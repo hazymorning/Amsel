@@ -1,14 +1,15 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/design/readme/amsel-dark.svg">
-    <img src="docs/design/readme/amsel-light.svg" alt="Amsel" width="260">
-  </picture>
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/design/readme/header-dark.svg">
+  <img src="docs/design/readme/header-light.svg" alt="Amsel. Black feathers. Golden song.">
+</picture>
 
-<p align="center">
-  Amsel is the German word for blackbird. The blackbird is a plain-looking bird and is known mostly for its song.
-</p>
+Amsel is a small Android app that plays your Music Assistant library on your phone or on any speaker in the house. It exists because a good player was missing, not because building one sounded like fun.
 
-<p align="center">
-  The app is a music player for Music Assistant on Android. It was started because a good player was needed, not for the fun of building one. That is also why it is not open source, since there is simply no interest in running a project. A lot of care goes into it all the same, and anyone is welcome to use it.
-</p>
+### The ideas behind it
+
+- What matters most is that it works, because the nicest app isn't worth much when the music stops.
+- It should be easy to use, because you want to listen to music, not solve a puzzle.
+- There's no loud branding and no AI look, and nothing in it is different just to be different.
+- It's designed by a human for humans, and the ones at home are quick to say when something doesn't feel right.
+
+<br><sub>Amsel is the German word for blackbird. The blackbird is a plain-looking bird and is known mostly for its song.</sub>
