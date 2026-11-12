@@ -3,6 +3,6 @@
   <img src="docs/design/readme/header-light.svg" alt="Amsel. Black feathers. Golden song.">
 </picture>
 
-Music is personal, and everyone probably has their own idea of how a music app should look and feel. This app is one such idea. It exists only because a good player was missing, not because building one sounded like fun.
+Music is personal, and everyone probably has their own idea of how a music app should look and feel. This app is one such idea. 
 
-<br><sub>Amsel is the German word for blackbird. The blackbird is a plain-looking bird and is known mostly for its song.</sub>
+<sub>Amsel is the German word for blackbird. The blackbird is a plain-looking bird and is known mostly for its song.</sub>
