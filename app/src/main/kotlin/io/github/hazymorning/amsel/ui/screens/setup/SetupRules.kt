@@ -7,6 +7,7 @@ import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
 import io.github.hazymorning.amsel.api.ServerProbe
 import io.github.hazymorning.amsel.api.SignInResult
+import io.github.hazymorning.amsel.api.isCertificateError
 import io.github.hazymorning.amsel.data.FoundServer
 import java.io.IOException
 import java.security.GeneralSecurityException
@@ -30,7 +31,8 @@ internal sealed interface ServerCheck {
 
 /**
  * Reads the server's info and sign-in methods. Unreachable covers anything that is not Music
- * Assistant answering; a server older than [Schema.MIN_SUPPORTED] is too old.
+ * Assistant answering, but for a certificate this phone does not trust; a server older than
+ * [Schema.MIN_SUPPORTED] is too old.
  */
 internal suspend fun checkServer(address: ServerAddress, probe: suspend (ServerAddress) -> ServerProbe): ServerCheck =
     try {
@@ -43,7 +45,7 @@ internal suspend fun checkServer(address: ServerAddress, probe: suspend (ServerA
     } catch (e: MaCommandException) {
         if (e.isSetupRequired) ServerCheck.NeedsSetup else ServerCheck.Failed(ServerError.Unreachable)
     } catch (e: MaConnectionException) {
-        ServerCheck.Failed(ServerError.Unreachable)
+        ServerCheck.Failed(if (e.isCertificateError()) ServerError.Certificate else ServerError.Unreachable)
     } catch (e: SerializationException) {
         // Something answered, but not as Music Assistant.
         ServerCheck.Failed(ServerError.Unreachable)
@@ -59,6 +61,17 @@ internal suspend fun attempt(block: suspend () -> SignInResult): SignInResult = 
 } catch (e: IOException) {
     SignInResult.Failed
 }
+
+/**
+ * Why [target] was not reached. A name typed without a scheme went to https, as one off the home
+ * network may answer any DNS; plain http to it only when typed so.
+ */
+internal fun ServerError.of(target: Target): ServerError =
+    if (this == ServerError.Unreachable && "://" !in target.field && target.address.baseUrl.isHttps) {
+        ServerError.HttpsFailed
+    } else {
+        this
+    }
 
 /** For display: the host alone, never a scheme or port (`192.168.1.20`, `music.example.com`). */
 internal fun hostOf(address: ServerAddress): String = address.baseUrl.host

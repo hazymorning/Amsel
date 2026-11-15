@@ -4,6 +4,7 @@ import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.ProviderMapping
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +19,7 @@ import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -148,6 +150,45 @@ class DownloadsTest {
         assertEquals("ep1", manifest.absEpisodeId)
         assertEquals("Folge 1", manifest.title)
         assertEquals(listOf("001.m4a"), manifest.files.map { it.name })
+    }
+
+    @Test fun `an extension that is no plain word names the file audio, in its item's folder`() = signedIn {
+        val store = DownloadStore(root.resolve("no_backup/downloads"))
+        val downloads = Downloads(client, store, network, wifiOnly, ::itemAt, {}, { 1_000L })
+        for (ext in listOf("../../x", ".mp3/../../../../x")) {
+            abs.ext = ext
+            downloads.add(BOOK)
+            downloads.work()
+            assertEquals(listOf("001.audio", "002.audio"), downloads.manifest(BOOK)?.files?.map { it.name })
+            val outside = root.walk().filter { it.isFile && !it.startsWith(store.dir(BOOK)) }
+            assertEquals(emptyList<File>(), outside.toList())
+            downloads.remove(BOOK)
+        }
+    }
+
+    @Test fun `a manifest naming a file outside its folder fetches and writes nothing`() = runBlocking {
+        val store = DownloadStore(root)
+        val file = DownloadFile("1", "001.mp3/../../x", 300_000, 0.0, 100.0)
+        val stale = DownloadManifest(
+            BOOK,
+            "book1",
+            title = "Das dicke Buch",
+            mediaType = "audiobook",
+            files = listOf(file),
+        )
+        store.save(stale)
+        assertThrows(IOException::class.java) { store.file(BOOK, file) }
+        val fetched = runCatching { DownloadJob(client, store).fetch(stale, file) {} }
+        assertTrue(fetched.exceptionOrNull() is IOException)
+        assertEquals(listOf("manifest.json"), root.walk().filter { it.isFile }.map { it.name }.toList())
+        assertTrue(abs.requests.isEmpty())
+    }
+
+    @Test fun `every name a download is given stays readable, a thousandth file and Arabic digits too`() {
+        val store = DownloadStore(root)
+        for (name in listOf("001.mp3", "1000.m4b", "٠٠١.mp3")) {
+            assertEquals(store.dir(BOOK).resolve(name), store.file(BOOK, DownloadFile("1", name, 1, 0.0, 1.0)))
+        }
     }
 
     @Test fun `what is not from Audiobookshelf, or before signing in, is said so`() = runBlocking {

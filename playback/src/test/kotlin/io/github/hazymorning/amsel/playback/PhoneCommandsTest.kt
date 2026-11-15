@@ -219,16 +219,26 @@ class PhoneCommandsTest {
     @Test fun sendspinKeepsItsServerWhileTheControlSocketReconnects() {
         val server = ServerInfo("s1", "2.11.0", 99)
         val connected = ConnectionState.Connected(server, null)
-        assertEquals(server, sendspinServer(wanted = true, connected, last = null))
+        assertEquals(server, sendspinServer(wanted = true, connected, last = null, retriesSafe = true))
         // A Wi-Fi blip, a missed ping or a token rotation: Sendspin rides it out by itself.
-        assertEquals(server, sendspinServer(true, ConnectionState.Connecting, last = server))
-        assertEquals(server, sendspinServer(true, ConnectionState.Offline, last = server))
+        assertEquals(server, sendspinServer(true, ConnectionState.Connecting, last = server, retriesSafe = true))
+        assertEquals(server, sendspinServer(true, ConnectionState.Offline, last = server, retriesSafe = true))
         // The idle close, signing out, or another speaker picked: stop.
-        assertNull(sendspinServer(true, ConnectionState.Idle, last = server))
-        assertNull(sendspinServer(true, ConnectionState.SignedOut, last = server))
-        assertNull(sendspinServer(false, connected, last = server))
+        assertNull(sendspinServer(true, ConnectionState.Idle, last = server, retriesSafe = true))
+        assertNull(sendspinServer(true, ConnectionState.SignedOut, last = server, retriesSafe = true))
+        assertNull(sendspinServer(false, connected, last = server, retriesSafe = true))
         // Never connected yet: nothing to connect to.
-        assertNull(sendspinServer(true, ConnectionState.Connecting, last = null))
+        assertNull(sendspinServer(true, ConnectionState.Connecting, last = null, retriesSafe = true))
+    }
+
+    @Test fun sendspinWaitsForTheControlSocketWhereItsRetriesAreNotSafe() {
+        val server = ServerInfo("s1", "2.11.0", 99)
+        // Plain http off the network where the server answered: the token would go to whoever answers there.
+        assertNull(sendspinServer(true, ConnectionState.Offline, last = server, retriesSafe = false))
+        assertNull(sendspinServer(true, ConnectionState.Connecting, last = server, retriesSafe = false))
+        // A socket that connected there checked the server first; one still up from before goes on.
+        val connected = ConnectionState.Connected(server, null)
+        assertEquals(server, sendspinServer(true, connected, last = null, retriesSafe = false))
     }
 
     @Test fun theLocksFollowTheAudioNotTheConnection() {

@@ -36,6 +36,9 @@ internal class FakeAbs(val files: List<ByteArray> = listOf(bytes(300_000, 1), by
     /** The server refuses the files themselves, as for a user without the download right. */
     var refuseFiles = false
 
+    /** What the book's files say their extension is. */
+    var ext = ".mp3"
+
     init {
         server.createContext("/") { exchange ->
             try {
@@ -104,7 +107,7 @@ internal class FakeAbs(val files: List<ByteArray> = listOf(bytes(300_000, 1), by
         var start = 0.0
         val tracks = files.mapIndexed { i, data ->
             val track = """{"startOffset": $start, "duration": 100.0, "contentUrl": "/api/items/book1/file/${i + 1}",
-                "metadata": {"filename": "Teil ${i + 1}.mp3", "ext": ".mp3", "size": ${data.size}}}"""
+                "metadata": {"filename": "Teil ${i + 1}.mp3", "ext": "$ext", "size": ${data.size}}}"""
             start += 100.0
             track
         }

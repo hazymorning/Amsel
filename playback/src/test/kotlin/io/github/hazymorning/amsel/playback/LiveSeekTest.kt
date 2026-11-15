@@ -54,12 +54,13 @@ class LiveSeekTest {
     private fun live(block: suspend (Rig) -> Unit) = runBlocking {
         assumeTrue("MA_URL not set", url != null)
         val address = ServerAddress.parse(url!!)!!
-        val signIn = MaAuth(http).signIn(address, "amsel", "amsel-test-pw", "Amsel (live test)")
+        val id = MaAuth(http).probe(address).info.serverId
+        val signIn = MaAuth(http).signIn(address, id, "amsel", "amsel-test-pw", "Amsel (live test)")
         assertTrue("sign in: $signIn", signIn is SignInResult.Success)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val client = MaClient(http, scope)
         try {
-            client.start(address, (signIn as SignInResult.Success).token)
+            client.start(address, (signIn as SignInResult.Success).token, id)
             withTimeout(15_000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val speakers = Speakers(api, ::now, scope)

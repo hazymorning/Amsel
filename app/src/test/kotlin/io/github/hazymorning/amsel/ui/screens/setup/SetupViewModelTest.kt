@@ -131,6 +131,17 @@ class SetupViewModelTest {
         assertNull(vm.state.value.server.error)
     }
 
+    @Test fun `a name typed without a scheme is tried over https only, and asks for http when it fails`() =
+        runTest(dispatcher) {
+            val vm = atAddress(probe = { throw MaConnectionException("refused") })
+            vm.onAddressChange("music.example.com")
+            vm.onConnect()
+            runCurrent()
+            assertEquals(listOf(ServerAddress.parse("https://music.example.com")), probed)
+            assertEquals(ServerError.HttpsFailed, vm.state.value.server.error)
+            assertEquals("music.example.com", vm.state.value.server.address)
+        }
+
     @Test fun `a typed address is checked until it answers as a supported Music Assistant`() = runTest(dispatcher) {
         val answers = ArrayDeque<() -> ServerProbe>(
             listOf(

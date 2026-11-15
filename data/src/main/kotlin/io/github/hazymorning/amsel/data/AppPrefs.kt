@@ -147,6 +147,13 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         store.edit { it.remove(TOKEN) }
     }
 
+    /** Where the server last answered as itself ([NetworkKey.text]): kept out of [Prefs], as no screen reads it. */
+    suspend fun checkedNetwork(): String? = store.data.first()[CHECKED_NETWORK]
+
+    suspend fun saveCheckedNetwork(text: String?) {
+        store.edit { if (text != null) it[CHECKED_NETWORK] = text else it.remove(CHECKED_NETWORK) }
+    }
+
     suspend fun setTheme(theme: String) {
         store.edit { it[THEME] = theme }
     }
@@ -270,6 +277,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val SPEAKER_NAME = stringPreferencesKey("speaker_name")
         val PHONE_PLAYER = stringPreferencesKey("phone_client_id")
         val TOKEN = stringPreferencesKey("token")
+        val CHECKED_NETWORK = stringPreferencesKey("checked_network")
         val SLEEP_MINUTES = intPreferencesKey("sleep_minutes")
         val SLEEP_FADE = intPreferencesKey("sleep_fade")
         val SLEEP_SHAKE = booleanPreferencesKey("sleep_shake")

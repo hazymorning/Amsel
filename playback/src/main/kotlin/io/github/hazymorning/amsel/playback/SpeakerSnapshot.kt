@@ -53,6 +53,15 @@ data class SpeakerSnapshot(
         speed,
         (current?.durationSeconds ?: 0) * 1000L,
     )
+
+    /** As last heard, at rest where it was at [nowMs]: not playing, nothing starting. */
+    fun standingAt(nowMs: Long): SpeakerSnapshot = copy(
+        playing = false,
+        playActionInProgress = false,
+        seeking = false,
+        elapsedSeconds = positionAt(nowMs) / 1000.0,
+        elapsedAtMs = nowMs,
+    )
 }
 
 /**

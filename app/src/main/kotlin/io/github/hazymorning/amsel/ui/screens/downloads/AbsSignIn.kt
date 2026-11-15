@@ -73,9 +73,10 @@ typealias AbsSignIn = suspend (address: String, username: String, password: Stri
 
 /**
  * Signing in to Audiobookshelf, where downloads come from: its address, the username and the
- * password, then [button]. An address without https:// is tried with it, then with plain http, as
- * a server at home answers; what went wrong shows under the field it is about. [last] fills in
- * the server and name signed in with before, so signing in again asks only for the password.
+ * password, then [button]. An address without a scheme is tried with https, then, where it is a
+ * home address, with plain http, as a server at home answers; what went wrong shows under the
+ * field it is about. [last] fills in the server and name signed in with before, so signing in
+ * again asks only for the password.
  */
 @Composable
 internal fun AbsSignInForm(
@@ -116,11 +117,7 @@ internal fun AbsSignInForm(
             },
             label = stringResource(R.string.abs_address),
             helper = stringResource(R.string.abs_address_example),
-            error = when (error) {
-                AbsException.Reason.BadAddress -> stringResource(R.string.abs_error_address)
-                AbsException.Reason.Unreachable -> stringResource(R.string.abs_error_unreachable)
-                else -> null
-            },
+            error = error?.addressError?.let { stringResource(it) },
             keyboardOptions = KeyboardOptions(
                 capitalization = KeyboardCapitalization.None,
                 autoCorrectEnabled = false,
@@ -174,10 +171,7 @@ internal fun AbsSignInForm(
             },
             fill = fill,
         )
-        val other = error?.takeIf {
-            it != AbsException.Reason.BadAddress && it != AbsException.Reason.Unreachable &&
-                it != AbsException.Reason.WrongLogin
-        }
+        val other = error?.takeIf { it.addressError == null && it != AbsException.Reason.WrongLogin }
         if (other != null) FieldNote(stringResource(R.string.abs_error_server), error = true)
         Spacer(Modifier.height(Space.Group))
         PrimaryButton(
@@ -193,6 +187,17 @@ internal fun AbsSignInForm(
         )
     }
 }
+
+/** What [AbsSignInForm] says under the address for this failure; null when it is not about the address. */
+private val AbsException.Reason.addressError: Int?
+    get() = when (this) {
+        AbsException.Reason.BadAddress -> R.string.abs_error_address
+        AbsException.Reason.Unreachable -> R.string.abs_error_unreachable
+        AbsException.Reason.Certificate -> R.string.abs_error_certificate
+        AbsException.Reason.HttpsFailed -> R.string.abs_error_https
+        AbsException.Reason.AwayFromHome -> R.string.abs_error_away
+        else -> null
+    }
 
 /** Sign in to Audiobookshelf, asked for by the first download, which then starts: [then]. */
 @Composable

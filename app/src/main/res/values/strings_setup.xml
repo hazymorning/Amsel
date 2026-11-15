@@ -16,6 +16,8 @@
     <string name="setup_connect">Connect</string>
     <string name="setup_connecting">Connecting</string>
     <string name="setup_error_unreachable">Couldn’t reach Music\u00A0Assistant at that address</string>
+    <string name="setup_error_certificate">The server’s certificate isn’t valid</string>
+    <string name="setup_error_https">Couldn’t reach Music\u00A0Assistant over https. For plain http at home, type http:// and the port too.</string>
     <string name="setup_finish_setup">Finish setting up Music\u00A0Assistant first</string>
 
     <!-- Sign in -->

@@ -64,7 +64,7 @@ class UpNextViewModelTest {
         // Cleared at the end, so the ViewModel's scope and its stop timeout end with the test.
         val store = ViewModelStore()
         try {
-            client.start(fake.address, "t")
+            client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val beforePlay = mutableListOf<String>()
@@ -153,7 +153,7 @@ class UpNextViewModelTest {
         val client = MaClient(OkHttpClient(), scope)
         val store = ViewModelStore()
         try {
-            client.start(fake.address, "t")
+            client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val messages = Messages(MutableStateFlow(true))
@@ -216,7 +216,7 @@ class UpNextViewModelTest {
         val client = MaClient(OkHttpClient(), scope)
         val store = ViewModelStore()
         try {
-            client.start(fake.address, "t")
+            client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val speakers = Speakers(api, { 0L })

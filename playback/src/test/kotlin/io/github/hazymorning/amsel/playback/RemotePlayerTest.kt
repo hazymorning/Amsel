@@ -139,6 +139,17 @@ class RemotePlayerTest {
     }
 
     @Test
+    fun aSpeakerOutOfReachForAWhileRestsWhereItWasWithItsSongStillShown() {
+        // Heard playing 10 s in, with a play on its way; out of reach 5 s later.
+        val p = player(fake { it.copy(playActionInProgress = true).standingAt(now + 5_000) })
+        assertFalse(p.playWhenReady)
+        assertEquals(Player.STATE_READY, p.playbackState)
+        assertEquals("q1", p.currentMediaItem?.mediaId)
+        now += 60_000
+        assertEquals(15_000, p.currentPosition)
+    }
+
+    @Test
     fun aPausedPositionStaysPut() {
         val p = player(fake { it.copy(playing = false) })
         now += 30_000

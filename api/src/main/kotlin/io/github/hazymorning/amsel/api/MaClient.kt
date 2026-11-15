@@ -38,7 +38,10 @@ public sealed interface ConnectionState {
     /** Unreachable; it stays so through the retries until one connects. */
     public data object Offline : ConnectionState
 
-    /** The token was rejected: the user must sign in again. Reconnecting stops. */
+    /**
+     * The token was rejected, or the server was set up anew (another `server_id` where it answered
+     * before): the user must sign in again. Reconnecting stops.
+     */
     public data object SignedOut : ConnectionState
 
     /** The server is older than the app supports. Reconnecting stops. */
@@ -50,7 +53,15 @@ public sealed interface ConnectionState {
  * with backoff) until [stop]. Commands wait briefly for a connection; events from every
  * connection arrive in [events]. Knows nothing about screens.
  */
-public class MaClient(private val http: OkHttpClient, private val scope: CoroutineScope) {
+public class MaClient(
+    private val http: OkHttpClient,
+    private val scope: CoroutineScope,
+    /**
+     * Whether the phone is on the network where the server last answered with its own id: another
+     * id there means it was set up anew, where no stored token signs in.
+     */
+    private val sameNetwork: () -> Boolean = { false },
+) {
     private val _state = MutableStateFlow<ConnectionState>(ConnectionState.Idle)
     private val _events =
         MutableSharedFlow<MaEvent>(extraBufferCapacity = 512, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -63,11 +74,14 @@ public class MaClient(private val http: OkHttpClient, private val scope: Corouti
     public val state: StateFlow<ConnectionState> = _state.asStateFlow()
     public val events: SharedFlow<MaEvent> = _events.asSharedFlow()
 
-    /** Connects to [address] with the long-lived [token], at once, replacing any connection. */
-    public fun start(address: ServerAddress, token: String): Unit = synchronized(lock) {
+    /**
+     * Connects to [address] with the long-lived [token], at once, replacing any connection. The
+     * token goes only to the server whose first frame names [serverId].
+     */
+    public fun start(address: ServerAddress, token: String, serverId: String): Unit = synchronized(lock) {
         end()
         _state.value = ConnectionState.Connecting
-        loop = scope.launch { runLoop(address, token) }
+        loop = scope.launch { runLoop(address, token, serverId) }
     }
 
     /** Closes the connection and stops reconnecting. */
@@ -113,24 +127,33 @@ public class MaClient(private val http: OkHttpClient, private val scope: Corouti
         socket = null
     }
 
-    private suspend fun runLoop(address: ServerAddress, token: String) {
+    private suspend fun runLoop(address: ServerAddress, token: String, serverId: String) {
         var failures = 0
+        var strangers = 0
         while (true) {
             val s = MaSocket(http, address) { _events.tryEmit(it) }
             try {
                 val info = s.open()
-                if (!Schema.isSupported(info.schemaVersion)) return publish(ConnectionState.Unsupported)
-                val user = authenticate(s, token)
-                failures = 0
-                publish(ConnectionState.Connected(info, user), s)
-                s.closed.await()
-                publish(ConnectionState.Connecting)
-                continue
+                if (info.serverId == serverId) {
+                    strangers = 0
+                    if (!Schema.isSupported(info.schemaVersion)) return publish(ConnectionState.Unsupported)
+                    val user = authenticate(s, token)
+                    failures = 0
+                    publish(ConnectionState.Connected(info, user), s)
+                    s.closed.await()
+                    publish(ConnectionState.Connecting)
+                    continue
+                }
+                // Whatever answers at a home address on another network gets no token. A second
+                // answer in a row, where the server itself answered before, is the server set up
+                // anew: by then a network change has reached sameNetwork.
+                if (++strangers >= SET_UP_ANEW_AFTER && sameNetwork()) return publish(ConnectionState.SignedOut)
             } catch (e: MaCommandException) {
                 // A server set up anew has no users: like a refused token, no retry can sign in.
                 if (e.isAuthError || e.isSetupRequired) return publish(ConnectionState.SignedOut)
+                strangers = 0
             } catch (e: MaConnectionException) {
-                // Retried below.
+                strangers = 0
             } finally {
                 s.close()
             }
@@ -152,6 +175,7 @@ public class MaClient(private val http: OkHttpClient, private val scope: Corouti
 
     private companion object {
         val CONNECT_WAIT = 10.seconds
+        const val SET_UP_ANEW_AFTER = 2
 
         /** 1, 2, 4, 8, 16, then every 30 seconds. */
         fun backoffSeconds(failures: Int): Long = if (failures > 5) 30 else 1L shl (failures - 1)

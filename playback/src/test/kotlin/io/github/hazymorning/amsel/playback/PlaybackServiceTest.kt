@@ -16,7 +16,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaConstants
 import androidx.media3.session.MediaLibraryService.MediaLibrarySession
-import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionError
 import androidx.media3.session.SessionResult
@@ -63,7 +62,7 @@ private object NoArtwork : BitmapLoader {
 }
 
 /** A library with nothing in it. */
-private object Catalogless : Catalog {
+internal object Catalogless : Catalog {
     override suspend fun recent(limit: Int) = emptyList<BrowseNode>()
 
     override suspend fun inProgress(limit: Int) = emptyList<BrowseNode>()
@@ -326,6 +325,7 @@ class BrowseTreeTest {
         app::getString,
         "Amsel",
         CarArtwork(app),
+        Cars(app.packageManager),
         beforeCarPlay,
         blocked,
         voiceUri,
@@ -338,18 +338,14 @@ class BrowseTreeTest {
             it
     }
 
-    private fun controller(packageName: String) = MediaSession.ControllerInfo.createTestOnlyControllerInfo(
-        packageName,
-        0,
-        0,
-        0,
-        0,
-        false,
-        Bundle.EMPTY,
-        true,
-    )
+    private fun controller(packageName: String) = controllerOf(packageName, AUTO_UID)
 
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
+
+    @Before fun installAndroidAuto() {
+        // As Android 10 and later bring it.
+        installApp(ANDROID_AUTO, AUTO_UID, system = true)
+    }
 
     @After fun tearDown() {
         session?.release()
@@ -603,5 +599,6 @@ class BrowseTreeTest {
 
     private companion object {
         const val ANDROID_AUTO = "com.google.android.projection.gearhead"
+        const val AUTO_UID = 10_150
     }
 }

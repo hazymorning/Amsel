@@ -5,8 +5,9 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
  * Where the server lives. Accepts what people type: `192.168.1.20`, `music.local`,
- * `music.local:8095`, `https://music.example.com`, `http://10.0.0.5:8095/`. Without a scheme it
- * adds `http://` and port 8095; with one it keeps the scheme's default port.
+ * `music.local:8095`, `music.example.com`, `https://music.example.com`, `http://10.0.0.5:8095/`.
+ * Without a scheme a home address ([isLanHost]) gets `http://` and port 8095, and any other name
+ * `https://`; with a scheme it keeps the scheme's default port.
  */
 public data class ServerAddress(val baseUrl: HttpUrl) {
     /** The command WebSocket: `<base>/ws`. */
@@ -33,7 +34,18 @@ public data class ServerAddress(val baseUrl: HttpUrl) {
             } else {
                 val withScheme = "http://$trimmed".toHttpUrlOrNull() ?: return null
                 val explicitPort = Regex("^(\\[[^\\]]+]|[^:/\\[]+):\\d+").containsMatchIn(trimmed)
-                if (explicitPort) withScheme else withScheme.newBuilder().port(DEFAULT_PORT).build()
+                when {
+                    // Plain http to any other name only when typed so: DNS on a hostile network
+                    // can answer it with a private address, which the cleartext guard lets through.
+                    !isLanHost(withScheme.host) -> withScheme.newBuilder()
+                        .scheme("https")
+                        .port(if (explicitPort) withScheme.port else HttpUrl.defaultPort("https"))
+                        .build()
+
+                    explicitPort -> withScheme
+
+                    else -> withScheme.newBuilder().port(DEFAULT_PORT).build()
+                }
             } ?: return null
             if (url.host.isBlank()) return null
             return ServerAddress(url.newBuilder().query(null).fragment(null).build())
