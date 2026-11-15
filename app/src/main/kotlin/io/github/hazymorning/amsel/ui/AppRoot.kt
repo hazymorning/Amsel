@@ -43,6 +43,7 @@ import io.github.hazymorning.amsel.ui.components.LocalDownloadMarks
 import io.github.hazymorning.amsel.ui.components.LocalMusicPlays
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
@@ -57,6 +58,7 @@ import io.github.hazymorning.amsel.ui.screens.pages.PodcastRoute
 import io.github.hazymorning.amsel.ui.screens.pages.SimilarSongsRoute
 import io.github.hazymorning.amsel.ui.screens.player.NowPlayingRoute
 import io.github.hazymorning.amsel.ui.screens.search.SearchRoute
+import io.github.hazymorning.amsel.ui.screens.settings.BarRoute
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsRoute
 import io.github.hazymorning.amsel.ui.screens.setup.SetupRoute
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
@@ -260,6 +262,8 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
 
     val downloads = graph.downloading.marks.collectAsStateWithLifecycle()
     val plays = remember { derivedStateOf { nowPlaying?.isPlaying == true } }
+    val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
+    val bar = remember(prefs?.barPlaces) { BarPlace.of(prefs?.barPlaces) }
     CompositionLocalProvider(
         LocalAppActions provides actions,
         LocalDownloadMarks provides downloads,
@@ -276,6 +280,7 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
             offer = offer,
             onTakeOffer = graph.offers::take,
             onDismissOffer = graph.offers::dismiss,
+            bar = bar,
             slots = ShellSlots(
                 screen = { route, nav -> RouteContent(route, nav) },
                 nowPlaying = { onClose, nav -> NowPlayingRoute(onClose, nav) },
@@ -299,6 +304,7 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         is Route.SimilarSongs -> SimilarSongsRoute(navigator, route.key, route.title)
         is Route.SeeAll -> SeeAllRoute(navigator, route.option, title = route.title)
         Route.Settings -> SettingsRoute(navigator)
+        Route.Bar -> BarRoute(navigator)
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }

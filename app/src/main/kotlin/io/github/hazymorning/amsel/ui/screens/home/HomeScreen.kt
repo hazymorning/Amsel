@@ -22,6 +22,7 @@ import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.LocalOpenNowPlaying
+import io.github.hazymorning.amsel.ui.LocalStartSearch
 import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
@@ -57,6 +58,8 @@ fun HomeScreen(
     onTipGone: (Tip) -> Unit = {},
     /** Speakers: a tap makes the speaker the one in use. */
     onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
+    /** Search's field: opens Search, the keyboard up. */
+    onSearch: () -> Unit = {},
 ) {
     BackHandler(enabled = state.editing) { editor.doneEditing() }
     // Home needs no header: content begins under the status bar, and only edit mode, a place of its
@@ -96,6 +99,7 @@ fun HomeScreen(
                         tip,
                         onTipGone,
                         onSpeaker,
+                        onSearch,
                     )
                 }
 
@@ -196,6 +200,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         tip = tip.takeUnless { told },
         onTipGone = tips::seen,
         onSpeaker = { speaker, play -> if (play) actions.play(speaker) else actions.look(speaker, openPlayer) },
+        onSearch = LocalStartSearch.current,
         modifier = modifier,
     )
 }

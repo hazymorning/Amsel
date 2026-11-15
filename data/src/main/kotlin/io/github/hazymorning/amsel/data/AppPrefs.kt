@@ -76,6 +76,8 @@ data class Prefs(
     val lastPlaylistName: String? = null,
     /** When the sleep timer was last offered (ms since the epoch): once a night. */
     val sleepOfferedAt: Long? = null,
+    /** The places the bar shows, in its order, by their ids; null for the bar as it comes. */
+    val barPlaces: List<String>? = null,
 )
 
 class AppPrefs(context: Context, scope: CoroutineScope) {
@@ -112,6 +114,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
             lastPlaylistKey = p[LAST_PLAYLIST],
             lastPlaylistName = p[LAST_PLAYLIST_NAME],
             sleepOfferedAt = p[SLEEP_OFFERED_AT],
+            barPlaces = p[BAR_PLACES]?.split(',')?.filter { it.isNotBlank() },
         )
     }
 
@@ -156,6 +159,10 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
 
     suspend fun setTheme(theme: String) {
         store.edit { it[THEME] = theme }
+    }
+
+    suspend fun setBarPlaces(ids: List<String>) {
+        store.edit { it[BAR_PLACES] = ids.joinToString(",") }
     }
 
     suspend fun setSleepMinutes(minutes: Int) {
@@ -273,6 +280,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val SERVER_ID = stringPreferencesKey("server_id")
         val SERVER_NAME = stringPreferencesKey("server_name")
         val THEME = stringPreferencesKey("theme")
+        val BAR_PLACES = stringPreferencesKey("bar_places")
         val SPEAKER = stringPreferencesKey("speaker_id")
         val SPEAKER_NAME = stringPreferencesKey("speaker_name")
         val PHONE_PLAYER = stringPreferencesKey("phone_client_id")

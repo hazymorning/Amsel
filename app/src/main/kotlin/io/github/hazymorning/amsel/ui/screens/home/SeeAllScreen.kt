@@ -113,6 +113,7 @@ private val SectionSource.glyph: Int
         SectionSource.Audiobooks -> R.drawable.ic_audiobook
         SectionSource.Podcasts -> R.drawable.ic_podcast
         SectionSource.Speakers -> R.drawable.ic_speaker
+        SectionSource.Search -> R.drawable.ic_search
     }
 
 /** The first cover 8 under the bar, as a row keeps it 8 under its top; the last ink 32 above the dock. */

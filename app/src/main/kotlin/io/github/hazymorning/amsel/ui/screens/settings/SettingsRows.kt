@@ -150,7 +150,7 @@ internal fun PlainToggleRow(title: String, detail: String, checked: Boolean, onC
 
 /** The switch shows the state; the row it sits in takes the tap and says it to TalkBack. */
 @Composable
-private fun SettingSwitch(checked: Boolean) {
+internal fun SettingSwitch(checked: Boolean) {
     val colors = MaterialTheme.colorScheme
     Switch(
         checked = checked,
