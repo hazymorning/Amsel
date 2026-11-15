@@ -227,8 +227,10 @@ fun ToggleIconButton(
 }
 
 /**
- * A round play or pause in ink, the focal action: Now Playing's 72 dp and a page's 56. The triangle
- * sits a little right of the centre of its box, so it looks centred in the circle. A light tick answers.
+ * A round play or pause in ink, the focal action: Now Playing's 72 dp and a page's 56; [tonal], a
+ * disc in the second tone with the glyph in ink, for a surface that is no page (the dock). The
+ * triangle sits a little right of the centre of its box, so it looks centred in the circle. A light
+ * tick answers.
  */
 @Composable
 fun PlayButton(
@@ -237,10 +239,11 @@ fun PlayButton(
     modifier: Modifier = Modifier,
     size: Dp = Sizes.PagePlayButton,
     label: String? = null,
+    tonal: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
-    val background = colors.primary
-    val glyphTint = colors.onPrimary
+    val background = if (tonal) colors.surfaceContainerHigh else colors.primary
+    val glyphTint = if (tonal) colors.onSurface else colors.onPrimary
     val glyph = if (size >= Sizes.PlayButton) Sizes.IconLarge else Sizes.Icon
     val icon = if (playing) R.drawable.ic_pause_slim else R.drawable.ic_play
     val description = label ?: stringResource(if (playing) R.string.pause else R.string.play)
@@ -271,7 +274,11 @@ fun PlayButton(
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            Modifier.size(size).lift(Shapes.Circle, Lift.Button).clip(Shapes.Circle).background(background),
+            Modifier
+                .size(size)
+                .then(if (tonal) Modifier else Modifier.lift(Shapes.Circle, Lift.Button))
+                .clip(Shapes.Circle)
+                .background(background),
             contentAlignment = Alignment.Center,
         ) {
             val shift = if (playing) 0.dp else inkWidth(icon, glyph) / PLAY_SHIFT

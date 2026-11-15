@@ -81,6 +81,19 @@ class ArtistViewModelTest {
         assertTrue(messages.pending.value.isEmpty())
     }
 
+    @Test fun `an artist the server does not describe in time gets its page from its albums and songs`() = runTest {
+        val source = FakeSource().apply {
+            itemFailure = MaConnectionException("No answer to music/item_by_uri")
+            tracks = list("music_artists_artist_tracks").take(5)
+            albums = list("music_artists_artist_albums")
+        }
+        val state = watch(ArtistViewModel(ARTIST, source, mapper, playing, messages).state)
+        assertFalse(state.value.showUnavailable)
+        assertEquals("Aurora Tone", state.value.artist?.title)
+        assertEquals(listOf("Second Wind", "First Light"), state.value.albums.map { it.title })
+        assertEquals(5, state.value.popular.size)
+    }
+
     @Test fun `an artist paints its albums from the index before the server answers`() = runTest {
         val source = FakeSource(gated = true).apply {
             rows.value = row(ARTIST, "artist", "Aurora Tone")

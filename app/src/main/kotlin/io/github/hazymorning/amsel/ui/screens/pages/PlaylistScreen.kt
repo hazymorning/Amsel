@@ -63,6 +63,7 @@ fun PlaylistScreen(
             modifier,
             bottom =
                 Space.ListEnd - rowInkBottom(RowLead.Cover, true),
+            art = playlist?.art,
             // An empty playlist has no row for Play, so its ⋮ waits in the bar.
             actions = {
                 playlist?.takeIf { state.isEmpty }?.let { MoreButton(it.title, onClick = { onMore(it.media) }) }

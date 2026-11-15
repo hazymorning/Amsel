@@ -80,7 +80,7 @@ fun ArtistScreen(
             }
             // A tile's caption ends on its ink; an album row keeps its own room under it.
             val bottom = if (state.similar.isEmpty()) Space.ListEnd - Space.TileRows else Space.ListEnd
-            PageScaffold(artist?.title, listState, onBack, bottom = bottom) {
+            PageScaffold(artist?.title, listState, onBack, bottom = bottom, art = artist?.art) {
                 item(key = "art", contentType = PageSlot.Art) {
                     PageArt(artist?.art, MediaKind.Artist, artist?.title)
                 }

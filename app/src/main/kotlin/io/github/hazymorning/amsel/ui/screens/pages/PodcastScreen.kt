@@ -76,6 +76,7 @@ fun PodcastScreen(
         onBack,
         modifier,
         bottom = Space.ListEnd - rowInkBottom(RowLead.None, twoLines = true),
+        art = podcast?.art,
         actions = {
             if (podcast != null) MoreButton(podcast.title, onClick = { onMore(podcast) })
         },
