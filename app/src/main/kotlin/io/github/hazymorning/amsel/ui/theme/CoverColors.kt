@@ -29,10 +29,19 @@ data class CoverColors(val hue: Float, val saturation: Float) {
      * [surface] washed with the cover's hue: plainly coloured, yet quiet enough to read on. By day
      * a shade deeper than the paper, at night a shade lighter than the dark, so the hue shows.
      */
-    fun tint(surface: Color, night: Boolean): Color {
+    fun tint(surface: Color, night: Boolean): Color = tint(surface, night, 1f)
+
+    /**
+     * A page's head under its cover: the same hue as [tint], plainer to see, as it covers only the
+     * top of a page that scrolls away, where Now Playing's tint lies under all of it.
+     */
+    fun wash(surface: Color, night: Boolean): Color = tint(surface, night, WASH_STRENGTH)
+
+    private fun tint(surface: Color, night: Boolean, by: Float): Color {
         val lightness = with(surface) { (maxOf(red, green, blue) + minOf(red, green, blue)) / 2 } +
-            if (night) NIGHT_TINT_LIFT else -DAY_TINT_DEPTH
-        return lerp(surface, hsl(hue, TINT_SATURATION * strength, lightness.coerceIn(0f, 1f)), TINT_SHARE)
+            by * if (night) NIGHT_TINT_LIFT else -DAY_TINT_DEPTH
+        val saturation = (TINT_SATURATION * strength * by).coerceAtMost(1f)
+        return lerp(surface, hsl(hue, saturation, lightness.coerceIn(0f, 1f)), TINT_SHARE)
     }
 
     /** Covers with little colour lend little: a grey-blue sleeve tints less than a red one. */
@@ -48,6 +57,9 @@ private const val TINT_SATURATION = 0.55f
 private const val TINT_SHARE = 0.7f
 private const val DAY_TINT_DEPTH = 0.035f
 private const val NIGHT_TINT_LIFT = 0.04f
+
+/** How much plainer a page's wash is than Now Playing's tint. */
+private const val WASH_STRENGTH = 1.6f
 
 /** Covers are sampled at this size: plenty for a palette, and cheap to decode. */
 private const val SAMPLE_PX = 64

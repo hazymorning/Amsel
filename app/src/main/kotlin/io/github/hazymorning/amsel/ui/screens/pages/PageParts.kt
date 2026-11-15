@@ -129,7 +129,7 @@ internal fun PageScaffold(
 private fun coverWash(art: ArtRef?): State<Color> {
     val colors = rememberCoverColors(art)
     val scheme = MaterialTheme.colorScheme
-    val tint = colors?.tint(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f)
+    val tint = colors?.wash(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f)
     return animateColorAsState(tint, Motion.effectsSlow(), label = "page wash")
 }
 

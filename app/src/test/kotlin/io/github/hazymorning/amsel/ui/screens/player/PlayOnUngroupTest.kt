@@ -102,6 +102,8 @@ class PlayOnUngroupTest {
             assertEquals(411f - 24f, button.right.value, 0.5f)
             assertTrue(button.bottom - button.top >= 48.dp)
         }
-        assertTrue(heading.bottom < group.top && group.bottom < ungroup.top && ungroup.bottom < first.top)
+        assertTrue(heading.bottom < group.top && group.bottom < ungroup.top)
+        // The first speaker's row keeps its own room over its words, as the heading leaves over Group.
+        assertEquals(ungroup.bottom.value, first.top.value, 0.5f)
     }
 }

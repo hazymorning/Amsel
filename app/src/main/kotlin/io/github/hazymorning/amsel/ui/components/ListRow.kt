@@ -171,9 +171,12 @@ fun ListRow(
         } else if (role == Role.RadioButton) {
             Spacer(Modifier.width(Space.Sibling))
             // Laid out in every choice and drawn in the chosen one, so a name breaks alike chosen or not.
+            // Its middle stands where a pill button's round end has its centre, so it lines up under one.
             InkGlyph(
                 R.drawable.ic_check,
-                Modifier.drawWithContent { if (selected) drawContent() },
+                Modifier
+                    .padding(end = Sizes.ButtonHeight / 2 - inkWidth(R.drawable.ic_check) / 2)
+                    .drawWithContent { if (selected) drawContent() },
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }

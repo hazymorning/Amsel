@@ -8,6 +8,7 @@
     <string name="player_volume_percent">%1$d\u00A0%%</string>
     <string name="player_volume_still">silent</string>
     <string name="player_volume_fixed">Volume is set on the speaker</string>
+    <string name="player_volume_in_group">In the group</string>
     <string name="player_up_next">Up next</string>
     <!-- Above the artwork: where the music comes from (the album) -->
     <string name="player_from">from %1$s</string>
@@ -86,8 +87,6 @@
     <string name="player_repeat_off">Off</string>
     <string name="player_repeat_all">All</string>
     <string name="player_repeat_one">One song</string>
-    <string name="player_volume_down">Volume down</string>
-    <string name="player_volume_up">Volume up</string>
     <string name="group">Group</string>
     <string name="group_count">Group +%1$d</string>
     <string name="group_with">Group with %1$s</string>

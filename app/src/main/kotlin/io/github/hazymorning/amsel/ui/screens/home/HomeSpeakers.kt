@@ -26,7 +26,6 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.Artwork
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.RingBefore
 import io.github.hazymorning.amsel.ui.components.ShelfRow
 import io.github.hazymorning.amsel.ui.components.SpeakerName
@@ -115,13 +114,9 @@ private fun SpeakerCard(
         val shown = if (blank) Modifier.alpha(0f) else Modifier
         Artwork(speaker.art, shown.size(CardArt), MediaKind.Track, glyph = speaker.glyph)
         Column(shown.weight(1f).padding(start = CardInset)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                InkGlyph(speaker.glyph, tint = colors.onSurfaceVariant, size = Sizes.IconSmall)
-                Spacer(Modifier.width(Space.S1))
-                SpeakerName(speaker, type.titleSmall, colors.onSurface)
-            }
-            // Name and state apart, so the two lines stand as tall as the cover beside them.
-            Spacer(Modifier.height(Space.S2))
+            // The name alone: the row says these are speakers, and a cover without a picture wears the glyph.
+            SpeakerName(speaker, type.titleSmall, colors.onSurface)
+            Spacer(Modifier.height(Space.S1))
             val line: @Composable () -> Unit = {
                 Words(
                     holds,
