@@ -114,6 +114,24 @@ class HomeLayoutTest {
         assertEquals(Everything, changed.option)
     }
 
+    @Test fun everySectionButSpeakersShowsItsTitleUntilThePersonSaysOtherwise() {
+        assertTrue(home.sections.all { it.showsTitle })
+        val speakers = home.setOption("s3", SectionOption.Speakers)
+        assertFalse(speakers.sections[2].showsTitle)
+        assertTrue(speakers.setTitled("s3", true).sections[2].showsTitle)
+        assertFalse(home.setTitled("s2", false).sections[1].showsTitle)
+        // Another option brings its own way: Speakers hide theirs, the rest show.
+        assertTrue(home.setTitled("s2", false).setOption("s2", SectionOption.TopArtists).sections[1].showsTitle)
+    }
+
+    @Test fun aHiddenTitleIsKeptAndAHomeStoredBeforeItStillReads() {
+        val hidden = home.setTitled("s2", false).setOption("s3", SectionOption.Speakers).setTitled("s3", true)
+        assertEquals(hidden, HomeLayout.decode(hidden.encode()))
+        val older = """{"sections": [{"id": "s1", "option": "Speakers", "layout": "Row"},
+            {"id": "s2", "option": "NewAlbums", "layout": "Row"}]}"""
+        assertEquals(listOf(false, true), HomeLayout.decode(older).sections.map { it.showsTitle })
+    }
+
     @Test fun pinsGoFirstAndOnlyOnce() {
         val pinned = home.pin("library://album/1").pin("library://playlist/2").pin("library://album/1")
         assertEquals(listOf("library://album/1", "library://playlist/2"), pinned.pinned)

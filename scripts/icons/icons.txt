@@ -41,6 +41,8 @@ more                dots-three             bold
 settings            gear-six
 open_external       arrow-square-out       mirrored
 edit                pencil-simple
+title               text-t
+title_off           text-t-slash
 add                 plus
 minus               minus
 chevron             caret-right            mirrored

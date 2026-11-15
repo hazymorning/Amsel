@@ -76,6 +76,10 @@ class HomeScreenTest {
             calls += "title $id $title"
         }
 
+        override fun setTitled(id: String, titled: Boolean) {
+            calls += "titled $id $titled"
+        }
+
         override fun moveUp(id: String) {
             calls += "up $id"
         }
@@ -151,6 +155,27 @@ class HomeScreenTest {
         compose.onNodeWithText("Move up").assertDoesNotExist()
         compose.onNodeWithText("Remove").performClick()
         assertEquals(listOf("remove s2"), editor.calls)
+    }
+
+    @Test fun theSectionsMoreHidesItsTitleAndShowsItAgain() {
+        val editor = Recorder()
+        show(HomeSample.editing, editor)
+        compose.onAllNodesWithContentDescription("More options for Recently played").onFirst().performClick()
+        compose.onNodeWithText("Hide title").performClick()
+        assertEquals(listOf("titled s2 false"), editor.calls)
+    }
+
+    @Test fun aSectionShowsItsTitleOnlyWhereItsTitled() {
+        val speakers = HomeSample.speakers
+        val state = mutableStateOf(speakers)
+        compose.setContent { AmselTheme { HomeScreen(state.value, {}, {}, {}, {}, editor = Recorder()) } }
+        compose.onNodeWithText("Speakers").assertDoesNotExist()
+        compose.onNodeWithText("Recently played").assertIsDisplayed()
+        state.value = speakers.copy(
+            sections = speakers.sections.map { it.copy(titled = it.option == SectionOption.Speakers) },
+        )
+        compose.onNodeWithText("Speakers").assertIsDisplayed()
+        compose.onNodeWithText("Recently played").assertDoesNotExist()
     }
 
     @Test fun talkBackMovesASectionFromItsTitle() {
