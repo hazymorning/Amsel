@@ -1,0 +1,223 @@
+{
+  "request": {
+    "message_id": "6",
+    "command": "ai_radio/hosts/list"
+  },
+  "response": {
+    "message_id": "6",
+    "result": [
+      {
+        "id": "minimal_dj",
+        "name": "Minimal DJ",
+        "instructions": "Host personality: minimal, calm, understated DJ who lets the music lead. Program instructions: keep every segment brief, avoid small talk, avoid cliches, and never overshadow the songs with unnecessary commentary.",
+        "tts_engine": "",
+        "language": "",
+        "options": {},
+        "section_ids": [
+          "minimal_dj_transition",
+          "minimal_dj_smoother"
+        ],
+        "section_order": [
+          {
+            "when": "between_songs",
+            "flow": [
+              {
+                "OPTIONAL": {
+                  "section": "minimal_dj_transition",
+                  "chance": 0.6666666666666666,
+                  "guards": {
+                    "min_gap_songs": 3,
+                    "max_per_60min": 0,
+                    "require_placeholders_present": []
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "merge_section_id": "minimal_dj_smoother"
+      },
+      {
+        "id": "morning_show",
+        "name": "Morning show",
+        "instructions": "Host personality: warm, energetic, upbeat morning-show host who sounds fully awake and glad to be on air. Program instructions: write for spoken delivery, keep segments concise, avoid bullet-point phrasing, avoid cliches, mention concrete details when available, and maintain a believable radio flow between sections.",
+        "tts_engine": "",
+        "language": "",
+        "options": {},
+        "section_ids": [
+          "morning_show_intro",
+          "morning_show_transition",
+          "morning_show_weather",
+          "morning_show_news",
+          "morning_show_sign_off",
+          "morning_show_smoother"
+        ],
+        "section_order": [
+          {
+            "when": "start_of_playlist",
+            "flow": [
+              {
+                "MUST": "morning_show_intro"
+              }
+            ]
+          },
+          {
+            "when": "between_songs",
+            "flow": [
+              {
+                "OPTIONAL": {
+                  "section": "morning_show_transition",
+                  "chance": 0.6666666666666666,
+                  "guards": {
+                    "min_gap_songs": 3,
+                    "max_per_60min": 0,
+                    "require_placeholders_present": []
+                  }
+                }
+              },
+              {
+                "OPTIONAL": {
+                  "section": "morning_show_weather",
+                  "chance": 1.0,
+                  "guards": {
+                    "min_gap_songs": 0,
+                    "max_per_60min": 1,
+                    "require_placeholders_present": [
+                      "<weather_hourly>",
+                      "<timestamp>"
+                    ]
+                  }
+                }
+              },
+              {
+                "OPTIONAL": {
+                  "section": "morning_show_news",
+                  "chance": 1.0,
+                  "guards": {
+                    "min_gap_songs": 0,
+                    "max_per_60min": 1,
+                    "require_placeholders_present": [
+                      "<timestamp>"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "when": "end_of_playlist",
+            "flow": [
+              {
+                "MUST": "morning_show_sign_off"
+              }
+            ]
+          }
+        ],
+        "merge_section_id": "morning_show_smoother"
+      },
+      {
+        "id": "music_nerd",
+        "name": "Music nerd",
+        "instructions": "Host personality: knowledgeable, enthusiastic music nerd who loves sharing context without lecturing. Program instructions: write for spoken delivery, keep segments concise, favor concrete facts over generic praise, avoid cliches, and maintain a believable radio flow between sections.",
+        "tts_engine": "",
+        "language": "",
+        "options": {},
+        "section_ids": [
+          "music_nerd_intro",
+          "music_nerd_artist_fact",
+          "music_nerd_transition",
+          "music_nerd_smoother"
+        ],
+        "section_order": [
+          {
+            "when": "start_of_playlist",
+            "flow": [
+              {
+                "MUST": "music_nerd_intro"
+              }
+            ]
+          },
+          {
+            "when": "between_songs",
+            "flow": [
+              {
+                "OPTIONAL": {
+                  "section": "music_nerd_artist_fact",
+                  "chance": 1.0,
+                  "guards": {
+                    "min_gap_songs": 2,
+                    "max_per_60min": 0,
+                    "require_placeholders_present": []
+                  }
+                }
+              },
+              {
+                "OPTIONAL": {
+                  "section": "music_nerd_transition",
+                  "chance": 0.2,
+                  "guards": {
+                    "min_gap_songs": 1,
+                    "max_per_60min": 0,
+                    "require_placeholders_present": []
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "merge_section_id": "music_nerd_smoother"
+      },
+      {
+        "id": "party_host",
+        "name": "Party host",
+        "instructions": "Host personality: high-energy, confident party host who keeps the crowd hyped. Program instructions: write for spoken delivery, keep segments concise, avoid bullet-point phrasing, avoid cliches, and maintain a believable, energetic radio flow between sections.",
+        "tts_engine": "",
+        "language": "",
+        "options": {},
+        "section_ids": [
+          "party_host_hype_intro",
+          "party_host_shout_out",
+          "party_host_sign_off",
+          "party_host_smoother"
+        ],
+        "section_order": [
+          {
+            "when": "start_of_playlist",
+            "flow": [
+              {
+                "MUST": "party_host_hype_intro"
+              }
+            ]
+          },
+          {
+            "when": "between_songs",
+            "flow": [
+              {
+                "OPTIONAL": {
+                  "section": "party_host_shout_out",
+                  "chance": 0.6666666666666666,
+                  "guards": {
+                    "min_gap_songs": 3,
+                    "max_per_60min": 0,
+                    "require_placeholders_present": []
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "when": "end_of_playlist",
+            "flow": [
+              {
+                "MUST": "party_host_sign_off"
+              }
+            ]
+          }
+        ],
+        "merge_section_id": "party_host_smoother"
+      }
+    ],
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.10.9. With the AI Radio plugin set up against a stand-in engine: the four hosts a fresh install has."
+}

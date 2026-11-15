@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "97",
+    "command": "music/favorites/set_item",
+    "args": {
+      "item": "filesystem_local--Cu6eBeYR://track/Aurora Tone/First Light (2021)/01 - Dawn Chorus.flac",
+      "favorite": false
+    }
+  },
+  "response": {
+    "message_id": "97",
+    "result": null,
+    "partial": false
+  }
+}

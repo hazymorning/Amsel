@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Welcome -->
+    <string name="setup_welcome">Play music from Music\u00A0Assistant on any speaker in the house</string>
+    <string name="setup_find_server">Find my server</string>
+
+    <!-- Your server -->
+    <string name="setup_server_title">Your server</string>
+    <string name="setup_searching">Looking for Music\u00A0Assistant on your network…</string>
+    <string name="setup_choose">Choose your Music\u00A0Assistant</string>
+    <string name="setup_type_address">Type an address</string>
+    <string name="setup_not_found">Couldn’t find Music\u00A0Assistant on this network</string>
+    <string name="setup_address">Server address</string>
+    <string name="setup_address_example">For example 192.168.1.20</string>
+    <string name="setup_https">Away from home, use an https:// address so the connection is safe.</string>
+    <string name="setup_connect">Connect</string>
+    <string name="setup_connecting">Connecting</string>
+    <string name="setup_error_unreachable">Couldn’t reach Music\u00A0Assistant at that address</string>
+    <string name="setup_finish_setup">Finish setting up Music\u00A0Assistant first</string>
+
+    <!-- Sign in -->
+    <string name="setup_sign_in_home_assistant">Sign in with Home\u00A0Assistant</string>
+    <string name="setup_or">or</string>
+    <string name="setup_username">Username</string>
+    <string name="setup_password">Password</string>
+    <string name="setup_show">Show</string>
+    <string name="setup_hide">Hide</string>
+    <string name="setup_show_password">Show password</string>
+    <string name="setup_hide_password">Hide password</string>
+    <string name="setup_sign_in">Sign in</string>
+    <string name="setup_signing_in">Signing in</string>
+    <string name="setup_error_password">That password didn’t work</string>
+    <string name="setup_error_too_many_attempts">Too many tries. Wait a minute, then try again.</string>
+    <string name="setup_error_account_disabled">This account is turned off in Music\u00A0Assistant</string>
+    <string name="setup_error_sign_in_unreachable">Couldn’t reach Music\u00A0Assistant. Try again.</string>
+    <string name="setup_error_home_assistant">Signing in with Home\u00A0Assistant didn’t finish. Try again.</string>
+
+    <!-- Home Assistant's sign-in page -->
+    <string name="setup_home_assistant" translatable="false">Home\u00A0Assistant</string>
+    <string name="setup_opening_home_assistant">Opening Home\u00A0Assistant…</string>
+    <string name="setup_error_home_assistant_page">Can’t reach Home\u00A0Assistant</string>
+</resources>

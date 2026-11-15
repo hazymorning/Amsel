@@ -1,0 +1,15 @@
+{
+  "request": null,
+  "response": {
+    "event": "playlog_updated",
+    "object_id": "library://playlist/9",
+    "data": {
+      "uri": "library://playlist/9",
+      "media_type": "playlist",
+      "fully_played": true,
+      "seconds_played": 0,
+      "userid": "bqHpRp-xnrXCItYpYsMDM0BClt4UOiioSB9nLwbh5K4"
+    }
+  },
+  "notes": "Server-pushed event; 4 of this type arrived during the recording."
+}

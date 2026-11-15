@@ -1,0 +1,19 @@
+{
+  "request": {
+    "message_id": "1",
+    "command": "auth/providers"
+  },
+  "response": {
+    "message_id": "1",
+    "result": [
+      {
+        "provider_id": "builtin",
+        "provider_type": "builtin",
+        "requires_redirect": false,
+        "supports_remote_app": false
+      }
+    ],
+    "partial": false
+  },
+  "notes": "Unauthenticated: login providers for the sign-in screen."
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home -->
+    <string name="home_no_sections">Noch nichts auf der Startseite</string>
+
+    <!-- Section titles: what a section shows, in plain words -->
+    <string name="home_option_pinned">Angeheftet</string>
+    <string name="home_your_albums">Eigene Alben</string>
+    <string name="home_option_smart_playlists">Intelligente Playlists</string>
+    <string name="home_option_your_playlists">Eigene Playlists</string>
+    <string name="home_option_favorite_playlists">Lieblingsplaylists</string>
+    <string name="home_option_recent_playlists">Zuletzt gehörte Playlists</string>
+    <string name="home_option_new_albums">Neu in der Bibliothek</string>
+    <string name="home_option_new_albums_choice">Neue Alben</string>
+    <string name="home_option_recent_albums">Zuletzt gehörte Alben</string>
+    <string name="home_option_favorite_albums">Lieblingsalben</string>
+    <string name="home_option_random_albums">Zufällige Alben</string>
+    <string name="home_option_top_artists">Meistgehörte Künstler</string>
+    <string name="home_option_favorite_artists">Lieblingskünstler</string>
+    <string name="home_option_recent_artists">Zuletzt gehörte Künstler</string>
+    <string name="home_option_all_stations_choice">Alle Sender</string>
+    <string name="home_option_favorite_stations">Lieblingssender</string>
+    <string name="home_option_recent_stations">Zuletzt gehörte Sender</string>
+    <string name="home_option_new_audiobooks">Neue Hörbücher</string>
+    <string name="home_option_new_episodes">Neue Folgen</string>
+    <string name="home_option_your_podcasts">Eigene Podcasts</string>
+    <string name="home_option_played_here_choice">Zuletzt hier gehört</string>
+    <string name="home_option_speakers">Lautsprecher</string>
+
+    <!-- How a section shows its items -->
+    <string name="home_layout_grid">Raster</string>
+    <string name="home_layout_small">Kleine Cover</string>
+    <string name="home_layout_row">Reihe</string>
+    <string name="home_layout_big">Große Cover</string>
+    <string name="home_layout_list">Liste</string>
+
+    <!-- Editing Home: each section is a sentence; %1$s is what it shows, %2$s how -->
+    <string name="home_edit">Startseite bearbeiten</string>
+    <string name="home_edit_short">Bearbeiten</string>
+    <string name="home_edit_done">Fertig</string>
+    <string name="home_edit_sentence">Zeigt %1$s als %2$s</string>
+    <string name="home_edit_what">Inhalt</string>
+    <string name="home_edit_how">Anzeigen als</string>
+    <string name="home_edit_what_is">Inhalt: %1$s</string>
+    <string name="home_edit_how_is">Anzeigen als: %1$s</string>
+
+    <!-- The sentence's chips: what and how as the sentence says them ("Show your pins as a grid") -->
+    <string name="home_sentence_option_pinned">Angeheftetes</string>
+    <string name="home_sentence_option_everything">zuletzt Gehörtes</string>
+    <string name="home_sentence_option_played_here">hier zuletzt Gehörtes</string>
+    <string name="home_sentence_option_continue_listening">Angefangenes</string>
+    <string name="home_sentence_option_smart_playlists">intelligente Playlists</string>
+    <string name="home_sentence_option_your_playlists">eigene Playlists</string>
+    <string name="home_sentence_option_favorite_playlists">Lieblingsplaylists</string>
+    <string name="home_sentence_option_recent_playlists">zuletzt gehörte Playlists</string>
+    <string name="home_sentence_option_new_albums">neue Alben</string>
+    <string name="home_sentence_option_recent_albums">zuletzt gehörte Alben</string>
+    <string name="home_sentence_option_favorite_albums">Lieblingsalben</string>
+    <string name="home_sentence_option_random_albums">zufällige Alben</string>
+    <string name="home_sentence_option_top_artists">meistgehörte Künstler</string>
+    <string name="home_sentence_option_favorite_artists">Lieblingskünstler</string>
+    <string name="home_sentence_option_recent_artists">zuletzt gehörte Künstler</string>
+    <string name="home_sentence_option_all_stations">alle Sender</string>
+    <string name="home_sentence_option_favorite_stations">Lieblingssender</string>
+    <string name="home_sentence_option_recent_stations">zuletzt gehörte Sender</string>
+    <string name="home_sentence_option_new_audiobooks">neue Hörbücher</string>
+    <string name="home_sentence_option_new_episodes">neue Folgen</string>
+    <string name="home_sentence_option_your_podcasts">eigene Podcasts</string>
+    <string name="home_sentence_option_speakers">die Lautsprecher</string>
+    <string name="home_sentence_layout_grid">Raster</string>
+    <string name="home_sentence_layout_small">kleine Cover</string>
+    <string name="home_sentence_layout_row">Reihe</string>
+    <string name="home_sentence_layout_big">große Cover</string>
+    <string name="home_sentence_layout_list">Liste</string>
+    <string name="home_edit_add_section">Abschnitt hinzufügen</string>
+    <string name="home_section_empty">Hier ist noch nichts</string>
+    <string name="home_section_empty_speakers">Erscheint, wenn ein anderer Lautsprecher spielt oder pausiert</string>
+    <string name="home_section_empty_pinned">Noch nichts angeheftet. Ein Album, eine Playlist, einen Künstler, einen Sender, ein Hörbuch oder einen Podcast lange drücken und „An die Startseite anheften“ wählen.</string>
+
+    <!-- Pins, from any item's ⋮ sheet -->
+    <string name="home_action_pin">An die Startseite anheften</string>
+    <string name="home_action_unpin">Von der Startseite lösen</string>
+    <string name="home_pinned">An die Startseite angeheftet</string>
+    <string name="home_unpinned">Von der Startseite gelöst</string>
+
+    <string name="home_edit_failed">Die Startseite wurde nicht geändert</string>
+    <string name="home_edit_rename">Name des Abschnitts</string>
+    <string name="home_edit_rename_action">Umbenennen</string>
+    <string name="move_earlier">Nach vorne</string>
+    <string name="move_later">Nach hinten</string>
+
+    <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
+    <string name="tip_edit_home">Eine Überschrift lange drücken, um die Startseite zu bearbeiten.</string>
+    <string name="tip_settings">Die Startseite nach unten ziehen, um die Einstellungen zu öffnen.</string>
+    <string name="tip_more">Album, Playlist oder Titel lange drücken für weitere Optionen.</string>
+    <string name="tip_dismiss">Tipp ausblenden</string>
+</resources>

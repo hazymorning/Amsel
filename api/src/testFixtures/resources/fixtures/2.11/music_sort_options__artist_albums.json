@@ -1,0 +1,33 @@
+{
+  "request": {
+    "message_id": "21",
+    "command": "music/sort_options",
+    "args": {
+      "listing": "artist_albums"
+    }
+  },
+  "response": {
+    "message_id": "21",
+    "result": [
+      {
+        "field": "sort_name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "sort_name"
+      },
+      {
+        "field": "name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "name"
+      },
+      {
+        "field": "year",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "year"
+      }
+    ],
+    "partial": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "request": {
+    "message_id": "12",
+    "command": "music/radios/library_items",
+    "args": {
+      "limit": 50,
+      "offset": 0,
+      "order_by": "sort_name"
+    }
+  },
+  "response": {
+    "message_id": "12",
+    "result": [],
+    "partial": false
+  },
+  "notes": "A fresh test server has no radio stations."
+}

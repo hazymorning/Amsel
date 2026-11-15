@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- Whether a newer version exists changes without the code changing: updates are deliberate,
+         and an unchanged commit must not fail when a library elsewhere releases. -->
+    <issue id="NewerVersionAvailable" severity="informational" />
+    <issue id="GradleDependency" severity="informational" />
+    <issue id="AndroidGradlePluginVersion" severity="informational" />
+</lint>

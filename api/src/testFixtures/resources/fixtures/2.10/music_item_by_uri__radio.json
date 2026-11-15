@@ -1,0 +1,87 @@
+{
+  "request": {
+    "message_id": "18",
+    "command": "music/item_by_uri",
+    "args": {
+      "uri": "library://radio/1"
+    }
+  },
+  "response": {
+    "message_id": "18",
+    "result": {
+      "item_id": "1",
+      "provider": "library",
+      "name": "Amsel Test Radio",
+      "version": "",
+      "sort_name": "tailwind",
+      "uri": "library://radio/1",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "radio",
+      "provider_mappings": [
+        {
+          "item_id": "http://127.0.0.1:8777/01%20-%20Tailwind.mp3",
+          "provider_domain": "builtin",
+          "provider_instance": "builtin",
+          "available": true,
+          "in_library": true,
+          "is_unique": null,
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "?",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "mp3",
+            "bit_rate": 49
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "description_language": null,
+        "life_span": null,
+        "artist_entity_type": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "http://127.0.0.1:8777/01%20-%20Tailwind.mp3",
+            "provider": "builtin",
+            "remotely_accessible": false,
+            "proxy_id": "e0afc7da61b7a338b369477bc19eb7d397bca28b97f79a14b4bf2e691c733786"
+          }
+        ],
+        "grouping": null,
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "lrc_lyrics": null,
+        "transcript": null,
+        "transcript_cues": null,
+        "has_transcript": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "collections": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "date_added": "2026-11-01T23:00:15+00:00",
+      "duration": 0,
+      "is_dynamic": false
+    },
+    "partial": false
+  }
+}

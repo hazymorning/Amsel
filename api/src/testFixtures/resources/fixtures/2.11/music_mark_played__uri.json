@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "1046",
+    "command": "music/mark_played",
+    "args": {
+      "media_item": "library://audiobook/1"
+    }
+  },
+  "response": {
+    "message_id": "1046",
+    "error_code": 999,
+    "details": "Value of type <class 'str'> is invalid for media_item, expected value of type music_assistant_models.media_items.media_item.Artist | music_assistant_models.media_items.media_item.Album | music_assistant_models.media_items.media_item.Track | music_assistant_models.media_items.media_item.Radio | music_assistant_models.media_items.media_item.Playlist | music_assistant_models.media_items.media_item.Audiobook | music_assistant_models.media_items.media_item.Podcast | music_assistant_models.media_items.media_item.PodcastEpisode | music_assistant_models.media_items.media_item.SoundEffect | music_assistant_models.media_items.media_item.Genre | music_assistant_models.media_items.media_item.AudioSource | music_assistant_models.media_items.media_item.MediaCollection | music_assistant_models.media_items.media_item.ItemMapping"
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

@@ -1,0 +1,39 @@
+# Releasing
+
+1. Make sure CI is green.
+2. Write `release/NOTES.md`: a heading with the release's name, short (two or three words), from a
+   bird's life, its own and with some character ("Nesting luck"), then 100 to 150 words in plain
+   language under the headings `## New`, `## Better` and `## Fixed` (only those with something in
+   them), one line each: `- **Name:** what it does for the people using the app.`
+3. Set `release/VERSION` to the new version, through the pull request, so it reaches `main`.
+   Versions follow the calendar: the year, the month (3 for March) and a count within the month
+   from 0, `v2026.11.0`, then `v2026.11.1`, `v2026.12.0`. Every version is published as a regular
+   release and marked the latest.
+4. The Release workflow builds the signed APK (the pull request's CI tested that code) and publishes it
+   here, https://github.com/hazymorning/Amsel, as "Nesting luck • 2026.11.0", with the notes as
+   written and the APK as its one file. A name an earlier release already has stops it, and fails
+   the pull request's CI before that (`scripts/release/check-name.sh`). Actions → Release → Run
+   workflow publishes the version in `release/VERSION` if it is not released yet.
+
+Amsel's source is public here, under the GNU General Public License, version 3 (`LICENSE`); the
+app's update check and Obtainium read the releases.
+
+Actions → Cleanup → Run workflow keeps the newest release and deletes the others with their tags,
+every tag no release keeps, every branch but `main` and `signing` (a branch with an open pull
+request stays), the Actions caches, and every workflow run but the newest of each workflow.
+
+## The signing key
+
+The owner sets one repository secret
+(https://github.com/hazymorning/Amsel/settings/secrets/actions/new): `AMSEL_SIGNING_PASSWORD`, a
+long password from a password manager.
+
+The key itself never leaves GitHub and never passes through anyone's hands: the first release
+run here generates it on the runner (PKCS12, RSA 4096, alias `amsel`; keytool accepts only ASCII,
+so the keystore's own password is the SHA-256 hex of the secret), encrypts it with that password
+(AES-256-CBC, PBKDF2 with 600,000 iterations) and pushes the encrypted file to the `signing`
+branch. Every later release decrypts the same key from there, signs, and deletes the decrypted
+copy; an existing `signing` branch refuses a second key. The password is the one thing to keep
+safe; never delete the `signing` branch. Losing either means users must uninstall to get later
+updates, as 2026.11.31 asked once: the key of the private repository's releases could not move,
+its password being lost.

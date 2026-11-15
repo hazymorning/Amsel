@@ -1,0 +1,14 @@
+{
+  "request": {
+    "message_id": "93",
+    "command": "player_queues/stop",
+    "args": {
+      "queue_id": "upac3a0401"
+    }
+  },
+  "response": {
+    "message_id": "93",
+    "result": null,
+    "partial": false
+  }
+}

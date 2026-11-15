@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Now Playing -->
+    <string name="player_position">Position</string>
+    <string name="player_position_of">%1$s von %2$s</string>
+    <string name="player_volume">Lautstärke</string>
+    <string name="player_volume_now">Lautstärke, %1$d\u00A0%%</string>
+    <string name="player_volume_percent">%1$d\u00A0%%</string>
+    <string name="player_volume_still">stumm</string>
+    <string name="player_volume_fixed">Die Lautstärke wird am Lautsprecher eingestellt</string>
+    <string name="player_up_next">Als Nächstes</string>
+    <!-- Above the artwork: where the music comes from (the album) -->
+    <string name="player_from">aus %1$s</string>
+    <string name="endless_mix">Endloser Mix</string>
+    <string name="endless_mix_of">Endloser Mix · %1$s</string>
+    <string name="endless_mix_fixed">Vom endlosen Mix vorgegeben</string>
+    <string name="dj">DJ</string>
+    <string name="dj_on">DJ eingeschaltet</string>
+    <string name="dj_off">DJ ausgeschaltet</string>
+    <string name="dj_gone">Diesen DJ gibt es nicht mehr</string>
+    <!-- In the dock for a moment after the music moves to another speaker -->
+    <string name="player_loading">Lädt…</string>
+
+    <!-- Now Playing for a book or an episode -->
+    <string name="player_previous_chapter">Vorheriges Kapitel</string>
+    <string name="player_next_chapter">Nächstes Kapitel</string>
+    <string name="player_chapters">Kapitel</string>
+    <string name="player_no_chapters_book">Dieses Hörbuch hat keine Kapitel.</string>
+    <string name="player_no_chapters_episode">Diese Folge hat keine Kapitel.</string>
+    <string name="player_chapter_position">Kapitel %1$d von %2$d, %3$s</string>
+
+    <!-- Up next -->
+    <string name="player_now_playing">Läuft gerade</string>
+    <string name="player_up_next_empty">Als Nächstes kommt nichts</string>
+    <string name="player_up_next_loading">„Als Nächstes“ wird geladen</string>
+
+    <!-- Play on -->
+    <string name="player_play_on">Abspielen auf</string>
+    <string name="player_not_playing">Keine Wiedergabe</string>
+    <string name="player_playing">Wiedergabe läuft</string>
+    <string name="player_paused">Pausiert · %1$s</string>
+    <string name="player_resting">Pausiert</string>
+    <!-- Play on asks before music that plays would stop: speaker, what it plays, the person's music -->
+    <string name="player_ask_busy">%1$s spielt gerade „%2$s“. Stattdessen „%3$s“ dort abspielen?</string>
+    <string name="player_ask_busy_unknown">%1$s spielt bereits etwas. Stattdessen „%2$s“ dort abspielen?</string>
+    <string name="player_ask_leaving">%2$s spielt gerade „%1$s“. Mitnehmen?</string>
+    <string name="player_play_there">Dort abspielen</string>
+    <string name="player_show_playing">Zeigen, was dort läuft</string>
+    <string name="player_take_along">Mitnehmen</string>
+    <string name="player_leave_there">Dort lassen</string>
+    <string name="player_not_available">Nicht verfügbar</string>
+    <string name="player_transfer">Wiedergabe übertragen</string>
+
+    <!-- Item actions -->
+    <string name="player_action_play_next">Als Nächstes abspielen</string>
+    <string name="player_action_add_to_up_next">Zu „Als Nächstes“ hinzufügen</string>
+    <string name="player_action_similar_songs">Ähnliche Titel</string>
+    <string name="player_action_add_favorite">Zu Favoriten hinzufügen</string>
+    <string name="player_action_remove_favorite">Aus Favoriten entfernen</string>
+    <string name="add_to_playlist">Zur Playlist hinzufügen</string>
+    <string name="player_action_go_to_artist">Zum Künstler</string>
+    <string name="player_action_go_to_album">Zum Album</string>
+    <string name="player_action_remove_from_up_next">Aus „Als Nächstes“ entfernen</string>
+    <string name="player_action_remove_from_playlist">Aus dieser Playlist entfernen</string>
+    <string name="player_action_mark_finished">Als beendet markieren</string>
+    <string name="player_action_mark_unfinished">Als nicht beendet markieren</string>
+    <string name="player_action_mark_played">Als gehört markieren</string>
+    <string name="player_action_mark_unplayed">Als ungehört markieren</string>
+    <string name="player_action_go_to_author">Zum Autor</string>
+    <string name="player_action_go_to_audiobook">Zum Hörbuch</string>
+    <string name="player_action_go_to_podcast">Zum Podcast</string>
+
+    <!-- Asked before a song leaves a playlist (the one destructive action) -->
+    <string name="player_confirm_remove_from_playlist">„%1$s“ aus %2$s entfernen?</string>
+    <string name="player_confirm_remove_from_this_playlist">„%1$s“ aus dieser Playlist entfernen?</string>
+    <string name="player_confirm_cancel">Abbrechen</string>
+    <string name="player_like">Gefällt mir</string>
+    <string name="player_repeat">Wiederholen</string>
+    <string name="player_repeat_off">Aus</string>
+    <string name="player_repeat_all">Alle</string>
+    <string name="player_repeat_one">Ein Titel</string>
+    <string name="player_volume_down">Leiser</string>
+    <string name="player_volume_up">Lauter</string>
+    <string name="group">Gruppieren</string>
+    <string name="group_count">Gruppe +%1$d</string>
+    <string name="group_with">Gruppe</string>
+    <string name="ungroup_all">Gruppe auflösen</string>
+</resources>

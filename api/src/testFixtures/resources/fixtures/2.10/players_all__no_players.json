@@ -1,0 +1,12 @@
+{
+  "request": {
+    "message_id": "7",
+    "command": "players/all"
+  },
+  "response": {
+    "message_id": "7",
+    "result": [],
+    "partial": false
+  },
+  "notes": "A fresh test server has no speakers at all: no built-in web player exists until a browser or Sendspin client connects."
+}

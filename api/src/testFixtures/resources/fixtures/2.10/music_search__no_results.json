@@ -1,0 +1,25 @@
+{
+  "request": {
+    "message_id": "34",
+    "command": "music/search",
+    "args": {
+      "search_query": "zzzz-no-match",
+      "limit": 5
+    }
+  },
+  "response": {
+    "message_id": "34",
+    "result": {
+      "artists": [],
+      "albums": [],
+      "genres": [],
+      "tracks": [],
+      "playlists": [],
+      "radio": [],
+      "audiobooks": [],
+      "podcasts": [],
+      "sound_effects": []
+    },
+    "partial": false
+  }
+}

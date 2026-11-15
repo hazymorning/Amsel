@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "31",
+    "command": "music/albums/get",
+    "args": {
+      "item_id": "999999",
+      "provider_instance_id_or_domain": "library"
+    }
+  },
+  "response": {
+    "message_id": "31",
+    "error_code": 2,
+    "details": "The requested media item could not be found."
+  }
+}

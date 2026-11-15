@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/info"
+  },
+  "response": {
+    "server_id": "5508030b1ae84af5b964920b731c97ec",
+    "server_version": "2.11.0b7",
+    "schema_version": 99,
+    "min_supported_schema_version": 28,
+    "base_url": "http://172.17.0.4:8095",
+    "homeassistant_addon": false,
+    "onboard_done": true,
+    "name": "Music Assistant (fc0b18d7c220)",
+    "status": "running",
+    "internal_url": "http://172.17.0.4:8095",
+    "external_url": null,
+    "has_remote_access": false,
+    "unsupported_install": false
+  },
+  "notes": "Unauthenticated HTTP endpoint; same payload as the server_info WebSocket message."
+}

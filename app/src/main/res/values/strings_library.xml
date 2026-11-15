@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sort order -->
+    <string name="library_sort_recently_played">Recently played</string>
+    <string name="library_sort_recently_added">Recently added</string>
+    <string name="library_sort_a_to_z">A–Z</string>
+    <string name="library_sort_description">Sorted by %1$s. Change order</string>
+
+    <!-- A–Z scrubber, for TalkBack -->
+    <string name="library_scrubber">Jump to letter</string>
+
+    <!-- States -->
+    <string name="library_loading">Loading your library</string>
+    <string name="library_refresh_failed">Your library couldn’t be refreshed</string>
+    <string name="library_empty_playlists">No playlists yet</string>
+    <string name="library_empty_albums">No albums yet</string>
+    <string name="library_empty_artists">No artists yet</string>
+    <string name="library_empty_audiobooks">No audiobooks yet</string>
+    <string name="library_empty_podcasts">No podcasts yet</string>
+    <string name="library_empty_downloads">Nothing downloaded yet</string>
+</resources>

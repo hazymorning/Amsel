@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android Auto's browse tree; its tabs' names are the ones the app shows too -->
+    <string name="recently_played">Recently played</string>
+    <string name="playlists">Playlists</string>
+    <string name="albums">Albums</string>
+    <string name="artists">Artists</string>
+    <!-- The fourth tab once the library holds audiobooks or podcasts: Artists, Audiobooks, Podcasts -->
+    <string name="library">Library</string>
+    <string name="audiobooks">Audiobooks</string>
+    <string name="podcasts">Podcasts</string>
+    <!-- Recently played's two groups: books and episodes in progress, then music -->
+    <string name="continue_listening">Continue listening</string>
+    <string name="browse_music">Music</string>
+    <!-- Shown in the car while no one is signed in on the phone, with a button that opens Amsel there -->
+    <string name="browse_sign_in">When it’s safe, sign in on your phone</string>
+    <string name="browse_open_app">Open Amsel</string>
+    <string name="browse_not_found">Couldn’t find that in Music\u00A0Assistant</string>
+    <string name="error_too_old">This Music\u00A0Assistant is too old. Update it first.</string>
+
+    <!-- Skips by seconds in a book or an episode: the notification's buttons and Now Playing's -->
+    <plurals name="back_seconds">
+        <item quantity="one">Back %1$d second</item>
+        <item quantity="other">Back %1$d seconds</item>
+    </plurals>
+    <plurals name="forward_seconds">
+        <item quantity="one">Forward %1$d second</item>
+        <item quantity="other">Forward %1$d seconds</item>
+    </plurals>
+
+    <!-- What did not reach a speaker; %1$s is the speaker's name -->
+    <string name="error_speaker_busy">%1$s is still starting the last song. Give it a moment.</string>
+    <string name="error_speaker_unavailable">%1$s isn’t responding</string>
+    <string name="error_not_allowed">Your account can’t do that. Ask whoever runs Music\u00A0Assistant.</string>
+    <string name="error_not_found">That’s no longer available</string>
+    <string name="error_play_failed">That didn’t play</string>
+    <string name="error_nothing_to_mix">There’s not enough here for a mix</string>
+    <string name="error_phone_not_ready">This phone isn’t ready to play yet. Give it a moment.</string>
+    <string name="error_phone_refused">Music\u00A0Assistant won’t play on this phone. Ask whoever runs it.</string>
+    <string name="error_not_connected">Can’t reach Music\u00A0Assistant</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="session_like">Like</string>
+    <string name="session_unlike">Unlike</string>
+    <string name="session_previous">Previous</string>
+    <string name="session_next">Next</string>
+    <string name="download_channel">Downloads</string>
+    <plurals name="download_title">
+        <item quantity="one">Downloading a book or an episode</item>
+        <item quantity="other">Downloading %d books or episodes</item>
+    </plurals>
+    <string name="download_waiting_wifi">Waiting for Wi-Fi</string>
+    <string name="download_waiting_network">Waiting for a connection</string>
+    <string name="download_stop">Stop</string>
+</resources>

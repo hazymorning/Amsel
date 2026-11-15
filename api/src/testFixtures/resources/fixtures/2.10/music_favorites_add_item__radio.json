@@ -1,0 +1,14 @@
+{
+  "request": {
+    "message_id": "19",
+    "command": "music/favorites/add_item",
+    "args": {
+      "item": "library://radio/1"
+    }
+  },
+  "response": {
+    "message_id": "19",
+    "result": null,
+    "partial": false
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "request": {
+    "message_id": "18",
+    "command": "music/sort_options",
+    "args": {
+      "listing": "library_artists"
+    }
+  },
+  "response": {
+    "message_id": "18",
+    "result": [
+      {
+        "field": "sort_name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "sort_name"
+      },
+      {
+        "field": "name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "name"
+      },
+      {
+        "field": "timestamp_added",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "timestamp_added"
+      },
+      {
+        "field": "timestamp_modified",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "timestamp_modified"
+      },
+      {
+        "field": "last_played",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "last_played"
+      },
+      {
+        "field": "play_count",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "play_count"
+      },
+      {
+        "field": "favorite_timestamp",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "favorite_timestamp"
+      },
+      {
+        "field": "random",
+        "supports_direction": false,
+        "default_direction": null,
+        "label_key": "random"
+      },
+      {
+        "field": "random_play_count",
+        "supports_direction": false,
+        "default_direction": null,
+        "label_key": "random_play_count"
+      }
+    ],
+    "partial": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "5",
+    "command": "auth/token/create",
+    "args": {
+      "name": "Amsel fixtures"
+    }
+  },
+  "response": {
+    "message_id": "5",
+    "result": "<redacted-jwt>",
+    "partial": false
+  },
+  "notes": "Long-lived token (1 year, no auto-renew) for the current user."
+}

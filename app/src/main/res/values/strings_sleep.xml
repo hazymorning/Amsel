@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_timer_running">Sleep timer, %1$s left</string>
+    <string name="sleep_off">Off</string>
+    <string name="sleep_turn_off">Turn off</string>
+    <string name="sleep_minutes">%1$d min</string>
+    <string name="sleep_end_of_chapter">End of chapter</string>
+    <string name="sleep_end_of_episode">End of episode</string>
+    <string name="sleep_left">%1$s left</string>
+    <string name="sleep_failed">Couldn’t set the sleep timer</string>
+    <string name="sleep_length">Length</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="bookmark_add">Add bookmark</string>
+    <string name="bookmark_saved">Bookmark · %1$s</string>
+    <string name="bookmark_chapter">Chapter %1$d</string>
+    <string name="bookmark_note_add">Add a note</string>
+    <string name="bookmark_note">Note</string>
+    <string name="bookmark_delete">Delete</string>
+    <string name="bookmark_deleted">Bookmark deleted</string>
+    <string name="bookmarks_empty">No bookmarks yet. The bookmark button on Now Playing keeps your place.</string>
+    <string name="undo">Undo</string>
+</resources>
