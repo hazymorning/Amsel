@@ -99,8 +99,8 @@ fun Artwork(
         ) {
             var failed by remember(art) { mutableStateOf(art == null) }
             if (failed) {
-                if (!name.isNullOrBlank() && initialsOf(name) != null) {
-                    TypeCover(name, kind, side)
+                if (name != null && monogramOf(name) != null) {
+                    TypeCover(name, side)
                 } else {
                     InkGlyph(glyph ?: fallbackIcon(kind), tint = colors.outline, size = fallbackGlyph(side))
                 }

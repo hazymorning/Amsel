@@ -5,17 +5,20 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class TypeCoverTest {
-    @Test fun initialsAreTheFirstLettersOfTheFirstTwoWords() {
-        assertEquals("RT", initialsOf("Road Trip 2026"))
-        assertEquals("D", initialsOf("Dunmore"))
-        assertEquals("AM", initialsOf("anouk meyer"))
-        assertEquals("2M", initialsOf("2026 Mix"))
-        assertEquals("KF", initialsOf("Kestrel & Finch"))
+    @Test fun theMonogramIsTheFirstLetterOrFigureAsACapital() {
+        assertEquals("F", monogramOf("Flitz&Suppe"))
+        assertEquals("4", monogramOf("4AM Radio"))
+        assertEquals("É", monogramOf("élodie"))
+        assertEquals("K", monogramOf("  (kestrel & finch)"))
     }
 
-    @Test fun aNameWithoutLettersHasNoInitials() {
-        assertNull(initialsOf(""))
-        assertNull(initialsOf("  "))
-        assertNull(initialsOf("!!! ..."))
+    @Test fun aLetterWhoseCapitalIsTwoStaysOne() {
+        assertEquals("S", monogramOf("ßtraße"))
+    }
+
+    @Test fun aNameWithoutLettersOrFiguresHasNoMonogram() {
+        assertNull(monogramOf(""))
+        assertNull(monogramOf("  "))
+        assertNull(monogramOf("!!!"))
     }
 }
