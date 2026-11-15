@@ -26,6 +26,7 @@
     <string name="home_option_your_podcasts">Eigene Podcasts</string>
     <string name="home_option_played_here_choice">Zuletzt hier gehört</string>
     <string name="home_option_speakers">Lautsprecher</string>
+    <string name="home_option_search">Suche</string>
 
     <!-- How a section shows its items -->
     <string name="home_layout_grid">Raster</string>
@@ -67,6 +68,7 @@
     <string name="home_sentence_option_new_episodes">neue Folgen</string>
     <string name="home_sentence_option_your_podcasts">eigene Podcasts</string>
     <string name="home_sentence_option_speakers">die Lautsprecher</string>
+    <string name="home_sentence_option_search">das Suchfeld</string>
     <string name="home_sentence_layout_grid">Raster</string>
     <string name="home_sentence_layout_small">kleine Cover</string>
     <string name="home_sentence_layout_row">Reihe</string>

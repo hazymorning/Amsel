@@ -39,6 +39,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
 import io.github.hazymorning.amsel.app.Offer
 import io.github.hazymorning.amsel.ui.components.Dock
+import io.github.hazymorning.amsel.ui.components.DockFade
 import io.github.hazymorning.amsel.ui.components.LocalDockInset
 import io.github.hazymorning.amsel.ui.components.MessageHost
 import io.github.hazymorning.amsel.ui.components.NavBarItem
@@ -132,10 +133,23 @@ fun AppShell(
     val dockInset = remember(density) { derivedStateOf { with(density) { dockHeight.intValue.toDp() } } }
 
     val openPlayer: () -> Unit = { scope.launch { layer.open() } }
-    CompositionLocalProvider(LocalOpenNowPlaying provides openPlayer, LocalNewSearch provides newSearch) {
+    val startSearch: () -> Unit = {
+        tabs.popToRoot(Tab.Search)
+        tab = Tab.Search
+        newSearch++
+    }
+    CompositionLocalProvider(
+        LocalOpenNowPlaying provides openPlayer,
+        LocalNewSearch provides newSearch,
+        LocalStartSearch provides startSearch,
+    ) {
         Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
             CompositionLocalProvider(LocalDockInset provides dockInset) {
                 TabPages(tabs, tab, Modifier.fillMaxSize())
+            }
+            // What scrolls fades out over the dock's edge; Settings' picture stands on that edge, and keeps it.
+            if (stack.lastOrNull() != Route.Settings) {
+                DockFade(Modifier.align(Alignment.BottomCenter).offset { IntOffset(0, -dockHeight.intValue) })
             }
             Dock(
                 nowPlaying = nowPlaying,
@@ -248,6 +262,9 @@ val LocalOpenNowPlaying = staticCompositionLocalOf<() -> Unit> { {} }
 
 /** Counts the searches a shortcut or a link asked for: each one empties Search and brings the keyboard up. */
 val LocalNewSearch = compositionLocalOf { 0 }
+
+/** Goes to Search, emptied, the keyboard up: Home's Search field. */
+val LocalStartSearch = staticCompositionLocalOf<() -> Unit> { {} }
 
 /** How long a Now Playing link waits for the speaker to say what plays. */
 private const val NOW_PLAYING_WAIT_MS = 5_000L

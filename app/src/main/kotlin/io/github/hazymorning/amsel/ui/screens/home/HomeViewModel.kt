@@ -242,8 +242,8 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
         val noPins = option == SectionOption.Pinned && layout.pinned.isEmpty()
         val waitingForIndex = list.isEmpty() && option.indexKind in inputs.firstSyncs
         val ofSpeakers = option == SectionOption.Speakers
-        // Speakers keep no snapshot: their row holds its room until the server names them.
-        val loading = !inputs.offline &&
+        // Speakers keep no snapshot: their row holds its room until the server names them. Search waits for nothing.
+        val loading = !inputs.offline && option != SectionOption.Search &&
             if (ofSpeakers) !inputs.speakers.loaded else !noPins && (cached == null || waitingForIndex)
         // Edit mode shows every pin Home holds, so each can be put in its place.
         val shown = if (editing &&
@@ -292,7 +292,7 @@ data class SectionUi(
     /** The person's own name for it, if they gave one. */
     val title: String? = null,
     /** Its heading shows outside edit mode. */
-    val titled: Boolean = option != SectionOption.Speakers,
+    val titled: Boolean = option != SectionOption.Speakers && option != SectionOption.Search,
     /** Played here: the speaker whose plays it shows, named after its title. */
     val heardOn: SpeakerUi? = null,
     /** Speakers: those it shows; none away from them, which hides it. */
@@ -300,7 +300,7 @@ data class SectionUi(
     /** The speaker music plays on. */
     val inUse: String? = null,
 ) {
-    val isEmpty: Boolean get() = !loading && items.isEmpty() && speakers.isEmpty()
+    val isEmpty: Boolean get() = option != SectionOption.Search && !loading && items.isEmpty() && speakers.isEmpty()
 }
 
 /**
