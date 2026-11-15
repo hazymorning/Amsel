@@ -9,11 +9,9 @@ import android.provider.Settings
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.hazymorning.amsel.BuildConfig
@@ -35,18 +32,15 @@ import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
-import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
-import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
 
 /**
  * Settings in three blocks, as the platforms' own settings set them: the account, the sleep timer and
- * the app, each a rounded block of rows under its name; the licence and the blackbird close the page,
+ * the app, each a rounded block of rows under its name; Amsel's line, the licence and the blackbird close the page,
  * quietly ([PageWithBird]). The version stands under Updates, whose sheet looks for a newer one.
  */
 @Composable
@@ -66,7 +60,7 @@ fun SettingsScreen(
     update: UpdateState = UpdateState.Unknown,
     onLookForUpdatesChange: (Boolean) -> Unit = {},
     onLookForUpdate: () -> Unit = {},
-    onDownloadUpdate: (UpdateState.Available) -> Unit = {},
+    onInstallUpdate: (UpdateState.Available) -> Unit = {},
     downloads: DownloadSettings = DownloadSettings(),
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignIn = { _, _, _ -> null },
@@ -162,10 +156,10 @@ fun SettingsScreen(
                     SettingRow(
                         stringResource(R.string.settings_updates),
                         shape,
-                        subtitle = if (update is UpdateState.Available) {
-                            stringResource(R.string.update_out, update.version)
-                        } else {
-                            stringResource(R.string.settings_version, state.appVersion)
+                        subtitle = when (update) {
+                            is UpdateState.Available -> stringResource(R.string.update_out, update.version)
+                            is UpdateState.Loading -> stringResource(R.string.update_downloading, update.update.version)
+                            else -> stringResource(R.string.settings_version, state.appVersion)
                         },
                         onClick = { choosing = Choice.Updates },
                     )
@@ -195,7 +189,7 @@ fun SettingsScreen(
                     lookAtStart = state.lookForUpdates,
                     onLookAtStart = onLookForUpdatesChange,
                     onLook = onLookForUpdate,
-                    onDownload = onDownloadUpdate,
+                    onInstall = onInstallUpdate,
                 )
 
                 Choice.Downloads -> DownloadsSheetContent(
@@ -219,27 +213,6 @@ fun SettingsScreen(
         }
     }
 }
-
-/** Whose Amsel is, centred under the last block, quiet: what Amsel is, not a setting. */
-@Composable
-private fun LicenceNote() {
-    val style = MaterialTheme.typography.bodyMedium
-    val note = stringResource(R.string.settings_rights)
-    Words(
-        note,
-        style,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        maxLines = 2,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = OverLicence, start = Keyline.Margin, end = Keyline.Margin)
-            .textInk(style),
-    )
-}
-
-/** From the last block to the licence: the page's end stands apart from its settings. */
-private val OverLicence = Space.S16
 
 /** From one block's foot to the next group's name. */
 private val BetweenGroups = Space.S8
@@ -305,7 +278,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         update = update,
         onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
         onLookForUpdate = graph.updates::lookNow,
-        onDownloadUpdate = graph.updates::download,
+        onInstallUpdate = graph.updates::install,
         downloads = DownloadSettings(account, used, last = prefs?.lastAbsAccount()),
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,
         onAbsSignIn = graph.downloading::signIn,

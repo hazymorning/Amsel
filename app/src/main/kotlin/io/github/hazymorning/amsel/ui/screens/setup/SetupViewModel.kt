@@ -236,7 +236,8 @@ class SetupViewModel(
                 }
 
                 is ServerCheck.Failed -> updateServer {
-                    copy(step = ServerStep.Address, address = target.field, connectingTo = null, error = check.error)
+                    val error = check.error.of(target)
+                    copy(step = ServerStep.Address, address = target.field, connectingTo = null, error = error)
                 }
 
                 ServerCheck.NeedsSetup -> {

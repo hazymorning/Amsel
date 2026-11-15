@@ -40,6 +40,6 @@ also while Amsel is closed. Hold Amsel's icon for Search, Now playing and Speake
 ## Updates in Amsel
 
 Settings → Updates looks for a newer version on GitHub, and can do so each time Amsel starts
-(off at first; never in the background). The update downloads in the browser; opening the
-download installs it. Every Amsel release is signed with the same key, so Android refuses an
-update that was not.
+(off at first; never in the background). Install update downloads it in Amsel and opens
+Android's installer on it; the first time, Android asks to let Amsel install apps. Every Amsel
+release is signed with the same key, so Android refuses an update that was not.

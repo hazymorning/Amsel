@@ -3,6 +3,8 @@ package io.github.hazymorning.amsel.journey
 import android.app.Application
 import android.content.ComponentName
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasContentDescription
@@ -47,12 +49,18 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import org.robolectric.shadows.ShadowNetworkCapabilities
 
 /** The app with an in-memory token vault: Robolectric has no Android Keystore. */
 class JourneyApp : AmselApp() {
     // Robolectric runs no App Startup provider, so the process lifecycle never tells the session
     // that the app is in front; the activity under test is.
     override fun onCreate() {
+        // Robolectric's phone is on mobile data, where no plain http leaves it.
+        val connectivity = getSystemService(ConnectivityManager::class.java)
+        val wifi = ShadowNetworkCapabilities.newInstance()
+        shadowOf(wifi).addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+        shadowOf(connectivity).setNetworkCapabilities(requireNotNull(connectivity.activeNetwork), wifi)
         super.onCreate()
         graph.data.session.setForeground(true)
     }

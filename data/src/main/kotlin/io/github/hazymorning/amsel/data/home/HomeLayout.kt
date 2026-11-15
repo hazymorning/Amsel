@@ -94,9 +94,21 @@ enum class SectionLayout(val maxItems: Int) {
     }
 }
 
-/** [title] is the person's own name for the section; null says the option in plain words. */
+/**
+ * [title] is the person's own name for the section; null says the option in plain words. [titled]
+ * shows or hides its heading; null leaves it to the option ([showsTitle]).
+ */
 @Serializable
-data class HomeSection(val id: String, val option: SectionOption, val layout: SectionLayout, val title: String? = null)
+data class HomeSection(
+    val id: String,
+    val option: SectionOption,
+    val layout: SectionLayout,
+    val title: String? = null,
+    val titled: Boolean? = null,
+) {
+    /** Whether its heading shows: as the person set it, else for every option but Speakers, whose cards say what they are. */
+    val showsTitle: Boolean get() = titled ?: (option != SectionOption.Speakers)
+}
 
 /**
  * The person's Home on one server: its sentences in order, as many as they like, and the items
@@ -138,13 +150,16 @@ data class HomeLayout(
     fun moveDown(id: String): HomeLayout = move(id, sections.indexOfFirst { it.id == id } + 1)
 
     /**
-     * A new option brings its own title: a name given to the old one would no longer fit. Speakers
-     * is a shelf and nothing else.
+     * A new option brings its own title, shown or not as that option is: a name given to the old one
+     * would no longer fit. Speakers is a shelf and nothing else.
      */
     fun setOption(id: String, option: SectionOption): HomeLayout = update(id) {
         val layout = if (option == SectionOption.Speakers) SectionLayout.Row else it.layout
-        it.copy(option = option, title = null, layout = layout)
+        it.copy(option = option, title = null, titled = null, layout = layout)
     }
+
+    /** Shows or hides section [id]'s heading. */
+    fun setTitled(id: String, titled: Boolean): HomeLayout = update(id) { it.copy(titled = titled) }
 
     /** Names section [id]; a blank name gives back the option's own. */
     fun setTitle(id: String, title: String?): HomeLayout =

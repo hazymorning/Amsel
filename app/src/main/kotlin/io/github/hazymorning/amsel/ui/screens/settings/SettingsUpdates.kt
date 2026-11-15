@@ -26,7 +26,8 @@ import io.github.hazymorning.amsel.ui.theme.Space
 
 /**
  * Updates, in their own sheet: where Amsel stands, read whole at any type size, the one button that
- * moves it on (look, or download what was found), and whether to look at each start.
+ * moves it on (look, or install what was found, showing how far its download is), and whether to
+ * look at each start.
  */
 @Composable
 internal fun UpdatesSheetContent(
@@ -35,7 +36,7 @@ internal fun UpdatesSheetContent(
     lookAtStart: Boolean,
     onLookAtStart: (Boolean) -> Unit,
     onLook: () -> Unit,
-    onDownload: (UpdateState.Available) -> Unit,
+    onInstall: (UpdateState.Available) -> Unit,
 ) {
     val style = MaterialTheme.typography.bodyLarge
     val sentence = when (state) {
@@ -43,6 +44,7 @@ internal fun UpdatesSheetContent(
         UpdateState.Looking -> stringResource(R.string.updates_looking)
         UpdateState.Newest -> stringResource(R.string.updates_newest, version)
         is UpdateState.Available -> stringResource(R.string.updates_available, state.version)
+        is UpdateState.Loading -> stringResource(R.string.updates_downloading, state.update.version)
         UpdateState.Failed -> stringResource(R.string.updates_failed)
     }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
@@ -62,9 +64,13 @@ internal fun UpdatesSheetContent(
         )
         Spacer(Modifier.height(Space.Group))
         PrimaryButton(
-            stringResource(if (state is UpdateState.Available) R.string.updates_download else R.string.updates_look),
-            onClick = { if (state is UpdateState.Available) onDownload(state) else onLook() },
-            enabled = state != UpdateState.Looking,
+            when (state) {
+                is UpdateState.Available -> stringResource(R.string.updates_install)
+                is UpdateState.Loading -> stringResource(R.string.downloading_percent, (state.share * 100).toInt())
+                else -> stringResource(R.string.updates_look)
+            },
+            onClick = { if (state is UpdateState.Available) onInstall(state) else onLook() },
+            enabled = state != UpdateState.Looking && state !is UpdateState.Loading,
             modifier = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth(),
         )
         Spacer(Modifier.height(Space.Group))

@@ -116,16 +116,26 @@ cached; `m3/MediaSession.java:2846-2865`) fetches it over the cleartext-allowed 
 - **Keep the last snapshot while reconnecting.** An empty timeline removes the notification and
   stops the FGS at once (`m3/MediaNotificationManager.java:197-200`, `:364-376`), and from the
   background it cannot come back. `:data` keeps the last speaker state until the socket is back or
-  the user changes speaker. The socket stays open while the FGS runs; commands wait up to 10 s for it (D7).
+  the user changes speaker. The socket stays open while the speaker plays; commands wait up to 10 s
+  for it (D7). Two minutes without the socket (`Session.stale`), the snapshot rests where it was,
+  not playing: the notification keeps its item, Media3 lets the FGS go 10 min later, and the socket
+  closes 60 s after, unless the app is in front or This phone plays.
 - **Never start the service by hand.** Media3 starts it with `startForegroundService(startSelfIntent)`
   when playback starts (`m3/MediaNotificationManager.java:534`).
 - **No `MediaButtonReceiver`, no resumption.** Media3 treats a manifest receiver as "this app does
   playback resumption" (`m3/MediaSessionLegacyStub.java:203-205`); a stale card for a speaker
   someone else now uses would mislead. `onGetLibraryRoot` answers `ERROR_NOT_SUPPORTED` for
   `params.isRecent`.
-- **Controllers.** The 1.11 default `onConnectAsync` gives trusted controllers all commands and others
-  read access (`m3/MediaSession.java:2284-2298`); SystemUI gets the platform state
-  (`m3/MediaSessionImpl.java:975-978`). Keep the default.
+- **Controllers.** The 1.11 default `onConnectAsync` gives trusted controllers all commands and
+  others read access (`m3/MediaSession.java:2284-2298`); SystemUI gets the platform state
+  (`m3/MediaSessionImpl.java:975-978`). `BrowseTree.onConnectAsync` gives trusted controllers and the
+  car the library, less search, and every player command. Media3 knows the car by package name alone
+  (`isAutoCompanionController`, `isAutomotiveController`), which any app can take where Android Auto
+  or the car's media app is not installed, and which a legacy controller names itself before
+  Android 13 (`ControllerInfo.isPackageNameVerified`). So a car counts when Android trusts it, or
+  when its package is a system app installed under the controller's uid (`Cars`, once per uid).
+  Android Auto from Play on Android 9 is no system app: it counts only while trusted, as an app with
+  notification access is; its signing certificate is not checked.
 - **Manifest** (`:playback`): the two FGS permissions; `<service android:exported="true"
   android:foregroundServiceType="mediaPlayback" tools:ignore="ExportedService">` with actions
   `androidx.media3.session.MediaLibraryService` and `android.media.browse.MediaBrowserService`.
@@ -150,7 +160,9 @@ is in the background stays silent by design. Test with `adb shell cmd audio set-
 `MediaLibrarySession.Callback` (compiled in `BrowseTree.kt`): root → **Recently played, Playlists,
 Albums, Artists** (four tabs; honour `MediaConstants.EXTRAS_KEY_ROOT_CHILDREN_LIMIT`) → library rows
 read live from the server (each read wakes a socket the idle close shut), at most 100 per page → an album or playlist's tracks; an artist's albums. Grid
-for browsable, list for playable (`EXTRAS_KEY_CONTENT_STYLE_BROWSABLE/PLAYABLE`). A track row's
+for browsable, list for playable (`EXTRAS_KEY_CONTENT_STYLE_BROWSABLE/PLAYABLE`). An artist without a
+picture shows the first of the album covers the index keeps for it: the artwork provider serves one
+proxied picture, not the app's two by two. A track row's
 `mediaId` is `"<album or playlist uri>|<track uri>"`, which `handleSetMediaItems` turns into
 `play_media(media=parent, start_item=track)`. `onAddMediaItems` must pass items through: the default
 fails for items without a URI (`m3/MediaSession.java:1958-1966`).

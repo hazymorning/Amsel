@@ -72,6 +72,7 @@ import kotlin.math.roundToInt
 @Composable
 internal fun SectionTitleLine(
     title: String,
+    titled: Boolean,
     renaming: Boolean,
     onRenaming: (Boolean) -> Unit,
     onRename: (String) -> Unit,
@@ -80,7 +81,7 @@ internal fun SectionTitleLine(
 ) {
     val cap = with(LocalDensity.current) { capHeight(MaterialTheme.typography.titleLarge) }
     Row(Modifier.fillMaxWidth().padding(horizontal = Keyline.Margin)) {
-        SectionTitleField(title, renaming, onRenaming, onRename, moves, Modifier.weight(1f))
+        SectionTitleField(title, titled, renaming, onRenaming, onRename, moves, Modifier.weight(1f))
         Spacer(Modifier.width(Space.Sibling))
         Box(Modifier.height(cap), contentAlignment = Alignment.Center) {
             MoreButton(title, onMore, Modifier.overhang(top = Sizes.TouchTarget / 2, bottom = Sizes.TouchTarget / 2))
@@ -98,13 +99,15 @@ internal fun SectionTitleLine(
 @Composable
 private fun SectionTitleField(
     title: String,
+    titled: Boolean,
     renaming: Boolean,
     onRenaming: (Boolean) -> Unit,
     onRename: (String) -> Unit,
     moves: List<CustomAccessibilityAction>,
     modifier: Modifier = Modifier,
 ) {
-    val ink = MaterialTheme.colorScheme.onSurface
+    // A heading Home does not show stands faint here, where it can still be named.
+    val ink = MaterialTheme.colorScheme.run { if (titled) onSurface else outline }
     val style = MaterialTheme.typography.titleLarge.copy(color = ink)
     if (!renaming) {
         val reach = with(LocalDensity.current) { ((Sizes.TouchTarget - capHeight(style)) / 2).coerceAtLeast(0.dp) }

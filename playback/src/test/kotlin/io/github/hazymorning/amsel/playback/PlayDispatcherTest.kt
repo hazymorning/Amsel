@@ -78,7 +78,7 @@ class PlayDispatcherTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val client = MaClient(OkHttpClient(), scope)
         try {
-            client.start(fake.address, "t")
+            client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val seekIn = { queueId: String, place: Place -> soughtIn += queueId to place }
             val dispatcher = PlayDispatcher(

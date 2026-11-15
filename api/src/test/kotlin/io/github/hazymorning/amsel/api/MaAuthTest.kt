@@ -23,7 +23,7 @@ class MaAuthTest {
                 else -> emptyList()
             }
         }.use { fake ->
-            val result = auth.signIn(fake.address, "amsel", "amsel-test-pw", "Pixel 9")
+            val result = auth.signIn(fake.address, fake.serverId, "amsel", "amsel-test-pw", "Pixel 9")
             assertEquals(SignInResult.Success("long-lived"), result)
             val create = fake.received.first { it["command"]!!.jsonPrimitive.content == "auth/token/create" }
             assertEquals("Pixel 9", create["args"]!!.jsonObject["name"]!!.jsonPrimitive.content)
@@ -32,7 +32,8 @@ class MaAuthTest {
 
     @Test fun `wrong password is reported plainly`() = runBlocking {
         FakeMaServer { _, _ -> listOf(FakeMaServer.recorded("2.10", "auth_login__wrong_password")) }.use { fake ->
-            assertEquals(SignInResult.WrongPassword, auth.signIn(fake.address, "amsel", "nope", "Pixel 9"))
+            val result = auth.signIn(fake.address, fake.serverId, "amsel", "nope", "Pixel 9")
+            assertEquals(SignInResult.WrongPassword, result)
         }
     }
 
@@ -48,7 +49,10 @@ class MaAuthTest {
                 ),
             )
         }.use { fake ->
-            assertEquals(SignInResult.TooManyAttempts, auth.signIn(fake.address, "amsel", "right", "Pixel 9"))
+            assertEquals(
+                SignInResult.TooManyAttempts,
+                auth.signIn(fake.address, fake.serverId, "amsel", "right", "Pixel 9"),
+            )
         }
     }
 
@@ -62,7 +66,23 @@ class MaAuthTest {
     }
 
     @Test fun `unreachable server fails without throwing`() = runBlocking {
-        val result = auth.signIn(ServerAddress.parse("127.0.0.1:1")!!, "a", "b", "c")
+        val result = auth.signIn(ServerAddress.parse("127.0.0.1:1")!!, "s1", "a", "b", "c")
         assertTrue(result is SignInResult.Failed)
+    }
+
+    @Test fun `the password goes only to the server that was probed`() = runBlocking {
+        FakeMaServer { _, _ -> listOf(FakeMaServer.recorded("2.10", "auth_login")) }.use { fake ->
+            // Another server now answers where the probed one did: it is told nothing.
+            assertEquals(SignInResult.Failed, auth.signIn(fake.address, "probed", "amsel", "pw", "Pixel 9"))
+            assertEquals(SignInResult.Failed, auth.exchangeToken(fake.address, "probed", "session", "Pixel 9"))
+            assertTrue(fake.received.toString(), fake.received.isEmpty())
+        }
+    }
+
+    @Test fun `who answers is read without sending anything`() = runBlocking {
+        FakeMaServer { _, _ -> emptyList() }.use { fake ->
+            assertEquals(fake.serverId, auth.serverAt(fake.address).serverId)
+            assertTrue(fake.received.isEmpty())
+        }
     }
 }

@@ -21,10 +21,22 @@ import okhttp3.OkHttpClient
  * connects, which every call passes, WebSockets included (OkHttp runs no network interceptor for
  * those). Plain http goes direct: through a proxy the check would see the proxy's address, and the
  * proxy would carry the token on in cleartext. [cleartext] says whether the connection about to
- * open is plain http.
+ * open is plain http. The rule of [plainHttpOnlyWhen] goes on to the new client.
  */
-public fun OkHttpClient.localCleartext(cleartext: () -> Boolean = { true }): OkHttpClient =
-    newBuilder().proxySelector(DirectCleartext(proxySelector)).socketFactory(LocalCleartextSockets(cleartext)).build()
+public fun OkHttpClient.localCleartext(cleartext: () -> Boolean = { true }): OkHttpClient {
+    val permitted = (socketFactory as? PlainHttpRule)?.permitted ?: { true }
+    return newBuilder()
+        .proxySelector(DirectCleartext(proxySelector))
+        .socketFactory(LocalCleartextSockets(cleartext, permitted))
+        .build()
+}
+
+/**
+ * This client with the app's rule for plain http: none leaves the phone while [permitted] says
+ * no, whatever the address. Every client [localCleartext] and [forUrl] make from it keeps the rule.
+ */
+public fun OkHttpClient.plainHttpOnlyWhen(permitted: () -> Boolean): OkHttpClient =
+    newBuilder().socketFactory(PlainHttpRule(permitted)).build()
 
 /** This client for [url] over TLS; for plain http, one that connects only to local addresses. */
 public fun OkHttpClient.forUrl(url: HttpUrl): OkHttpClient = if (url.isHttps) this else localCleartext()
@@ -41,16 +53,9 @@ public fun InetAddress.isLocal(): Boolean = isLoopbackAddress || isLinkLocalAddr
         else -> false
     }
 
-private class LocalCleartextSockets(private val cleartext: () -> Boolean) : SocketFactory() {
-    override fun createSocket(): Socket = object : Socket() {
-        override fun connect(endpoint: SocketAddress, timeout: Int) {
-            val address = (endpoint as? InetSocketAddress)?.address
-            if (cleartext() && address?.isLocal() != true) {
-                throw ConnectException("Plain http only reaches the local network")
-            }
-            super.connect(endpoint, timeout)
-        }
-    }
+/** Sockets as the system makes them; the client carries [permitted] on to those derived from it. */
+private open class PlainHttpRule(val permitted: () -> Boolean) : SocketFactory() {
+    override fun createSocket(): Socket = Socket()
 
     override fun createSocket(host: String, port: Int): Socket =
         createSocket().apply { connect(InetSocketAddress(host, port)) }
@@ -69,6 +74,20 @@ private class LocalCleartextSockets(private val cleartext: () -> Boolean) : Sock
             bind(InetSocketAddress(localAddress, localPort))
             connect(InetSocketAddress(address, port))
         }
+}
+
+private class LocalCleartextSockets(private val cleartext: () -> Boolean, permitted: () -> Boolean) :
+    PlainHttpRule(permitted) {
+    override fun createSocket(): Socket = object : Socket() {
+        override fun connect(endpoint: SocketAddress, timeout: Int) {
+            if (cleartext()) {
+                val address = (endpoint as? InetSocketAddress)?.address
+                if (address?.isLocal() != true) throw ConnectException("Plain http only reaches the local network")
+                if (!permitted()) throw ConnectException("Plain http is not allowed on this network")
+            }
+            super.connect(endpoint, timeout)
+        }
+    }
 }
 
 private class DirectCleartext(private val proxies: ProxySelector) : ProxySelector() {

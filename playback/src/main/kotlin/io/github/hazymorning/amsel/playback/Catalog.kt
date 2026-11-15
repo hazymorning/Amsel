@@ -57,18 +57,21 @@ interface Catalog {
 /**
  * The car's library: live server reads, each list capped by the caller. Each read [wake]s the
  * session, since the car browses with the phone locked and nothing playing. [indexed] says whether
- * the library index holds any of a kind.
+ * the library index holds any of a kind; [covers] gives an artist without a picture the first of
+ * the album covers the index holds for it: one where the app shows four, as the car loads a cover
+ * as one proxied picture.
  */
 class DataCatalog(
     private val api: MaApi,
     private val wake: () -> Unit,
     private val indexed: suspend (MediaType) -> Boolean,
+    private val covers: suspend (uris: List<String>) -> Map<String, String> = { emptyMap() },
 ) : Catalog {
     override suspend fun recent(limit: Int): List<BrowseNode> {
         wake()
         return api.recentlyPlayed(limit, listOf(MediaType.Album, MediaType.Playlist, MediaType.Artist)).map {
             it.node()
-        }
+        }.withCovers()
     }
 
     override suspend fun inProgress(limit: Int): List<BrowseNode> {
@@ -85,7 +88,7 @@ class DataCatalog(
     override suspend fun library(tab: String, offset: Int, limit: Int): List<BrowseNode> {
         val type = MediaType.entries.firstOrNull { it.api == tab } ?: return emptyList()
         wake()
-        return api.libraryItems(type, LibrarySort.AToZ, offset = offset, limit = limit).map { it.node() }
+        return api.libraryItems(type, LibrarySort.AToZ, offset = offset, limit = limit).map { it.node() }.withCovers()
     }
 
     override suspend fun children(parentUri: String, offset: Int, limit: Int): List<BrowseNode> {
@@ -105,6 +108,16 @@ class DataCatalog(
     override suspend fun search(query: String, focus: String?): String? {
         wake()
         return bestMatch(query, focus, api.search(query, limitPerType = SEARCH_LIMIT))?.uri
+    }
+
+    private suspend fun List<BrowseNode>.withCovers(): List<BrowseNode> {
+        val bare = filter { it.cover == null && it.mediaType == MediaType.Artist.api }.map { it.uri }
+        if (bare.isEmpty()) return this
+        val held = covers(bare)
+        return map { node ->
+            val cover = held[node.uri]?.takeIf { node.cover == null } ?: return@map node
+            node.copy(cover = MediaItemImage(proxyId = cover))
+        }
     }
 
     private fun MediaItem.node() = BrowseNode(

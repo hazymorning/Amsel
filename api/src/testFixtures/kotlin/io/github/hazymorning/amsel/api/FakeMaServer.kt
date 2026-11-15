@@ -58,7 +58,7 @@ public fun withFakeApi(
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val client = MaClient(OkHttpClient(), scope)
     try {
-        client.start(fake.address, "token")
+        client.start(fake.address, "token", fake.serverId)
         withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
         block(MaApi(client), fake)
     } finally {
@@ -86,6 +86,9 @@ public class FakeMaServer(
     }
 
     public val address: ServerAddress get() = ServerAddress(server.url("/"))
+
+    /** The id its server info names, which a client must expect to send it a token. */
+    public val serverId: String get() = serverInfo.jsonObject.getValue("server_id").jsonPrimitive.content
 
     /** Pushes an event to every connected client. */
     public fun push(event: JsonObject): Unit = sockets.forEach { it.send(event.toString()) }

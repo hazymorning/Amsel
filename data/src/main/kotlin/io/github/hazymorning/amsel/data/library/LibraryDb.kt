@@ -1,5 +1,6 @@
 package io.github.hazymorning.amsel.data.library
 
+import android.content.Context
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -7,9 +8,11 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.Upsert
+import androidx.room.migration.Migration
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -65,10 +68,13 @@ data class LibraryItemEntity(
      */
     val altUri: String? = null,
     /**
-     * For an artist without a picture: up to four covers of its own albums ([ALBUM_COVERS]), one per
-     * line, newest first and compilations last, which its cover is made of.
+     * For an artist without a picture: up to four album covers ([ALBUM_COVERS]), one per line, which
+     * its cover is made of. Its own albums come first, then those it shares as a later artist, each
+     * newest first and compilations last.
      */
     val albumCovers: String? = null,
+    /** An album's artists after the first ([artistUri]), one uri per line. */
+    val albumArtists: String? = null,
 )
 
 @Entity(tableName = "sync_state")
@@ -140,10 +146,11 @@ interface LibraryDao {
     @Query("SELECT * FROM items")
     fun observeAll(): Flow<List<LibraryItemEntity>>
 
-    /** Every album's first artist and cover, for the covers of artists without a picture. */
+    /** Every album's artists and cover, for the covers of artists without a picture. */
     @Query(
-        "SELECT artistUri, imageProxyId FROM items WHERE mediaType = 'album' AND artistUri IS NOT NULL " +
-            "AND imageProxyId IS NOT NULL ORDER BY compilation, year IS NULL, year DESC, addedRank",
+        "SELECT artistUri, albumArtists, imageProxyId FROM items WHERE mediaType = 'album' " +
+            "AND artistUri IS NOT NULL AND imageProxyId IS NOT NULL " +
+            "ORDER BY compilation, year IS NULL, year DESC, addedRank",
     )
     suspend fun albumCovers(): List<AlbumCover>
 
@@ -153,15 +160,27 @@ interface LibraryDao {
     @Query("SELECT uri FROM items WHERE mediaType = 'artist' AND imageProxyId IS NULL")
     suspend fun artistsWithoutPicture(): List<String>
 
-    /** Gives each artist without a picture the covers of its own albums. */
+    /** Gives each artist without a picture the covers of its own albums, then of those it shares. */
     @Transaction
     suspend fun coverArtists() {
-        val covers = albumCovers().groupBy({ it.artistUri }, { it.imageProxyId })
+        val albums = albumCovers()
+        val own = albums.groupBy({ it.artistUri }, { it.imageProxyId })
+        val shared = albums.flatMap { album -> album.albumArtists?.lines().orEmpty().map { it to album.imageProxyId } }
+            .groupBy({ it.first }, { it.second })
         for (artist in artistsWithoutPicture()) {
-            val own = covers[artist].orEmpty().distinct().take(ALBUM_COVERS)
-            setAlbumCovers(artist, own.joinToString("\n").ifEmpty { null })
+            val covers = (own[artist].orEmpty() + shared[artist].orEmpty()).distinct().take(ALBUM_COVERS)
+            setAlbumCovers(artist, covers.joinToString("\n").ifEmpty { null })
         }
     }
+
+    @Query("SELECT uri, albumCovers FROM items WHERE uri IN (:uris) AND albumCovers IS NOT NULL")
+    suspend fun heldCovers(uris: List<String>): List<HeldCovers>
+
+    /** For each of [uris] that wears its albums' covers, those covers: any number of uris, a few hundred a query. */
+    suspend fun coversOf(uris: Collection<String>): Map<String, List<String>> = uris.distinct()
+        .chunked(URIS_PER_QUERY)
+        .flatMap { heldCovers(it) }
+        .associate { it.uri to it.albumCovers.lines() }
 
     /** The albums whose first artist is [artistUri], for an artist page before the server answers. */
     @Query("SELECT * FROM items WHERE mediaType = 'album' AND artistUri = :artistUri")
@@ -223,14 +242,33 @@ interface LibraryDao {
     suspend fun clearSyncState()
 }
 
-data class AlbumCover(val artistUri: String, val imageProxyId: String)
+data class AlbumCover(val artistUri: String, val albumArtists: String?, val imageProxyId: String)
+
+data class HeldCovers(val uri: String, val albumCovers: String)
 
 /** How many album covers make an artist's cover: two by two. */
 const val ALBUM_COVERS = 4
 
-// The index is a cache: an upgrade drops it (fallbackToDestructiveMigration) and the next
-// connect syncs it again.
-@Database(entities = [LibraryItemEntity::class, SyncStateEntity::class], version = 10, exportSchema = false)
+/** Uris in one `IN`: SQLite on older Android takes at most 999 variables a statement. */
+private const val URIS_PER_QUERY = 500
+
+@Database(entities = [LibraryItemEntity::class, SyncStateEntity::class], version = 11, exportSchema = false)
 abstract class LibraryDb : RoomDatabase() {
     abstract fun dao(): LibraryDao
+}
+
+// The index is a cache: an upgrade without a migration drops it, and the next connect syncs it again.
+internal fun openLibraryDb(context: Context): LibraryDb =
+    Room.databaseBuilder(context, LibraryDb::class.java, "library.db")
+        .addMigrations(MIGRATION_10_11)
+        .fallbackToDestructiveMigration(true)
+        .build()
+
+/**
+ * Adds [LibraryItemEntity.albumArtists]. Only the albums sync again to fill it: dropped, the whole
+ * index would leave the Library empty until every kind had synced.
+ */
+internal val MIGRATION_10_11 = Migration(10, 11) { db ->
+    db.execSQL("ALTER TABLE items ADD COLUMN albumArtists TEXT")
+    db.execSQL("DELETE FROM sync_state WHERE mediaType = 'album'")
 }

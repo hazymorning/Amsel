@@ -86,6 +86,8 @@
     <string name="home_edit_failed">Couldn’t change Home</string>
     <string name="home_edit_rename">Section name</string>
     <string name="home_edit_rename_action">Rename</string>
+    <string name="home_hide_title">Hide title</string>
+    <string name="home_show_title">Show title</string>
     <string name="move_earlier">Move earlier</string>
     <string name="move_later">Move later</string>
 
