@@ -45,7 +45,7 @@ class PlayOnUngroupTest {
         show { PlayOnSheetContent(PlayOnUiState(PlayerSample.speakers, "kitchen", kitchen, alone), onSelect = {}) }
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
         compose.onNodeWithText("Group").performClick()
-        compose.onNodeWithText("Group · Kitchen").assertIsDisplayed()
+        compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
     }
 
     @Test fun aGroupTheSpeakerInUseLeadsNamesItsSizeAndUngroupLetsEveryoneGo() {
@@ -76,7 +76,7 @@ class PlayOnUngroupTest {
         compose.onNodeWithText("Ungroup all").assertIsDisplayed()
         compose.onNodeWithText("Group +2").performClick()
         // The step is the group's, whichever speaker the phone is set to.
-        compose.onNodeWithText("Group · Kitchen").assertIsDisplayed()
+        compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
         compose.onNodeWithText("Bedroom").performClick()
         compose.onNodeWithText("This phone").performClick()
         compose.onNodeWithText("Done").performClick()

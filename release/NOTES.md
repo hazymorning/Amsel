@@ -7,7 +7,7 @@
 ## Better
 
 - **Mini player:** a short shadow lets it sit a little above the page, in place of the fade, and play stands on a round disc.
-- **Play on:** Group is a big button over the first speaker, with Ungroup all under it.
+- **Play on:** Group is a big button over the first speaker, with Ungroup all under it, and its step reads "Group with Kitchen".
 - **Speakers on Home:** each card's name and state have more room, in balance with the cover.
 
 ## Fixed

@@ -52,7 +52,7 @@ internal fun GroupList(
     val before = rememberSaveable(leader.id) { state.group.filter { it.member }.map { it.id } }
     var chosen by rememberSaveable(leader.id) { mutableStateOf(before) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
-        SheetHeader(stringResource(R.string.group_with), name = leader.displayName())
+        SheetHeader(stringResource(R.string.group_with, leader.displayName()))
         Spacer(Modifier.height(Space.HeaderToContent))
         state.group.forEach { choice ->
             val ticked = choice.id in chosen

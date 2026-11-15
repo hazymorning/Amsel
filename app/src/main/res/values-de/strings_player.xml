@@ -83,6 +83,6 @@
     <string name="player_volume_up">Lauter</string>
     <string name="group">Gruppieren</string>
     <string name="group_count">Gruppe +%1$d</string>
-    <string name="group_with">Gruppe</string>
+    <string name="group_with">Gruppe mit %1$s</string>
     <string name="ungroup_all">Gruppe auflösen</string>
 </resources>

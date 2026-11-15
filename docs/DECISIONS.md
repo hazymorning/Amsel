@@ -737,3 +737,4 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-15 | The mini player's play stands on a 44 dp disc of Surface 2, the glyph in ink: a page's play is ink on ink, the dock's a quieter version of it | Owner (play to stand out a bit more); 3 |
 | 2026-11-15 | An artist the server does not describe in time takes its name from its own albums and songs; the page is unavailable only when nothing at all answered, not when the albums had already shown | Owner (pages of artists not yet loaded stayed empty, and were right on the second visit) |
 | 2026-11-15 | A page with a cover washes its head in the cover's muted hue, the tint Now Playing's page uses, easing into the plain page by its actions and scrolling away with them; black-and-white covers leave it plain | Owner (use the covers' colours, calmly); 3 |
+| 2026-11-15 | The group step is titled "Group with Kitchen" / „Gruppe mit Küche“, a phrase, not the name after a dot | Owner |
