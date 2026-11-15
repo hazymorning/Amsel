@@ -173,6 +173,15 @@ interface LibraryDao {
         }
     }
 
+    @Query("SELECT uri, albumCovers FROM items WHERE uri IN (:uris) AND albumCovers IS NOT NULL")
+    suspend fun heldCovers(uris: List<String>): List<HeldCovers>
+
+    /** For each of [uris] that wears its albums' covers, those covers: any number of uris, a few hundred a query. */
+    suspend fun coversOf(uris: Collection<String>): Map<String, List<String>> = uris.distinct()
+        .chunked(URIS_PER_QUERY)
+        .flatMap { heldCovers(it) }
+        .associate { it.uri to it.albumCovers.lines() }
+
     /** The albums whose first artist is [artistUri], for an artist page before the server answers. */
     @Query("SELECT * FROM items WHERE mediaType = 'album' AND artistUri = :artistUri")
     suspend fun albumsBy(artistUri: String): List<LibraryItemEntity>
@@ -235,8 +244,13 @@ interface LibraryDao {
 
 data class AlbumCover(val artistUri: String, val albumArtists: String?, val imageProxyId: String)
 
+data class HeldCovers(val uri: String, val albumCovers: String)
+
 /** How many album covers make an artist's cover: two by two. */
 const val ALBUM_COVERS = 4
+
+/** Uris in one `IN`: SQLite on older Android takes at most 999 variables a statement. */
+private const val URIS_PER_QUERY = 500
 
 @Database(entities = [LibraryItemEntity::class, SyncStateEntity::class], version = 11, exportSchema = false)
 abstract class LibraryDb : RoomDatabase() {

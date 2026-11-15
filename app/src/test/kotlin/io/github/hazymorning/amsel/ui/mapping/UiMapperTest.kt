@@ -3,6 +3,7 @@ package io.github.hazymorning.amsel.ui.mapping
 import io.github.hazymorning.amsel.api.Images
 import io.github.hazymorning.amsel.api.MaJson
 import io.github.hazymorning.amsel.api.MediaItem
+import io.github.hazymorning.amsel.api.MediaItemImage
 import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.api.PlayerMedia
 import io.github.hazymorning.amsel.api.PlayerQueue
@@ -13,6 +14,7 @@ import io.github.hazymorning.amsel.api.fixture
 import io.github.hazymorning.amsel.data.PositionAnchor
 import io.github.hazymorning.amsel.data.QueueState
 import io.github.hazymorning.amsel.data.home.HomeItem
+import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.playback.snapshotOf
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
@@ -101,6 +103,38 @@ class UiMapperTest {
         val episode = MaJson.decodeFromJsonElement(MediaItem.serializer(), pictured)
         assertNull(episode.metadata?.images)
         assertEquals("http://ma.local:8095/imageproxy/harbour", mapper.media(episode).art?.base)
+    }
+
+    @Test fun `an artist without a picture wears four album covers two by two, or the first alone`() {
+        val url = { proxyId: String -> "http://ma.local:8095/imageproxy/$proxyId" }
+        val home = HomeItem("library://artist/3", "artist", "Aurora Tone", covers = listOf("c4", "c3", "c2", "c1"))
+        val four = mapper.media(home).art
+        assertEquals(url("c4"), four?.base)
+        assertEquals(listOf("c4", "c3", "c2", "c1").map(url), four?.quarters?.map { it.base })
+        val row = LibraryItemEntity(
+            uri = home.uri,
+            mediaType = "artist",
+            name = home.name,
+            sortName = "aurora tone",
+            subtitle = null,
+            imageProxyId = null,
+            year = null,
+            favorite = false,
+            addedRank = 0,
+            playedRank = null,
+            isEditable = false,
+            artistUri = null,
+            albumCovers = "c4\nc3\nc2\nc1",
+        )
+        assertEquals(four, mapper.media(row).art)
+
+        val two = mapper.media(home.copy(covers = listOf("c2", "c1"))).art
+        assertEquals(url("c2"), two?.base)
+        assertEquals(emptyList<Any>(), two?.quarters)
+        val own = mapper.media(home.copy(image = MediaItemImage(proxyId = "own"))).art
+        assertEquals(url("own"), own?.base)
+        assertEquals(emptyList<Any>(), own?.quarters)
+        assertEquals(url("own"), mapper.media(row.copy(imageProxyId = "own")).art?.base)
     }
 
     private fun queue(version: String, name: String): PlayerQueue =

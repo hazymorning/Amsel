@@ -11,6 +11,7 @@ import io.github.hazymorning.amsel.data.library.LibraryRepository
 import io.github.hazymorning.amsel.data.withRecordedServer
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
@@ -219,6 +220,34 @@ class SectionSourcesTest {
         assertEquals("play_count", fake.args("music/artists/library_items")["sort_field"]!!.jsonPrimitive.content)
     }
 
+    @Test fun anArtistWithoutAPictureWearsItsAlbumsCoversFromTheIndexInEveryArtistsSection() = withLibrary(
+        overrides = { command, _ ->
+            if (command != "music/artists/library_items") {
+                null
+            } else {
+                val recorded = FakeMaServer.recorded("2.11", "music_artists_library_items")
+                val artists = recorded.getValue("result").jsonArray.map { artist ->
+                    val aurora = artist.jsonObject
+                    if (aurora.getValue("uri").jsonPrimitive.content != AURORA) return@map artist
+                    // The recorded artists all have a picture: this one is a favourite without one.
+                    val metadata = JsonObject(aurora.getValue("metadata").jsonObject - "images")
+                    JsonObject(aurora + ("metadata" to metadata) + ("favorite" to JsonPrimitive(true)))
+                }
+                listOf(JsonObject(recorded + ("result" to JsonArray(artists))))
+            }
+        },
+    ) { sources, _ ->
+        val covers = db.dao().get(AURORA)?.albumCovers?.lines().orEmpty()
+        assertEquals(2, covers.size)
+        // From the index, and the server's lists, whose items take the index's row.
+        for (option in listOf(SectionOption.FavoriteArtists, SectionOption.TopArtists, SectionOption.RecentArtists)) {
+            val aurora = sources.load(option, 13, emptyList(), null).items.single { it.uri == AURORA }
+            assertEquals(option.name, covers, aurora.covers)
+        }
+        val pinned = sources.load(SectionOption.Pinned, 13, listOf(AURORA), null).items.single()
+        assertEquals(covers, pinned.covers)
+    }
+
     @Test fun randomAlbumsGoOnFromTheOnesHomeShows() = withLibrary { sources, _ ->
         val shown = sources.load(SectionOption.RandomAlbums, 2, emptyList(), null)
         val all = sources.load(SectionOption.RandomAlbums, 13, emptyList(), shown).items
@@ -256,5 +285,9 @@ class SectionSourcesTest {
         val items = sources.load(SectionOption.Pinned, 13, pins, SectionItems(listOf(offline))).items
         assertEquals(listOf("Amsel Test Radio", "From Spotify", "Kept While Offline"), items.map { it.name })
         assertEquals("radio", items.first().mediaType)
+    }
+
+    private companion object {
+        const val AURORA = "library://artist/3"
     }
 }

@@ -41,6 +41,8 @@ data class HomeItem(
     val smart: Boolean = false,
     /** A playlist the server fills anew each time it plays. */
     val dynamic: Boolean = false,
+    /** An artist without a picture: its albums' covers from the index, which it wears. */
+    val covers: List<String> = emptyList(),
 )
 
 /**
@@ -205,6 +207,7 @@ internal fun LibraryItemEntity.toHomeItem() = HomeItem(
     fullyPlayed = fullyPlayed == true,
     smart = isSmart,
     dynamic = isDynamic,
+    covers = albumCovers?.lines().orEmpty(),
 )
 
 internal fun MediaItem.toHomeItem() = HomeItem(

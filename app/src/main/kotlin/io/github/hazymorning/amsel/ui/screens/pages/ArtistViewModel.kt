@@ -131,12 +131,19 @@ class ArtistViewModel(
         }
     }
 
-    /** Similar artists: a bonus, so a failure or none leaves the shelf out and says nothing. */
+    /**
+     * Similar artists: a bonus, so a failure or none leaves the shelf out and says nothing. Those
+     * without a picture wear their albums' covers, where the index holds them.
+     */
     private suspend fun similarArtists(artist: Deferred<MediaItem?>) {
         if (similarOffered.firstOrNull { it } != true) return
         val found = orNullOnFailure { source.similarArtists(key) } ?: return
         val similar = found.similarTo(key, artist.await()).map(mapper::media)
-        page.update { it.copy(similar = similar) }
+        val covers = source.albumCovers(similar.filter { it.art == null }.map { it.key })
+        val shown = similar.map { artist ->
+            artist.takeIf { it.art != null } ?: artist.copy(art = mapper.albumsArt(covers[artist.key].orEmpty()))
+        }
+        page.update { it.copy(similar = shown) }
     }
 
     /** Albums from the library index, unless the page already shows them. True when they now come from it. */

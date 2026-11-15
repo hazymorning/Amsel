@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** An artist without a picture is given the covers of its own albums. */
+/** An artist without a picture is given the covers of its own albums, and they are found by its uri. */
 @RunWith(RobolectricTestRunner::class)
 class ArtistCoversTest {
     private val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), LibraryDb::class.java)
@@ -88,6 +88,15 @@ class ArtistCoversTest {
         )
         dao.coverArtists()
         assertEquals("c4\nc3\nc2\nc1", dao.get("library://artist/a")?.albumCovers)
+    }
+
+    @Test fun `the covers of many artists are looked up at once, for those that wear any`() = runTest {
+        dao.upsert(listOf(artist("a"), artist("b", picture = "own"), artist("c"), album("1", "a", "c1", year = 2000)))
+        dao.coverArtists()
+        val unknown = (1..1200).map { "library://artist/x$it" }
+        val asked = unknown + listOf("library://artist/b", "library://artist/c", "library://artist/a")
+        assertEquals(mapOf("library://artist/a" to listOf("c1")), dao.coversOf(asked))
+        assertEquals(emptyMap<String, List<String>>(), dao.coversOf(emptyList()))
     }
 
     private fun artist(id: String, picture: String? = null) = entity("library://artist/$id", "artist", picture)

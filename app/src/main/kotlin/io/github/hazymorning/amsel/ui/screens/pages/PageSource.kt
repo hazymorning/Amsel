@@ -70,6 +70,9 @@ interface PageSource {
 
     /** Keeps what the page of [key] now shows, for the next visit's first paint. */
     suspend fun keep(key: String, page: ShownPage) = Unit
+
+    /** The index's album covers of each of the artists [keys] that has no picture; none it does not hold. */
+    suspend fun albumCovers(keys: List<String>): Map<String, List<String>> = emptyMap()
 }
 
 /** The real [PageSource]: the server, and the library index and the pages last shown for the first paint. */
@@ -128,6 +131,8 @@ class ServerPageSource(
     override suspend fun keep(key: String, page: ShownPage) {
         memory?.write(key, page)
     }
+
+    override suspend fun albumCovers(keys: List<String>): Map<String, List<String>> = library().albumCovers(keys)
 
     private inline fun <T> ids(key: String, load: (id: String, provider: String) -> T): T {
         val uri = requireNotNull(ItemUri.parse(key)) { "Not an item uri: $key" }

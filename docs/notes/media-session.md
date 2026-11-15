@@ -150,7 +150,9 @@ is in the background stays silent by design. Test with `adb shell cmd audio set-
 `MediaLibrarySession.Callback` (compiled in `BrowseTree.kt`): root → **Recently played, Playlists,
 Albums, Artists** (four tabs; honour `MediaConstants.EXTRAS_KEY_ROOT_CHILDREN_LIMIT`) → library rows
 read live from the server (each read wakes a socket the idle close shut), at most 100 per page → an album or playlist's tracks; an artist's albums. Grid
-for browsable, list for playable (`EXTRAS_KEY_CONTENT_STYLE_BROWSABLE/PLAYABLE`). A track row's
+for browsable, list for playable (`EXTRAS_KEY_CONTENT_STYLE_BROWSABLE/PLAYABLE`). An artist without a
+picture shows the first of the album covers the index keeps for it: the artwork provider serves one
+proxied picture, not the app's two by two. A track row's
 `mediaId` is `"<album or playlist uri>|<track uri>"`, which `handleSetMediaItems` turns into
 `play_media(media=parent, start_item=track)`. `onAddMediaItems` must pass items through: the default
 fails for items without a URI (`m3/MediaSession.java:1958-1966`).

@@ -9,6 +9,7 @@ import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.SearchResults
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
+import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import kotlinx.coroutines.CompletableDeferred
@@ -242,6 +243,16 @@ class SearchViewModelTest {
         vm.onQueryChange("motorhed")
         advanceTimeBy(READ_MS + 1)
         assertEquals("Motörhead Live", (vm.state.value.results?.top as TopResult.Item).item.title)
+    }
+
+    @Test fun anArtistTheServerSendsWithoutAPictureWearsTheCoversTheIndexMadeIt() = runTest {
+        val covers = ArtRef("c1", quarters = listOf("c1", "c2", "c3", "c4").map(::ArtRef))
+        val aurora = MediaUi("library://artist/3", MediaKind.Artist, "Aurora Tone", art = covers)
+        server = { SearchResults(artists = listOf(MediaItem("3", "library", "Aurora Tone", aurora.key, "artist"))) }
+        val vm = viewModel(library = flowOf(listOf(aurora, album(1, "Aurora Tone Live"))))
+        vm.onQueryChange("aurora tone")
+        advanceTimeBy(301)
+        assertEquals(covers, (vm.state.value.results?.top as TopResult.Item).item.art)
     }
 
     private fun SearchUiState.topTitle() = (results?.top as? TopResult.Song)?.track?.title

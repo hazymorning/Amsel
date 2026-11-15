@@ -1,8 +1,10 @@
 package io.github.hazymorning.amsel.ui.screens.pages
 
+import io.github.hazymorning.amsel.api.Images
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MediaItem
+import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.app.Messages
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +20,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +33,9 @@ import org.junit.Test
 class ArtistViewModelTest {
     private val messages = Messages(MutableStateFlow(true))
     private val mapper = UiMapper { null }
+
+    /** Draws covers, as the app does once connected. */
+    private val drawn = UiMapper { Images(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
     private val playing = MutableStateFlow<String?>(null)
 
     @Before fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -188,6 +194,18 @@ class ArtistViewModelTest {
         assertEquals(listOf("Cirrus"), state.value.similar.map { it.title })
     }
 
+    @Test fun `similar artists without a picture wear their albums' covers from the index`() = runTest {
+        val source = FakeSource().apply {
+            item = one("music_artists_get")
+            similar = listOf(artist(7, "Cirrus"), artist(8, "Nimbus"))
+            covers = mapOf("library://artist/7" to listOf("c1", "c2", "c3", "c4"))
+        }
+        val vm = ArtistViewModel(ARTIST, source, drawn, playing, messages, flowOf(true))
+        val (cirrus, nimbus) = watch(vm.state).value.similar
+        assertEquals(listOf("c1", "c2", "c3", "c4").map { "$IMAGES/$it" }, cirrus.art?.quarters?.map { it.base })
+        assertNull(nimbus.art)
+    }
+
     @Test fun `similar artists alone do not make a page`() {
         val similar = listOf(mapper.media(artist(7, "Cirrus")))
         val state = ArtistUiState(mapper.media(one("music_artists_get")), similar = similar)
@@ -204,5 +222,9 @@ class ArtistViewModelTest {
         val state = watch(ArtistViewModel(ARTIST, source, mapper, playing, messages).state)
         assertTrue(state.value.showUnavailable)
         assertTrue(state.value.albums.isEmpty())
+    }
+
+    private companion object {
+        const val IMAGES = "http://ma.local:8095/imageproxy"
     }
 }

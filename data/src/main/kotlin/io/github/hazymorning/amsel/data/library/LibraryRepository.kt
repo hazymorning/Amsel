@@ -134,6 +134,9 @@ class LibraryRepository(
     /** The index's albums whose first artist is [artistUri]: an artist page's first paint. */
     suspend fun albumsBy(artistUri: String): List<LibraryItemEntity> = dao.albumsBy(artistUri)
 
+    /** For each of [uris] that is an artist without a picture, the album covers it wears, with no server call. */
+    suspend fun albumCovers(uris: Collection<String>): Map<String, List<String>> = dao.coversOf(uris)
+
     /** Playlists the user can add to, A-Z (built-in smart playlists are not editable). */
     suspend fun editablePlaylists(): List<LibraryItemEntity> = dao.editablePlaylists()
 
