@@ -714,3 +714,9 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-15 | A plain-http Audiobookshelf refused by the home rule says so (Away from home), at once and without a retry that cannot work, instead of "Couldn't reach Audiobookshelf" | Review |
 | 2026-11-15 | A download let go for another sends its place first; Media3's stop that follows is not the new one's, so nothing is saved of it at 0 s | Review (lost place) |
 | 2026-11-15 | German says „Überschrift ausblenden“: „Titel“ in a music app reads as a song | Review |
+| 2026-11-15 | Android's buttons stand on Surface 1 under the bar's band of Surface 2, so the band reads as Amsel's own section and not as one block with them; the gesture handle keeps the band's tone | Owner |
+| 2026-11-15 | Home's speaker cards lie on Surface 1 with ink at 3% over it: a breath lighter than Home's ground at night and a breath darker by day, no new tone | Owner (cards too close to the ground) |
+| 2026-11-15 | The playing ring breathes while music plays: an echo widens from under it and fades, once every 2.8 s; paused or with reduced motion it holds still. It is the one loop beside a spinner | Owner |
+| 2026-11-15 | Ungroup all is a primary button between the margins over the first speaker in Play on, no longer a glyph beside Group | Owner |
+| 2026-11-15 | Until the server names its speakers, Home's Speakers row holds its room with two blank cards, so nothing under it moves when the app opens; offline it holds none | Owner (rows shifting at start) |
+| 2026-11-15 | Home ends 48 above the dock, a section's distance, where other lists keep 32 | Owner |
