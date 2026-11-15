@@ -36,10 +36,14 @@ internal class ProgressSaves(
 
     @Volatile private var failed: Failure? = null
 
+    /** What started playing: a stop Media3 tells of once another item is loaded is not that one's. */
+    private var playingUri: String? = null
+
     /** It started or stopped playing: saves every 10 s from now on, or once now and sent. */
     fun playing(playing: Boolean) {
         ticking?.cancel()
         if (playing) {
+            playingUri = place()?.manifest?.uri
             ticking = scope.launch {
                 var beat = 0
                 while (isActive) {
@@ -47,7 +51,7 @@ internal class ProgressSaves(
                     save(send = ++beat % SEND_EVERY == 0 && !waitsForNetwork())
                 }
             }
-        } else {
+        } else if (place()?.manifest?.uri == playingUri) {
             save(send = true)
         }
     }
@@ -55,6 +59,7 @@ internal class ProgressSaves(
     /** The item was let go: nothing of it is saved any more. */
     fun stop() {
         ticking?.cancel()
+        playingUri = null
     }
 
     /** Keeps the place on the phone, and with [send] sends it to Audiobookshelf. */

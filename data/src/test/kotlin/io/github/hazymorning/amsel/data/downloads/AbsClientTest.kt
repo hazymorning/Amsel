@@ -78,9 +78,9 @@ class AbsClientTest {
         val away = client(reachesHome = { false })
         assertEquals(AbsException.Reason.AwayFromHome, reason { away.signIn(abs.url, "root", "pw") })
         runBlocking { accounts.save(AbsAccount(abs.url, "root"), abs.refreshToken) }
-        assertEquals(AbsException.Reason.Unreachable, reason { away.progress("book1", null) })
-        assertEquals(AbsException.Reason.Unreachable, reason { away.saveProgress("book1", null, 61.5, 200.0, false) })
-        assertEquals(AbsException.Reason.Unreachable, reason { away.file("book1", "1", 0).close() })
+        assertEquals(AbsException.Reason.AwayFromHome, reason { away.progress("book1", null) })
+        assertEquals(AbsException.Reason.AwayFromHome, reason { away.saveProgress("book1", null, 61.5, 200.0, false) })
+        assertEquals(AbsException.Reason.AwayFromHome, reason { away.file("book1", "1", 0).close() })
         assertTrue(abs.requests.toString(), abs.requests.isEmpty())
         // Back home, the same calls go out.
         assertNull(runBlocking { client().progress("book1", null) })

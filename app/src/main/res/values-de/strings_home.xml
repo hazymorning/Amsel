@@ -86,8 +86,8 @@
     <string name="home_edit_failed">Die Startseite wurde nicht geändert</string>
     <string name="home_edit_rename">Name des Abschnitts</string>
     <string name="home_edit_rename_action">Umbenennen</string>
-    <string name="home_hide_title">Titel ausblenden</string>
-    <string name="home_show_title">Titel anzeigen</string>
+    <string name="home_hide_title">Überschrift ausblenden</string>
+    <string name="home_show_title">Überschrift anzeigen</string>
     <string name="move_earlier">Nach vorne</string>
     <string name="move_later">Nach hinten</string>
 

@@ -61,11 +61,12 @@ internal fun UiMapper.newestFirst(albums: List<MediaItem>, except: String? = nul
 
 /**
  * What the page of an artist with no picture, and none in the index, shows for it: the covers of
- * the [albums] it lists, newest first and compilations last, then of its popular [songs].
+ * the [albums] it lists, newest first and compilations last, then of its popular [songs]' albums
+ * (a song's own picture is often its file's copy of the album's, so it would repeat one album).
  */
 internal fun UiMapper.pageCovers(albums: List<MediaItem>, songs: List<MediaItem>): ArtRef? = albumsArt(
     albums.sortedWith(compareBy<MediaItem> { it.isCompilation }.thenByDescending { it.year ?: Int.MIN_VALUE })
-        .mapNotNull { it.cover?.proxyId } + songs.mapNotNull { it.cover?.proxyId },
+        .mapNotNull { it.cover?.proxyId } + songs.mapNotNull { (it.album?.cover ?: it.cover)?.proxyId },
 )
 
 /** The library index's albums in the order [newestFirst] gives the server's: newest first, then by name. */

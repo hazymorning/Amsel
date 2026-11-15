@@ -178,6 +178,15 @@ class HomeScreenTest {
         compose.onNodeWithText("Recently played").assertDoesNotExist()
     }
 
+    @Test fun withEveryTitleHiddenTheFirstKeepsItsOwnSoEditHomeStaysInReach() {
+        val editor = Recorder()
+        val home = HomeSample.home
+        show(home.copy(sections = home.sections.map { it.copy(titled = false) }), editor)
+        compose.onNodeWithText("Smart playlists").assertDoesNotExist()
+        compose.onNodeWithText("Recently played").performTouchInput { longClick() }
+        assertEquals(listOf("start"), editor.calls)
+    }
+
     @Test fun talkBackMovesASectionFromItsTitle() {
         val editor = Recorder()
         show(HomeSample.editing, editor)

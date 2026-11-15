@@ -26,8 +26,17 @@ class ProgressSavesTest {
         durationSec = 36_000.0,
     )
 
-    /** Saves kept on the phone. */
+    private val other = book.copy(uri = "library://audiobook/3", absItemId = "book2", title = "Das dünne Buch")
+
+    /** What is loaded. */
+    private var now: DownloadManifest? = book
+
+    /** Saves kept on the phone, and of what. */
     private var kept = 0
+    private val keptOf = mutableListOf<String>()
+
+    /** Sends to Audiobookshelf, of what. */
+    private val sentOf = mutableListOf<String>()
 
     /** Sends to Audiobookshelf, through or not. */
     private var sent = 0
@@ -38,10 +47,14 @@ class ProgressSavesTest {
     private val saves = ProgressSaves(
         scope,
         network,
-        place = { DownloadPlace(book, LocalProgress(61.5, updatedAt = 0)) },
-        keep = { kept++ },
+        place = { now?.let { DownloadPlace(it, LocalProgress(61.5, updatedAt = 0)) } },
+        keep = {
+            kept++
+            keptOf += it.manifest.uri
+        },
         send = {
             sent++
+            sentOf += it.manifest.uri
             if (unreachable) throw AbsException(AbsException.Reason.Unreachable)
         },
         io = EmptyCoroutineContext,
@@ -61,6 +74,18 @@ class ProgressSavesTest {
         scope.runCurrent()
         assertEquals(61, kept)
         assertEquals(3, sent)
+    }
+
+    @Test fun `a book let go for another keeps and sends its own place, and nothing of the other at 0 s`() {
+        saves.playing(true)
+        // LocalPlayback lets it go with its place, then loads the other; Media3's stop comes after.
+        saves.save(send = true)
+        saves.stop()
+        now = other
+        saves.playing(false)
+        scope.runCurrent()
+        assertEquals(listOf(book.uri), keptOf)
+        assertEquals(listOf(book.uri), sentOf)
     }
 
     @Test fun `after a send fails none goes while it plays until the network changes`() {

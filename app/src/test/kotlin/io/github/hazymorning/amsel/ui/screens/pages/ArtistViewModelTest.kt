@@ -254,6 +254,18 @@ class ArtistViewModelTest {
         assertEquals(emptyList<Any>(), one?.quarters)
     }
 
+    @Test fun `songs count with their album's picture, not their file's copy of it`() = runTest {
+        val songs = list("music_artists_artist_tracks")
+        val source = FakeSource().apply {
+            item = bare
+            tracks = songs
+        }
+        val art = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state).value.artist?.art
+        val albums = songs.mapNotNull { it.album?.cover?.proxyId }.map { "$IMAGES/$it" }.toSet()
+        val shown = art?.quarters?.map { it.base }.orEmpty().ifEmpty { listOfNotNull(art?.base) }
+        assertTrue(shown.isNotEmpty() && shown.all { it in albums })
+    }
+
     @Test fun `its own picture, then the index's covers, come before the page's`() = runTest {
         val source = FakeSource().apply {
             item = one("music_artists_get")

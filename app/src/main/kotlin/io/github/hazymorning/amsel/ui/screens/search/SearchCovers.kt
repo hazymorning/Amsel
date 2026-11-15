@@ -16,5 +16,5 @@ internal fun UiMapper.listed(item: MediaItem, raw: SearchResults, held: Map<Stri
     val shown = media(item)
     if (shown.art != null || shown.kind != MediaKind.Artist) return shown
     val by = (raw.albums + raw.tracks).filter { found -> found.artists.any { it.uri == item.uri } }
-    return shown.copy(art = held[item.uri] ?: albumsArt(by.mapNotNull { it.cover?.proxyId }))
+    return shown.copy(art = held[item.uri] ?: albumsArt(by.mapNotNull { (it.album?.cover ?: it.cover)?.proxyId }))
 }

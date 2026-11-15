@@ -222,7 +222,7 @@ class AbsClient(
     // read on its main thread, where the screens ask from.
     private suspend fun call(base: HttpUrl, request: Request): Response {
         // Away from the household's network a home address may lead to anyone, who would get the token.
-        if (!base.isHttps && !reachesHome()) throw AbsException(AbsException.Reason.Unreachable)
+        if (!base.isHttps && !reachesHome()) throw AbsException(AbsException.Reason.AwayFromHome)
         return try {
             runInterruptible(Dispatchers.IO) { http.forUrl(base).newCall(request).execute() }
         } catch (e: AbsException) {

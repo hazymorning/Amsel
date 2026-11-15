@@ -112,6 +112,11 @@ class LocalPlayback(
                 // A manifest from before file names were checked, naming a file outside its folder.
                 return
             }
+            // What played goes with its place, before the other is loaded over it.
+            if (_now.value != null) {
+                saves.save(send = true)
+                saves.stop()
+            }
             cover = art
             exo.setMediaSource(source)
             exo.prepare()
