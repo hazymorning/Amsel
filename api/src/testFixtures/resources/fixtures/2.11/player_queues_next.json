@@ -1,0 +1,14 @@
+{
+  "request": {
+    "message_id": "82",
+    "command": "player_queues/next",
+    "args": {
+      "queue_id": "upe2a1d83a"
+    }
+  },
+  "response": {
+    "message_id": "82",
+    "result": null,
+    "partial": false
+  }
+}

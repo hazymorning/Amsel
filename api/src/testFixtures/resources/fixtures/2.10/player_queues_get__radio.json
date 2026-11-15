@@ -1,0 +1,217 @@
+{
+  "request": {
+    "message_id": "23",
+    "command": "player_queues/get",
+    "args": {
+      "queue_id": "up809bcbfa"
+    }
+  },
+  "response": {
+    "message_id": "23",
+    "result": {
+      "queue_id": "up809bcbfa",
+      "active": true,
+      "display_name": "Kitchen",
+      "available": true,
+      "items": 1,
+      "shuffle_enabled": false,
+      "repeat_mode": "off",
+      "crossfade_enabled": false,
+      "autoplay_enabled": false,
+      "overlay_enabled": false,
+      "overlay_source": null,
+      "overlay_volume": 100,
+      "smart_fades_active": false,
+      "smart_shuffle_active": false,
+      "current_index": 0,
+      "index_in_buffer": 0,
+      "ended": false,
+      "elapsed_time": 2.912294626235962,
+      "elapsed_time_last_updated": 1793574018.3731577,
+      "playback_speed": 1.0,
+      "state": "playing",
+      "current_item": {
+        "queue_id": "up809bcbfa",
+        "queue_item_id": "e932824659354a5dbeef6550acd3a07b",
+        "name": "Amsel Test Radio",
+        "duration": null,
+        "sort_index": 0,
+        "streamdetails": {
+          "provider": "builtin",
+          "item_id": "http://127.0.0.1:8777/01%20-%20Tailwind.mp3",
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "mp3",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "mp3",
+            "bit_rate": 48
+          },
+          "media_type": "track",
+          "stream_type": "http",
+          "duration": 14,
+          "size": null,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "low",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": {
+                "mode": "dynamic",
+                "measurement_source": "live",
+                "target_lufs": -14.0,
+                "measured_lufs": null,
+                "applied_gain_db": null
+              },
+              "playback_speed": 1.0,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "up809bcbfa"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "low",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": null,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "dynamic",
+          "volume_normalization_gain_correct": null,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "1",
+          "provider": "library",
+          "name": "Amsel Test Radio",
+          "version": "",
+          "sort_name": "tailwind",
+          "uri": "library://radio/1",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "radio",
+          "provider_mappings": [
+            {
+              "item_id": "http://127.0.0.1:8777/01%20-%20Tailwind.mp3",
+              "provider_domain": "builtin",
+              "provider_instance": "builtin",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "?",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "mp3",
+                "bit_rate": 49
+              },
+              "url": null,
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "http://127.0.0.1:8777/01%20-%20Tailwind.mp3",
+                "provider": "builtin",
+                "remotely_accessible": false,
+                "proxy_id": "e0afc7da61b7a338b369477bc19eb7d397bca28b97f79a14b4bf2e691c733786"
+              }
+            ],
+            "grouping": null,
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": true,
+          "position": null,
+          "date_added": "2026-11-01T23:00:15+00:00",
+          "duration": 0,
+          "is_dynamic": false
+        },
+        "image": {
+          "type": "thumb",
+          "path": "http://127.0.0.1:8777/01%20-%20Tailwind.mp3",
+          "provider": "builtin",
+          "remotely_accessible": false,
+          "proxy_id": "e0afc7da61b7a338b369477bc19eb7d397bca28b97f79a14b4bf2e691c733786"
+        },
+        "index": 0,
+        "available": true,
+        "extra_attributes": {}
+      },
+      "next_item": null,
+      "sources": [],
+      "flow_mode": false,
+      "resume_pos": 0,
+      "is_dynamic": false,
+      "extra_attributes": {
+        "play_action_in_progress": false
+      },
+      "dont_stop_the_music_enabled": false,
+      "radio_source": []
+    },
+    "partial": false
+  }
+}

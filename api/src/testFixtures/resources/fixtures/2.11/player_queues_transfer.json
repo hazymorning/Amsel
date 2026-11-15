@@ -1,0 +1,17 @@
+{
+  "request": {
+    "message_id": "86",
+    "command": "player_queues/transfer",
+    "args": {
+      "source_queue_id": "upe2a1d83a",
+      "target_queue_id": "upac3a0401",
+      "auto_play": true
+    }
+  },
+  "response": {
+    "message_id": "86",
+    "result": null,
+    "partial": false
+  },
+  "notes": "'Play on': moves the queue (items and position) to another speaker."
+}

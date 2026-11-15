@@ -1,0 +1,121 @@
+{
+  "request": {
+    "message_id": "1009",
+    "command": "music/audiobooks/get",
+    "args": {
+      "item_id": "1",
+      "provider_instance_id_or_domain": "library"
+    }
+  },
+  "response": {
+    "message_id": "1009",
+    "result": {
+      "item_id": "1",
+      "provider": "library",
+      "name": "Single File Tale",
+      "version": "",
+      "sort_name": "single file tale",
+      "uri": "library://audiobook/1",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "Ada Quill/Single File Tale/Single File Tale.m4b",
+          "provider_domain": "filesystem_local",
+          "provider_instance": "filesystem_local--c2U5hPyj",
+          "available": true,
+          "in_library": true,
+          "is_unique": null,
+          "audio_format": {
+            "content_type": "m4b",
+            "codec_type": "aac",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "m4b",
+            "bit_rate": 33
+          },
+          "url": null,
+          "details": "1793645846"
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "description_language": null,
+        "life_span": null,
+        "artist_entity_type": null,
+        "review": null,
+        "explicit": null,
+        "images": null,
+        "grouping": null,
+        "genres": [
+          "Spoken Word"
+        ],
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "lrc_lyrics": null,
+        "transcript": null,
+        "transcript_cues": null,
+        "has_transcript": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 0,
+            "name": "Opening",
+            "start": 0.0,
+            "end": 40.0
+          },
+          {
+            "position": 1,
+            "name": "Middle",
+            "start": 40.0,
+            "end": 80.0
+          },
+          {
+            "position": 2,
+            "name": "Ending",
+            "start": 80.0,
+            "end": 120.0
+          }
+        ],
+        "collections": [],
+        "last_refresh": null,
+        "last_musicbrainz_lookup": null
+      },
+      "favorite": null,
+      "position": null,
+      "date_added": "2026-11-02T18:58:07+00:00",
+      "publisher": null,
+      "authors": [
+        {
+          "item_id": "1",
+          "provider": "library",
+          "name": "Ada Quill",
+          "version": "",
+          "sort_name": "ada quill",
+          "uri": "library://artist/1",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "artist",
+          "available": true,
+          "image": null,
+          "year": null
+        }
+      ],
+      "narrators": [],
+      "duration": 120,
+      "fully_played": null,
+      "resume_position_ms": null
+    }
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

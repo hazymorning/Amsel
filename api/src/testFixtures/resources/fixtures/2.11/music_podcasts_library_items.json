@@ -1,0 +1,50 @@
+{
+  "request": {
+    "message_id": "1010",
+    "command": "music/podcasts/library_items",
+    "args": {
+      "limit": 50
+    }
+  },
+  "response": {
+    "message_id": "1010",
+    "result": [
+      {
+        "item_id": "1",
+        "provider": "library",
+        "name": "Harbour Talk",
+        "version": "",
+        "sort_name": "harbour talk",
+        "uri": "library://podcast/1",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "podcast",
+        "provider_mappings": [
+          {
+            "item_id": "Harbour Talk",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--WYyt72c4",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": "21d6fda490c5470358ba111d22877b12140b4371e633ce4010cfb1f2886d1072"
+          }
+        ],
+        "metadata": {},
+        "total_episodes": 0,
+        "available": true
+      }
+    ]
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

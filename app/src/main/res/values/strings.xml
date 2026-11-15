@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Amsel</string>
+    <string name="music_assistant" translatable="false">Music Assistant</string>
+
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_search">Search</string>
+
+    <!-- Shared -->
+    <string name="see_all">See all</string>
+    <string name="more_options_for">More options for %1$s</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <!-- On the bar that offers to play what was tapped: its speaker line, for TalkBack -->
+    <string name="offer_pick_speaker">Choose a speaker</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="retry">Retry</string>
+    <string name="refresh">Refresh</string>
+    <string name="refreshing">Refreshing</string>
+    <string name="open_now_playing">Open now playing</string>
+    <string name="speaker_button_description">Speaker: %1$s. Choose speaker</string>
+    <string name="speaker_button_playing">Speaker: %1$s, playing. Choose speaker</string>
+    <!-- Launcher shortcuts, held on the app icon -->
+    <string name="shortcut_speakers">Speakers</string>
+    <string name="shortcut_choose_speaker">Choose speaker</string>
+    <string name="radio">Radio</string>
+    <!-- What an item is: the line under its name where the server gives none, and before a top result's -->
+    <string name="kind_song">Song</string>
+    <string name="kind_album">Album</string>
+    <string name="kind_artist">Artist</string>
+    <string name="kind_playlist">Playlist</string>
+    <string name="kind_audiobook">Audiobook</string>
+    <string name="kind_podcast">Podcast</string>
+    <string name="kind_episode">Episode</string>
+    <string name="this_phone">This phone</string>
+    <string name="loading">Loading</string>
+    <string name="add_music">Add music in Music\u00A0Assistant</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="remove">Remove</string>
+    <string name="no_editable_playlists">You have no playlists to add to yet. Make one in Music\u00A0Assistant.</string>
+    <string name="open_music_assistant">Open Music\u00A0Assistant</string>
+
+    <!-- Messages: plain sentences, never a code; one sentence takes no full stop. -->
+    <string name="error_move_failed">Couldn’t move the music to %1$s</string>
+    <string name="error_select_failed">Couldn’t switch to %1$s</string>
+    <string name="error_no_browser">No browser to open Music\u00A0Assistant in</string>
+    <string name="added_to_playlist">Added to %1$s</string>
+
+    <!-- Hints over the dock, right after something happened: a line under a title, and the button -->
+    <string name="hint_liked_into">Add to %1$s as well?</string>
+    <string name="hint_liked_playlist">Add to a playlist as well?</string>
+    <string name="hint_add">Add</string>
+    <string name="hint_choose">Choose</string>
+    <string name="hint_unliked">%1$s is no longer a favourite</string>
+    <string name="hint_added">Added</string>
+    <string name="hint_open">Open</string>
+    <string name="hint_unreachable">Can\'t be reached</string>
+    <string name="hint_play_here">Play here</string>
+    <string name="hint_silent">Is silent</string>
+    <string name="hint_louder">Louder</string>
+    <string name="hint_sleep">Set a sleep timer?</string>
+    <string name="hint_sleep_minutes">%1$d min</string>
+    <string name="hint_away">Still playing on %1$s</string>
+    <string name="hint_home">Continue on %1$s?</string>
+    <string name="hint_headphones">Headphones connected</string>
+    <string name="hint_ended">Everything played. More like this?</string>
+    <string name="hint_go_on">Keep going</string>
+    <string name="update">Update</string>
+    <string name="update_out">Amsel %1$s is out</string>
+    <string name="update_title" translatable="false">Amsel %1$s</string>
+    <string name="update_downloading">Amsel %1$s is downloading: tap its notification to install it</string>
+    <string name="error_no_browser_update">No browser to download the update in</string>
+</resources>

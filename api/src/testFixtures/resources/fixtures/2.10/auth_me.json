@@ -1,0 +1,22 @@
+{
+  "request": {
+    "message_id": "3",
+    "command": "auth/me"
+  },
+  "response": {
+    "message_id": "3",
+    "result": {
+      "user_id": "u3PXw06IO6NYrt6ZfyEFQTyiPFJM2TKC9BC6MJwLy1A",
+      "username": "amsel",
+      "role": "admin",
+      "enabled": true,
+      "created_at": "2026-11-01T19:17:02.961331+00:00",
+      "display_name": null,
+      "avatar_url": null,
+      "preferences": {},
+      "provider_filter": [],
+      "player_filter": []
+    },
+    "partial": false
+  }
+}

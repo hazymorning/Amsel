@@ -1,0 +1,83 @@
+{
+  "request": {
+    "message_id": "1012",
+    "command": "music/podcasts/get",
+    "args": {
+      "item_id": "1",
+      "provider_instance_id_or_domain": "library"
+    }
+  },
+  "response": {
+    "message_id": "1012",
+    "result": {
+      "item_id": "1",
+      "provider": "library",
+      "name": "Harbour Talk",
+      "version": "",
+      "sort_name": "harbour talk",
+      "uri": "library://podcast/1",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "podcast",
+      "provider_mappings": [
+        {
+          "item_id": "Harbour Talk",
+          "provider_domain": "filesystem_local",
+          "provider_instance": "filesystem_local--WYyt72c4",
+          "available": true,
+          "in_library": true,
+          "is_unique": null,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": "21d6fda490c5470358ba111d22877b12140b4371e633ce4010cfb1f2886d1072"
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "description_language": null,
+        "life_span": null,
+        "artist_entity_type": null,
+        "review": null,
+        "explicit": null,
+        "images": null,
+        "grouping": null,
+        "genres": [
+          "Spoken Word"
+        ],
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "lrc_lyrics": null,
+        "transcript": null,
+        "transcript_cues": null,
+        "has_transcript": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "collections": null,
+        "last_refresh": null,
+        "last_musicbrainz_lookup": null
+      },
+      "favorite": null,
+      "position": null,
+      "date_added": "2026-11-02T18:58:07+00:00",
+      "publisher": null,
+      "total_episodes": 0
+    }
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

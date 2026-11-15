@@ -1,0 +1,16 @@
+{
+  "request": {
+    "message_id": "10",
+    "command": "ai_radio/queue_dj/set",
+    "args": {
+      "queue_id": "upb1c50d43",
+      "host_id": null
+    }
+  },
+  "response": {
+    "message_id": "10",
+    "result": {},
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.10.9. Off: host_id null."
+}

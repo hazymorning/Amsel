@@ -1,0 +1,16 @@
+{
+  "request": {
+    "message_id": "91",
+    "command": "player_queues/play_media",
+    "args": {
+      "queue_id": "upe2a1d83a",
+      "media": "library://playlist/9",
+      "option": "replace"
+    }
+  },
+  "response": {
+    "message_id": "91",
+    "result": null,
+    "partial": false
+  }
+}

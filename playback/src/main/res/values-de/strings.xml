@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recently_played">Zuletzt gehört</string>
+    <string name="playlists">Playlists</string>
+    <string name="albums">Alben</string>
+    <string name="artists">Künstler</string>
+    <string name="library">Bibliothek</string>
+    <string name="audiobooks">Hörbücher</string>
+    <string name="podcasts">Podcasts</string>
+    <string name="continue_listening">Weiterhören</string>
+    <string name="browse_music">Musik</string>
+    <string name="browse_sign_in">Wenn es sicher ist, auf dem Handy anmelden</string>
+    <string name="browse_open_app">Amsel öffnen</string>
+    <string name="browse_not_found">Das wurde in Music\u00A0Assistant nicht gefunden</string>
+    <string name="error_too_old">Dieser Music\u00A0Assistant ist zu\u00A0alt. Bitte zuerst aktualisieren.</string>
+
+    <!-- The notification's buttons for a book or an episode -->
+    <plurals name="back_seconds">
+        <item quantity="one">%1$d Sekunde zurück</item>
+        <item quantity="other">%1$d Sekunden zurück</item>
+    </plurals>
+    <plurals name="forward_seconds">
+        <item quantity="one">%1$d Sekunde vor</item>
+        <item quantity="other">%1$d Sekunden vor</item>
+    </plurals>
+
+    <string name="error_speaker_busy">%1$s startet noch den letzten Titel. Bitte kurz warten.</string>
+    <string name="error_speaker_unavailable">%1$s reagiert nicht</string>
+    <string name="error_not_allowed">Mit diesem Konto geht das nicht. Wer Music\u00A0Assistant betreut, kann das ändern.</string>
+    <string name="error_not_found">Das ist nicht mehr verfügbar</string>
+    <string name="error_play_failed">Die Wiedergabe ist fehlgeschlagen</string>
+    <string name="error_nothing_to_mix">Das reicht nicht für einen Mix</string>
+    <string name="error_phone_not_ready">Dieses Handy ist noch nicht bereit. Bitte kurz warten.</string>
+    <string name="error_phone_refused">Music\u00A0Assistant spielt nicht auf diesem Handy. Wer Music\u00A0Assistant betreut, kann das ändern.</string>
+    <string name="error_not_connected">Music\u00A0Assistant ist nicht erreichbar</string>
+    <string name="error_generic">Etwas ist schiefgelaufen</string>
+    <string name="session_like">Gefällt mir</string>
+    <string name="session_unlike">Gefällt mir nicht mehr</string>
+    <string name="session_previous">Vorheriges</string>
+    <string name="session_next">Nächstes</string>
+    <string name="download_channel">Downloads</string>
+    <plurals name="download_title">
+        <item quantity="one">Ein Hörbuch oder eine Folge wird heruntergeladen</item>
+        <item quantity="other">%d Hörbücher oder Folgen werden heruntergeladen</item>
+    </plurals>
+    <string name="download_waiting_wifi">Wartet auf WLAN</string>
+    <string name="download_waiting_network">Wartet auf eine Verbindung</string>
+    <string name="download_stop">Abbrechen</string>
+</resources>

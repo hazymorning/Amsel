@@ -1,0 +1,15 @@
+{
+  "request": null,
+  "response": {
+    "event": "playlog_updated",
+    "object_id": "library://track/10",
+    "data": {
+      "uri": "library://track/10",
+      "media_type": "track",
+      "fully_played": false,
+      "seconds_played": 5,
+      "userid": "u3PXw06IO6NYrt6ZfyEFQTyiPFJM2TKC9BC6MJwLy1A"
+    }
+  },
+  "notes": "Server-pushed event; 5 of this type arrived during the recording."
+}

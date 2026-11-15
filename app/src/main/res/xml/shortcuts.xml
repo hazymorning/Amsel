@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Held on the launcher icon, and pinned to the home screen from there. Each opens the link it
+     names (Opening), which a widget can open too. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:icon="@drawable/shortcut_search"
+        android:shortcutId="search"
+        android:shortcutLongLabel="@string/tab_search"
+        android:shortcutShortLabel="@string/tab_search">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="amsel://search"
+            android:targetClass="io.github.hazymorning.amsel.MainActivity"
+            android:targetPackage="io.github.hazymorning.amsel" />
+    </shortcut>
+    <shortcut
+        android:icon="@drawable/shortcut_now_playing"
+        android:shortcutId="now-playing"
+        android:shortcutLongLabel="@string/player_now_playing"
+        android:shortcutShortLabel="@string/player_now_playing">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="amsel://now-playing"
+            android:targetClass="io.github.hazymorning.amsel.MainActivity"
+            android:targetPackage="io.github.hazymorning.amsel" />
+    </shortcut>
+    <shortcut
+        android:icon="@drawable/shortcut_speakers"
+        android:shortcutId="speakers"
+        android:shortcutLongLabel="@string/shortcut_choose_speaker"
+        android:shortcutShortLabel="@string/shortcut_speakers">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="amsel://speakers"
+            android:targetClass="io.github.hazymorning.amsel.MainActivity"
+            android:targetPackage="io.github.hazymorning.amsel" />
+    </shortcut>
+</shortcuts>

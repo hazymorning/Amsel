@@ -1,0 +1,14 @@
+{
+  "request": {
+    "message_id": "9",
+    "command": "ai_radio/queue_dj/status"
+  },
+  "response": {
+    "message_id": "9",
+    "result": {
+      "upb1c50d43": "music_nerd"
+    },
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.10.9. Kitchen has a DJ."
+}

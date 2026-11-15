@@ -1,0 +1,11 @@
+{
+  "request": {
+    "message_id": "14",
+    "command": "music/albums/count"
+  },
+  "response": {
+    "message_id": "14",
+    "result": 4,
+    "partial": false
+  }
+}

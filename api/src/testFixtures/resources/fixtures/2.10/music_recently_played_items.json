@@ -1,0 +1,41 @@
+{
+  "request": {
+    "message_id": "87",
+    "command": "music/recently_played_items",
+    "args": {
+      "limit": 6,
+      "media_types": [
+        "album",
+        "playlist",
+        "artist"
+      ]
+    }
+  },
+  "response": {
+    "message_id": "87",
+    "result": [
+      {
+        "item_id": "9",
+        "provider": "library",
+        "name": "Amsel Mix",
+        "version": "",
+        "sort_name": "amsel mix",
+        "uri": "library://playlist/9",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "available": true,
+        "image": {
+          "type": "thumb",
+          "path": "/data/playlist_metadata_images/9_1793560654_thumb.jpg",
+          "provider": "playlist_metadata",
+          "remotely_accessible": false,
+          "proxy_id": "a5e05e1c973c37e7b305d19c5495a35c374b4e058a19f2ec8a73aaaecbc899cc"
+        },
+        "year": null
+      }
+    ],
+    "partial": false
+  },
+  "notes": "fully_played_only defaults to true: an album started a few seconds ago is not listed."
+}

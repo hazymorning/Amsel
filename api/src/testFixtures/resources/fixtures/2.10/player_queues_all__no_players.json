@@ -1,0 +1,11 @@
+{
+  "request": {
+    "message_id": "8",
+    "command": "player_queues/all"
+  },
+  "response": {
+    "message_id": "8",
+    "result": [],
+    "partial": false
+  }
+}

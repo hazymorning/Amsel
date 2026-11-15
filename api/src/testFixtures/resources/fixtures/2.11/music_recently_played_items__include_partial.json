@@ -1,0 +1,35 @@
+{
+  "request": {
+    "message_id": "95",
+    "command": "music/recently_played_items",
+    "args": {
+      "limit": 6,
+      "media_types": [
+        "album",
+        "playlist",
+        "artist"
+      ],
+      "fully_played_only": false
+    }
+  },
+  "response": {
+    "message_id": "95",
+    "result": [
+      {
+        "item_id": "9",
+        "provider": "library",
+        "name": "Amsel Mix",
+        "version": "",
+        "sort_name": "amsel mix",
+        "uri": "library://playlist/9",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "available": true,
+        "image": null,
+        "year": null
+      }
+    ],
+    "partial": false
+  }
+}

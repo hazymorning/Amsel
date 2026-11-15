@@ -1,0 +1,14 @@
+{
+  "request": {
+    "message_id": "25",
+    "command": "player_queues/stop",
+    "args": {
+      "queue_id": "up809bcbfa"
+    }
+  },
+  "response": {
+    "message_id": "25",
+    "result": null,
+    "partial": false
+  }
+}

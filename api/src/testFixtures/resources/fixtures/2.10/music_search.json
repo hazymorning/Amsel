@@ -1,0 +1,884 @@
+{
+  "request": {
+    "message_id": "32",
+    "command": "music/search",
+    "args": {
+      "search_query": "aurora",
+      "limit": 5
+    }
+  },
+  "response": {
+    "message_id": "32",
+    "result": {
+      "artists": [
+        {
+          "item_id": "2",
+          "provider": "library",
+          "name": "Aurora Tone",
+          "version": "",
+          "sort_name": "aurora tone",
+          "uri": "library://artist/2",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "artist",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": "Aurora Tone",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/artist.jpg",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "67b00d9706c829ec832277b380f854c965f09976abc0e571cd0765c9d3b9f48d"
+              }
+            ],
+            "grouping": null,
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:17:03+00:00",
+          "artist_type": "singer"
+        }
+      ],
+      "albums": [
+        {
+          "item_id": "4",
+          "provider": "library",
+          "name": "First Light",
+          "version": "",
+          "sort_name": "first light",
+          "uri": "library://album/4",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/First Light (2021)",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": "Aurora Tone/First Light (2021)",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+              }
+            ],
+            "grouping": null,
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:42+00:00",
+          "year": 2021,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "album_type": "unknown"
+        },
+        {
+          "item_id": "2",
+          "provider": "library",
+          "name": "Second Wind",
+          "version": "",
+          "sort_name": "second wind",
+          "uri": "library://album/2",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/Second Wind (2023)",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": "Aurora Tone/Second Wind (2023)",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "01a7ed45e2fc9e02777cd0e9b303c60f7ffbae83e33590279f341ff6ab2ac5a7"
+              }
+            ],
+            "grouping": null,
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:43+00:00",
+          "year": 2023,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "album_type": "unknown"
+        }
+      ],
+      "genres": [],
+      "tracks": [
+        {
+          "item_id": "11",
+          "provider": "library",
+          "name": "Dawn Chorus",
+          "version": "",
+          "sort_name": "dawn chorus",
+          "uri": "library://track/11",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/First Light (2021)/01 - Dawn Chorus.flac",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "flac",
+                "codec_type": "flac",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "flac",
+                "bit_rate": 55
+              },
+              "url": null,
+              "details": "1793560602"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Ambient"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:42+00:00",
+          "duration": 12,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "4",
+            "provider": "library",
+            "name": "First Light",
+            "version": "",
+            "sort_name": "first light",
+            "uri": "library://album/4",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Aurora Tone/First Light (2021)/folder.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+            },
+            "year": 2021
+          },
+          "disc_number": 1,
+          "track_number": 1,
+          "audio_metadata": null
+        },
+        {
+          "item_id": "12",
+          "provider": "library",
+          "name": "Jet Stream",
+          "version": "",
+          "sort_name": "jet stream",
+          "uri": "library://track/12",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Cirrus/High Clouds (2024)/02 - Jet Stream.mp3",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "mp3",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "mp3",
+                "bit_rate": 49
+              },
+              "url": null,
+              "details": "1793560604"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "f3485a5c160f470b37c1a2b8d72b594ac987feeb5dad5b291f618b778473ae9e"
+              },
+              {
+                "type": "thumb",
+                "path": "Cirrus/High Clouds (2024)/02 - Jet Stream.mp3",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "b140dec53212fb23f41fc50e2a0639df7ab44ff04a54518180b3364353d0e2f9"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Pop"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:44+00:00",
+          "duration": 15,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            },
+            {
+              "item_id": "3",
+              "provider": "library",
+              "name": "Cirrus",
+              "version": "",
+              "sort_name": "cirrus",
+              "uri": "library://artist/3",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "3",
+            "provider": "library",
+            "name": "High Clouds",
+            "version": "",
+            "sort_name": "high clouds",
+            "uri": "library://album/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "f3485a5c160f470b37c1a2b8d72b594ac987feeb5dad5b291f618b778473ae9e"
+            },
+            "year": 2024
+          },
+          "disc_number": 1,
+          "track_number": 2,
+          "audio_metadata": null
+        },
+        {
+          "item_id": "10",
+          "provider": "library",
+          "name": "Morning Haze",
+          "version": "",
+          "sort_name": "morning haze",
+          "uri": "library://track/10",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/First Light (2021)/02 - Morning Haze.flac",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "flac",
+                "codec_type": "flac",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "flac",
+                "bit_rate": 54
+              },
+              "url": null,
+              "details": "1793560602"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Ambient"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:42+00:00",
+          "duration": 15,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "4",
+            "provider": "library",
+            "name": "First Light",
+            "version": "",
+            "sort_name": "first light",
+            "uri": "library://album/4",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Aurora Tone/First Light (2021)/folder.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+            },
+            "year": 2021
+          },
+          "disc_number": 1,
+          "track_number": 2,
+          "audio_metadata": null
+        },
+        {
+          "item_id": "6",
+          "provider": "library",
+          "name": "Still Air",
+          "version": "",
+          "sort_name": "still air",
+          "uri": "library://track/6",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/Second Wind (2023)/03 - Still Air.mp3",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "mp3",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "mp3",
+                "bit_rate": 49
+              },
+              "url": null,
+              "details": "1793560603"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "01a7ed45e2fc9e02777cd0e9b303c60f7ffbae83e33590279f341ff6ab2ac5a7"
+              },
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/Second Wind (2023)/03 - Still Air.mp3",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "9c6f491739128d061018a25945c625ed52310b9ee0c7c42a7553024993cfe225"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Electronic"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:43+00:00",
+          "duration": 20,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "2",
+            "provider": "library",
+            "name": "Second Wind",
+            "version": "",
+            "sort_name": "second wind",
+            "uri": "library://album/2",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "01a7ed45e2fc9e02777cd0e9b303c60f7ffbae83e33590279f341ff6ab2ac5a7"
+            },
+            "year": 2023
+          },
+          "disc_number": 1,
+          "track_number": 3,
+          "audio_metadata": null
+        },
+        {
+          "item_id": "9",
+          "provider": "library",
+          "name": "Sunrise",
+          "version": "",
+          "sort_name": "sunrise",
+          "uri": "library://track/9",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/First Light (2021)/03 - Sunrise.flac",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--9AmKqjyh",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "flac",
+                "codec_type": "flac",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "flac",
+                "bit_rate": 54
+              },
+              "url": null,
+              "details": "1793560602"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                "provider": "filesystem_local--9AmKqjyh",
+                "remotely_accessible": false,
+                "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Ambient"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-01T19:16:42+00:00",
+          "duration": 18,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "4",
+            "provider": "library",
+            "name": "First Light",
+            "version": "",
+            "sort_name": "first light",
+            "uri": "library://album/4",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Aurora Tone/First Light (2021)/folder.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+            },
+            "year": 2021
+          },
+          "disc_number": 1,
+          "track_number": 3,
+          "audio_metadata": null
+        }
+      ],
+      "playlists": [],
+      "radio": [],
+      "audiobooks": [],
+      "podcasts": [],
+      "sound_effects": []
+    },
+    "partial": false
+  }
+}

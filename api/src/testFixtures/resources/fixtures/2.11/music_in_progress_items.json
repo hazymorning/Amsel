@@ -1,0 +1,29 @@
+{
+  "request": {
+    "message_id": "1037",
+    "command": "music/in_progress_items",
+    "args": {
+      "limit": 13
+    }
+  },
+  "response": {
+    "message_id": "1037",
+    "result": [
+      {
+        "item_id": "2",
+        "provider": "library",
+        "name": "The Lantern Road",
+        "version": "",
+        "sort_name": "lantern road, the",
+        "uri": "library://audiobook/2",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "audiobook",
+        "available": true,
+        "image": null,
+        "year": null
+      }
+    ]
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Home -->
+    <string name="home_no_sections">Nothing on Home yet</string>
+
+    <!-- Section titles: what a section shows, in plain words -->
+    <string name="home_option_pinned">Pinned</string>
+    <string name="home_your_albums">Your albums</string>
+    <string name="home_option_smart_playlists">Smart playlists</string>
+    <string name="home_option_your_playlists">Your playlists</string>
+    <string name="home_option_favorite_playlists">Favourite playlists</string>
+    <string name="home_option_recent_playlists">Recently played playlists</string>
+    <string name="home_option_new_albums">New in your library</string>
+    <string name="home_option_new_albums_choice">New albums</string>
+    <string name="home_option_recent_albums">Recently played albums</string>
+    <string name="home_option_favorite_albums">Favourite albums</string>
+    <string name="home_option_random_albums">Random albums</string>
+    <string name="home_option_top_artists">Artists you play most</string>
+    <string name="home_option_favorite_artists">Favourite artists</string>
+    <string name="home_option_recent_artists">Recently played artists</string>
+    <string name="home_option_all_stations_choice">All stations</string>
+    <string name="home_option_favorite_stations">Favourite stations</string>
+    <string name="home_option_recent_stations">Recently played stations</string>
+    <string name="home_option_new_audiobooks">New audiobooks</string>
+    <string name="home_option_new_episodes">New episodes</string>
+    <string name="home_option_your_podcasts">Your podcasts</string>
+    <string name="home_option_played_here_choice">Recently played here</string>
+    <string name="home_option_speakers">Speakers</string>
+
+    <!-- How a section shows its items -->
+    <string name="home_layout_grid">Grid</string>
+    <string name="home_layout_small">Small covers</string>
+    <string name="home_layout_row">Row</string>
+    <string name="home_layout_big">Big covers</string>
+    <string name="home_layout_list">List</string>
+
+    <!-- Editing Home: each section is a sentence; %1$s is what it shows, %2$s how -->
+    <string name="home_edit">Edit Home</string>
+    <string name="home_edit_short">Edit</string>
+    <string name="home_edit_done">Done</string>
+    <string name="home_edit_sentence">Show %1$s as %2$s</string>
+    <string name="home_edit_what">What to show</string>
+    <string name="home_edit_how">Show as</string>
+    <string name="home_edit_what_is">What to show: %1$s</string>
+    <string name="home_edit_how_is">Show as: %1$s</string>
+
+    <!-- The sentence's chips: what and how as the sentence says them ("Show your pins as a grid") -->
+    <string name="home_sentence_option_pinned">your pins</string>
+    <string name="home_sentence_option_everything">recently played</string>
+    <string name="home_sentence_option_played_here">recently played here</string>
+    <string name="home_sentence_option_continue_listening">what you started</string>
+    <string name="home_sentence_option_smart_playlists">smart playlists</string>
+    <string name="home_sentence_option_your_playlists">your playlists</string>
+    <string name="home_sentence_option_favorite_playlists">favourite playlists</string>
+    <string name="home_sentence_option_recent_playlists">recently played playlists</string>
+    <string name="home_sentence_option_new_albums">new albums</string>
+    <string name="home_sentence_option_recent_albums">recently played albums</string>
+    <string name="home_sentence_option_favorite_albums">favourite albums</string>
+    <string name="home_sentence_option_random_albums">random albums</string>
+    <string name="home_sentence_option_top_artists">artists you play most</string>
+    <string name="home_sentence_option_favorite_artists">favourite artists</string>
+    <string name="home_sentence_option_recent_artists">recently played artists</string>
+    <string name="home_sentence_option_all_stations">all stations</string>
+    <string name="home_sentence_option_favorite_stations">favourite stations</string>
+    <string name="home_sentence_option_recent_stations">recently played stations</string>
+    <string name="home_sentence_option_new_audiobooks">new audiobooks</string>
+    <string name="home_sentence_option_new_episodes">new episodes</string>
+    <string name="home_sentence_option_your_podcasts">your podcasts</string>
+    <string name="home_sentence_option_speakers">the speakers</string>
+    <string name="home_sentence_layout_grid">a grid</string>
+    <string name="home_sentence_layout_small">small covers</string>
+    <string name="home_sentence_layout_row">a row</string>
+    <string name="home_sentence_layout_big">big covers</string>
+    <string name="home_sentence_layout_list">a list</string>
+    <string name="home_edit_add_section">Add section</string>
+    <string name="home_section_empty">Nothing here yet</string>
+    <string name="home_section_empty_speakers">Shows other speakers that play or are paused</string>
+    <string name="home_section_empty_pinned">Nothing pinned yet. Long-press an album, playlist, artist, station, book or podcast and choose Pin to Home.</string>
+
+    <!-- Pins, from any item's ⋮ sheet -->
+    <string name="home_action_pin">Pin to Home</string>
+    <string name="home_action_unpin">Unpin from Home</string>
+    <string name="home_pinned">Pinned to Home</string>
+    <string name="home_unpinned">Unpinned from Home</string>
+
+    <string name="home_edit_failed">Couldn’t change Home</string>
+    <string name="home_edit_rename">Section name</string>
+    <string name="home_edit_rename_action">Rename</string>
+    <string name="move_earlier">Move earlier</string>
+    <string name="move_later">Move later</string>
+
+    <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
+    <string name="tip_edit_home">Long-press a heading to edit Home.</string>
+    <string name="tip_settings">Pull Home down to open Settings.</string>
+    <string name="tip_more">Long-press an album, a playlist or a song for more options.</string>
+    <string name="tip_dismiss">Dismiss tip</string>
+</resources>
