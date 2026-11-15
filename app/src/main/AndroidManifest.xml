@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- An update installs from Amsel itself: Android's installer refuses an app without this. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- AndroidX core declares these for receivers registered not exported below Android 13; none is
          (Media3's car observer registers its receiver exported). -->
     <permission
@@ -63,5 +65,15 @@
             android:authorities="${applicationId}.artwork"
             android:exported="false"
             android:grantUriPermissions="true" />
+        <!-- A downloaded update: not exported, the installer is granted reading it when it opens. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/updates" />
+        </provider>
     </application>
 </manifest>

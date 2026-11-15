@@ -54,7 +54,8 @@ owner's explicit wishes override the plan.
    everything else goes to `docs/PARKING-LOT.md`.
 4. Settings fit one screen.
 5. Permissions: INTERNET, ACCESS_NETWORK_STATE, ACCESS_LOCAL_NETWORK, FOREGROUND_SERVICE,
-   FOREGROUND_SERVICE_MEDIA_PLAYBACK, WAKE_LOCK. Nothing else.
+   FOREGROUND_SERVICE_MEDIA_PLAYBACK, WAKE_LOCK; and, as the owner asked, FOREGROUND_SERVICE_DATA_SYNC
+   and POST_NOTIFICATIONS for downloads, REQUEST_INSTALL_PACKAGES for updates. Nothing else.
 6. Budgets fail the build: APK <= 8 MB, permission and dependency allowlists
    (`:app:checkBudgets`).
 7. One corner rule for every cover, artists included (continuous corners by size, `Shapes.cover`):

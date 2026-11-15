@@ -74,7 +74,7 @@
     <string name="hint_go_on">Keep going</string>
     <string name="update">Update</string>
     <string name="update_out">Amsel %1$s is out</string>
-    <string name="update_title" translatable="false">Amsel %1$s</string>
-    <string name="update_downloading">Amsel %1$s is downloading: tap its notification to install it</string>
-    <string name="error_no_browser_update">No browser to download the update in</string>
+    <string name="update_downloading">Amsel %1$s is downloading</string>
+    <string name="update_not_downloaded">Amsel %1$s could not be downloaded</string>
+    <string name="error_no_installer">Android’s installer could not be opened</string>
 </resources>
