@@ -9,11 +9,20 @@ import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.SearchResults
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
+import io.github.hazymorning.amsel.ui.model.MediaKind
+import io.github.hazymorning.amsel.ui.model.MediaUi
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -42,9 +51,15 @@ class SearchViewModelTest {
 
     @After fun tearDown() = Dispatchers.resetMain()
 
+    /** The screen collecting the last view model's state; cancelled, Search is left. */
+    private lateinit var screen: Job
+
     private fun track(name: String) = MediaItem("1", "library", name, "library://track/$name", "track")
 
-    private fun TestScope.viewModel(handle: SavedStateHandle = SavedStateHandle()): SearchViewModel {
+    private fun TestScope.viewModel(
+        handle: SavedStateHandle = SavedStateHandle(),
+        library: Flow<List<MediaUi>> = flowOf(emptyList()),
+    ): SearchViewModel {
         val vm = SearchViewModel(
             handle,
             search = { q ->
@@ -53,11 +68,21 @@ class SearchViewModelTest {
             },
             mapper = UiMapper { null },
             playing = playing,
+            library = library,
             background = UnconfinedTestDispatcher(testScheduler),
         )
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+        show(vm)
         return vm
     }
+
+    private fun TestScope.show(vm: SearchViewModel) {
+        screen = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
+    }
+
+    private fun book(progress: Float) =
+        MediaUi("library://audiobook/2", MediaKind.Audiobook, "The Lantern Road", progress = progress)
+
+    private fun album(id: Int, title: String) = MediaUi("library://album/$id", MediaKind.Album, title)
 
     @Test fun thePlayingSongIsMarkedAndFollowsTheSpeaker() = runTest {
         val vm = viewModel()
@@ -185,5 +210,45 @@ class SearchViewModelTest {
         assertEquals("library://artist/9", album.artistKey)
     }
 
+    @Test fun searchLeftBehindReadsNothingWhileABookPlaysOn() = runTest {
+        var reads = 0
+        val library = MutableStateFlow(listOf(book(0.1f)))
+        viewModel(library = library.onEach { reads++ })
+        assertEquals(1, reads)
+
+        screen.cancel()
+        advanceTimeBy(AWAY_MS)
+        // The book's progress, every 30 s.
+        listOf(0.2f, 0.3f, 0.4f).forEach { library.value = listOf(book(it)) }
+        assertEquals(1, reads)
+    }
+
+    @Test fun aSearchAfterComingBackFindsNearMatchesInTheLibraryAsItIsThen() = runTest {
+        server = { SearchResults() }
+        val library = MutableStateFlow(listOf(album(1, "Blackbird Song")))
+        // Reading the index takes a while, longer than typing.
+        val vm = viewModel(
+            library = flow {
+                delay(READ_MS)
+                emitAll(library)
+            },
+        )
+        advanceTimeBy(READ_MS + 1)
+        screen.cancel()
+        advanceTimeBy(AWAY_MS)
+        library.value = listOf(album(1, "Blackbird Song"), album(2, "Motörhead Live"))
+
+        show(vm)
+        vm.onQueryChange("motorhed")
+        advanceTimeBy(READ_MS + 1)
+        assertEquals("Motörhead Live", (vm.state.value.results?.top as TopResult.Item).item.title)
+    }
+
     private fun SearchUiState.topTitle() = (results?.top as? TopResult.Song)?.track?.title
+
+    private companion object {
+        /** Long enough away from Search for it to let the index go. */
+        const val AWAY_MS = 60_000L
+        const val READ_MS = 1_000L
+    }
 }
