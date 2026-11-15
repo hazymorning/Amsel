@@ -53,6 +53,9 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
     var failure: Throwable? = null
     var itemCalls = 0
 
+    /** Thrown by the item alone: a music service slow to describe it. */
+    var itemFailure: Throwable? = null
+
     /** What each page showed last time, by key: never held back, as the phone answers. */
     val shownPages = mutableMapOf<String, ShownPage>()
 
@@ -72,6 +75,7 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
 
     override suspend fun item(key: String): MediaItem? {
         itemCalls++
+        itemFailure?.let { throw it }
         return answer(item)
     }
 

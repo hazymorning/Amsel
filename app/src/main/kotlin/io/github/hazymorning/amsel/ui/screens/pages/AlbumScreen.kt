@@ -63,7 +63,7 @@ fun AlbumScreen(
         // A tile's caption ends on its ink; a track row runs on below it.
         val endsOnShelf = moreBy != null && state.moreByArtist.isNotEmpty()
         val bottom = if (endsOnShelf) Space.ListEnd else Space.ListEnd - trackInk
-        PageScaffold(album?.title, listState, onBack, modifier, bottom = bottom) {
+        PageScaffold(album?.title, listState, onBack, modifier, bottom = bottom, art = album?.art) {
             item(key = "art", contentType = PageSlot.Art) { PageArt(album?.art, MediaKind.Album, album?.title) }
             item(key = "title", contentType = PageSlot.Title) { AlbumTitle(state, onOpenArtist) }
             item(key = "actions", contentType = PageSlot.Actions) {

@@ -40,6 +40,7 @@ import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.PlayingRing
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
+import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.label
@@ -145,39 +146,37 @@ private fun SpeakerList(
         val haptics = LocalHapticFeedback.current
         SheetHeader(stringResource(R.string.player_play_on))
         Spacer(Modifier.height(Space.HeaderToContent))
-        if (state.grouped) {
-            // Letting the speakers go is one big tap, over the first of them.
-            PrimaryButton(
-                stringResource(R.string.ungroup_all),
-                onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-                    onUngroup()
-                },
-                modifier = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth(),
-            )
-            Spacer(Modifier.height(Space.Group))
-        }
-        // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
-        state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
-            SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
-        }
+        // Grouping is one big tap over the speakers; letting a group go one more under it, in the
+        // second tone, so the sheet keeps one focal point.
+        val wide = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth()
         if (members != null) {
-            // Grouping is one big tap too, under the last speaker and well apart from the list.
-            Spacer(Modifier.height(BeforeGroup))
             PrimaryButton(
                 stringResource(if (members > 0) R.string.group_count else R.string.group, members),
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     onGrouping()
                 },
-                modifier = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth(),
+                modifier = wide,
             )
+        }
+        if (state.grouped) {
+            if (members != null) Spacer(Modifier.height(Space.S2))
+            SecondaryButton(
+                stringResource(R.string.ungroup_all),
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    onUngroup()
+                },
+                modifier = wide,
+            )
+        }
+        if (members != null || state.grouped) Spacer(Modifier.height(Space.Group))
+        // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
+        state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
+            SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
         }
     }
 }
-
-/** Over Group: the list ends, and what changes the speakers stands apart from them. */
-private val BeforeGroup = Space.S10
 
 /** "Transfer playback": the other speakers in reach. The music moves to the one tapped and goes on there. */
 @Composable

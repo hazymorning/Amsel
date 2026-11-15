@@ -1,18 +1,15 @@
-# Rain dance
+# Wing stretch
 
 ## New
 
-- **Your bottom bar:** choose which places it shows and in what order, under Settings › Bottom bar or with a long press on the bar. Home always stays.
-- **Search on Home:** Edit Home can add a search field; a tap on it opens Search with the keyboard up.
+- **Cover colours:** album, playlist, artist, book and podcast pages take on a soft wash of their cover's colour at the top, easing into the page as you scroll. Black-and-white covers stay plain.
 
 ## Better
 
-- **Mini player:** play and skip have more room and stand further from the screen's edge.
-- **A calmer edge:** pages fade out gently above the mini player, so it stands apart.
-- **Speakers:** the dot on the speaker is larger, and Group is a big button under the speakers.
-- **Playing ring:** its breath is now plain to see.
-- **Settings:** its foot shows Amsel's name in the README's lettering, and the moon is much quieter at night.
+- **Mini player:** a short shadow lets it sit a little above the page, in place of the fade, and play stands on a round disc.
+- **Play on:** Group is a big button over the first speaker, with Ungroup all under it.
+- **Speakers on Home:** each card's name and state have more room, in balance with the cover.
 
 ## Fixed
 
-- **Settings:** the line at its foot is no longer translated.
+- **Artist pages:** an artist your server was slow to describe could end on an empty page after a long wait. Its page now shows what arrived, its albums and popular songs, named from them.

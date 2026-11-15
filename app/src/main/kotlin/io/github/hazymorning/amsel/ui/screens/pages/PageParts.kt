@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.ui.screens.pages
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +21,17 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -56,10 +63,12 @@ import io.github.hazymorning.amsel.ui.components.plus
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
+import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.isNight
+import io.github.hazymorning.amsel.ui.theme.rememberCoverColors
 import io.github.hazymorning.amsel.ui.theme.secondLine
 
 internal enum class PageSlot { Art, Title, Actions, Header, Track, Shelf, Tile, AlbumRow, Message }
@@ -79,20 +88,56 @@ internal fun PageScaffold(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     bottom: Dp = Space.ListEnd,
+    /** The cover whose hue washes the page's head. */
+    art: ArtRef? = null,
     actions: @Composable RowScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
 ) {
     val titleShown by remember(list) { derivedStateOf { list.firstVisibleItemIndex > TITLE_INDEX } }
+    val wash = coverWash(art)
+    val washHeight = with(LocalDensity.current) { (pageCover() * WASH_COVERS).toPx() }
     MaterialScreen(modifier, bar = { PageTopBar(title, onBack, showTitle = titleShown, actions = actions) }) { insets ->
         ScrollEdges(list)
         LazyColumn(
-            Modifier.fillMaxSize(),
+            Modifier
+                .fillMaxSize()
+                .drawBehind {
+                    // The head scrolls away with its wash; past it the page is plain.
+                    if (list.firstVisibleItemIndex != 0) return@drawBehind
+                    val top = -list.firstVisibleItemScrollOffset.toFloat()
+                    val brush = Brush.verticalGradient(
+                        *WashStops.map { (at, share) -> at to wash.value.copy(alpha = wash.value.alpha * share) }
+                            .toTypedArray(),
+                        startY = top,
+                        endY = top + washHeight,
+                    )
+                    drawRect(brush, topLeft = Offset(0f, top), size = Size(size.width, washHeight))
+                },
             state = list,
             contentPadding = insets.plus(bottom = bottom),
             content = content,
         )
     }
 }
+
+/**
+ * The page's head leans to its cover as Now Playing's whole page does: the same muted hue, behind
+ * the cover and its title under the bar's clear strip, easing into the plain page by the list. A
+ * cover with no hue worth borrowing, or none yet, leaves the page plain.
+ */
+@Composable
+private fun coverWash(art: ArtRef?): State<Color> {
+    val colors = rememberCoverColors(art)
+    val scheme = MaterialTheme.colorScheme
+    val tint = colors?.tint(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f)
+    return animateColorAsState(tint, Motion.effectsSlow(), label = "page wash")
+}
+
+/** The wash reaches down this many cover heights from the screen's top. */
+private const val WASH_COVERS = 2f
+
+/** Whole through the bar and the cover's top, then easing out to nothing. */
+private val WashStops = listOf(0f to 1f, 0.35f to 1f, 0.6f to 0.62f, 0.8f to 0.25f, 1f to 0f)
 
 @Composable
 internal fun pageCover(): Dp = Sizes.pageCover(LocalWindowInfo.current.containerDpSize.width)

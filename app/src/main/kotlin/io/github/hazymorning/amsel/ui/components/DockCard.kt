@@ -18,9 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -47,6 +45,9 @@ import io.github.hazymorning.amsel.ui.theme.dockLine
 
 /** The dock's play glyph, a step up from the next beside it. */
 private val PlayGlyph = 28.dp
+
+/** The disc play stands on: the dock's own measure, under its cover's 48. */
+private val PlayDisc = 44.dp
 
 /**
  * Around what plays on the dock: the page's margin, so its cover stands on the margin as a page's
@@ -147,7 +148,6 @@ private fun PlayerRow(
     val openLabel = stringResource(R.string.open_now_playing)
     val nextLabel = stringResource(state.nextLabel)
     val previousLabel = stringResource(state.previousLabel)
-    val haptics = LocalHapticFeedback.current
     val skip: (Boolean) -> Unit = { forward ->
         onControl(if (forward) PlayerControl.Next else PlayerControl.Previous)
     }
@@ -194,18 +194,8 @@ private fun PlayerRow(
         PlayerWords(state, speaker, Modifier.weight(1f), song = swipe.follow, runs = !covered)
         Spacer(Modifier.width(BeforePlay))
         val ink = MaterialTheme.colorScheme.onSurface
-        IconAction(
-            if (state.isPlaying) R.drawable.ic_pause_slim else R.drawable.ic_play,
-            stringResource(if (state.isPlaying) R.string.pause else R.string.play),
-            onClick = {
-                haptics.performHapticFeedback(
-                    if (state.isPlaying) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn,
-                )
-                onControl(PlayerControl.PlayPause)
-            },
-            tint = ink,
-            size = PlayGlyph,
-        )
+        // On a disc of the second tone, so play stands out from the words without shouting.
+        PlayButton(state.isPlaying, { onControl(PlayerControl.PlayPause) }, size = PlayDisc, tonal = true)
         if (state.spoken) {
             val seconds = (SKIP_FORWARD_MS / 1000).toInt()
             SkipSeconds(
