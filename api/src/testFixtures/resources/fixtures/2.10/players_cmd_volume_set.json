@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "60",
+    "command": "players/cmd/volume_set",
+    "args": {
+      "player_id": "updb709e97",
+      "volume_level": 25
+    }
+  },
+  "response": {
+    "message_id": "60",
+    "result": null,
+    "partial": false
+  }
+}

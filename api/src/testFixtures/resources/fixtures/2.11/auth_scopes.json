@@ -1,0 +1,56 @@
+{
+  "request": {
+    "message_id": "4",
+    "command": "auth/scopes"
+  },
+  "response": {
+    "message_id": "4",
+    "result": {
+      "admin": [
+        "*"
+      ],
+      "user": [
+        "config.core.read",
+        "config.players.read",
+        "config.providers.own",
+        "config.providers.read",
+        "library.read",
+        "library.write",
+        "players.control",
+        "players.read",
+        "providers.read",
+        "queues.control",
+        "queues.read",
+        "system.read",
+        "users.invite"
+      ],
+      "guest": [
+        "config.players.read",
+        "library.read",
+        "players.control",
+        "players.read",
+        "providers.read",
+        "queues.control",
+        "queues.read"
+      ],
+      "service": [
+        "config.core.read",
+        "config.players.read",
+        "config.players.write",
+        "config.providers.read",
+        "library.read",
+        "library.write",
+        "players.control",
+        "players.read",
+        "providers.read",
+        "queues.control",
+        "queues.read",
+        "system.read",
+        "users.impersonate",
+        "users.invite",
+        "users.read"
+      ]
+    },
+    "partial": false
+  }
+}

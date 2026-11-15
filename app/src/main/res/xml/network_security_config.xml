@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home servers usually speak plain http on port 8095. Android cannot limit cleartext to
+     private addresses, so it is allowed here, and every plain http connection the app opens
+     (localCleartext, the Home Assistant sign-in page) refuses any other address. -->
+<network-security-config xmlns:tools="http://schemas.android.com/tools">
+    <base-config cleartextTrafficPermitted="true" tools:ignore="InsecureBaseConfiguration" />
+</network-security-config>

@@ -1,0 +1,134 @@
+name: Release
+
+# A release starts when release/VERSION changes on main, or by hand (Actions → Release → Run
+# workflow), which publishes the version in release/VERSION if it is not released yet. This
+# workflow builds, signs and publishes it here, titled "Name • 2026.11.0": the name is the first
+# line of release/NOTES.md, and the release carries the rest of it.
+#
+# One repository secret, set by the owner: AMSEL_SIGNING_PASSWORD. The release key never leaves
+# GitHub: the first release run generates it here, encrypts it with the password (AES-256, PBKDF2
+# 600,000 iterations) and keeps the encrypted file on the `signing` branch; every later release
+# decrypts the same key from there. See docs/RELEASING.md.
+
+on:
+  push:
+    branches: [main]
+    paths: ['release/VERSION']
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - name: Version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          version=$(tr -d '[:space:]' < release/VERSION)
+          case "$version" in v[0-9]*) ;; *) echo "::error::release/VERSION must look like v2026.11.0, got '$version'"; exit 1 ;; esac
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "Release $version already exists; nothing to do."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          name=$(sed -n '1s/^# *//p' release/NOTES.md)
+          if [ -z "$name" ]; then
+            echo "::error::release/NOTES.md must start with '# ' and the bird name of $version."
+            exit 1
+          fi
+          # Read first: piped straight into grep, a failed listing would read as "no such name".
+          # Earlier titles carry their version after " • "; the name is what comes before it.
+          names=$(gh release list --limit 1000 --json name --jq '.[].name | split(" • ")[0]')
+          if grep -qxF -- "$name" <<< "$names"; then
+            echo "::error::An earlier release is already called '$name'; give $version a name of its own in release/NOTES.md."
+            exit 1
+          fi
+          echo "TITLE=$name • ${version#v}" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        if: env.SKIP != '1'
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+        if: env.SKIP != '1'
+      # The key and its password exist only inside this step.
+      - name: Signed release APK (the key is created on the first release, then reused)
+        if: env.SKIP != '1'
+        env:
+          AMSEL_SIGNING_PASSWORD: ${{ secrets.AMSEL_SIGNING_PASSWORD }}
+          AMSEL_VERSION_NAME: ${{ env.VERSION }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AMSEL_SIGNING_PASSWORD:-}" ]; then
+            echo "::error::Add the AMSEL_SIGNING_PASSWORD repository secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          # keytool accepts only ASCII passwords, so the keystore uses an ASCII password derived
+          # from the secret (its SHA-256 in hex); the secret itself encrypts the stored file.
+          storepass=$(printf '%s' "$AMSEL_SIGNING_PASSWORD" | sha256sum | cut -d' ' -f1)
+          echo "::add-mask::$storepass"
+          export AMSEL_STOREPASS="$storepass"
+          enc="$RUNNER_TEMP/amsel-release.jks.enc"
+          jks="$RUNNER_TEMP/amsel-release.jks"
+          trap 'rm -f "$enc" "$jks"' EXIT
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth 1 "$remote" signing 2>/dev/null && git show FETCH_HEAD:amsel-release.jks.enc > "$enc" 2>/dev/null; then
+            echo "Using the release key from the signing branch."
+          else
+            # Only ever once: an existing signing branch refuses this push, so a key is never replaced.
+            echo "No release key yet: creating it, encrypted with the secret."
+            keytool -genkeypair -keystore "$jks" -storetype PKCS12 -alias amsel -keyalg RSA -keysize 4096 \
+              -validity 36500 -storepass:env AMSEL_STOREPASS -keypass:env AMSEL_STOREPASS \
+              -dname "CN=Amsel, O=hazymorning"
+            openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -in "$jks" -out "$enc" -pass env:AMSEL_SIGNING_PASSWORD
+            rm -f "$jks"
+            keydir=$(mktemp -d)
+            cp "$enc" "$keydir/amsel-release.jks.enc"
+            cat > "$keydir/README.md" <<'EOF'
+          # Amsel release signing key
+
+          `amsel-release.jks.enc` is the release keystore (PKCS12, alias `amsel`), encrypted with
+          AES-256-CBC and PBKDF2 (600,000 iterations). The repository secret AMSEL_SIGNING_PASSWORD
+          decrypts it; its store and key password is the SHA-256 hex of that secret. Created by the
+          first release run; every release signs with it. Never delete this branch: losing the key
+          means users must uninstall to get later updates. See docs/RELEASING.md on the main line.
+          EOF
+            git -C "$keydir" init -q -b signing
+            git -C "$keydir" -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              add -A
+            git -C "$keydir" -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -qm "Encrypted release signing key"
+            git -C "$keydir" push -q "$remote" signing
+          fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$enc" -out "$jks" -pass env:AMSEL_SIGNING_PASSWORD
+          # Gradle and its plugins never see the secret or the token, only the derived passwords.
+          env -u AMSEL_SIGNING_PASSWORD -u GH_TOKEN \
+            AMSEL_KEYSTORE_PATH="$jks" AMSEL_KEYSTORE_PASSWORD="$AMSEL_STOREPASS" AMSEL_KEY_ALIAS=amsel \
+            AMSEL_KEY_PASSWORD="$AMSEL_STOREPASS" ./gradlew :app:assembleRelease :app:checkReleaseApkSize
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk "dist/amsel-${VERSION}.apk"
+
+      - name: Publish
+        if: env.SKIP != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Every release is a regular one: the newest is what Releases shows first. The notes are
+          # the notes, nothing added; the APK is the one file.
+          tail -n +2 release/NOTES.md > notes.md
+          gh release create "$VERSION" dist/* --target "$GITHUB_SHA" --title "$TITLE" --notes-file notes.md --latest

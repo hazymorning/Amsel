@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "85",
+    "command": "player_queues/repeat",
+    "args": {
+      "queue_id": "upe2a1d83a",
+      "repeat_mode": "off"
+    }
+  },
+  "response": {
+    "message_id": "85",
+    "result": null,
+    "partial": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "20",
+    "command": "music/favorites/set_item",
+    "args": {
+      "item": "library://radio/1",
+      "favorite": true
+    }
+  },
+  "response": {
+    "message_id": "20",
+    "result": null,
+    "partial": false
+  }
+}

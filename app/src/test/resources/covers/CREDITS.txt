@@ -1,0 +1,26 @@
+Sample covers for screenshot tests only (never shipped). Cropped and resized from:
+- album_1: Venice, from the Porch of Madonna della Salute, Joseph Mallord William Turner, The Metropolitan Museum of Art (Open Access, CC0), object 437853
+- album_2: Wheat Field with Cypresses, Vincent van Gogh, The Metropolitan Museum of Art (Open Access, CC0), object 436535
+- album_3: Under the Wave off Kanagawa (Kanagawa oki nami ura), also known as The Great Wave, from the series Thirty-six Views of Mount Fuji (Fugaku sanjūrokkei), Katsushika Hokusai, The Metropolitan Museum of Art (Open Access, CC0), object 45434
+- album_4: Circus Sideshow (Parade de cirque), Georges Seurat, The Metropolitan Museum of Art (Open Access, CC0), object 437654
+- album_5: The Monet Family in Their Garden at Argenteuil, Edouard Manet, The Metropolitan Museum of Art (Open Access, CC0), object 436965
+- album_6: Young Woman with a Water Pitcher, Johannes Vermeer, The Metropolitan Museum of Art (Open Access, CC0), object 437881
+- album_7: The Gulf Stream, Winslow Homer, The Metropolitan Museum of Art (Open Access, CC0), object 11122
+- album_8: Spring in Brittany, Paul Sébillot, The Metropolitan Museum of Art (Open Access, CC0), object 437647
+- album_9: Heart of the Andes, Frederic Edwin Church, The Metropolitan Museum of Art (Open Access, CC0), object 10481
+- album_10: The "Kearsarge" at Boulogne, Edouard Manet, The Metropolitan Museum of Art (Open Access, CC0), object 438144
+- album_11: Irises, Vincent van Gogh, The Metropolitan Museum of Art (Open Access, CC0), object 436528
+- artist_1: Madame Georges Charpentier (Marguerite-Louise Lemonnier, 1848–1904) and Her Children, Georgette-Berthe (1872–1945) and Paul-Emile-Charles (1875–1895), Auguste Renoir, The Metropolitan Museum of Art (Open Access, CC0), object 438815
+- artist_2: The Card Players, Paul Cézanne, The Metropolitan Museum of Art (Open Access, CC0), object 435868
+- artist_3: Madame X (Virginie Amélie Avegno Gautreau), John Singer Sargent, The Metropolitan Museum of Art (Open Access, CC0), object 12127
+- artist_4: The Englishman (William Tom Warrener, 1861–1934) at the Moulin Rouge, Henri de Toulouse-Lautrec, The Metropolitan Museum of Art (Open Access, CC0), object 437835
+- artist_11: Self-Portrait with a Straw Hat (obverse: The Potato Peeler), Vincent van Gogh, The Metropolitan Museum of Art (Open Access, CC0), object 436532
+- playlist_1: Still Life with Peaches, Auguste Renoir, The Metropolitan Museum of Art (Open Access, CC0), object 437429
+- playlist_2: The Repast of the Lion, Henri Rousseau (le Douanier), The Metropolitan Museum of Art (Open Access, CC0), object 438822
+- playlist_3: View of Toledo, El Greco (Domenikos Theotokopoulos), The Metropolitan Museum of Art (Open Access, CC0), object 436575
+- playlist_5: The Boulevard Montmartre on a Winter Morning, Camille Pissarro, The Metropolitan Museum of Art (Open Access, CC0), object 437310
+- playlist_6: Shepherdess Seated on a Rock, Jean-François Millet, The Metropolitan Museum of Art (Open Access, CC0), object 437098
+- playlist_7: Cypresses, Vincent van Gogh, The Metropolitan Museum of Art (Open Access, CC0), object 437980
+- playlist_4: Vassily Kandinsky, 1913 - Composition 7.jpg, Wikimedia Commons (public domain)
+- audiobook_1..4: book covers drawn for these tests over the paintings above (Pissarro, Renoir, Manet, Sargent), titles in EB Garamond (SIL OFL 1.1)
+- podcast_1..3: covers drawn for these tests in Amsel Sans

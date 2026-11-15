@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "83",
+    "command": "player_queues/seek",
+    "args": {
+      "queue_id": "upe2a1d83a",
+      "position": 5
+    }
+  },
+  "response": {
+    "message_id": "83",
+    "result": null,
+    "partial": false
+  }
+}

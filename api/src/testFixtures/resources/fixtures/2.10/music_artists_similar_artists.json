@@ -1,0 +1,17 @@
+{
+  "request": {
+    "message_id": "5",
+    "command": "music/artists/similar_artists",
+    "args": {
+      "item_id": "4",
+      "provider_instance_id_or_domain": "library",
+      "limit": 25
+    }
+  },
+  "response": {
+    "message_id": "5",
+    "result": [],
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.10.9. A library artist from local files: no music service knows similar ones, so the list is empty."
+}

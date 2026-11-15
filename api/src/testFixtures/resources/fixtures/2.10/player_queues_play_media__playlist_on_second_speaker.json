@@ -1,0 +1,16 @@
+{
+  "request": {
+    "message_id": "84",
+    "command": "player_queues/play_media",
+    "args": {
+      "queue_id": "updb709e97",
+      "media": "library://playlist/9",
+      "option": "replace"
+    }
+  },
+  "response": {
+    "message_id": "84",
+    "result": null,
+    "partial": false
+  }
+}

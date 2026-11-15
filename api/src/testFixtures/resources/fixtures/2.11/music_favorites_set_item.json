@@ -1,0 +1,16 @@
+{
+  "request": {
+    "message_id": "96",
+    "command": "music/favorites/set_item",
+    "args": {
+      "item": "library://album/4",
+      "favorite": true
+    }
+  },
+  "response": {
+    "message_id": "96",
+    "result": null,
+    "partial": false
+  },
+  "notes": "2.11: per-user like (true), dislike (false) or clear (null)."
+}

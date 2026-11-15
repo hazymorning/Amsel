@@ -1,0 +1,17 @@
+{
+  "request": {
+    "message_id": "58",
+    "command": "player_queues/play_media",
+    "args": {
+      "queue_id": "upe2a1d83a",
+      "media": "library://album/4",
+      "option": "replace"
+    }
+  },
+  "response": {
+    "message_id": "58",
+    "result": null,
+    "partial": false
+  },
+  "notes": "Answered after playback started."
+}

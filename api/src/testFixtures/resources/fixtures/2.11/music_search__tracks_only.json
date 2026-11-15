@@ -1,0 +1,261 @@
+{
+  "request": {
+    "message_id": "40",
+    "command": "music/search",
+    "args": {
+      "search_query": "air",
+      "media_types": [
+        "track"
+      ],
+      "limit": 10
+    }
+  },
+  "response": {
+    "message_id": "40",
+    "result": {
+      "artists": [],
+      "albums": [],
+      "genres": [],
+      "tracks": [
+        {
+          "item_id": "5",
+          "provider": "library",
+          "name": "Still Air",
+          "version": "",
+          "sort_name": "still air",
+          "uri": "library://track/5",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/Second Wind (2023)/03 - Still Air.mp3",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--Cu6eBeYR",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "mp3",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "mp3",
+                "bit_rate": 49
+              },
+              "url": null,
+              "details": "1793560603"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/Second Wind (2023)/03 - Still Air.mp3",
+                "provider": "filesystem_local--Cu6eBeYR",
+                "remotely_accessible": false,
+                "proxy_id": "10c30660f4ae1e7b48d22cde838a677ea915c5b1d96356ded78b609f406fcfc6"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Electronic"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": "2023-01-01T00:00:00+00:00",
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": "2026-11-01T19:16:43+00:00",
+          "duration": 20,
+          "artists": [
+            {
+              "item_id": "3",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/3",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "3",
+            "provider": "library",
+            "name": "Second Wind",
+            "version": "",
+            "sort_name": "second wind",
+            "uri": "library://album/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "c76429f60da2c587c072e0448d0cae9ee94f69fc99eb7303b80c6cf5a661cd4d"
+            },
+            "year": 2023
+          },
+          "disc_number": 1,
+          "track_number": 3,
+          "audio_metadata": null
+        },
+        {
+          "item_id": "4",
+          "provider": "library",
+          "name": "Thin Air",
+          "version": "",
+          "sort_name": "thin air",
+          "uri": "library://track/4",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--Cu6eBeYR",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "mp3",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "mp3",
+                "bit_rate": 49
+              },
+              "url": null,
+              "details": "1793560604"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+                "provider": "filesystem_local--Cu6eBeYR",
+                "remotely_accessible": false,
+                "proxy_id": "3a42267d0e76e94daba60f1407c65b1684e6cf94858d6593ca69eb115d447e6c"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Pop"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": "2024-01-01T00:00:00+00:00",
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": "2026-11-01T19:16:44+00:00",
+          "duration": 18,
+          "artists": [
+            {
+              "item_id": "1",
+              "provider": "library",
+              "name": "Cirrus",
+              "version": "",
+              "sort_name": "cirrus",
+              "uri": "library://artist/1",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "1",
+            "provider": "library",
+            "name": "High Clouds",
+            "version": "",
+            "sort_name": "high clouds",
+            "uri": "library://album/1",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "Cirrus/High Clouds (2024)/01 - Altitude.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "9ada74b74fdf046634375c4d119e71527c4097607f770e254db8be69d4b79cfe"
+            },
+            "year": 2024
+          },
+          "disc_number": 1,
+          "track_number": 3,
+          "audio_metadata": null
+        }
+      ],
+      "playlists": [],
+      "radio": [],
+      "audiobooks": [],
+      "podcasts": [],
+      "sound_effects": []
+    },
+    "partial": false
+  }
+}

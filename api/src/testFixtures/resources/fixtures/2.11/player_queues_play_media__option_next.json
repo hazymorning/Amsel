@@ -1,0 +1,16 @@
+{
+  "request": {
+    "message_id": "64",
+    "command": "player_queues/play_media",
+    "args": {
+      "queue_id": "upe2a1d83a",
+      "media": "filesystem_local--Cu6eBeYR://track/Aurora Tone/First Light (2021)/01 - Dawn Chorus.flac",
+      "option": "next"
+    }
+  },
+  "response": {
+    "message_id": "64",
+    "result": null,
+    "partial": false
+  }
+}

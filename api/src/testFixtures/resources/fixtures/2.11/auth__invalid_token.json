@@ -1,0 +1,14 @@
+{
+  "request": {
+    "message_id": "5",
+    "command": "auth",
+    "args": {
+      "token": "not-a-valid-token"
+    }
+  },
+  "response": {
+    "message_id": "5",
+    "error_code": 23,
+    "details": "The access token is invalid or has expired."
+  }
+}

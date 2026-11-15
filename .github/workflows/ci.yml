@@ -1,0 +1,92 @@
+name: CI
+
+# Once per change, on its pull request. Main does not run it again after the squash merge, which
+# holds the tree the pull request tested, and a release does not run the tests again either. A
+# branch without a pull request runs nothing (start a run by hand from the Actions tab). A change
+# that touches only words and the release machinery (the README, docs, the licence, the notes, the
+# release and cleanup workflows) builds nothing, so it does not run.
+on:
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'NOTICE'
+      - 'AGENTS.md'
+      - 'docs/**'
+      - 'release/NOTES.md'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/cleanup.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - name: The release's name is its own
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/release/check-name.sh
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Lint
+        run: ./gradlew ktlintCheck lintDebug
+      - name: Unit and screenshot tests
+        run: ./gradlew testDebugUnitTest test :sendspin:testAndroidHostTest verifyRoborazziDebug
+      - name: Budgets (permissions, dependencies, APK size)
+        run: ./gradlew :app:checkBudgets
+      - name: Debug APK
+        run: ./gradlew :app:assembleDebug
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: amsel-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        if: failure()
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/outputs/roborazzi/
+
+  # The M1 gate: the real client against real Music Assistant servers, both supported releases.
+  live-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        server: ['2.10.9', '2.11.0b7']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: Music Assistant ${{ matrix.server }} with a test library
+        run: |
+          URL=$(scripts/test-server/start.sh ${{ matrix.server }} | tail -1)
+          TOKEN=$(python3 scripts/test-server/setup.py --url "$URL")
+          echo "MA_URL=$URL" >> "$GITHUB_ENV"
+          echo "::add-mask::$TOKEN"
+          echo "MA_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+      - name: Fake speakers
+        run: |
+          nohup python3 scripts/test-server/fake_player.py --name Kitchen > kitchen.log 2>&1 &
+          nohup python3 scripts/test-server/fake_player.py --name "Living Room" --id amsel-fake-living-room > living.log 2>&1 &
+      - name: Live tests (client, seeks on a speaker, then the whole app's first-run journey)
+        run: |
+          ./gradlew :api:test --tests '*LiveServerTest*'
+          ./gradlew :playback:testDebugUnitTest --tests '*LiveSeekTest*'
+          ./gradlew :app:testDebugUnitTest --tests '*FirstRunJourneyTest*'
+      - if: always()
+        run: scripts/test-server/stop.sh ${{ matrix.server }}

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "84",
+    "command": "player_queues/shuffle",
+    "args": {
+      "queue_id": "upe2a1d83a",
+      "shuffle_enabled": false
+    }
+  },
+  "response": {
+    "message_id": "84",
+    "result": null,
+    "partial": false
+  }
+}

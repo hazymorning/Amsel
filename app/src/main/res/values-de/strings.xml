@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tabs -->
+    <string name="tab_home">Startseite</string>
+    <string name="tab_search">Suche</string>
+
+    <!-- Shared -->
+    <string name="see_all">Alle anzeigen</string>
+    <string name="more_options_for">Weitere Optionen für %1$s</string>
+    <string name="play">Abspielen</string>
+    <string name="pause">Pausieren</string>
+    <string name="resume">Weiterhören</string>
+    <string name="offer_pick_speaker">Lautsprecher wählen</string>
+    <string name="shuffle">Zufällig</string>
+    <string name="next">Nächster Titel</string>
+    <string name="previous">Vorheriger Titel</string>
+    <string name="back">Zurück</string>
+    <string name="close">Schließen</string>
+    <string name="retry">Nochmal</string>
+    <string name="refresh">Aktualisieren</string>
+    <string name="refreshing">Wird aktualisiert</string>
+    <string name="open_now_playing">Aktuelle Wiedergabe öffnen</string>
+    <string name="speaker_button_description">Lautsprecher: %1$s. Lautsprecher auswählen</string>
+    <string name="speaker_button_playing">Lautsprecher: %1$s, spielt. Lautsprecher auswählen</string>
+    <!-- Launcher shortcuts, held on the app icon -->
+    <string name="shortcut_speakers">Lautsprecher</string>
+    <string name="shortcut_choose_speaker">Lautsprecher auswählen</string>
+    <string name="radio">Radio</string>
+    <!-- What an item is: the line under its name where the server gives none, and before a top result's -->
+    <string name="kind_song">Titel</string>
+    <string name="kind_album">Album</string>
+    <string name="kind_artist">Künstler</string>
+    <string name="kind_playlist">Playlist</string>
+    <string name="kind_audiobook">Hörbuch</string>
+    <string name="kind_podcast">Podcast</string>
+    <string name="kind_episode">Folge</string>
+    <string name="this_phone">Dieses Handy</string>
+    <string name="loading">Wird geladen</string>
+    <string name="add_music">In Music\u00A0Assistant hinzufügen</string>
+    <string name="move_up">Nach oben</string>
+    <string name="move_down">Nach unten</string>
+    <string name="remove">Entfernen</string>
+    <string name="no_editable_playlists">Noch keine eigene Playlist. In\u00A0Music\u00A0Assistant eine anlegen.</string>
+    <string name="open_music_assistant">Music\u00A0Assistant öffnen</string>
+
+    <!-- Messages: plain sentences, never a code; one sentence takes no full stop. -->
+    <string name="error_move_failed">%1$s hat die Musik nicht übernommen</string>
+    <string name="error_select_failed">%1$s ließ sich nicht auswählen</string>
+    <string name="error_no_browser">Kein Browser zum Öffnen von Music\u00A0Assistant</string>
+    <string name="added_to_playlist">Zu %1$s hinzugefügt</string>
+
+    <string name="hint_liked_into">Auch zu %1$s hinzufügen?</string>
+    <string name="hint_liked_playlist">Auch zu einer Playlist hinzufügen?</string>
+    <string name="hint_add">Hinzufügen</string>
+    <string name="hint_choose">Auswählen</string>
+    <string name="hint_unliked">%1$s ist kein Favorit mehr</string>
+    <string name="hint_added">Hinzugefügt</string>
+    <string name="hint_open">Öffnen</string>
+    <string name="hint_unreachable">Ist nicht erreichbar</string>
+    <string name="hint_play_here">Hier hören</string>
+    <string name="hint_silent">Ist stumm</string>
+    <string name="hint_louder">Lauter</string>
+    <string name="hint_sleep">Schlaftimer stellen?</string>
+    <string name="hint_sleep_minutes">%1$d Min.</string>
+    <string name="hint_away">Läuft noch auf %1$s</string>
+    <string name="hint_home">Auf %1$s weiterhören?</string>
+    <string name="hint_headphones">Kopfhörer verbunden</string>
+    <string name="hint_ended">Alles gespielt. Ähnliches weiterhören?</string>
+    <string name="hint_go_on">Weiter</string>
+    <string name="update">Aktualisieren</string>
+    <string name="update_out">Amsel %1$s ist da</string>
+    <string name="update_downloading">Amsel %1$s wird geladen: Tippe auf die Mitteilung, um es zu installieren</string>
+    <string name="error_no_browser_update">Kein Browser zum Herunterladen des Updates</string>
+</resources>

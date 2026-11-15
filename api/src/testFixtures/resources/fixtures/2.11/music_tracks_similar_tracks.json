@@ -1,0 +1,999 @@
+{
+  "request": {
+    "message_id": "4",
+    "command": "music/tracks/similar_tracks",
+    "args": {
+      "item_id": "0_0_0",
+      "provider_instance_id_or_domain": "test",
+      "limit": 3
+    }
+  },
+  "response": {
+    "message_id": "4",
+    "result": [
+      {
+        "item_id": "0_0_1",
+        "provider": "test",
+        "name": "gangsta rap Test Track 0 - 0 - 1",
+        "version": "",
+        "sort_name": "gangsta rap test track 0 - 0 - 1",
+        "uri": "test://track/0_0_1",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "0_0_1",
+            "provider_domain": "test",
+            "provider_instance": "test",
+            "available": true,
+            "in_library": null,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": [
+            {
+              "type": "thumb",
+              "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+            }
+          ],
+          "grouping": null,
+          "genres": [
+            "gangsta rap"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2021-06-15T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": null,
+        "date_added": null,
+        "duration": 60,
+        "artists": [
+          {
+            "item_id": "0",
+            "provider": "test",
+            "name": "gangsta rap Test Artist 0",
+            "version": "",
+            "sort_name": "gangsta rap test artist 0",
+            "uri": "test://artist/0",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "provider_mappings": [
+              {
+                "item_id": "0",
+                "provider_domain": "test",
+                "provider_instance": "test",
+                "available": true,
+                "in_library": null,
+                "is_unique": null,
+                "audio_format": {
+                  "content_type": "?",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "?",
+                  "bit_rate": 0
+                },
+                "url": null,
+                "details": null
+              }
+            ],
+            "metadata": {
+              "description": null,
+              "description_language": null,
+              "life_span": null,
+              "artist_entity_type": null,
+              "review": null,
+              "explicit": null,
+              "images": [
+                {
+                  "type": "thumb",
+                  "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                  "provider": "builtin",
+                  "remotely_accessible": false,
+                  "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+                },
+                {
+                  "type": "fanart",
+                  "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/fallback_fanart.jpeg",
+                  "provider": "builtin",
+                  "remotely_accessible": false,
+                  "proxy_id": "607baa18424c175c17c9e80bf3705c49400097f98c991606e2846d90b906f23f"
+                }
+              ],
+              "grouping": null,
+              "genres": [
+                "gangsta rap"
+              ],
+              "mood": null,
+              "style": null,
+              "copyright": null,
+              "lyrics": null,
+              "lrc_lyrics": null,
+              "transcript": null,
+              "transcript_cues": null,
+              "has_transcript": null,
+              "label": null,
+              "links": null,
+              "performers": null,
+              "preview": null,
+              "popularity": null,
+              "release_date": null,
+              "languages": null,
+              "chapters": null,
+              "collections": null,
+              "last_refresh": null,
+              "last_musicbrainz_lookup": null
+            },
+            "favorite": null,
+            "position": null,
+            "date_added": null,
+            "artist_type": "singer"
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "0_0",
+          "provider": "test",
+          "name": "gangsta rap Test Album 0",
+          "version": "",
+          "sort_name": "gangsta rap test album 0",
+          "uri": "test://album/0_0",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "provider_mappings": [
+            {
+              "item_id": "0_0",
+              "provider_domain": "test",
+              "provider_instance": "test",
+              "available": true,
+              "in_library": null,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": null,
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                "provider": "builtin",
+                "remotely_accessible": false,
+                "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "gangsta rap"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": null,
+          "year": null,
+          "artists": [
+            {
+              "item_id": "0",
+              "provider": "test",
+              "name": "gangsta rap Test Artist 0",
+              "version": "",
+              "sort_name": "gangsta rap test artist 0",
+              "uri": "test://artist/0",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "provider_mappings": [
+                {
+                  "item_id": "0",
+                  "provider_domain": "test",
+                  "provider_instance": "test",
+                  "available": true,
+                  "in_library": null,
+                  "is_unique": null,
+                  "audio_format": {
+                    "content_type": "?",
+                    "codec_type": "?",
+                    "sample_rate": 44100,
+                    "bit_depth": 16,
+                    "channels": 2,
+                    "output_format_str": "?",
+                    "bit_rate": 0
+                  },
+                  "url": null,
+                  "details": null
+                }
+              ],
+              "metadata": {
+                "description": null,
+                "description_language": null,
+                "life_span": null,
+                "artist_entity_type": null,
+                "review": null,
+                "explicit": null,
+                "images": [
+                  {
+                    "type": "thumb",
+                    "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                    "provider": "builtin",
+                    "remotely_accessible": false,
+                    "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+                  },
+                  {
+                    "type": "fanart",
+                    "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/fallback_fanart.jpeg",
+                    "provider": "builtin",
+                    "remotely_accessible": false,
+                    "proxy_id": "607baa18424c175c17c9e80bf3705c49400097f98c991606e2846d90b906f23f"
+                  }
+                ],
+                "grouping": null,
+                "genres": [
+                  "gangsta rap"
+                ],
+                "mood": null,
+                "style": null,
+                "copyright": null,
+                "lyrics": null,
+                "lrc_lyrics": null,
+                "transcript": null,
+                "transcript_cues": null,
+                "has_transcript": null,
+                "label": null,
+                "links": null,
+                "performers": null,
+                "preview": null,
+                "popularity": null,
+                "release_date": null,
+                "languages": null,
+                "chapters": null,
+                "collections": null,
+                "last_refresh": null,
+                "last_musicbrainz_lookup": null
+              },
+              "favorite": null,
+              "position": null,
+              "date_added": null,
+              "artist_type": "singer"
+            }
+          ],
+          "album_type": "unknown"
+        },
+        "disc_number": 1,
+        "track_number": 1,
+        "audio_metadata": null
+      },
+      {
+        "item_id": "0_0_2",
+        "provider": "test",
+        "name": "gangsta rap Test Track 0 - 0 - 2",
+        "version": "",
+        "sort_name": "gangsta rap test track 0 - 0 - 2",
+        "uri": "test://track/0_0_2",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "0_0_2",
+            "provider_domain": "test",
+            "provider_instance": "test",
+            "available": true,
+            "in_library": null,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": [
+            {
+              "type": "thumb",
+              "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+            }
+          ],
+          "grouping": null,
+          "genres": [
+            "gangsta rap"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2021-06-15T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": null,
+        "date_added": null,
+        "duration": 60,
+        "artists": [
+          {
+            "item_id": "0",
+            "provider": "test",
+            "name": "gangsta rap Test Artist 0",
+            "version": "",
+            "sort_name": "gangsta rap test artist 0",
+            "uri": "test://artist/0",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "provider_mappings": [
+              {
+                "item_id": "0",
+                "provider_domain": "test",
+                "provider_instance": "test",
+                "available": true,
+                "in_library": null,
+                "is_unique": null,
+                "audio_format": {
+                  "content_type": "?",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "?",
+                  "bit_rate": 0
+                },
+                "url": null,
+                "details": null
+              }
+            ],
+            "metadata": {
+              "description": null,
+              "description_language": null,
+              "life_span": null,
+              "artist_entity_type": null,
+              "review": null,
+              "explicit": null,
+              "images": [
+                {
+                  "type": "thumb",
+                  "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                  "provider": "builtin",
+                  "remotely_accessible": false,
+                  "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+                },
+                {
+                  "type": "fanart",
+                  "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/fallback_fanart.jpeg",
+                  "provider": "builtin",
+                  "remotely_accessible": false,
+                  "proxy_id": "607baa18424c175c17c9e80bf3705c49400097f98c991606e2846d90b906f23f"
+                }
+              ],
+              "grouping": null,
+              "genres": [
+                "gangsta rap"
+              ],
+              "mood": null,
+              "style": null,
+              "copyright": null,
+              "lyrics": null,
+              "lrc_lyrics": null,
+              "transcript": null,
+              "transcript_cues": null,
+              "has_transcript": null,
+              "label": null,
+              "links": null,
+              "performers": null,
+              "preview": null,
+              "popularity": null,
+              "release_date": null,
+              "languages": null,
+              "chapters": null,
+              "collections": null,
+              "last_refresh": null,
+              "last_musicbrainz_lookup": null
+            },
+            "favorite": null,
+            "position": null,
+            "date_added": null,
+            "artist_type": "singer"
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "0_0",
+          "provider": "test",
+          "name": "gangsta rap Test Album 0",
+          "version": "",
+          "sort_name": "gangsta rap test album 0",
+          "uri": "test://album/0_0",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "provider_mappings": [
+            {
+              "item_id": "0_0",
+              "provider_domain": "test",
+              "provider_instance": "test",
+              "available": true,
+              "in_library": null,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": null,
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                "provider": "builtin",
+                "remotely_accessible": false,
+                "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "gangsta rap"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": null,
+          "year": null,
+          "artists": [
+            {
+              "item_id": "0",
+              "provider": "test",
+              "name": "gangsta rap Test Artist 0",
+              "version": "",
+              "sort_name": "gangsta rap test artist 0",
+              "uri": "test://artist/0",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "provider_mappings": [
+                {
+                  "item_id": "0",
+                  "provider_domain": "test",
+                  "provider_instance": "test",
+                  "available": true,
+                  "in_library": null,
+                  "is_unique": null,
+                  "audio_format": {
+                    "content_type": "?",
+                    "codec_type": "?",
+                    "sample_rate": 44100,
+                    "bit_depth": 16,
+                    "channels": 2,
+                    "output_format_str": "?",
+                    "bit_rate": 0
+                  },
+                  "url": null,
+                  "details": null
+                }
+              ],
+              "metadata": {
+                "description": null,
+                "description_language": null,
+                "life_span": null,
+                "artist_entity_type": null,
+                "review": null,
+                "explicit": null,
+                "images": [
+                  {
+                    "type": "thumb",
+                    "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                    "provider": "builtin",
+                    "remotely_accessible": false,
+                    "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+                  },
+                  {
+                    "type": "fanart",
+                    "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/fallback_fanart.jpeg",
+                    "provider": "builtin",
+                    "remotely_accessible": false,
+                    "proxy_id": "607baa18424c175c17c9e80bf3705c49400097f98c991606e2846d90b906f23f"
+                  }
+                ],
+                "grouping": null,
+                "genres": [
+                  "gangsta rap"
+                ],
+                "mood": null,
+                "style": null,
+                "copyright": null,
+                "lyrics": null,
+                "lrc_lyrics": null,
+                "transcript": null,
+                "transcript_cues": null,
+                "has_transcript": null,
+                "label": null,
+                "links": null,
+                "performers": null,
+                "preview": null,
+                "popularity": null,
+                "release_date": null,
+                "languages": null,
+                "chapters": null,
+                "collections": null,
+                "last_refresh": null,
+                "last_musicbrainz_lookup": null
+              },
+              "favorite": null,
+              "position": null,
+              "date_added": null,
+              "artist_type": "singer"
+            }
+          ],
+          "album_type": "unknown"
+        },
+        "disc_number": 1,
+        "track_number": 2,
+        "audio_metadata": null
+      },
+      {
+        "item_id": "0_0_3",
+        "provider": "test",
+        "name": "gangsta rap Test Track 0 - 0 - 3",
+        "version": "",
+        "sort_name": "gangsta rap test track 0 - 0 - 3",
+        "uri": "test://track/0_0_3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "0_0_3",
+            "provider_domain": "test",
+            "provider_instance": "test",
+            "available": true,
+            "in_library": null,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": [
+            {
+              "type": "thumb",
+              "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+            }
+          ],
+          "grouping": null,
+          "genres": [
+            "gangsta rap"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2021-06-15T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": null,
+        "date_added": null,
+        "duration": 60,
+        "artists": [
+          {
+            "item_id": "0",
+            "provider": "test",
+            "name": "gangsta rap Test Artist 0",
+            "version": "",
+            "sort_name": "gangsta rap test artist 0",
+            "uri": "test://artist/0",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "provider_mappings": [
+              {
+                "item_id": "0",
+                "provider_domain": "test",
+                "provider_instance": "test",
+                "available": true,
+                "in_library": null,
+                "is_unique": null,
+                "audio_format": {
+                  "content_type": "?",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "?",
+                  "bit_rate": 0
+                },
+                "url": null,
+                "details": null
+              }
+            ],
+            "metadata": {
+              "description": null,
+              "description_language": null,
+              "life_span": null,
+              "artist_entity_type": null,
+              "review": null,
+              "explicit": null,
+              "images": [
+                {
+                  "type": "thumb",
+                  "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                  "provider": "builtin",
+                  "remotely_accessible": false,
+                  "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+                },
+                {
+                  "type": "fanart",
+                  "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/fallback_fanart.jpeg",
+                  "provider": "builtin",
+                  "remotely_accessible": false,
+                  "proxy_id": "607baa18424c175c17c9e80bf3705c49400097f98c991606e2846d90b906f23f"
+                }
+              ],
+              "grouping": null,
+              "genres": [
+                "gangsta rap"
+              ],
+              "mood": null,
+              "style": null,
+              "copyright": null,
+              "lyrics": null,
+              "lrc_lyrics": null,
+              "transcript": null,
+              "transcript_cues": null,
+              "has_transcript": null,
+              "label": null,
+              "links": null,
+              "performers": null,
+              "preview": null,
+              "popularity": null,
+              "release_date": null,
+              "languages": null,
+              "chapters": null,
+              "collections": null,
+              "last_refresh": null,
+              "last_musicbrainz_lookup": null
+            },
+            "favorite": null,
+            "position": null,
+            "date_added": null,
+            "artist_type": "singer"
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "0_0",
+          "provider": "test",
+          "name": "gangsta rap Test Album 0",
+          "version": "",
+          "sort_name": "gangsta rap test album 0",
+          "uri": "test://album/0_0",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "provider_mappings": [
+            {
+              "item_id": "0_0",
+              "provider_domain": "test",
+              "provider_instance": "test",
+              "available": true,
+              "in_library": null,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": null,
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                "provider": "builtin",
+                "remotely_accessible": false,
+                "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "gangsta rap"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": null,
+          "year": null,
+          "artists": [
+            {
+              "item_id": "0",
+              "provider": "test",
+              "name": "gangsta rap Test Artist 0",
+              "version": "",
+              "sort_name": "gangsta rap test artist 0",
+              "uri": "test://artist/0",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "provider_mappings": [
+                {
+                  "item_id": "0",
+                  "provider_domain": "test",
+                  "provider_instance": "test",
+                  "available": true,
+                  "in_library": null,
+                  "is_unique": null,
+                  "audio_format": {
+                    "content_type": "?",
+                    "codec_type": "?",
+                    "sample_rate": 44100,
+                    "bit_depth": 16,
+                    "channels": 2,
+                    "output_format_str": "?",
+                    "bit_rate": 0
+                  },
+                  "url": null,
+                  "details": null
+                }
+              ],
+              "metadata": {
+                "description": null,
+                "description_language": null,
+                "life_span": null,
+                "artist_entity_type": null,
+                "review": null,
+                "explicit": null,
+                "images": [
+                  {
+                    "type": "thumb",
+                    "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/logo.png",
+                    "provider": "builtin",
+                    "remotely_accessible": false,
+                    "proxy_id": "1f6cce43feb48957a497e30c5feb3b2680085c7ad4ba0c24be9a0850f278715e"
+                  },
+                  {
+                    "type": "fanart",
+                    "path": "/app/venv/lib/python3.14/site-packages/music_assistant/helpers/resources/fallback_fanart.jpeg",
+                    "provider": "builtin",
+                    "remotely_accessible": false,
+                    "proxy_id": "607baa18424c175c17c9e80bf3705c49400097f98c991606e2846d90b906f23f"
+                  }
+                ],
+                "grouping": null,
+                "genres": [
+                  "gangsta rap"
+                ],
+                "mood": null,
+                "style": null,
+                "copyright": null,
+                "lyrics": null,
+                "lrc_lyrics": null,
+                "transcript": null,
+                "transcript_cues": null,
+                "has_transcript": null,
+                "label": null,
+                "links": null,
+                "performers": null,
+                "preview": null,
+                "popularity": null,
+                "release_date": null,
+                "languages": null,
+                "chapters": null,
+                "collections": null,
+                "last_refresh": null,
+                "last_musicbrainz_lookup": null
+              },
+              "favorite": null,
+              "position": null,
+              "date_added": null,
+              "artist_type": "singer"
+            }
+          ],
+          "album_type": "unknown"
+        },
+        "disc_number": 1,
+        "track_number": 3,
+        "audio_metadata": null
+      }
+    ],
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.11.0b7. From the image's own test provider (set up with nothing to sync, removed again): a music service's songs, whole Track objects with nested Artist and Album."
+}

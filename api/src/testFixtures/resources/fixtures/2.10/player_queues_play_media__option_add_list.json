@@ -1,0 +1,19 @@
+{
+  "request": {
+    "message_id": "58",
+    "command": "player_queues/play_media",
+    "args": {
+      "queue_id": "updb709e97",
+      "media": [
+        "filesystem_local--9AmKqjyh://track/Basso Continuo/Low End (2022)/01 - Ground Bass.ogg",
+        "filesystem_local--9AmKqjyh://track/Cirrus/High Clouds (2024)/02 - Jet Stream.mp3"
+      ],
+      "option": "add"
+    }
+  },
+  "response": {
+    "message_id": "58",
+    "result": null,
+    "partial": false
+  }
+}

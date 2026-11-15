@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads">Downloads</string>
+    <string name="download">Download</string>
+    <string name="download_cancel">Stop download</string>
+    <string name="download_remove">Remove download</string>
+    <string name="download_remove_question">Remove “%1$s” from this phone? It can be downloaded again.</string>
+    <!-- A message, once for a book or an episode, the first time it plays on this phone -->
+    <string name="download_offer">Download “%1$s” to listen on the go?</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="downloading_percent">Downloading · %1$d %%</string>
+    <string name="download_waiting">Waiting to download</string>
+    <string name="download_stopped">Download stopped</string>
+    <string name="download_not_abs">Only books and podcasts from Audiobookshelf can be downloaded</string>
+    <string name="download_failed_signed_out">Sign in to Audiobookshelf again to download “%1$s”</string>
+    <string name="download_failed_gone">“%1$s” is no longer on Audiobookshelf</string>
+    <string name="download_failed_refused">Audiobookshelf doesn’t let this account download “%1$s”</string>
+    <string name="download_failed_unreachable">Couldn’t reach Audiobookshelf to download “%1$s”</string>
+    <string name="download_failed_server">Audiobookshelf couldn’t send “%1$s”</string>
+    <string name="download_failed_space">Couldn’t save “%1$s”. Is there space left on this phone?</string>
+    <string name="download_not_saved">Couldn’t save the download. Is there space left on this phone?</string>
+
+    <!-- Audiobookshelf, where downloads come from -->
+    <string name="abs_intro">Books and podcasts from Audiobookshelf can be downloaded to listen without a connection. Sign in once with your Audiobookshelf account.</string>
+    <string name="abs_address">Audiobookshelf address</string>
+    <string name="abs_address_example">For example books.example.com or 192.168.1.20:13378</string>
+    <string name="abs_sign_in">Sign in</string>
+    <string name="abs_sign_in_download">Sign in and download</string>
+    <string name="abs_error_address">That doesn’t look like an address</string>
+    <string name="abs_error_unreachable">Couldn’t reach Audiobookshelf at that address</string>
+    <string name="abs_error_login">That username or password didn’t work</string>
+    <string name="abs_error_server">Audiobookshelf didn’t answer as expected. Try again.</string>
+    <string name="abs_signed_in">Signed in to Audiobookshelf as %1$s at %2$s.</string>
+    <string name="abs_not_connected">Not connected to Audiobookshelf</string>
+    <string name="downloads_used">%1$s on this phone</string>
+    <string name="downloads_wifi">Only on Wi-Fi</string>
+    <string name="downloads_wifi_detail">Downloads wait for Wi-Fi rather than use mobile data</string>
+</resources>

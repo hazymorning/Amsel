@@ -1,0 +1,107 @@
+{
+  "request": {
+    "message_id": "1048",
+    "command": "music/audiobooks/get",
+    "args": {
+      "item_id": "2",
+      "provider_instance_id_or_domain": "library"
+    }
+  },
+  "response": {
+    "message_id": "1048",
+    "result": {
+      "item_id": "2",
+      "provider": "library",
+      "name": "The Lantern Road",
+      "version": "",
+      "sort_name": "lantern road, the",
+      "uri": "library://audiobook/2",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "Ada Quill/The Lantern Road/01 - Chapter 1.mp3",
+          "provider_domain": "filesystem_local",
+          "provider_instance": "filesystem_local--8VZfxXpg",
+          "available": true,
+          "in_library": true,
+          "is_unique": null,
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "mp3",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "mp3",
+            "bit_rate": 32
+          },
+          "url": null,
+          "details": "1793645844"
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "description_language": null,
+        "life_span": null,
+        "artist_entity_type": null,
+        "review": null,
+        "explicit": null,
+        "images": null,
+        "grouping": null,
+        "genres": [
+          "Audiobook"
+        ],
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "lrc_lyrics": null,
+        "transcript": null,
+        "transcript_cues": null,
+        "has_transcript": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 1,
+            "name": "Chapter 1",
+            "start": 0.0,
+            "end": 90.070204
+          },
+          {
+            "position": 2,
+            "name": "Chapter 2",
+            "start": 90.070204,
+            "end": 180.140408
+          },
+          {
+            "position": 3,
+            "name": "Chapter 3",
+            "start": 180.140408,
+            "end": 270.210612
+          }
+        ],
+        "collections": null,
+        "last_refresh": 1793646137
+      },
+      "favorite": false,
+      "position": null,
+      "date_added": "2026-11-02T19:01:40+00:00",
+      "publisher": null,
+      "authors": [
+        "Ada Quill"
+      ],
+      "narrators": [],
+      "duration": 270,
+      "fully_played": null,
+      "resume_position_ms": null
+    }
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

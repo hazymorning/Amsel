@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- What is left of a book or episode -->
+    <string name="spoken_left_hours_minutes">Noch %1$d\u00A0Std. %2$d\u00A0Min.</string>
+    <string name="spoken_left_hours">Noch %1$d\u00A0Std.</string>
+    <string name="spoken_left_minutes">Noch %1$d\u00A0Min.</string>
+
+    <!-- Chapters: the number counts from 1 as the list shows it -->
+    <string name="spoken_chapter">Kapitel %1$d</string>
+    <string name="spoken_chapter_titled">Kapitel %1$d · %2$s</string>
+    <string name="spoken_chapter_left">noch %1$s</string>
+</resources>

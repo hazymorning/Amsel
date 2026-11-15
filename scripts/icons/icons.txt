@@ -1,0 +1,91 @@
+# Phosphor icons, copied in as vector drawables by scripts/icons/fetch-icons.py. Each comes in the
+# Regular, Bold and Light cuts, whose lines are 1.5 dp at 24, 16 and 32 dp; the app draws the cut
+# whose line is nearest 1.5 dp at the size it is drawn. One icon per line:
+#   <drawable name, written as ic_<name>.xml>  <phosphor icon>  [fill|bold]  [mirrored]  [custom]
+#   [heavy]  [stroke:<units>]
+# "fill" (transport glyphs and the selected tab) and "bold" (three dots, which have no line to
+# keep) come in that one cut only.
+# "heavy" adds a cut with a 32 unit line, 1.5 dp at 12 dp, for a glyph inside a download's ring.
+# "stroke:<units>" draws Phosphor's own line drawing with lines that wide, in one cut: the caret
+# after words is a step smaller than they are, and 29 units keep its line at 1.5 dp there.
+# "mirrored" flips the glyph in right-to-left layouts (arrows and lists that point somewhere).
+# "custom" takes scripts/icons/custom/<icon>.svg instead: Amsel's own glyphs, drawn to Phosphor's
+# spec (a 16 unit stroke on its 256 grid, round ends), in the same three cuts.
+# Run scripts/icons/fetch-icons.py after editing; icons that leave this list are deleted.
+
+# Tabs: outline when not selected, filled when selected.
+home                house
+home_selected       house                  fill
+search              magnifying-glass
+search_selected     magnifying-glass       fill
+library             library                custom
+library_selected    library_selected       custom
+
+# Transport: filled, as on every media control.
+play                play                   fill
+pause_slim          pause_slim             custom
+skip_next           skip-forward           fill
+skip_previous       skip-back              fill
+shuffle             shuffle
+repeat              repeat
+repeat_one          repeat-once
+skip_back           arrow-counter-clockwise
+skip_forward        arrow-clockwise
+
+# Navigation and actions.
+back                arrow-left             mirrored
+collapse            caret-down
+close               x
+check               check
+more                dots-three             bold
+settings            gear-six
+open_external       arrow-square-out       mirrored
+edit                pencil-simple
+add                 plus
+minus               minus
+chevron             caret-right            mirrored
+sleep               moon
+dropdown            caret-down             stroke:29
+move_up             arrow-up
+move_down           arrow-down
+
+# Items and their actions.
+album               vinyl-record
+artist              user
+playlist            playlist               mirrored
+track               music-note
+radio               radio
+audiobook           book-open
+podcast             microphone
+chapters            list-numbers           mirrored
+played              check-circle
+unplayed            circle-dashed
+favorite            heart
+favorite_filled     heart                  fill
+bookmark            bookmark-simple
+play_next           queue                  mirrored
+playlist_add        list-plus              mirrored
+remove              minus-circle
+drag                list
+pin                 push-pin
+unpin               push-pin-slash
+download            download-simple        heavy
+downloaded          arrow-circle-down      fill
+download_stop       stop                   fill
+mix                 infinity
+similar             music-notes
+dj                  microphone-stage
+
+# Speakers and volume.
+speaker             room                   custom
+queue               queue                  custom
+group               link-simple
+ungroup             link-break
+phone               device-mobile
+volume              speaker-high
+
+# States.
+offline             wifi-slash
+
+# A tip's mark.
+tip                 lightbulb

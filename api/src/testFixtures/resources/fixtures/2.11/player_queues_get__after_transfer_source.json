@@ -1,0 +1,47 @@
+{
+  "request": {
+    "message_id": "90",
+    "command": "player_queues/get",
+    "args": {
+      "queue_id": "upe2a1d83a"
+    }
+  },
+  "response": {
+    "message_id": "90",
+    "result": {
+      "queue_id": "upe2a1d83a",
+      "active": true,
+      "display_name": "Kitchen",
+      "available": true,
+      "items": 0,
+      "shuffle_enabled": false,
+      "repeat_mode": "off",
+      "crossfade_enabled": false,
+      "autoplay_enabled": false,
+      "overlay_enabled": false,
+      "overlay_source": null,
+      "overlay_volume": 100,
+      "smart_fades_active": false,
+      "smart_shuffle_active": false,
+      "current_index": null,
+      "index_in_buffer": null,
+      "ended": false,
+      "elapsed_time": 0,
+      "elapsed_time_last_updated": 1793560715.3479223,
+      "playback_speed": 1.0,
+      "state": "idle",
+      "current_item": null,
+      "next_item": null,
+      "sources": [],
+      "flow_mode": true,
+      "resume_pos": 5,
+      "is_dynamic": false,
+      "extra_attributes": {
+        "play_action_in_progress": false
+      },
+      "dont_stop_the_music_enabled": false,
+      "radio_source": []
+    },
+    "partial": false
+  }
+}

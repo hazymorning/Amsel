@@ -1,0 +1,130 @@
+{
+  "request": {
+    "message_id": "1039",
+    "command": "music/audiobooks/library_items",
+    "args": {
+      "limit": 50
+    }
+  },
+  "response": {
+    "message_id": "1039",
+    "result": [
+      {
+        "item_id": "2",
+        "provider": "library",
+        "name": "The Lantern Road",
+        "version": "",
+        "sort_name": "lantern road, the",
+        "uri": "library://audiobook/2",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "audiobook",
+        "provider_mappings": [
+          {
+            "item_id": "Ada Quill/The Lantern Road/01 - Chapter 1.mp3",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--c2U5hPyj",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "mp3",
+              "codec_type": "mp3",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "mp3",
+              "bit_rate": 32
+            },
+            "url": null,
+            "details": "be0ba32d897dbedbcf7332676dcf3e6c602e0aafbb3f640d2bf0473bed2ac614"
+          }
+        ],
+        "metadata": {},
+        "authors": [
+          {
+            "item_id": "1",
+            "provider": "library",
+            "name": "Ada Quill",
+            "version": "",
+            "sort_name": "ada quill",
+            "uri": "library://artist/1",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "narrators": [
+          {
+            "item_id": "2",
+            "provider": "library",
+            "name": "Ben Reader",
+            "version": "",
+            "sort_name": "ben reader",
+            "uri": "library://artist/2",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "duration": 270,
+        "fully_played": false,
+        "resume_position_ms": 102000,
+        "available": true
+      },
+      {
+        "item_id": "1",
+        "provider": "library",
+        "name": "Single File Tale",
+        "version": "",
+        "sort_name": "single file tale",
+        "uri": "library://audiobook/1",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "audiobook",
+        "provider_mappings": [
+          {
+            "item_id": "Ada Quill/Single File Tale/Single File Tale.m4b",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--c2U5hPyj",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "m4b",
+              "codec_type": "aac",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "m4b",
+              "bit_rate": 33
+            },
+            "url": null,
+            "details": "1793645846"
+          }
+        ],
+        "metadata": {},
+        "authors": [
+          {
+            "item_id": "1",
+            "provider": "library",
+            "name": "Ada Quill",
+            "version": "",
+            "sort_name": "ada quill",
+            "uri": "library://artist/1",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "narrators": [],
+        "duration": 120,
+        "available": true
+      }
+    ]
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

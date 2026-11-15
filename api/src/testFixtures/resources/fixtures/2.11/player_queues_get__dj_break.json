@@ -1,0 +1,507 @@
+{
+  "request": {
+    "command": "player_queues/get",
+    "args": {
+      "queue_id": "upcd320c8c"
+    }
+  },
+  "response": {
+    "result": {
+      "queue_id": "upcd320c8c",
+      "active": true,
+      "display_name": "Living Room",
+      "available": true,
+      "items": 18,
+      "shuffle_enabled": false,
+      "repeat_mode": "off",
+      "crossfade_enabled": false,
+      "autoplay_enabled": false,
+      "overlay_enabled": false,
+      "overlay_source": null,
+      "overlay_volume": 100,
+      "smart_fades_active": false,
+      "smart_shuffle_active": false,
+      "current_index": 1,
+      "index_in_buffer": 5,
+      "ended": false,
+      "elapsed_time": 1.7119189886147286,
+      "elapsed_time_last_updated": 1794443219.6294336,
+      "playback_speed": 1.0,
+      "state": "playing",
+      "current_item": {
+        "queue_id": "upcd320c8c",
+        "queue_item_id": "b9484f9322a84da091ec8fdaba5ef47f",
+        "name": "Artist fact + Transition",
+        "duration": 3,
+        "sort_index": 1,
+        "streamdetails": {
+          "provider": "ai_radio",
+          "item_id": "djbdee4d328816_005",
+          "audio_format": {
+            "content_type": "wav",
+            "codec_type": "s16le",
+            "sample_rate": 48000,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "wav;rate=44100;bitrate=16;channels=2",
+            "bit_rate": 1536
+          },
+          "media_type": "sound_effect",
+          "stream_type": "custom",
+          "duration": 3,
+          "size": null,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "lossless",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": null,
+              "playback_speed": 1.0,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "upcd320c8c"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "lossless",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": null,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "disabled",
+          "volume_normalization_gain_correct": null,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "djbdee4d328816_005",
+          "provider": "ai_radio",
+          "name": "Artist fact + Transition",
+          "version": "",
+          "sort_name": "artist fact + transition",
+          "uri": "ai_radio://sound_effect/djbdee4d328816_005",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "sound_effect",
+          "provider_mappings": [
+            {
+              "item_id": "djbdee4d328816_005",
+              "provider_domain": "ai_radio",
+              "provider_instance": "ai_radio",
+              "available": true,
+              "in_library": null,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": null,
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "/app/venv/lib/python3.14/site-packages/music_assistant/providers/ai_radio/air.png",
+                "provider": "builtin",
+                "remotely_accessible": false,
+                "proxy_id": "e77d003324c57429ffb6a1b90d859f43358d2ac2def8b1b542923aa61a7f37e6"
+              }
+            ],
+            "grouping": null,
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": null,
+          "duration": 0
+        },
+        "image": {
+          "type": "thumb",
+          "path": "/app/venv/lib/python3.14/site-packages/music_assistant/providers/ai_radio/air.png",
+          "provider": "builtin",
+          "remotely_accessible": false,
+          "proxy_id": "e77d003324c57429ffb6a1b90d859f43358d2ac2def8b1b542923aa61a7f37e6"
+        },
+        "index": 0,
+        "available": true,
+        "origin": null,
+        "extra_attributes": {
+          "ai_radio_session_id": "djbdee4d328816",
+          "ai_radio_station_id": "",
+          "ai_radio_host_id": "music_nerd",
+          "ai_radio_prompt": "Merge the drafts below into one coherent radio break. Preserve factual content, remove duplication, and make the final segment sound like one host speaking naturally.\n1. [music_nerd_artist_fact] The next track is Aurora Tone - Tailwind. Share one specific, verifiable fact about the artist, the recording or its influence, in two to four spoken sentences. No generic trivia and no 'did you know' framing. If no solid fact is available, say less rather than guess.\n2. [music_nerd_transition] The previous track was Cirrus - Thin Air and the next track is Aurora Tone - Tailwind. Bridge the two with one natural link, such as a shared era, scene, mood or a surprising contrast, then hand off by naming the next artist and title once. No filler, and mention the previous track at most in passing.\n\nCreate one single moderator script that naturally combines all requested parts. Return plain text only.\n\nTarget length: around 1150 characters total. It may exceed by up to 15% if needed to finish naturally. Never stop mid-sentence.",
+          "ai_radio_max_chars": 1150,
+          "ai_radio_web_search_mode": "allow",
+          "ai_radio_weather_required": false,
+          "ai_radio_allow_post": false,
+          "ai_radio_queue_dj": true,
+          "ai_radio_gap_next_id": "ff3b93bea52140a2becb690ee3880929",
+          "ai_radio_rendered_text": "That was a fine one. Coming up next, another."
+        }
+      },
+      "next_item": {
+        "queue_id": "upcd320c8c",
+        "queue_item_id": "ff3b93bea52140a2becb690ee3880929",
+        "name": "Aurora Tone - Tailwind",
+        "duration": 14,
+        "sort_index": 1,
+        "streamdetails": {
+          "provider": "filesystem_local--NM2YfwUA",
+          "item_id": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "mp3",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "mp3",
+            "bit_rate": 48
+          },
+          "media_type": "track",
+          "stream_type": "local_file",
+          "duration": 14,
+          "size": 87088,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "low",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": {
+                "mode": "measurement_only",
+                "measurement_source": "track",
+                "target_lufs": -14.0,
+                "measured_lufs": -32.5,
+                "applied_gain_db": 18.5
+              },
+              "playback_speed": 1.0,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "upcd320c8c"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "low",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": -32.5,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "measurement_only",
+          "volume_normalization_gain_correct": 18.5,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "2",
+          "provider": "library",
+          "name": "Tailwind",
+          "version": "",
+          "sort_name": "tailwind",
+          "uri": "library://track/2",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--NM2YfwUA",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "mp3",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "mp3",
+                "bit_rate": 49
+              },
+              "url": null,
+              "details": "1794327729"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+                "provider": "filesystem_local--NM2YfwUA",
+                "remotely_accessible": false,
+                "proxy_id": "78c59d7a6e2b4984809721f7d995fa08f7d1fd143978ee91f2ebc84d37fc67e5"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Electronic"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": "2023-01-01T00:00:00+00:00",
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null,
+            "last_musicbrainz_lookup": null
+          },
+          "favorite": null,
+          "position": null,
+          "date_added": "2026-11-10T16:22:09+00:00",
+          "duration": 14,
+          "artists": [
+            {
+              "item_id": "2",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/2",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 0,
+          "album": {
+            "item_id": "2",
+            "provider": "library",
+            "name": "Second Wind",
+            "version": "",
+            "sort_name": "second wind",
+            "uri": "library://album/2",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "provider_mappings": [
+              {
+                "item_id": "Aurora Tone/Second Wind (2023)",
+                "provider_domain": "filesystem_local",
+                "provider_instance": "filesystem_local--NM2YfwUA",
+                "available": true,
+                "in_library": true,
+                "is_unique": null,
+                "audio_format": {
+                  "content_type": "?",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "?",
+                  "bit_rate": 0
+                },
+                "url": "Aurora Tone/Second Wind (2023)",
+                "details": null
+              }
+            ],
+            "metadata": {
+              "description": null,
+              "description_language": null,
+              "life_span": null,
+              "artist_entity_type": null,
+              "review": null,
+              "explicit": null,
+              "images": [
+                {
+                  "type": "thumb",
+                  "path": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+                  "provider": "filesystem_local--NM2YfwUA",
+                  "remotely_accessible": false,
+                  "proxy_id": "78c59d7a6e2b4984809721f7d995fa08f7d1fd143978ee91f2ebc84d37fc67e5"
+                }
+              ],
+              "grouping": null,
+              "genres": null,
+              "mood": null,
+              "style": null,
+              "copyright": null,
+              "lyrics": null,
+              "lrc_lyrics": null,
+              "transcript": null,
+              "transcript_cues": null,
+              "has_transcript": null,
+              "label": null,
+              "links": null,
+              "performers": null,
+              "preview": null,
+              "popularity": null,
+              "release_date": null,
+              "languages": null,
+              "chapters": null,
+              "collections": null,
+              "last_refresh": 1787161041,
+              "last_musicbrainz_lookup": null
+            },
+            "favorite": null,
+            "position": null,
+            "date_added": "2026-11-10T16:22:09+00:00",
+            "year": 2023,
+            "artists": [
+              {
+                "item_id": "2",
+                "provider": "library",
+                "name": "Aurora Tone",
+                "version": "",
+                "sort_name": "aurora tone",
+                "uri": "library://artist/2",
+                "external_ids": [],
+                "is_playable": true,
+                "media_type": "artist",
+                "available": true,
+                "image": null,
+                "year": null
+              }
+            ],
+            "album_type": "unknown"
+          },
+          "disc_number": 1,
+          "track_number": 1,
+          "audio_metadata": null
+        },
+        "image": {
+          "type": "thumb",
+          "path": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+          "provider": "filesystem_local--NM2YfwUA",
+          "remotely_accessible": false,
+          "proxy_id": "78c59d7a6e2b4984809721f7d995fa08f7d1fd143978ee91f2ebc84d37fc67e5"
+        },
+        "index": 0,
+        "available": true,
+        "origin": null,
+        "extra_attributes": {}
+      },
+      "sources": [],
+      "flow_mode": true,
+      "resume_pos": 0,
+      "is_dynamic": false,
+      "extra_attributes": {
+        "play_action_in_progress": false
+      },
+      "dont_stop_the_music_enabled": false,
+      "radio_source": []
+    },
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.11.0b7 over HTTP, which numbers no messages. Living Room with the DJ on: what plays is one of its spoken breaks, a queue item of media_type sound_effect from the provider ai_radio, and a song comes next."
+}

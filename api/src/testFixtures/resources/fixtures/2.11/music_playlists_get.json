@@ -1,0 +1,86 @@
+{
+  "request": {
+    "message_id": "35",
+    "command": "music/playlists/get",
+    "args": {
+      "item_id": "9",
+      "provider_instance_id_or_domain": "library"
+    }
+  },
+  "response": {
+    "message_id": "35",
+    "result": {
+      "item_id": "9",
+      "provider": "library",
+      "name": "Amsel Mix",
+      "version": "",
+      "sort_name": "amsel mix",
+      "uri": "library://playlist/9",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "playlist",
+      "provider_mappings": [
+        {
+          "item_id": "Playlists/Amsel Mix.m3u",
+          "provider_domain": "filesystem_local",
+          "provider_instance": "filesystem_local--Cu6eBeYR",
+          "available": true,
+          "in_library": true,
+          "is_unique": null,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": "1793560604"
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "description_language": null,
+        "life_span": null,
+        "artist_entity_type": null,
+        "review": null,
+        "explicit": null,
+        "images": null,
+        "grouping": null,
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "lrc_lyrics": null,
+        "transcript": null,
+        "transcript_cues": null,
+        "has_transcript": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "collections": null,
+        "last_refresh": null,
+        "last_musicbrainz_lookup": null
+      },
+      "favorite": null,
+      "position": null,
+      "date_added": "2026-11-01T19:18:04+00:00",
+      "owner": "Local files",
+      "is_editable": false,
+      "is_dynamic": false,
+      "supported_mediatypes": [
+        "track"
+      ],
+      "access": null
+    },
+    "partial": false
+  }
+}

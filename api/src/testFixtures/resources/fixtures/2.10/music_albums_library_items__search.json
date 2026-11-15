@@ -1,0 +1,78 @@
+{
+  "request": {
+    "message_id": "21",
+    "command": "music/albums/library_items",
+    "args": {
+      "limit": 50,
+      "offset": 0,
+      "search": "light"
+    }
+  },
+  "response": {
+    "message_id": "21",
+    "result": [
+      {
+        "item_id": "4",
+        "provider": "library",
+        "name": "First Light",
+        "version": "",
+        "sort_name": "first light",
+        "uri": "library://album/4",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "album",
+        "provider_mappings": [
+          {
+            "item_id": "Aurora Tone/First Light (2021)",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--9AmKqjyh",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Aurora Tone/First Light (2021)",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Aurora Tone/First Light (2021)/folder.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "cba068fa1ec7ec1ac4bd0136c9dd655e4a35fb803fff5eb19cd376159bd48957"
+            }
+          ]
+        },
+        "favorite": false,
+        "year": 2021,
+        "artists": [
+          {
+            "item_id": "2",
+            "provider": "library",
+            "name": "Aurora Tone",
+            "version": "",
+            "sort_name": "aurora tone",
+            "uri": "library://artist/2",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "album_type": "unknown",
+        "available": true
+      }
+    ],
+    "partial": false
+  }
+}

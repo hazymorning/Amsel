@@ -1,0 +1,18 @@
+{
+  "request": null,
+  "response": {
+    "server_id": "269ed74c282548b886aee77a83a86cf5",
+    "server_version": "2.10.9",
+    "schema_version": 65,
+    "min_supported_schema_version": 28,
+    "base_url": "http://172.17.0.4:8095",
+    "homeassistant_addon": false,
+    "onboard_done": true,
+    "name": "Music Assistant (cc2a81b547d4)",
+    "status": "running",
+    "internal_url": "http://172.17.0.4:8095",
+    "external_url": null,
+    "has_remote_access": false
+  },
+  "notes": "First frame the server sends on every new /ws connection, before any command."
+}
