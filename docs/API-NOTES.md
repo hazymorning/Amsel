@@ -26,7 +26,7 @@ are in `music-assistant/models@1.1.232`; `client:` is `/home/user/ref/client/mus
 7. Load `players/all` and `player_queues/all`, then keep both current from `player_*` and `queue_*` events.
 8. Library index: page `music/{playlists,albums,artists,audiobooks,podcasts,radios}/library_items` (limit 500) into Room, the kinds side by side, for each kind whose count or favourite count differs from the index's (or after another server or schema). Patch it from `media_item_*` and favourite events; re-sync on `music_sync_completed`.
 9. Every command is `{message_id, command, args}`. Match replies by `message_id`, join `partial:true` chunks, and turn `error_code` into a plain sentence.
-10. On a dropped socket reconnect with backoff and start again at step 2. Events are not replayed, so re-fetch players and queues. `auth` error 23 means the token is gone: show sign-in.
+10. On a dropped socket reconnect with backoff and start again at step 2. Events are not replayed, so re-fetch players and queues. `auth` error 23 means the token is gone: show sign-in. What the server last said holds only while it is current: after two minutes without a connection the speakers rest where they were and no longer keep the socket open, and the next network to come reconnects (`Session.stale`).
 
 ## 1. Versions and schema gates
 
@@ -336,7 +336,8 @@ time crosses a multiple of 30 s (`PLAYBACK_REPORT_INTERVAL_SECONDS`), never on a
 125 s). The official app never closes its session on purpose (`KtorServiceClient`: in the
 background it only declines to reconnect a dropped transport while nothing plays), but a lost
 connection rebuilds its phone's queue as well. Amsel keeps the session open while music is paused
-on the phone (`Session.setHolding`); when the phone's client leaves it notes the book or episode
+on the phone (`Session.setHolding`), until the server has been out of reach for two minutes
+(`Session.stale`); when the phone's client leaves it notes the book or episode
 and where it was (`Speakers.left`), and after the next join the rebuilt queue is parked at that
 place (`Speakers.rejoined`, `Seek.Parked`): it shows there and a play is a seek there, until the
 queue plays again or holds something else. A client-side fix that remembered places across runs

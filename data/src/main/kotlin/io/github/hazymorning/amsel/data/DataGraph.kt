@@ -145,7 +145,8 @@ class DataGraph(
         // that lands first is not overwritten by the older snapshot.
         scope.launch { home.load() }
         scope.launch { session.restore() }
-        // A dropped socket waits out its backoff; the network coming back is reason to retry at once.
+        // A dropped socket waits out its backoff, and one closed while the server was out of reach
+        // stays closed: the network coming back is reason to try at once.
         app.getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) = session.reconnect()

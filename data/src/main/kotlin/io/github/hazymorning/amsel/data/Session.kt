@@ -63,7 +63,9 @@ sealed interface SessionState {
  * The app's connection lifecycle. The socket stays open while the app is in the foreground,
  * something plays or This phone is paused by a call, and closes 60 s after none is true. A command
  * or library read from outside the app (the notification, a headset, the car) [wake]s it: it opens
- * if closed and stays open for 60 s after the last such use.
+ * if closed and stays open for 60 s after the last such use. What only the server can say, that a
+ * speaker plays or This phone holds music, keeps it open only until the server has been out of
+ * reach for two minutes ([stale]).
  */
 class Session(
     private val prefs: AppPrefs,
@@ -73,6 +75,7 @@ class Session(
     private val deviceName: String,
     network: PhoneNetwork,
     private val idleCloseMs: Long = IDLE_CLOSE_MS,
+    staleAfterMs: Long = STALE_AFTER_MS,
 ) {
     private val checked = CheckedNetwork(network, prefs, scope)
     val client = MaClient(http, scope, sameNetwork = checked::isHere)
@@ -88,6 +91,7 @@ class Session(
     private val lock = Any()
     private val _foreground = MutableStateFlow(false)
     private var playing = false
+    private var audible = false
     private var inCall = false
     private var holding = false
     private var idleJob: Job? = null
@@ -96,8 +100,19 @@ class Session(
     /** Forgetting a refused session and remembering a new one, one at a time. */
     private val changing = Mutex()
 
-    /** Whether the socket is wanted for its own sake. Read with [lock] held. */
-    private val active: Boolean get() = _foreground.value || playing || inCall || holding
+    /**
+     * What the server last said of the speakers is out of date: the socket has been trying for two
+     * minutes without connecting, and it stays so, closed too, until it connects.
+     */
+    val stale: StateFlow<Boolean> = scope.staleness(client.state, staleAfterMs)
+
+    /**
+     * Whether the socket is wanted for its own sake. Away from home a speaker that last played would
+     * keep it retrying for hours, so the server's word counts only while it is current. Read with
+     * [lock] held.
+     */
+    private val active: Boolean
+        get() = _foreground.value || audible || inCall || (!stale.value && (playing || holding))
 
     /** The app is in front: what only its screens show loads then. */
     val foreground: StateFlow<Boolean> = _foreground.asStateFlow()
@@ -176,6 +191,7 @@ class Session(
                 }
             }
         }
+        scope.launch { stale.collect { synchronized(lock) { reconcile() } } }
     }
 
     /** The address and token of the current session, for the Sendspin socket ("This phone"). */
@@ -199,8 +215,15 @@ class Session(
         reconcile()
     }
 
+    /** The session's speaker plays, or is about to, as the server last said. */
     fun setPlaying(value: Boolean) = synchronized(lock) {
         playing = value
+        reconcile()
+    }
+
+    /** This phone's own audio plays, or is about to, whichever speaker the session holds. */
+    fun setAudible(value: Boolean) = synchronized(lock) {
+        audible = value
         reconcile()
     }
 
@@ -243,15 +266,19 @@ class Session(
 
     /**
      * Retries an unreachable server at once instead of waiting out the backoff (Retry, a granted
-     * permission, the network coming back), or one that was too old and may have been updated.
+     * permission, the network coming back), or one that was too old and may have been updated. A
+     * socket that closed while the server was out of reach ([stale]) opens again too: the phone may
+     * be home, and what the speakers do is known once it connects.
      */
     fun reconnect() {
         synchronized(lock) {
             val session = stored.value ?: return
             val state = client.state.value
-            if (state != ConnectionState.Offline && state != ConnectionState.Unsupported) return
+            val closedStale = state == ConnectionState.Idle && stale.value
+            if (state != ConnectionState.Offline && state != ConnectionState.Unsupported && !closedStale) return
             client.start(session.address, session.token, session.serverId)
-            if (!active) armIdleClose()
+            // A network that keeps coming and going must not put off the close for ever.
+            if (!active && idleJob == null) armIdleClose()
         }
     }
 
@@ -415,6 +442,9 @@ class Session(
 
     private companion object {
         const val IDLE_CLOSE_MS = 60_000L
+
+        /** Well past a Wi-Fi blip, through which This phone's Sendspin keeps its server. */
+        const val STALE_AFTER_MS = 120_000L
         const val ROTATE_WITHIN_S = 30L * 24 * 3600
     }
 }

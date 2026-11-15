@@ -410,7 +410,9 @@ capped by the module at 64 UTF-8 bytes (`wire/Messages.kt:106`); check the read 
   Sendspin auth must use the very token the control socket uses. The module reconnects by itself
   with that first frame, so over plain http Amsel keeps its config through a control-socket
   reconnect only on the network where the control socket last passed the `server_id` check
-  (`sendspinServer`); over TLS it keeps it anywhere.
+  (`sendspinServer`); over TLS it keeps it anywhere. Either way only until the session closes:
+  two minutes without the control socket, paused music on the phone no longer keeps it open
+  (`Session.stale`), so neither socket retries for hours away from home.
 - Wire version, from the control socket's server info (`schema_version`, `server_version`), as
   the official app's `sendspinWireFor` (`EncryptedSendspinSupport.kt`): `schema_version >= 96`
   → `WireVersion.SPEC_1_0`; else `server_version` `2.10.N` with `N >= 7` → `SPEC_1_0`; else

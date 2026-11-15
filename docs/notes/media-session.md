@@ -116,7 +116,10 @@ cached; `m3/MediaSession.java:2846-2865`) fetches it over the cleartext-allowed 
 - **Keep the last snapshot while reconnecting.** An empty timeline removes the notification and
   stops the FGS at once (`m3/MediaNotificationManager.java:197-200`, `:364-376`), and from the
   background it cannot come back. `:data` keeps the last speaker state until the socket is back or
-  the user changes speaker. The socket stays open while the FGS runs; commands wait up to 10 s for it (D7).
+  the user changes speaker. The socket stays open while the speaker plays; commands wait up to 10 s
+  for it (D7). Two minutes without the socket (`Session.stale`), the snapshot rests where it was,
+  not playing: the notification keeps its item, Media3 lets the FGS go 10 min later, and the socket
+  closes 60 s after, unless the app is in front or This phone plays.
 - **Never start the service by hand.** Media3 starts it with `startForegroundService(startSelfIntent)`
   when playback starts (`m3/MediaNotificationManager.java:534`).
 - **No `MediaButtonReceiver`, no resumption.** Media3 treats a manifest receiver as "this app does

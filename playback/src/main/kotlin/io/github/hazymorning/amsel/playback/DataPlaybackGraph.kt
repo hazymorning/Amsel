@@ -81,11 +81,9 @@ class DataPlaybackGraph(
     private val sessionPlaying = MutableStateFlow(false)
 
     init {
+        sessionPlaying.onEach(data.session::setPlaying).launchIn(scope)
         // This phone playing behind another speaker keeps the connection open too.
-        combine(sessionPlaying, phone.audible) { session, phone -> session || phone }
-            .distinctUntilChanged()
-            .onEach(data.session::setPlaying)
-            .launchIn(scope)
+        phone.audible.onEach(data.session::setAudible).launchIn(scope)
         // So does music paused on This phone (Session.setHolding).
         combine(target, phone.playerId, data.speakers.queues) { selected, id, queues ->
             selected.isPhone && id != null && queues[id]?.queue?.currentItem != null
@@ -95,6 +93,15 @@ class DataPlaybackGraph(
     }
 
     override val elapsedRealtime: () -> Long = SystemClock::elapsedRealtime
+
+    /**
+     * Since when, on [elapsedRealtime]'s clock, what the server said of the speakers is out of date
+     * (Session.stale); null while it is current.
+     */
+    private val staleSince: StateFlow<Long?> =
+        data.session.stale.map { stale -> if (stale) elapsedRealtime() else null }
+            .stateIn(scope, SharingStarted.Eagerly, null)
+
     override val commands: MaSpeakerCommands =
         MaSpeakerCommands(api, dispatcher, data.session::wake, data.speakers, phone, scope, elapsedRealtime)
     override val catalog: Catalog = DataCatalog(api, data.session::wake) { it in data.library.heldTypes.first() }
@@ -144,10 +151,19 @@ class DataPlaybackGraph(
         return snapshot(id, speakers.players.value, speakers.queues.value, dispatcher.pending.value)?.current != null
     }
 
+    /**
+     * Out of reach for a while, a speaker rests where it was: nothing says it still plays, and one
+     * shown playing keeps the service in front and the lock screen's clock running.
+     */
     @Synchronized
     override fun snapshots(playerId: String): StateFlow<SpeakerSnapshot?> = snapshotFlows.getOrPut(playerId) {
-        combine(data.speakers.players, data.speakers.queues, dispatcher.pending) { players, queues, pending ->
-            snapshot(playerId, players, queues, pending)
+        combine(
+            data.speakers.players,
+            data.speakers.queues,
+            dispatcher.pending,
+            staleSince,
+        ) { players, queues, pending, since ->
+            snapshot(playerId, players, queues, pending)?.let { s -> since?.let(s::standingAt) ?: s }
         }.stateIn(scope, SharingStarted.WhileSubscribed(), null)
     }
 

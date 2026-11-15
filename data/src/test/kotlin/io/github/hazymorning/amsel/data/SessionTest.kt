@@ -20,6 +20,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import mockwebserver3.Dispatcher
+import mockwebserver3.MockResponse
+import mockwebserver3.RecordedRequest
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -45,6 +48,7 @@ class SessionTest {
         authError: Int? = null,
         storedId: String? = null,
         network: FakePhoneNetwork = FakePhoneNetwork(),
+        staleAfterMs: Long = Long.MAX_VALUE,
         block: suspend (Session, AppPrefs, FakeMaServer) -> Unit,
     ) = runBlocking {
         val fake =
@@ -60,7 +64,7 @@ class SessionTest {
         prefs.saveServer(fake.address.toString(), storedId ?: fake.serverId, "Home", "token")
         // The preferences outlive a test: no network is checked from an earlier one.
         prefs.saveCheckedNetwork(null)
-        val session = Session(prefs, plainVault, OkHttpClient(), scope, "Test", network, idleCloseMs = IDLE_MS)
+        val session = Session(prefs, plainVault, OkHttpClient(), scope, "Test", network, IDLE_MS, staleAfterMs)
         try {
             block(session, prefs, fake)
         } finally {
@@ -172,6 +176,80 @@ class SessionTest {
         session.awaitState { it == ConnectionState.Idle }
     }
 
+    @Test fun `a speaker heard playing keeps the socket only until the server has been out of reach a while`() =
+        withSession(staleAfterMs = STALE_MS) { session, _, fake ->
+            session.restore()
+            session.setPlaying(true)
+            session.setHolding(true)
+            session.awaitState { it is ConnectionState.Connected }
+            leaveHome(fake)
+            session.awaitState { it == ConnectionState.Offline }
+            session.awaitState { it == ConnectionState.Idle }
+            assertTrue(session.stale.value)
+            val tries = fake.server.requestCount
+            delay(STALE_MS + IDLE_MS)
+            assertEquals(tries, fake.server.requestCount)
+        }
+
+    @Test fun `This phone's own audio keeps the socket while the server is out of reach`() =
+        withSession(staleAfterMs = STALE_MS) { session, _, fake ->
+            session.restore()
+            session.setAudible(true)
+            session.awaitState { it is ConnectionState.Connected }
+            leaveHome(fake)
+            withTimeout(5_000) { session.stale.first { it } }
+            delay(IDLE_MS * 2)
+            assertEquals(ConnectionState.Offline, session.client.state.value)
+            session.setAudible(false)
+            session.awaitState { it == ConnectionState.Idle }
+        }
+
+    @Test fun `a socket closed while the server was out of reach opens again when a network comes`() =
+        withSession(staleAfterMs = STALE_MS) { session, _, fake ->
+            session.restore()
+            session.setHolding(true)
+            session.awaitState { it is ConnectionState.Connected }
+            val home = leaveHome(fake)
+            session.awaitState { it == ConnectionState.Idle }
+            fake.server.dispatcher = home
+            session.reconnect()
+            session.awaitState { it is ConnectionState.Connected }
+            withTimeout(5_000) { session.stale.first { !it } }
+            // Closed with nothing to keep it, it waits for the next use.
+            session.setHolding(false)
+            session.awaitState { it == ConnectionState.Idle }
+            val requests = fake.server.requestCount
+            session.reconnect()
+            assertEquals(ConnectionState.Idle, session.client.state.value)
+            assertEquals(requests, fake.server.requestCount)
+        }
+
+    @Test fun `a network that keeps coming and going does not put off the close`() =
+        withSession(staleAfterMs = STALE_MS) { session, _, fake ->
+            session.restore()
+            session.setHolding(true)
+            session.awaitState { it is ConnectionState.Connected }
+            leaveHome(fake)
+            withTimeout(5_000) { session.stale.first { it } }
+            repeat(10) {
+                if (session.client.state.value != ConnectionState.Idle) session.reconnect()
+                delay(IDLE_MS / 5)
+            }
+            assertEquals(ConnectionState.Idle, session.client.state.value)
+        }
+
+    /** The phone leaves home: the server's address answers nothing a socket can use. Returns home's answers. */
+    private fun leaveHome(fake: FakeMaServer): Dispatcher {
+        val home = fake.server.dispatcher
+        fake.server.dispatcher = Unreachable
+        fake.dropConnections()
+        return home
+    }
+
+    private object Unreachable : Dispatcher() {
+        override fun dispatch(request: RecordedRequest) = MockResponse(code = 503)
+    }
+
     @Test fun `signing in again after the server refused the token connects`() = runBlocking<Unit> {
         val info = fixture("2.11", "server_info").getValue("response")
         val fake = FakeMaServer(info) { command, args ->
@@ -254,5 +332,6 @@ class SessionTest {
 
     private companion object {
         const val IDLE_MS = 1_000L
+        const val STALE_MS = 1_000L
     }
 }
