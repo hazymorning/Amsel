@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.ui.components.Reorderable
+import io.github.hazymorning.amsel.ui.components.SearchEntry
 import io.github.hazymorning.amsel.ui.components.SectionHeader
 import io.github.hazymorning.amsel.ui.components.holdToMove
 import io.github.hazymorning.amsel.ui.components.overhang
@@ -66,6 +67,8 @@ internal data class SectionActions(
     val onArrange: (List<String>) -> Unit = {},
     /** Speakers: a tap makes the speaker the one in use and shows it in Now Playing; [play], a long press, plays there. */
     val onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
+    /** Search's field: opens Search, the keyboard up. */
+    val onSearch: () -> Unit = {},
 )
 
 /**
@@ -162,7 +165,9 @@ internal fun Section(
 
 @Composable
 private fun SectionBody(section: SectionUi, actions: SectionActions) {
-    if (section.option == SectionOption.Speakers) {
+    if (section.option == SectionOption.Search) {
+        SearchEntry(stringResource(R.string.search_placeholder), stringResource(R.string.tab_search), actions.onSearch)
+    } else if (section.option == SectionOption.Speakers) {
         SpeakerShelf(section, actions.onSpeaker)
     } else if (section.loading) {
         SectionSkeleton(section)

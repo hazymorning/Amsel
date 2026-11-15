@@ -3,7 +3,7 @@ package io.github.hazymorning.amsel.ui.components
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -49,11 +49,15 @@ private val UnderPlacesOverButtons = Space.S3
 
 private val TabGlyph = Sizes.Icon
 
-/** The speaker's dot while music plays on it, on its glyph's outline. */
-private val Dot = 6.dp
+/** The speaker's dot while music plays on it, on its glyph's outline: a third of the glyph's size. */
+private val Dot = 8.dp
 
 /** The ring of the band's own tone around the dot, which parts it from the line it sits on. */
-private val DotRing = 1.5.dp
+private val DotRing = 2.dp
+
+/** How far the dot's centre lies outside the outline, away from the glyph's middle. */
+private val Outward = 2.dp
+private const val DIAGONAL = 0.70710677f
 
 /**
  * Where the speaker glyph's outline turns at its top end, on the glyph's 256 grid: half way round
@@ -112,7 +116,8 @@ private fun Modifier.navPlace(): Modifier {
 
 /**
  * Inactive: the glyph in the secondary tone. Active: ink, and filled. TalkBack reads the place's
- * name; the whole strip from the band's top to the screen's edge takes the tap.
+ * name; the whole strip from the band's top to the screen's edge takes the tap. A long press
+ * ([onLongClick]) arranges the bar, as a long press on a heading edits Home.
  */
 @Composable
 fun RowScope.NavBarItem(
@@ -121,6 +126,8 @@ fun RowScope.NavBarItem(
     label: String,
     @DrawableRes icon: Int,
     @DrawableRes selectedIcon: Int,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val tint by animateColorAsState(
@@ -131,12 +138,14 @@ fun RowScope.NavBarItem(
     Box(
         Modifier
             .weight(1f)
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.Tab,
+            .semantics { this.selected = selected }
+            .combinedClickable(
                 interactionSource = null,
                 indication = null,
+                role = Role.Tab,
+                onLongClickLabel = longClickLabel,
+                onLongClick = onLongClick,
+                onClick = onClick,
             )
             .then(Modifier.navPlace()),
         contentAlignment = Alignment.TopCenter,
@@ -160,7 +169,13 @@ fun RowScope.NavBarItem(
  * band's tone. TalkBack hears "Speaker: Kitchen, playing. Choose speaker".
  */
 @Composable
-fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> Unit) {
+fun RowScope.NavBarSpeaker(
+    speaker: SpeakerUi,
+    playing: Boolean,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
+) {
     val colors = MaterialTheme.colorScheme
     val description = stringResource(
         if (playing) R.string.speaker_button_playing else R.string.speaker_button_description,
@@ -172,7 +187,14 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
     Box(
         Modifier
             .weight(1f)
-            .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
+            .combinedClickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onLongClickLabel = longClickLabel,
+                onLongClick = onLongClick,
+                onClick = onClick,
+            )
             .semantics { contentDescription = description }
             .then(Modifier.navPlace()),
         contentAlignment = Alignment.TopCenter,
@@ -184,8 +206,12 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
                     drawContent()
                     if (dot > 0f) {
                         // At the end side; the glyph is the same both ways round.
-                        val end = if (layoutDirection == LayoutDirection.Ltr) HALF_WAY else -HALF_WAY
-                        val at = inkPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, inkHeight = true)
+                        val ltr = layoutDirection == LayoutDirection.Ltr
+                        val end = if (ltr) HALF_WAY else -HALF_WAY
+                        val on = inkPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, inkHeight = true)
+                        // A little out along the same line, so its ring leaves the glyph's inner circle whole.
+                        val out = Outward.toPx() * DIAGONAL
+                        val at = on + Offset(if (ltr) out else -out, -out)
                         drawCircle(band, Dot.toPx() / 2 + DotRing.toPx(), at, alpha = dot)
                         drawCircle(moss, Dot.toPx() / 2, at, alpha = dot)
                     }

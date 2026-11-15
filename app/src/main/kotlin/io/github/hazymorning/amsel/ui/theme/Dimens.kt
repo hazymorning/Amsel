@@ -81,8 +81,8 @@ object Space {
     /** A grid's caption baseline to the next row of covers. */
     val TileRows = 32.dp
 
-    /** The last letters of a scrolling screen to the dock. */
-    val ListEnd = 32.dp
+    /** The last letters of a scrolling screen to the dock: clear of the dock's fade, which is as high. */
+    val ListEnd = 40.dp
 
     /** How far a row's cover sits inside its pressed band, so the band's corners nest around the cover's. */
     val BandInset = 8.dp

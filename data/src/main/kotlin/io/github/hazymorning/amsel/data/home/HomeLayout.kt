@@ -9,7 +9,18 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 
-enum class SectionSource { Pinned, RecentlyPlayed, Playlists, Albums, Artists, Radio, Audiobooks, Podcasts, Speakers }
+enum class SectionSource {
+    Pinned,
+    RecentlyPlayed,
+    Playlists,
+    Albums,
+    Artists,
+    Radio,
+    Audiobooks,
+    Podcasts,
+    Speakers,
+    Search,
+}
 
 /**
  * The first chip of a section's sentence, "Show [option] as [layout]": one of its source's
@@ -58,6 +69,9 @@ enum class SectionOption(val source: SectionSource) {
      * speakers, not the server's items, and only while a speaker other than This phone is in reach.
      */
     Speakers(SectionSource.Speakers),
+
+    /** A field that opens Search, the keyboard up: the app's own, not the server's items, never empty. */
+    Search(SectionSource.Search),
 }
 
 /** The second chip: how a section draws its items. Five layouts, one visual language. */
@@ -107,7 +121,7 @@ data class HomeSection(
     val titled: Boolean? = null,
 ) {
     /** Whether its heading shows: as the person set it, else for every option but Speakers, whose cards say what they are. */
-    val showsTitle: Boolean get() = titled ?: (option != SectionOption.Speakers)
+    val showsTitle: Boolean get() = titled ?: (option != SectionOption.Speakers && option != SectionOption.Search)
 }
 
 /**
@@ -151,7 +165,7 @@ data class HomeLayout(
 
     /**
      * A new option brings its own title, shown or not as that option is: a name given to the old one
-     * would no longer fit. Speakers is a shelf and nothing else.
+     * would no longer fit. Speakers is a shelf and nothing else; Search a field, whose layout is kept.
      */
     fun setOption(id: String, option: SectionOption): HomeLayout = update(id) {
         val layout = if (option == SectionOption.Speakers) SectionLayout.Row else it.layout

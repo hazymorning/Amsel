@@ -1,13 +1,18 @@
-# Puddle bath
+# Rain dance
+
+## New
+
+- **Your bottom bar:** choose which places it shows and in what order, under Settings › Bottom bar or with a long press on the bar. Home always stays.
+- **Search on Home:** Edit Home can add a search field; a tap on it opens Search with the keyboard up.
 
 ## Better
 
-- **Bottom bar:** with Android's buttons on, they stand on a tone of their own under Amsel's bar, so the bar reads as a section of its own.
-- **Speakers on Home:** the cards are a touch lighter, so they stand off the page.
-- **Playing ring:** while music plays, the small ring beside what plays breathes, slowly and calmly. Paused, it holds still.
-- **Groups:** Ungroup all is a large button over the first speaker in Play on.
-- **Home:** more room under the last section.
+- **Mini player:** play and skip have more room and stand further from the screen's edge.
+- **A calmer edge:** pages fade out gently above the mini player, so it stands apart.
+- **Speakers:** the dot on the speaker is larger, and Group is a big button under the speakers.
+- **Playing ring:** its breath is now plain to see.
+- **Settings:** its foot shows Amsel's name in the README's lettering, and the moon is much quieter at night.
 
 ## Fixed
 
-- **A calm start:** opening Amsel no longer pushes Home's rows down once the speakers are known. Their row keeps its place from the first moment.
+- **Settings:** the line at its foot is no longer translated.

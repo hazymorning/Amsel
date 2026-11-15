@@ -12,6 +12,7 @@ import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.ui.AppShell
 import io.github.hazymorning.amsel.ui.PlayerLayerState
 import io.github.hazymorning.amsel.ui.ShellSlots
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
@@ -30,6 +31,23 @@ class SettingsShots : ScreenshotTest() {
             onSpeaker = {},
             layer = remember { PlayerLayerState(open = false) },
             slots = ShellSlots(screen = { _, _ -> Settings() }, nowPlaying = { _, _ -> }, sheets = {}),
+        )
+    }
+
+    /** The bottom bar's page over the shell, its bar following it: Search taken out. */
+    @Test fun bar() = snap("settings_bar", ShotVariant.entries) {
+        val places = listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Library)
+        AppShell(
+            nowPlaying = PlayerSample.nowPlaying,
+            speaker = PlayerSample.nowPlaying.speaker,
+            onSpeaker = {},
+            layer = remember { PlayerLayerState(open = false) },
+            bar = places,
+            slots = ShellSlots(
+                screen = { _, _ -> BarScreen(places, onChange = {}, onBack = {}) },
+                nowPlaying = { _, _ -> },
+                sheets = {},
+            ),
         )
     }
 

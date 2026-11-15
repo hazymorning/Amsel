@@ -231,8 +231,8 @@ internal fun SectionSentence(section: SectionUi, onWhat: () -> Unit, onHow: () -
         SentenceLine(sentence.before, lead) {
             DropdownChip(what, onWhat, it, contentDescription = stringResource(R.string.home_edit_what_is, whatName))
         }
-        // Speakers is a shelf and nothing else.
-        if (section.option != SectionOption.Speakers) {
+        // Speakers is a shelf and Search a field, each nothing else.
+        if (section.option != SectionOption.Speakers && section.option != SectionOption.Search) {
             SentenceLine(sentence.between, lead) {
                 DropdownChip(how, onHow, it, contentDescription = stringResource(R.string.home_edit_how_is, howName))
             }

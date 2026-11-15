@@ -101,7 +101,7 @@ class SectionSources(
         SectionOption.NewAudiobooks -> index(library().firstRows(MediaType.Audiobook, LibrarySort.RecentlyAdded, limit))
         SectionOption.NewEpisodes -> server(api.latestEpisodes().take(limit))
         SectionOption.YourPodcasts -> index(library().firstRows(MediaType.Podcast, LibrarySort.RecentlyPlayed, limit))
-        SectionOption.Speakers -> SectionItems()
+        SectionOption.Speakers, SectionOption.Search -> SectionItems()
     }
 
     private fun index(rows: List<LibraryItemEntity>) = SectionItems(rows.map { it.toHomeItem() })
@@ -179,12 +179,13 @@ val SectionOption.indexKind: MediaType?
             SectionSource.Radio -> MediaType.Radio
             SectionSource.Audiobooks -> MediaType.Audiobook
             SectionSource.Podcasts -> MediaType.Podcast
-            SectionSource.Pinned, SectionSource.Speakers -> null
+            SectionSource.Pinned, SectionSource.Speakers, SectionSource.Search -> null
         }
     }
 
 private val FROM_SERVER = setOf(
     SectionOption.Speakers,
+    SectionOption.Search,
     SectionOption.ContinueListening,
     SectionOption.NewEpisodes,
     SectionOption.RecentPlaylists,
