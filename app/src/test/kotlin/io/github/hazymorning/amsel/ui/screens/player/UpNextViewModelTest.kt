@@ -91,13 +91,17 @@ class UpNextViewModelTest {
             val loaded = withTimeout(5000) { vm.state.first { it.items.isNotEmpty() } }
             assertFalse(loaded.loading)
             val ids = loaded.items.map { it.id }
+
+            // Each edit shows before the server answers. The load resumed on the network's thread,
+            // which may still be handing the state on, so it is awaited rather than read at once.
+            suspend fun shows(seen: (UpNextUiState) -> Boolean) = withTimeout(5000) { vm.state.first(seen) }
             vm.move(ids.last(), 0)
-            assertEquals(ids.last(), vm.state.value.items.first().id)
+            shows { it.items.first().id == ids.last() }
             vm.remove(ids.first())
-            assertFalse(vm.state.value.items.any { it.id == ids.first() })
+            shows { state -> state.items.none { it.id == ids.first() } }
             // The ⋮ sheet's Remove from Up next shows at once too, made by Up next itself.
             sheet.emit(UpNextEdit.Remove(ids[2]))
-            assertFalse(vm.state.value.items.any { it.id == ids[2] })
+            shows { state -> state.items.none { it.id == ids[2] } }
             withTimeout(5000) {
                 while (fake.received.none {
                         it["command"]!!.jsonPrimitive.content == "player_queues/delete_item"
@@ -112,7 +116,7 @@ class UpNextViewModelTest {
             vm.play(ids[1])
             assertEquals(listOf("kitchen"), beforePlay)
             // The tapped row stays current until the server reports it, whatever else the queue says.
-            assertEquals(ids[1], vm.state.value.items.single { it.isCurrent }.id)
+            assertEquals(ids[1], shows { state -> state.items.any { it.isCurrent } }.items.single { it.isCurrent }.id)
             shown.cancel()
         } finally {
             store.clear()
