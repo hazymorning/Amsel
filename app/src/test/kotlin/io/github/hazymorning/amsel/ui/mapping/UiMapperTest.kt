@@ -19,7 +19,12 @@ import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -77,6 +82,25 @@ class UiMapperTest {
         assertEquals(MediaKind.Episode, episode.kind)
         assertEquals("Harbour Talk", episode.subtitle)
         assertEquals(MediaKind.Audiobook, mapper.media(items("music_in_progress_items").single()).kind)
+    }
+
+    @Test fun `an episode without a picture of its own wears its podcast's, nested whole in it`() {
+        val recorded = result("2.11", "music_podcasts_podcast_episodes").jsonArray.first().jsonObject
+        val podcast = recorded.getValue("podcast").jsonObject
+        val thumb = buildJsonObject {
+            putJsonArray("images") {
+                add(
+                    buildJsonObject {
+                        put("type", "thumb")
+                        put("proxy_id", "harbour")
+                    },
+                )
+            }
+        }
+        val pictured = JsonObject(recorded + ("podcast" to JsonObject(podcast + ("metadata" to thumb))))
+        val episode = MaJson.decodeFromJsonElement(MediaItem.serializer(), pictured)
+        assertNull(episode.metadata?.images)
+        assertEquals("http://ma.local:8095/imageproxy/harbour", mapper.media(episode).art?.base)
     }
 
     private fun queue(version: String, name: String): PlayerQueue =
