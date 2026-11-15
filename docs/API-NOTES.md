@@ -622,6 +622,8 @@ Music Assistant streams Audiobookshelf's books but cannot hand out their files, 
 | `GET /api/items/{id}/cover` | the cover | 404 when there is none |
 | `GET`, `PATCH /api/me/progress/{id}[/{episode id}]` | `currentTime`, `duration`, `isFinished`, `lastUpdate` (ms) | GET is 404 before the first play; PATCH takes `currentTime`, `duration`, `progress`, `isFinished` |
 
+A download playing on the phone keeps its place there every 10 s and PATCHes it each time it stops playing and every 5 minutes while it plays; after a PATCH fails, none goes while it plays until the phone is on another network (`ProgressSaves`). A start takes the newer of the two places.
+
 Plain http offers no way to tell Audiobookshelf from an impostor, and its first request carries the refresh token. So plain http goes to it only on the network where Music Assistant's `server_id` check last passed over plain http (`Session.reachesHome`, kept across app restarts until the phone restarts); on another network the server's first frame is read first, and without a match the call fails as unreachable without connecting. An address typed without a scheme is tried over https; over plain http only when its host is a home address by its form (an IP literal, a name without a dot, or `.local`, `.lan`, `.internal`, `.home.arpa`, `.fritz.box`, `.home`, `.localdomain`), and never after a certificate the phone does not trust. Audiobookshelf answers a TLS hello with a plain `400`, an SSLException on the phone, which is not a certificate error.
 
 ### 7.11 Extras: endless mix, similar artists and songs, the DJ (2026-11-12; 2.10.9 and 2.11.0b7 [live])

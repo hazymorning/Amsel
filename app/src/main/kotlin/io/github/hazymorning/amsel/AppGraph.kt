@@ -91,7 +91,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     /** Downloads playing on this phone, built on first use. */
-    val local: LocalPlayback by lazy { LocalPlayback(app, data.downloads, data.abs, scope) }
+    val local: LocalPlayback by lazy { LocalPlayback(app, data.downloads, data.abs, network.current, scope) }
 
     val dispatcher: PlayDispatcher by lazy {
         PlayDispatcher(

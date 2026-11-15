@@ -83,7 +83,10 @@ interface PlaybackGraph {
     /** Loads the artwork the session shows, on the app's own HTTP client and cache. */
     val artwork: BitmapLoader
 
-    /** The session's speaker started or stopped playing: keep the connection open meanwhile. */
+    /**
+     * The session's speaker started or stopped playing: keep the connection open meanwhile. A
+     * download playing from the phone's files is no speaker and needs no connection.
+     */
     fun onPlayingChanged(playing: Boolean)
 
     /** A transport command did not reach its speaker: it joins [failures]. */
@@ -137,7 +140,7 @@ class PlaybackService : MediaLibraryService() {
     private val playingListener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.containsAny(Player.EVENT_PLAY_WHEN_READY_CHANGED, Player.EVENT_PLAYBACK_STATE_CHANGED)) {
-                PlaybackGraph.instance.onPlayingChanged(player.playsOrStarts)
+                PlaybackGraph.instance.onPlayingChanged(player.speakerPlays)
             }
         }
 
@@ -188,7 +191,7 @@ class PlaybackService : MediaLibraryService() {
         showButtons(built)
         scope.launch { graph.heart.collect { showButtons(built) } }
         // A speaker that already plays fires no change: tell the connection now.
-        graph.onPlayingChanged(built.player.playsOrStarts)
+        graph.onPlayingChanged(built.player.speakerPlays)
         // Said where the command came from too: the car, the lock screen, a watch.
         scope.launch { graph.failures.collect { built.sendError(errorFor(it)) } }
         scope.launch {
@@ -227,7 +230,7 @@ class PlaybackService : MediaLibraryService() {
         showButtons(session)
         // The new player may start in its final state (its speaker's snapshot is cached), so no
         // change would keep the connection's "something plays" flag right.
-        PlaybackGraph.instance.onPlayingChanged(next.playsOrStarts)
+        PlaybackGraph.instance.onPlayingChanged(next.speakerPlays)
     }
 
     /**
@@ -364,6 +367,10 @@ class PlaybackService : MediaLibraryService() {
  */
 private val Player.playsOrStarts: Boolean
     get() = playWhenReady && (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING)
+
+/** A speaker plays or starts: a download plays from the phone's own files, with no server to keep. */
+private val Player.speakerPlays: Boolean
+    get() = playsOrStarts && PlaybackGraph.instance.local?.owns(this) != true
 
 /** What a controller (the car, the lock screen, a watch) is told when [error] stopped what it asked. */
 @OptIn(UnstableApi::class)

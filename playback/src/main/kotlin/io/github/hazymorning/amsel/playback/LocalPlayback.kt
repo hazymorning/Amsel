@@ -17,6 +17,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ConcatenatingMediaSource2
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import io.github.hazymorning.amsel.api.MediaType
+import io.github.hazymorning.amsel.data.NetworkKey
 import io.github.hazymorning.amsel.data.downloads.AbsClient
 import io.github.hazymorning.amsel.data.downloads.DownloadManifest
 import io.github.hazymorning.amsel.data.downloads.Downloads
@@ -25,13 +26,11 @@ import java.io.IOException
 import kotlin.math.roundToLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -49,17 +48,33 @@ data class LocalPlaying(
  * server in the way, so a seek or a skip is instant and needs no connection. A book's files are one
  * timeline ([ConcatenatingMediaSource2]), next and previous step by chapter, back and forward by 15
  * and 30 seconds. Where the person is stays on the phone, every few seconds and at every pause, and
- * goes to Audiobookshelf when it can; a start takes the newer of the two.
+ * goes to Audiobookshelf now and then ([ProgressSaves]); a start takes the newer of the two.
  */
 @OptIn(UnstableApi::class)
 class LocalPlayback(
     private val context: Context,
     private val downloads: Downloads,
     private val abs: AbsClient,
+    /** The networks the phone is on: a send that failed waits for another. */
+    network: StateFlow<NetworkKey?>,
     private val scope: CoroutineScope,
 ) {
     private var exo: ExoPlayer? = null
-    private var saving: Job? = null
+    private val saves = ProgressSaves(
+        scope + Dispatchers.Main.immediate,
+        network,
+        ::place,
+        keep = { downloads.saveProgress(it.manifest.uri, it.progress) },
+        send = { (manifest, progress) ->
+            abs.saveProgress(
+                manifest.absItemId,
+                manifest.absEpisodeId,
+                progress.seconds,
+                manifest.durationSec,
+                progress.finished,
+            )
+        },
+    )
 
     /** The cover of what [now] holds, looked up once. */
     private var cover: Uri? = null
@@ -116,13 +131,13 @@ class LocalPlayback(
 
     /** Lets the item go, keeping where the person was: another plays instead. Main thread. */
     fun stop() {
-        save(final = true)
+        saves.save(send = true)
         release()
     }
 
     private fun release() {
         val exo = exo ?: return
-        saving?.cancel()
+        saves.stop()
         _now.value = null
         exo.stop()
         exo.clearMediaItems()
@@ -146,7 +161,7 @@ class LocalPlayback(
                 object : Player.Listener {
                     override fun onEvents(player: Player, events: Player.Events) {
                         _now.value?.manifest?.let(::publish)
-                        if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) onPlayingChanged(player.isPlaying)
+                        if (events.contains(Player.EVENT_IS_PLAYING_CHANGED)) saves.playing(player.isPlaying)
                     }
                 },
             )
@@ -215,38 +230,12 @@ class LocalPlayback(
         return if (finished) 0 else (seconds * MS).roundToLong()
     }
 
-    private fun onPlayingChanged(playing: Boolean) {
-        saving?.cancel()
-        if (playing) {
-            saving = scope.launch(Dispatchers.Main.immediate) {
-                var beat = 0
-                while (isActive) {
-                    delay(SAVE_EVERY_MS)
-                    save(final = ++beat % SEND_EVERY == 0)
-                }
-            }
-        } else {
-            save(final = true)
-        }
-    }
-
-    /** Keeps the place on the phone; [final] also sends it to Audiobookshelf. Main thread. */
-    private fun save(final: Boolean) {
-        val exo = exo ?: return
-        val manifest = _now.value?.manifest ?: return
-        val seconds = exo.currentPosition / MS
+    /** Where the person is in what is loaded. Main thread. */
+    private fun place(): DownloadPlace? {
+        val exo = exo ?: return null
+        val manifest = _now.value?.manifest ?: return null
         val finished = exo.playbackState == Player.STATE_ENDED
-        val progress = LocalProgress(seconds, System.currentTimeMillis(), finished)
-        scope.launch(Dispatchers.IO) {
-            try {
-                downloads.saveProgress(manifest.uri, progress)
-                if (final) {
-                    abs.saveProgress(manifest.absItemId, manifest.absEpisodeId, seconds, manifest.durationSec, finished)
-                }
-            } catch (e: IOException) {
-                // A full phone or no connection: the place goes with the next save.
-            }
-        }
+        return DownloadPlace(manifest, LocalProgress(exo.currentPosition / MS, System.currentTimeMillis(), finished))
     }
 
     /** Next and previous step through the chapters, as for a speaker ([Chapters]). */
@@ -275,9 +264,5 @@ class LocalPlayback(
     private companion object {
         const val MS = 1000.0
         const val REMOTE_WAIT_MS = 3_000L
-        const val SAVE_EVERY_MS = 10_000L
-
-        /** Every sixth save, once a minute, also goes to Audiobookshelf. */
-        const val SEND_EVERY = 6
     }
 }
