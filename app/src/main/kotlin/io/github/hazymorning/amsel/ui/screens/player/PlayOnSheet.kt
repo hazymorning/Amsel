@@ -170,7 +170,7 @@ private fun SpeakerList(
                 modifier = wide,
             )
         }
-        if (members != null || state.grouped) Spacer(Modifier.height(Space.Group))
+        // The first speaker's row keeps its own room over its words: as much as the heading leaves over Group.
         // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
         state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
             SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })

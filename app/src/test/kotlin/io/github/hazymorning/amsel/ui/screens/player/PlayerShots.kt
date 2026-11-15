@@ -7,6 +7,7 @@ import androidx.compose.ui.test.performTouchInput
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.ActionTarget
 import io.github.hazymorning.amsel.app.GroupChoice
+import io.github.hazymorning.amsel.app.MemberVolume
 import io.github.hazymorning.amsel.app.SleepMode
 import io.github.hazymorning.amsel.app.SleepTimerState
 import io.github.hazymorning.amsel.data.ServerExtras
@@ -80,6 +81,30 @@ class PlayerShots : ScreenshotTest() {
     /** The same in German, where the words are longer: still one line. */
     @Test fun playOnAGroupInGerman() = snapScreen("play_on_group_german", qualifiers = "de") {
         OverNowPlaying { PlayOn(grouped) }
+    }
+
+    /** One speaker: its bar alone. */
+    @Test fun volume() = snapScreen("volume", ShotVariant.entries) {
+        OverNowPlaying {
+            VolumeSheetContent("Kitchen", level = 40, members = emptyList(), onLevel = {}, onMember = { _, _ -> })
+        }
+    }
+
+    /** A group: its bar, then one for each of its speakers under a quiet line. */
+    @Test fun volumeOfAGroup() = snapScreen("volume_group", ShotVariant.entries) {
+        OverNowPlaying {
+            VolumeSheetContent(
+                "Kitchen +2",
+                level = 40,
+                members = listOf(
+                    MemberVolume("kitchen", "Kitchen", 40),
+                    MemberVolume("bedroom", "Bedroom", 25),
+                    MemberVolume("living", "Living room", 70),
+                ),
+                onLevel = {},
+                onMember = { _, _ -> },
+            )
+        }
     }
 
     @Test fun playOnAsks() = snapScreen("play_on_question", listOf(Light, LargeFont)) {
