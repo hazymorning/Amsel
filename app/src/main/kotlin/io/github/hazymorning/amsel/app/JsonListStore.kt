@@ -37,8 +37,10 @@ internal class JsonListStore<T>(private val file: File, serializer: KSerializer<
         scope.launch(Dispatchers.IO) {
             lock.withLock {
                 load()
-                _items.value = edit(_items.value)
-                save(_items.value)
+                val next = edit(_items.value)
+                // Written first: whoever sees the change can find it on the phone.
+                save(next)
+                _items.value = next
             }
         }
     }
