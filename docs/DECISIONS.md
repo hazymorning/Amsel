@@ -720,3 +720,9 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-15 | Ungroup all is a primary button between the margins over the first speaker in Play on, no longer a glyph beside Group | Owner |
 | 2026-11-15 | Until the server names its speakers, Home's Speakers row holds its room with two blank cards, so nothing under it moves when the app opens; offline it holds none | Owner (rows shifting at start) |
 | 2026-11-15 | Home ends 48 above the dock, a section's distance, where other lists keep 32 | Owner |
+| 2026-11-15 | Settings ends with "Amsel" as the README's picture sets it (Display's face, weight and tracking, which are the picture's), not the slogan in words, so nothing there is translated; the licence line under it is Meta's face at 11 | Owner (the slogan had been translated) |
+| 2026-11-15 | The night's moon behind the Settings bird is #21221E, barely off the page and darker than the crowns | Owner (still too strong) |
+| 2026-11-15 | Controls stand off the screen's edge: the mini player's skip has its ink 40 in, and play stands 24 after the words' room; a principle for every row's end control | Owner (too tight; a rule to keep) |
+| 2026-11-15 | Group is a primary button the width of the margins under the last speaker in Play on, 40 apart from the list; Ungroup all keeps its place over the first | Owner |
+| 2026-11-15 | The playing ring's echo is plainly seen: it leaves at 0.9 strength, widens to 2.6 times the ring, every 2.4 s | Owner (the breath was invisible) |
+| 2026-11-15 | The band speaker's dot is 8 with a 2 ring, its centre 2 outside the outline along the same radius, so the ring leaves the glyph's inner circle whole | Owner (too small, out of proportion) |

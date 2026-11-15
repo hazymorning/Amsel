@@ -49,11 +49,15 @@ private val UnderPlacesOverButtons = Space.S3
 
 private val TabGlyph = Sizes.Icon
 
-/** The speaker's dot while music plays on it, on its glyph's outline. */
-private val Dot = 6.dp
+/** The speaker's dot while music plays on it, on its glyph's outline: a third of the glyph's size. */
+private val Dot = 8.dp
 
 /** The ring of the band's own tone around the dot, which parts it from the line it sits on. */
-private val DotRing = 1.5.dp
+private val DotRing = 2.dp
+
+/** How far the dot's centre lies outside the outline, away from the glyph's middle. */
+private val Outward = 2.dp
+private const val DIAGONAL = 0.70710677f
 
 /**
  * Where the speaker glyph's outline turns at its top end, on the glyph's 256 grid: half way round
@@ -184,8 +188,12 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
                     drawContent()
                     if (dot > 0f) {
                         // At the end side; the glyph is the same both ways round.
-                        val end = if (layoutDirection == LayoutDirection.Ltr) HALF_WAY else -HALF_WAY
-                        val at = inkPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, inkHeight = true)
+                        val ltr = layoutDirection == LayoutDirection.Ltr
+                        val end = if (ltr) HALF_WAY else -HALF_WAY
+                        val on = inkPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, inkHeight = true)
+                        // A little out along the same line, so its ring leaves the glyph's inner circle whole.
+                        val out = Outward.toPx() * DIAGONAL
+                        val at = on + Offset(if (ltr) out else -out, -out)
                         drawCircle(band, Dot.toPx() / 2 + DotRing.toPx(), at, alpha = dot)
                         drawCircle(moss, Dot.toPx() / 2, at, alpha = dot)
                     }

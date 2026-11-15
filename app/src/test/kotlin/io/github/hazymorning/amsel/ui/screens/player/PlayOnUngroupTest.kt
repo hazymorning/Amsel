@@ -1,16 +1,11 @@
 package io.github.hazymorning.amsel.ui.screens.player
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.app.GroupChoice
 import io.github.hazymorning.amsel.sample.PlayerSample
@@ -21,10 +16,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
-/** Play on: Group in its header, and Ungroup over the speakers while a group stands. */
+/** Play on: Group as a big button under the speakers, and Ungroup over them while a group stands. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class PlayOnUngroupTest {
@@ -50,7 +44,7 @@ class PlayOnUngroupTest {
         val alone = listOf(GroupChoice("living", "Living room", isPhone = false, member = false))
         show { PlayOnSheetContent(PlayOnUiState(PlayerSample.speakers, "kitchen", kitchen, alone), onSelect = {}) }
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Group").performClick()
+        compose.onNodeWithText("Group").performClick()
         compose.onNodeWithText("Group · Kitchen").assertIsDisplayed()
     }
 
@@ -63,9 +57,9 @@ class PlayOnUngroupTest {
                 onUngroup = { ungrouped++ },
             )
         }
-        compose.onNodeWithContentDescription("Group +2").assertIsDisplayed()
+        compose.onNodeWithText("Group +2").assertIsDisplayed()
         // Making a group is not offered while one stands.
-        compose.onNodeWithContentDescription("Group").assertDoesNotExist()
+        compose.onNodeWithText("Group").assertDoesNotExist()
         compose.onNodeWithText("Ungroup all").performClick()
         assertEquals(1, ungrouped)
     }
@@ -80,7 +74,7 @@ class PlayOnUngroupTest {
             )
         }
         compose.onNodeWithText("Ungroup all").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Group +2").performClick()
+        compose.onNodeWithText("Group +2").performClick()
         // The step is the group's, whichever speaker the phone is set to.
         compose.onNodeWithText("Group · Kitchen").assertIsDisplayed()
         compose.onNodeWithText("Bedroom").performClick()
@@ -91,65 +85,26 @@ class PlayOnUngroupTest {
 
     @Test fun aSpeakerThatCannotLeadHasNoGroupAndNoUngroup() {
         show { PlayOnSheetContent(PlayOnUiState(PlayerSample.speakers, "kitchen"), onSelect = {}) }
-        compose.onNodeWithContentDescription("Group").assertDoesNotExist()
+        compose.onNodeWithText("Group").assertDoesNotExist()
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
     }
 
-    @Test fun ungroupIsABigButtonBetweenTheMarginsOverTheFirstSpeaker() {
+    @Test fun ungroupIsABigButtonOverTheFirstSpeakerAndGroupOneUnderTheLast() {
         val state = PlayOnUiState(grouped, "kitchen", kitchen, kitchensGroup, grouped = true)
         show { PlayOnSheetContent(state, onSelect = {}) }
         val heading = compose.onNodeWithText("Play on").getUnclippedBoundsInRoot()
-        val group = compose.onNodeWithContentDescription("Group +2").getUnclippedBoundsInRoot()
-        val button = compose.onNodeWithText("Ungroup all").getUnclippedBoundsInRoot()
-        // This phone is the first speaker Play on lists.
+        val ungroup = compose.onNodeWithText("Ungroup all").getUnclippedBoundsInRoot()
+        val group = compose.onNodeWithText("Group +2").getUnclippedBoundsInRoot()
+        // This phone is the first speaker Play on lists, Kitchen the last.
         val first = compose.onNodeWithText("This phone").getUnclippedBoundsInRoot()
-        // Group keeps the heading's line, on the margin.
-        assertTrue(group.middle in heading.top..heading.bottom)
-        assertEquals(411f - 24f, group.right.value, 0.5f)
-        assertEquals(24f, button.left.value, 0.5f)
-        assertEquals(411f - 24f, button.right.value, 0.5f)
-        assertTrue(button.bottom - button.top >= 48.dp)
-        assertTrue(heading.bottom < button.top && button.bottom < first.top)
-    }
-
-    @Config(qualifiers = "de-w392dp-h850dp-xxhdpi")
-    @Test
-    fun inGermanOnAPhoneGroupStaysOnTheHeadingsLine() {
-        var members by mutableIntStateOf(0)
-        show { PlayOnHeader(members, onGrouping = {}) }
-        val heading = compose.onNodeWithText("Abspielen auf").getUnclippedBoundsInRoot()
-        val alone = compose.onNodeWithContentDescription("Gruppieren").getUnclippedBoundsInRoot()
-        assertTrue(alone.middle in heading.top..heading.bottom)
-        assertEquals(392f - 24f, alone.right.value, 0.5f)
-        for (others in 1..9) {
-            members = others
-            val group = compose.onNodeWithContentDescription("Gruppe +$others").getUnclippedBoundsInRoot()
-            assertTrue("+$others", group.middle in heading.top..heading.bottom)
-            assertEquals(392f - 24f, group.right.value, 0.5f)
+        val last = compose.onNodeWithText("Kitchen +2").getUnclippedBoundsInRoot()
+        for (button in listOf(ungroup, group)) {
+            assertEquals(24f, button.left.value, 0.5f)
+            assertEquals(411f - 24f, button.right.value, 0.5f)
+            assertTrue(button.bottom - button.top >= 48.dp)
         }
+        assertTrue(heading.bottom < ungroup.top && ungroup.bottom < first.top)
+        // Well apart from the list: 40 under the last speaker's row, on top of the row's own room.
+        assertEquals(40f, (group.top - last.bottom).value, 0.5f)
     }
-
-    /** With Ungroup over the speakers, Group alone fits beside the heading on a narrow phone too. */
-    @Config(qualifiers = "de-w360dp-h640dp-xxhdpi")
-    @Test
-    fun inGermanOnANarrowPhoneGroupStaysOnTheHeadingsLine() {
-        show { PlayOnHeader(9, onGrouping = {}) }
-        val heading = compose.onNodeWithText("Abspielen auf").getUnclippedBoundsInRoot()
-        val group = compose.onNodeWithContentDescription("Gruppe +9").getUnclippedBoundsInRoot()
-        assertTrue(group.middle in heading.top..heading.bottom)
-        assertEquals(360f - 24f, group.right.value, 0.5f)
-    }
-
-    @Config(qualifiers = "de-w360dp-h640dp-xxhdpi")
-    @Test
-    fun whereTheLineIsTooShortGroupStandsUnderTheHeadingOnTheMargin() {
-        RuntimeEnvironment.setFontScale(2f)
-        show { PlayOnHeader(members = 2, onGrouping = {}) }
-        val heading = compose.onNodeWithText("Abspielen auf").getUnclippedBoundsInRoot()
-        val group = compose.onNodeWithContentDescription("Gruppe +2").getUnclippedBoundsInRoot()
-        assertTrue(group.middle > heading.bottom)
-        assertEquals(24f, group.left.value, 0.5f)
-    }
-
-    private val DpRect.middle get() = (top + bottom) / 2
 }

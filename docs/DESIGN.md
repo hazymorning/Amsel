@@ -21,6 +21,9 @@ The code is the source of truth for the values: `ui/theme` holds the tokens (`Co
 8. **Never fight for attention.** Nothing blinks or wears a badge, but for one moss dot on the
    band's speaker while music plays on it; a bar rises over the dock only to answer what the person
    just did.
+9. **Off the very edge.** What a thumb presses stands in from the screen's edge, never on its
+   outermost margin: easier to reach and calmer to look at. A cover or a line of words may sit on
+   the margin; a control at a row's end keeps more room from the edge than the margin alone.
 
 ## Rules (from the design review of Now Playing and Home)
 
@@ -143,9 +146,9 @@ over 120 ms (`PressIndication`).
    cover leaves the page plain. Nothing glows.
 3. **The playing ring** (`PlayingRing.kt`): a thin moss ring (8 dp, 1.5 dp line, as the blackbird's
    eye) before the subtitle of whatever plays, in place of a track's number. While the music plays
-   it breathes: an echo leaves from under it, widens to nearly twice its size as it settles and
-   fades, and is gone after 2 s; the next leaves 2.8 s after the last. Paused, or with reduced
-   motion, it holds still.
+   it breathes, plainly to see: an echo leaves from under it at nine tenths of its strength, widens
+   to more than two and a half times its size as it settles and fades, and is gone after 1.9 s; the
+   next leaves 2.4 s after the last. Paused, or with reduced motion, it holds still.
 
 A shelf of covers is a plain row: lamp, fold, turn and step back were tried and each was a step
 back from it.
@@ -154,7 +157,7 @@ back from it.
 
 | Component | Anatomy |
 | --- | --- |
-| Dock (`Dock.kt`, `DockCard.kt`, `NavBar.kt`) | One surface of Surface 1, full width, with no card and no line: what plays, and under it the places. Cover 48 on the margin, 16 to the words: the speaker's name (Body, 560), so the dock says at once which speaker is in hand, a group's "+2" after it in the secondary tone and never cut, and under it title and artist on one line (Line, secondary) that, while it is longer than its room, rests at its start, glides to its end, rests and glides back, again and again, its hidden end faded; then play (28 dp glyph) and the skip: next for music, forward 30 s for a book or an episode, as the notification has them, its ink on the margin. Play and the skip stand a touch target apart. While nothing plays the row stays: an empty cover and the speaker's name over "Not playing"; a tap anywhere on it opens Play on. Under the player's band of Surface 1, with 24 over and under its row, the bar is a band of Surface 2 of four of equal width, each its glyph alone: Home, the speaker, Search and Library, inactive secondary, active ink and filled; TalkBack reads their names. The speaker is no place: its glyph stays secondary and opens Play on, and while music plays on the speaker in use a moss dot of 6 sits on its glyph's outline, its centre on the line half way round the arc of the top at the end side, cut free of the line by a 1.5 ring of the band's tone: on the glyph, never in the empty corner of its box. The gesture handle lies in the room under the glyphs; with Android's buttons the glyphs stand 12 above them, and the buttons stand on Surface 1 under the band, so the band reads as a section of its own and not as one block with them. The paper runs on under the system's bar, with no scrim. A tap on the card or a pull up anywhere on the dock opens Now Playing; a sideways swipe on the card is previous and next. No progress line: where the song is shows in Now Playing. |
+| Dock (`Dock.kt`, `DockCard.kt`, `NavBar.kt`) | One surface of Surface 1, full width, with no card and no line: what plays, and under it the places. Cover 48 on the margin, 16 to the words: the speaker's name (Body, 560), so the dock says at once which speaker is in hand, a group's "+2" after it in the secondary tone and never cut, and under it title and artist on one line (Line, secondary) that, while it is longer than its room, rests at its start, glides to its end, rests and glides back, again and again, its hidden end faded; then, 24 after the words' room, play (28 dp glyph) and the skip: next for music, forward 30 s for a book or an episode, as the notification has them, its ink 40 in from the screen's edge, off it, where a thumb finds it. Play and the skip stand a touch target apart. While nothing plays the row stays: an empty cover and the speaker's name over "Not playing"; a tap anywhere on it opens Play on. Under the player's band of Surface 1, with 24 over and under its row, the bar is a band of Surface 2 of four of equal width, each its glyph alone: Home, the speaker, Search and Library, inactive secondary, active ink and filled; TalkBack reads their names. The speaker is no place: its glyph stays secondary and opens Play on, and while music plays on the speaker in use a moss dot of 8, a third of the glyph, sits on its glyph's outline, its centre 2 outside the line half way round the arc of the top at the end side, cut free of the line by a 2 ring of the band's tone that leaves the glyph's inner circle whole: on the glyph, never in the empty corner of its box. The gesture handle lies in the room under the glyphs; with Android's buttons the glyphs stand 12 above them, and the buttons stand on Surface 1 under the band, so the band reads as a section of its own and not as one block with them. The paper runs on under the system's bar, with no scrim. A tap on the card or a pull up anywhere on the dock opens Now Playing; a sideways swipe on the card is previous and next. No progress line: where the song is shows in Now Playing. |
 | Speaker pill (`SpeakerPill.kt`) | Where the music plays, at the start of Now Playing's footer: a 44 dp pill of ink at 5.5%, as wide as its words, the speaker's glyph as large as the name, the name and a caret. Never stretched. Short of room it gives up its caret, then letters of the name, and last the name. A tap opens Play on. |
 | Row (`ListRow.kt`) | 72 with a 56 cover (radius 6), 16 to the text; 56 or 64 for text rows. Title Body, second line Meta secondary. Track numbers stand on the margin (the first figure's ink on it), titles at 64. No menu: tap opens or plays, long press opens the actions, which also start an album, a playlist or an artist (Play, Shuffle) anywhere but on its own page, where the buttons are. Press: the band, 8 past the margins for a cover's row, 16 from words and glyphs for a row of words. |
 | Tile (`MediaTile.kt`) | Width (W − 24 − 32) × 3/7, 16 apart, so every row shows two and a third; small covers (W − 24 − 36) × 3/10, 12 apart, three and a third; big covers (W − 48 − 16) / 2, two between the margins. A flung shelf comes to rest with a whole cover on the margin (`ShelfRow`); the next runs off the screen's edge as it is. Square cover, caption capitals 14 under: title Caption, second line Meta right under it. Every caption is two lines high (`TileCaption`): a title too long for one line takes the second line's place and the second line gives way, so two titles that begin alike read apart and the tiles of a shelf or a grid stand alike. A tile without a second line keeps its title to one. An artist's tile is like any other. |
@@ -239,14 +242,13 @@ server's DJ says between two songs is a row like theirs, "DJ" where the artist s
 **Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and a faint handle, over a
 dim of 16% by day and 45% at night; the title on the margin, a second step without a back glyph;
 a choice is marked by its tick alone, no band, and every choice keeps the tick's room, so a name
-breaks alike chosen or not. Play on carries Group at the end of its heading ("Group +2" while a
-group exists, for that group's leader), as high as Now Playing's speaker pill (44); where the
-heading and Group do not fit on one line, Group stands under it. While speakers play along, Ungroup
-all is a primary button the width of the margins over the first speaker, a group's distance (24)
-above it. A speaker that plays carries the ring before what it plays ("Playing"
+breaks alike chosen or not. In Play on, while speakers play along, Ungroup all is a primary button
+the width of the margins over the first speaker, a group's distance (24) above it; Group ("Group
++2" while a group exists, for that group's leader) is one too, under the last speaker, 40 apart
+from the list. A speaker that plays carries the ring before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
-from Now Playing's menu, is Off and the server's hosts. Settings ends with Amsel's line, "Black feathers. Golden song." (Caption, ink), the licence line ("© 2026 hazymorning", Meta, secondary) a second line's step under it and, 48 under its baseline, the README's picture
-(`SettingsBird.kt`): the icon's blackbird behind three crowns before a 72 dp sun; at night a quiet moon a step above Surface 2,
+from Now Playing's menu, is Off and the server's hosts. Settings ends with Amsel's name as the README's picture sets it (Display: its face, weight and tracking; ink, the same in every language), the licence line ("© 2026 hazymorning", Meta's face at 11, secondary) 12 under it and, 48 under its baseline, the README's picture
+(`SettingsBird.kt`): the icon's blackbird behind three crowns before a 72 dp sun; at night a moon barely off the page, between Surface 1 and 2, darker than the crowns,
 centred and cut by the dock's edge it stands on, so the sun rises over that edge as the page reaches
 its end. Each time six tenths of it come over the dock's edge, the sun grows from nothing into place (650 ms) and then the bird rises from behind the crowns to its perch (900 ms), both settling; once it is under the dock again it waits to rise anew, and with reduced motion it simply stands there. A picture only: not spoken, no touch, its size the same at any font scale; where the
 settings fit a screen it stands at the screen's foot, and it never adds a scroll. Welcome is one
