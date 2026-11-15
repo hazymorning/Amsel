@@ -242,33 +242,24 @@ class LibraryRepository(
                 // every track's artist and every author to the library, and announces each.
                 if (existing == null && item.mediaType == MediaType.Artist.api) return false
                 val addedRank = existing?.addedRank ?: ((dao.minAddedRank(item.mediaType) ?: 0) - 1)
-                // 2.11 sends favorite = null in item events; keep the row's own state then.
-                val favorite = item.favorite ?: existing?.favorite ?: false
-                // An item sent without its provider mappings keeps the row's smart-playlist mark.
-                val unmapped = item.providerMappings.isEmpty()
-                val smart = item.isSmartPlaylist || (unmapped && existing?.isSmart == true)
-                val plugin = item.isPluginSmartPlaylist || (unmapped && existing?.smartPlugin == true)
-                val dynamic = item.isDynamic || (unmapped && existing?.isDynamic == true)
-                // Progress in an item event is the last listener's, whoever that was: the row keeps the
-                // person's own, and a new row waits for the next sync or this person's own play.
-                val entity = item.toEntity(addedRank, existing?.playedRank).copy(
-                    favorite = favorite,
-                    isSmart = smart,
-                    smartPlugin = plugin,
-                    isDynamic = dynamic,
-                    resumeMs = existing?.resumeMs,
-                    fullyPlayed = existing?.fullyPlayed,
-                )
+                val entity = item.toEntityOver(existing, addedRank)
                 // A metadata refresh often changes nothing the row holds: rewritten, it would re-run
                 // every query that observes the index.
                 if (entity == existing) return false
                 dao.upsert(listOf(entity))
+                // An album lends its cover to its artists; an artist that lost its picture wears its albums'.
+                val lostPicture = existing?.imageProxyId != null && entity.imageProxyId == null
+                if (item.mediaType == MediaType.Album.api || (item.mediaType == MediaType.Artist.api && lostPicture)) {
+                    dao.coverArtists()
+                }
                 return true
             }
 
             "media_item_deleted" -> {
                 val uri = event.objectId ?: return false
-                return dao.delete(uri) > 0
+                if (dao.delete(uri) == 0) return false
+                if (ItemUri.parse(uri)?.mediaType == MediaType.Album.api) dao.coverArtists()
+                return true
             }
 
             "favorite_updated" -> {
@@ -334,27 +325,3 @@ class LibraryRepository(
 
 /** Where the signed-in person stands in a book or episode. */
 data class ProgressUpdate(val uri: String, val fullyPlayed: Boolean, val positionMs: Long)
-
-internal fun MediaItem.toEntity(addedRank: Int, playedRank: Int?) = LibraryItemEntity(
-    uri = uri,
-    mediaType = mediaType,
-    name = name,
-    sortName = sortName ?: name.lowercase(),
-    subtitle = subtitle,
-    imageProxyId = cover?.proxyId,
-    year = year,
-    favorite = favorite == true,
-    addedRank = addedRank,
-    playedRank = playedRank,
-    isEditable = isEditable,
-    artistUri = artistUri,
-    isSmart = isSmartPlaylist,
-    smartPlugin = isPluginSmartPlaylist,
-    isDynamic = isDynamic,
-    compilation = isCompilation,
-    durationSec = duration?.takeIf { mediaType == MediaType.Audiobook.api && it > 0 },
-    resumeMs = resumePositionMs,
-    fullyPlayed = fullyPlayed,
-    narrators = narratorNames.ifBlank { null },
-    altUri = providerMappings.firstOrNull()?.let { ItemUri(it.providerInstance, mediaType, it.itemId).toString() },
-)
