@@ -113,6 +113,9 @@ private val Amsel by lazy { typography(Commissioner) }
 
 internal fun amselTypography(): Typography = Amsel
 
+/** The mini player's line under the speaker's name: Body's face at Caption's size. */
+val Typography.dockLine: TextStyle get() = bodyLarge.copy(fontSize = 14.sp, lineHeight = 20.sp)
+
 /** A button's words: a step firmer than the text around them, so an action reads as one. */
 fun TextStyle.firm(): TextStyle = copy(fontWeight = W520)
 
