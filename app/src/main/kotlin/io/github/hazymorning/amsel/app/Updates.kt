@@ -174,11 +174,7 @@ class Updates(
     private data class Release(@SerialName("tag_name") val tag: String, val assets: List<Asset> = emptyList())
 
     @Serializable
-    private data class Asset(
-        val name: String,
-        @SerialName("browser_download_url") val url: String,
-        val size: Long = 0,
-    )
+    private data class Asset(val name: String, @SerialName("browser_download_url") val url: String, val size: Long = 0)
 
     private companion object {
         /** Releases are published as regular releases, so the latest is the newest. */

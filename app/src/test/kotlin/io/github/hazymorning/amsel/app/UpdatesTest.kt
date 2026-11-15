@@ -54,7 +54,7 @@ class UpdatesTest {
         val said = messages.pending.first { it.isNotEmpty() }.single()
         assertEquals(R.string.update_not_downloaded, said.text)
         assertNotNull(said.retry)
-        assertTrue(opened.isEmpty)
+        assertTrue(opened.tryReceive().isFailure)
         assertFalse(temp.root.resolve("update/amsel.apk").exists())
     }
 
@@ -63,7 +63,7 @@ class UpdatesTest {
             updates.install(find())
             assertEquals(R.string.update_not_downloaded, messages.pending.first { it.isNotEmpty() }.single().text)
             assertTrue(asked.none { it.startsWith("https://example.com") })
-            assertTrue(opened.isEmpty)
+            assertTrue(opened.tryReceive().isFailure)
         }
 
     @Test fun theInstallerWaitsUntilAmselIsInFront() = updating(github(), inFront = false) {
@@ -71,7 +71,7 @@ class UpdatesTest {
         updates.install(found)
         updates.state.first { it == found }
         delay(200)
-        assertTrue(opened.isEmpty)
+        assertTrue(opened.tryReceive().isFailure)
         front.value = true
         assertArrayEquals(apk, opened.receive().readBytes())
     }
