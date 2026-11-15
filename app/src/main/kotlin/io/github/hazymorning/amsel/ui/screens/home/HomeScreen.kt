@@ -156,7 +156,9 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             graph.mapper,
             graph.messages,
             graph.spokenWord,
-            combine(graph.playing.speakers, graph.playing.speaker, ::HomeSpeakers),
+            combine(graph.playing.speakers, graph.playing.speaker, data.speakers.loads) { all, inUse, loads ->
+                HomeSpeakers(all, inUse, loaded = loads > 0)
+            },
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
