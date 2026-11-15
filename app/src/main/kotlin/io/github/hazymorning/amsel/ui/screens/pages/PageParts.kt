@@ -1,9 +1,7 @@
 package io.github.hazymorning.amsel.ui.screens.pages
 
-import android.os.SystemClock
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.animation.Animatable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +20,11 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -65,7 +63,6 @@ import io.github.hazymorning.amsel.ui.components.plus
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
-import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
@@ -125,25 +122,14 @@ internal fun PageScaffold(
 /**
  * The page's head leans to its cover as Now Playing's whole page does: the same muted hue, behind
  * the cover and its title under the bar's clear strip, easing into the plain page by the list. A
- * cover with no hue worth borrowing, or none yet, leaves the page plain. A hue known when the page
- * opens is simply there; one found while the page still slides in is there with it; only one that
- * takes longer, a slow server's, eases in.
+ * cover with no hue worth borrowing, or none yet, leaves the page plain. The hue is there as soon
+ * as it is known, with no fade.
  */
 @Composable
 private fun coverWash(art: ArtRef?): State<Color> {
     val colors = rememberCoverColors(art)
     val scheme = MaterialTheme.colorScheme
-    val tint = colors?.wash(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f)
-    val opened = remember { SystemClock.uptimeMillis() }
-    val wash = remember { Animatable(tint) }
-    LaunchedEffect(tint) {
-        if (SystemClock.uptimeMillis() - opened < Motion.NAVIGATION_MS) {
-            wash.snapTo(tint)
-        } else {
-            wash.animateTo(tint, Motion.effects())
-        }
-    }
-    return wash.asState()
+    return rememberUpdatedState(colors?.wash(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f))
 }
 
 /** The wash reaches down this many cover heights from the screen's top. */

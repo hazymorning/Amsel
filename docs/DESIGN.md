@@ -149,9 +149,8 @@ over 120 ms (`PressIndication`).
    colourfulness, muted strongly; Now Playing's page leans a few percent toward it, and a page with
    a cover (album, playlist, artist, book, podcast) washes its head in the same tint, under the
    bar's clear strip and behind the cover, easing into the plain page by its actions and scrolling
-   away with them. A black-and-white cover leaves the page plain. Nothing glows. Hues are kept on
-   the phone (512 covers), so a page opens already washed; one found while the page slides in is
-   there with it, and only a slower one eases in.
+   away with them. A black-and-white cover leaves the page plain. Nothing glows. The wash is there
+   as soon as the hue is known, with no fade.
 3. **The playing ring** (`PlayingRing.kt`): a thin moss ring (8 dp, 1.5 dp line, as the blackbird's
    eye) before the subtitle of whatever plays, in place of a track's number. While the music plays
    it breathes, plainly to see: an echo leaves from under it at nine tenths of its strength, widens
@@ -256,17 +255,17 @@ song are a list under a slim bar, "Similar to “Lanterns”".
 with the songs already played waiting above it. Only what comes next has a handle. What the
 server's DJ says between two songs is a row like theirs, "DJ" where the artist stands.
 
-**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle, framed evenly
-(`Space.SheetEdge`): the title's capitals, or a cover's top, 32 under the edge, and the last ink, a
-baseline or a button's or a bar's edge, 32 over the bottom (`sheetEnd`: a last row keeps part of
-it under its words itself). A pull down or a tap beside one closes it. Behind a sheet the screen
+**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle, framed by the
+margin on every side (`Space.SheetEdge`): the title's capitals, or a cover's top, 24 under the edge,
+as far as the content stands from the sides, and the last ink, a baseline or a button's or a bar's
+edge, 24 over the bottom (`sheetEnd`: a last row keeps part of it under its words itself). A pull down or a tap beside one closes it. Behind a sheet the screen
 lies under black at 32% by day and 60% at night; the title on the margin, a second step without a back glyph;
 a choice is marked by its tick alone, no band, its middle where a pill button's round end has its
 centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. Play on reads as a sentence: its heading, the speakers, then what to do with them. Group ("Group
 +2" while a group exists, for that group's leader) is a primary button the width of the margins
 under the last speaker; while speakers play along, Ungroup all stands 8 under it as a secondary
-button, so the sheet keeps one focal point. The buttons stand 32 under the last speaker's words, as
-far as the sheet's edge under them (principle 10). Volume, from Now Playing's footer, is one bar for the speaker in use and, for a
+button, so the sheet keeps one focal point. The buttons stand a group's distance, 32, under the last speaker's words, and the sheet's frame
+under them; the group step's Done stands as far under its speakers. Volume, from Now Playing's footer, is one bar for the speaker in use and, for a
 group, one for each of its speakers under "In the group" (Meta, secondary), 8 apart: a 56 dp pill
 of Surface 2 that is the slider itself, filled with ink at 14% as far as the level, the speaker's
 name (Body) at its start and the level (Meta, keeping the room of "100 %") at its end, each on the

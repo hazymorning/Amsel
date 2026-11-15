@@ -1,6 +1,5 @@
 package io.github.hazymorning.amsel.ui.theme
 
-import android.content.Context
 import android.util.LruCache
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -16,17 +15,8 @@ import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import coil3.toBitmap
 import io.github.hazymorning.amsel.ui.model.ArtRef
-import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.atan2
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -74,82 +64,11 @@ private const val WASH_STRENGTH = 1.6f
 /** Covers are sampled at this size: plenty for a palette, and cheap to decode. */
 private const val SAMPLE_PX = 64
 
-/** Hues per cover, so Now Playing and every page share one extraction. */
-private val cache = LruCache<String, Hue>(KEPT_HUES)
-
-/** About 25 kB on the phone: a library's worth of covers that were opened. */
-private const val KEPT_HUES = 512
-
-/**
- * The hues found, kept on the phone: a cover sampled once lends its hue at once ever after, also
- * after Amsel restarts, so a page opens already washed. [load] reads them at the app's start, off
- * the main thread; each new hue is written a moment after it was found, with any others that came.
- */
-object CoverHues {
-    private const val FILE = "cover_hues.txt"
-    private const val SAVE_DELAY_MS = 1_000L
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val writing = Mutex()
-    private val pending = AtomicBoolean(false)
-
-    @Volatile private var file: File? = null
-
-    fun load(context: Context) {
-        val kept = File(context.filesDir, FILE)
-        file = kept
-        scope.launch {
-            val lines = runCatching { if (kept.exists()) kept.readLines() else emptyList() }.getOrDefault(emptyList())
-            // Oldest first, as written, so the most recent stay longest.
-            lines.forEach { line ->
-                val parts = line.split('\t')
-                val hue = when {
-                    parts.size == 2 && parts[1] == GREY_MARK -> Hue.Grey
-
-                    parts.size == 3 -> {
-                        val h = parts[1].toFloatOrNull()
-                        val sat = parts[2].toFloatOrNull()
-                        if (h != null && sat != null) Hue.Of(CoverColors(h, sat)) else null
-                    }
-
-                    else -> null
-                }
-                if (hue != null && cache.get(parts[0]) == null) cache.put(parts[0], hue)
-            }
-        }
-    }
-
-    internal fun keep(key: String, hue: Hue) {
-        cache.put(key, hue)
-        if (file == null || !pending.compareAndSet(false, true)) return
-        scope.launch {
-            delay(SAVE_DELAY_MS)
-            pending.set(false)
-            save()
-        }
-    }
-
-    private suspend fun save() = writing.withLock {
-        val kept = file ?: return@withLock
-        val text = cache.snapshot().entries
-            .filter { (key, _) -> '\t' !in key && '\n' !in key }
-            .joinToString("\n") { (key, hue) ->
-                when (hue) {
-                    is Hue.Of -> "$key\t${hue.colors.hue}\t${hue.colors.saturation}"
-                    Hue.Grey -> "$key\t$GREY_MARK"
-                }
-            }
-        runCatching {
-            val next = File(kept.parentFile, "$FILE.new")
-            next.writeText(text)
-            next.renameTo(kept)
-        }
-    }
-
-    private const val GREY_MARK = "-"
-}
+/** Hues per cover, so Now Playing and Home share one extraction. */
+private val cache = LruCache<String, Hue>(64)
 
 /** A cover's hue, or [Grey] when it has none worth borrowing. */
-internal sealed interface Hue {
+private sealed interface Hue {
     data class Of(val colors: CoverColors) : Hue
 
     data object Grey : Hue
@@ -197,7 +116,7 @@ fun rememberCoverColors(art: ArtRef?): CoverColors? {
                 .generate()
             hueOf(palette)
         }
-        CoverHues.keep(key, hue)
+        cache.put(key, hue)
         value = (hue as? Hue.Of)?.colors
     }
     return colors

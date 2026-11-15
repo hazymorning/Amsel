@@ -7,6 +7,6 @@
 ## Better
 
 - **Play on:** the speakers come first; Group and Ungroup all follow them at the bottom.
-- **Sheets:** as much room above the title as below the last line, and the screen behind a sheet is darker.
-- **Cover colours:** a page's colour is there the moment it opens instead of fading in, and Amsel remembers each cover's colour.
+- **Sheets:** the title stands as far from the top as everything stands from the sides, the last line as far from the bottom, and the screen behind a sheet is darker.
+- **Cover colours:** a page's colour appears at once instead of fading in.
 - **Speakers on Home:** speakers that are playing always come first.

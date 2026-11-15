@@ -44,6 +44,7 @@ import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.label
+import io.github.hazymorning.amsel.ui.components.rowInkBottom
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
@@ -160,8 +161,8 @@ private fun SpeakerList(
         if (!buttons) return@Column
         // The sheet reads "Play on", the speakers, then what to do with them: Group, one big tap, and
         // letting a group go one more under it in the second tone, so the sheet keeps one focal
-        // point. They stand as far under the last speaker's words as over the sheet's edge.
-        Spacer(Modifier.height(rowsEnd))
+        // point. They stand a group's distance under the last speaker's words.
+        Spacer(Modifier.height((Space.BeforeList - rowInkBottom(RowLead.Glyph, twoLines = true)).coerceAtLeast(0.dp)))
         val wide = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth()
         if (members != null) {
             PrimaryButton(

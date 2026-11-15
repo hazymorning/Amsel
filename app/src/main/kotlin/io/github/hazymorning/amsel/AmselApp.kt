@@ -8,7 +8,6 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import io.github.hazymorning.amsel.playback.PlaybackGraph
-import io.github.hazymorning.amsel.ui.theme.CoverHues
 import kotlinx.coroutines.launch
 
 open class AmselApp :
@@ -21,8 +20,6 @@ open class AmselApp :
 
     override fun onCreate() {
         super.onCreate()
-        // Covers' hues found before, so pages and Now Playing open already washed.
-        CoverHues.load(this)
         // Sleep timers follow playback however it started: from the app, a car, a headset.
         PlaybackGraph.provider = { graph.playbackGraph.also { graph.sleepTimer.start() } }
         // The socket stays open while the app is in front (or something plays; see PlaybackService).

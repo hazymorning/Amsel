@@ -32,7 +32,7 @@ import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
-import io.github.hazymorning.amsel.ui.components.sheetEnd
+import io.github.hazymorning.amsel.ui.components.rowInkBottom
 import io.github.hazymorning.amsel.ui.model.displayName
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Shapes
@@ -75,8 +75,8 @@ internal fun GroupList(
                 trailing = { RoundCheck(ticked) },
             )
         }
-        // Done stands as far under the last speaker's name as over the sheet's edge.
-        Spacer(Modifier.height(sheetEnd(RowLead.Glyph, twoLines = false)))
+        // Done stands a group's distance under the last speaker's name, as Group does in the list.
+        Spacer(Modifier.height((Space.BeforeList - rowInkBottom(RowLead.Glyph, twoLines = false)).coerceAtLeast(0.dp)))
         PrimaryButton(
             stringResource(R.string.home_edit_done),
             onClick = { onDone(leader.id, chosen - before.toSet(), before - chosen.toSet()) },
