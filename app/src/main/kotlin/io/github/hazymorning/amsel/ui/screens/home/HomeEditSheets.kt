@@ -23,7 +23,9 @@ import io.github.hazymorning.amsel.data.home.SectionLayout
 import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.ui.components.ActionRow
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
+import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -48,7 +50,13 @@ internal fun WhatSheetContent(current: SectionOption, spoken: SpokenWord, onSele
     val groups = remember(current, spoken) {
         WhatGroups.map { group -> group.filter { it == current || it.isOffered(spoken) } }.filter { it.isNotEmpty() }
     }
-    Column(Modifier.fillMaxWidth().verticalScroll(scroll).selectableGroup().padding(bottom = Space.Group)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(scroll)
+            .selectableGroup()
+            .padding(bottom = sheetEnd(RowLead.None, twoLines = false)),
+    ) {
         SheetHeader(stringResource(R.string.home_edit_what))
         Spacer(Modifier.height(Space.HeaderToContent))
         groups.forEachIndexed { index, group ->
@@ -75,7 +83,7 @@ private const val UNPLACED = -1
 
 @Composable
 internal fun HowSheetContent(current: SectionLayout, onSelect: (SectionLayout) -> Unit) {
-    Column(Modifier.fillMaxWidth().selectableGroup().padding(bottom = Space.Group)) {
+    Column(Modifier.fillMaxWidth().selectableGroup().padding(bottom = sheetEnd(RowLead.None, twoLines = false))) {
         SheetHeader(stringResource(R.string.home_edit_how))
         Spacer(Modifier.height(Space.HeaderToContent))
         SectionLayout.entries.forEach { layout ->
@@ -95,7 +103,7 @@ internal fun SectionActionsSheetContent(
     onTitled: (Boolean) -> Unit,
     onRemove: () -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth().padding(bottom = Space.Group)) {
+    Column(Modifier.fillMaxWidth().padding(bottom = sheetEnd(RowLead.Glyph, twoLines = false))) {
         SheetHeader(title)
         Spacer(Modifier.height(Space.HeaderToContent))
         ActionRow(

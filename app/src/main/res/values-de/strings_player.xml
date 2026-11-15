@@ -8,6 +8,9 @@
     <string name="player_volume_percent">%1$d\u00A0%%</string>
     <string name="player_volume_still">stumm</string>
     <string name="player_volume_fixed">Die Lautstärke wird am Lautsprecher eingestellt</string>
+    <string name="player_volume_ask">%1$s lauter als deine Grenze von %2$s stellen?</string>
+    <string name="player_volume_ask_louder">Auf %1$s stellen</string>
+    <string name="player_volume_ask_stay">Bei %1$s bleiben</string>
     <string name="player_volume_in_group">In der Gruppe</string>
     <string name="player_up_next">Als Nächstes</string>
     <!-- Above the artwork: where the music comes from (the album) -->

@@ -38,10 +38,12 @@ import io.github.hazymorning.amsel.app.SleepMode
 import io.github.hazymorning.amsel.app.SleepTimerState
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
 import io.github.hazymorning.amsel.ui.components.InkGlyph
+import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.formatDuration
 import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
@@ -85,7 +87,8 @@ fun SleepSheetContent(
     val left = timer?.endsAtMs?.takeIf { dragging == null }?.let { ends ->
         stringResource(R.string.sleep_left, formatDuration(rememberLeft(ends).value))
     }
-    Column(modifier.fillMaxWidth().padding(bottom = Space.Group)) {
+    val end = if (endLabel != null) sheetEnd(RowLead.None, twoLines = false) else Space.SheetEdge
+    Column(modifier.fillMaxWidth().padding(bottom = end)) {
         SheetHeader(stringResource(R.string.sleep_timer), name = speaker)
         SleepLine(length, left)
         Spacer(Modifier.height(Space.Group))

@@ -17,9 +17,11 @@ import androidx.compose.ui.semantics.semantics
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.UpdateState
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
+import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -47,7 +49,12 @@ internal fun UpdatesSheetContent(
         is UpdateState.Loading -> stringResource(R.string.updates_downloading, state.update.version)
         UpdateState.Failed -> stringResource(R.string.updates_failed)
     }
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = sheetEnd(RowLead.None, twoLines = true)),
+    ) {
         SheetHeader(stringResource(R.string.settings_updates))
         Spacer(Modifier.height(Space.HeaderToContent))
         Words(

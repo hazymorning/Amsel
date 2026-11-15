@@ -28,11 +28,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.Bookmark
 import io.github.hazymorning.amsel.ui.components.LabelledField
@@ -46,6 +49,8 @@ import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
+import io.github.hazymorning.amsel.ui.theme.capHeight
+import io.github.hazymorning.amsel.ui.theme.lineHeight
 import java.time.Instant
 import java.time.ZoneId
 
@@ -64,7 +69,8 @@ fun BookmarksSheetContent(
     titles: Boolean = false,
 ) {
     var editing by rememberSaveable { mutableStateOf<Long?>(null) }
-    Column(modifier.fillMaxWidth().padding(bottom = Space.Group)) {
+    val end = if (bookmarks.isEmpty()) Space.SheetEdge else bookmarkEnd()
+    Column(modifier.fillMaxWidth().padding(bottom = end)) {
         SheetHeader(stringResource(R.string.bookmarks))
         Spacer(Modifier.height(Space.HeaderToContent))
         if (bookmarks.isEmpty()) {
@@ -159,6 +165,17 @@ private fun BookmarkRow(
             }
         }
     }
+}
+
+/**
+ * Under the last bookmark, what the sheet keeps so the note's line, the bookmark's last words, has
+ * its baseline [Space.SheetEdge] over the sheet's edge: the line's own room under it counts.
+ */
+@Composable
+private fun bookmarkEnd(): Dp {
+    val style = MaterialTheme.typography.bodyMedium
+    val below = with(LocalDensity.current) { (lineHeight(style) - capHeight(style)) / 2 }
+    return (Space.SheetEdge - Space.S3 - below).coerceAtLeast(0.dp)
 }
 
 /** The note is kept however the field goes: Done, another note, or the sheet closing. */

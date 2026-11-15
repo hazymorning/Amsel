@@ -18,7 +18,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Play on: Group as a big button under the speakers, and Ungroup over them while a group stands. */
+/** Play on: Group as a big button under the speakers, and Ungroup under it while a group stands. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class PlayOnUngroupTest {
@@ -89,21 +89,21 @@ class PlayOnUngroupTest {
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
     }
 
-    @Test fun groupAndUngroupAreBigButtonsOverTheFirstSpeaker() {
+    @Test fun groupAndUngroupAreBigButtonsUnderTheLastSpeaker() {
         val state = PlayOnUiState(grouped, "kitchen", kitchen, kitchensGroup, grouped = true)
         show { PlayOnSheetContent(state, onSelect = {}) }
         val heading = compose.onNodeWithText("Play on").getUnclippedBoundsInRoot()
         val group = compose.onNodeWithText("Group +2").getUnclippedBoundsInRoot()
         val ungroup = compose.onNodeWithText("Ungroup all").getUnclippedBoundsInRoot()
-        // This phone is the first speaker Play on lists.
+        // This phone is the first speaker Play on lists, Kitchen's group the last.
         val first = compose.onNodeWithText("This phone").getUnclippedBoundsInRoot()
+        val last = compose.onNodeWithText("Kitchen", substring = true).getUnclippedBoundsInRoot()
         for (button in listOf(group, ungroup)) {
             assertEquals(24f, button.left.value, 0.5f)
             assertEquals(411f - 24f, button.right.value, 0.5f)
             assertTrue(button.bottom - button.top >= 48.dp)
         }
-        assertTrue(heading.bottom < group.top && group.bottom < ungroup.top)
-        // The first speaker's row keeps its own room over its words, as the heading leaves over Group.
-        assertEquals(ungroup.bottom.value, first.top.value, 0.5f)
+        // "Play on", the speakers, then what to do with them.
+        assertTrue(heading.bottom < first.top && last.bottom < group.top && group.bottom < ungroup.top)
     }
 }

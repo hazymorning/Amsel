@@ -250,7 +250,12 @@ class HomeViewModelTest {
                 .sections.single { it.option == SectionOption.Speakers }
         }
         val home = shelf(HomeSpeakers(listOf(phone, kitchen, bedroom, garden), inUse = phone))
-        assertEquals(listOf(phone, kitchen, bedroom), home.speakers)
+        // What plays comes first; then the one in use, then the others as Play on lists them.
+        assertEquals(listOf(kitchen, phone, bedroom), home.speakers)
+        // Of two that play, the one in use comes first.
+        val office = SpeakerUi("office", "Office", song = "Rain", isPlaying = true)
+        val two = shelf(HomeSpeakers(listOf(phone, kitchen, bedroom, office), inUse = office))
+        assertEquals(listOf(office, kitchen, phone, bedroom), two.speakers)
         assertFalse(home.loading)
         assertTrue(shelf(HomeSpeakers(listOf(phone.copy(song = null), garden), inUse = phone)).isEmpty)
         assertTrue(shelf(HomeSpeakers(listOf(phone.copy(song = null), kitchen.copy(available = false)))).isEmpty)

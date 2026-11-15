@@ -8,6 +8,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import io.github.hazymorning.amsel.app.MemberVolume
@@ -28,12 +29,16 @@ class VolumeSheetTest {
     private val levels = mutableListOf<Int>()
     private val members = mutableListOf<Pair<String, Int>>()
 
-    private fun show(level: Int?, group: List<MemberVolume> = emptyList()) = compose.setContent {
+    private fun show(level: Int?, group: List<MemberVolume> = emptyList(), limit: Int = 0) = compose.setContent {
         AmselTheme {
-            VolumeSheetContent("Kitchen", level, group, onLevel = { levels += it }, onMember = { id, at ->
-                members +=
-                    id to at
-            })
+            VolumeSheetContent(
+                "Kitchen",
+                level,
+                group,
+                onLevel = { levels += it },
+                onMember = { id, at -> members += id to at },
+                limit = limit,
+            )
         }
     }
 
@@ -64,6 +69,32 @@ class VolumeSheetTest {
         }
         assertEquals("bedroom" to 30, members.last())
         assertEquals(emptyList<Int>(), levels)
+    }
+
+    @Test fun withALimitABarStopsOnItAndAsksBeforeGoingLouder() {
+        show(level = 40, limit = 70)
+        compose.onNodeWithContentDescription("Kitchen").performTouchInput { click(percentOffset(0.9f, 0.5f)) }
+        // It stops on the limit, then asks in place of the bars.
+        assertEquals(70, levels.last())
+        compose.onNodeWithText("Set Kitchen louder than your limit of 70\u00A0%?").assertExists()
+        compose.onNodeWithText("Set to 90\u00A0%").performClick()
+        assertEquals(90, levels.last())
+        // Let past, it asks no more while the sheet is open.
+        compose.onNodeWithContentDescription("Kitchen").performSemanticsAction(SemanticsActions.SetProgress) {
+            it(0.95f)
+        }
+        assertEquals(95, levels.last())
+    }
+
+    @Test fun stayingKeepsTheBarOnTheLimit() {
+        show(level = 40, limit = 70)
+        compose.onNodeWithContentDescription("Kitchen").performSemanticsAction(SemanticsActions.SetProgress) {
+            it(1f)
+        }
+        compose.onNodeWithText("Stay at 70\u00A0%").performClick()
+        assertEquals(listOf(70), levels)
+        compose.onNodeWithContentDescription("Kitchen")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "70\u00A0%"))
     }
 
     @Test fun aSpeakerThatSetsItsOwnVolumeSaysSoAndTakesNoChange() {

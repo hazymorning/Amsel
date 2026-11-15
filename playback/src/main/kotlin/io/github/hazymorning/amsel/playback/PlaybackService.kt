@@ -59,6 +59,9 @@ interface PlaybackGraph {
     /** A tap on that heart. */
     fun toggleHeart() {}
 
+    /** The volume limit the person set, 0 for none: speakers' keys stop at it (see [RemotePlayer]). */
+    fun volumeLimit(): Int = 0
+
     /** This phone's output, when it is the target. */
     val phone: LocalOutput?
 
@@ -117,6 +120,7 @@ interface PlaybackGraph {
         local = if (target.isPhone) phone else null,
         onCommandFailed = ::onCommandFailed,
         appScope = scope,
+        volumeLimit = ::volumeLimit,
     )
 
     companion object {

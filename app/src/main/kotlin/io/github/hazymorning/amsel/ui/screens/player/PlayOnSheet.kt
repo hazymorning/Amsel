@@ -44,6 +44,7 @@ import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.label
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.glyph
@@ -139,15 +140,28 @@ private fun SpeakerList(
     onGrouping: () -> Unit,
     onUngroup: () -> Unit,
 ) {
+    val members = state.group.count { it.member }.takeIf { state.group.isNotEmpty() }
+    val buttons = members != null || state.grouped
+    val rowsEnd = sheetEnd(RowLead.Glyph, twoLines = true)
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).selectableGroup().padding(bottom = Space.Group),
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .selectableGroup()
+            .padding(bottom = if (buttons) Space.SheetEdge else rowsEnd),
     ) {
-        val members = state.group.count { it.member }.takeIf { state.group.isNotEmpty() }
         val haptics = LocalHapticFeedback.current
         SheetHeader(stringResource(R.string.player_play_on))
         Spacer(Modifier.height(Space.HeaderToContent))
-        // Grouping is one big tap over the speakers; letting a group go one more under it, in the
-        // second tone, so the sheet keeps one focal point.
+        // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
+        state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
+            SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
+        }
+        if (!buttons) return@Column
+        // The sheet reads "Play on", the speakers, then what to do with them: Group, one big tap, and
+        // letting a group go one more under it in the second tone, so the sheet keeps one focal
+        // point. They stand as far under the last speaker's words as over the sheet's edge.
+        Spacer(Modifier.height(rowsEnd))
         val wide = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth()
         if (members != null) {
             PrimaryButton(
@@ -170,18 +184,14 @@ private fun SpeakerList(
                 modifier = wide,
             )
         }
-        // The first speaker's row keeps its own room over its words: as much as the heading leaves over Group.
-        // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
-        state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
-            SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
-        }
     }
 }
 
 /** "Transfer playback": the other speakers in reach. The music moves to the one tapped and goes on there. */
 @Composable
 fun TransferSheetContent(speakers: List<SpeakerUi>, onTransfer: (SpeakerUi) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    val end = sheetEnd(RowLead.Glyph, twoLines = true)
+    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = end)) {
         SheetHeader(stringResource(R.string.player_transfer))
         Spacer(Modifier.height(Space.HeaderToContent))
         speakers.forEach { speaker ->
