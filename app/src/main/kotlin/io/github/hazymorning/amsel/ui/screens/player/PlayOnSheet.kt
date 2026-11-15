@@ -38,6 +38,7 @@ import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.PlayingRing
+import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
@@ -45,6 +46,7 @@ import io.github.hazymorning.amsel.ui.components.label
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.glyph
+import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
@@ -140,8 +142,21 @@ private fun SpeakerList(
         Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).selectableGroup().padding(bottom = Space.Group),
     ) {
         val members = state.group.count { it.member }.takeIf { state.group.isNotEmpty() }
-        PlayOnHeader(members, state.grouped, onGrouping, onUngroup)
+        PlayOnHeader(members, onGrouping)
         Spacer(Modifier.height(Space.HeaderToContent))
+        if (state.grouped) {
+            // Letting the speakers go is one big tap, over the first of them.
+            val haptics = LocalHapticFeedback.current
+            PrimaryButton(
+                stringResource(R.string.ungroup_all),
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    onUngroup()
+                },
+                modifier = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth(),
+            )
+            Spacer(Modifier.height(Space.Group))
+        }
         // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
         state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
             SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
@@ -187,7 +202,7 @@ private fun SpeakerRow(speaker: SpeakerUi, selected: Boolean, onClick: () -> Uni
         lead = RowLead.Glyph,
         playing = plays,
         // The ring that marks what plays in every list, before what the speaker plays.
-        mark = if (plays) ({ PlayingRing() }) else null,
+        mark = if (plays) ({ PlayingRing(moving = true) }) else null,
         selected = selected,
         enabled = speaker.available,
         textMaxWidth = SpeakerTextMax,

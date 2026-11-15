@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.tappableElement
@@ -22,7 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -64,12 +68,35 @@ private const val HALF_WAY = 64f * 0.70710677f
 /**
  * The bar at the dock's foot, a band a tone apart from what plays above it: the app's places, each
  * its glyph alone. The band runs on under the system's own bar: its gesture handle lies in the room
- * under the glyphs, its buttons under that. The keyboard covers the dock, as it does Material's
- * navigation bar, leaving its room to what is typed.
+ * under the glyphs. Android's buttons stand under it on a tone of their own, the player's, so the
+ * band reads as Amsel's and not as one block with them. The keyboard covers the dock, as it does
+ * Material's navigation bar, leaving its room to what is typed.
  */
 @Composable
 fun NavBar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
-    Row(modifier.fillMaxWidth().selectableGroup(), verticalAlignment = Alignment.Top, content = content)
+    val density = LocalDensity.current
+    val buttons = if (WindowInsets.tappableElement.getBottom(density) > 0) {
+        WindowInsets.navigationBars.getBottom(density)
+    } else {
+        0
+    }
+    val under = MaterialTheme.colorScheme.surfaceContainerLow
+    Row(
+        modifier
+            .fillMaxWidth()
+            .then(
+                if (buttons > 0) {
+                    Modifier.drawBehind {
+                        drawRect(under, Offset(0f, size.height - buttons), Size(size.width, buttons.toFloat()))
+                    }
+                } else {
+                    Modifier
+                },
+            )
+            .selectableGroup(),
+        verticalAlignment = Alignment.Top,
+        content = content,
+    )
 }
 
 /** A place's room in the bar: over its glyph, and under it at least as much as the system's bar takes. */
