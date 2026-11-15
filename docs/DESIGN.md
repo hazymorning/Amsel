@@ -237,10 +237,10 @@ breaks alike chosen or not. Play on carries Group at the end of its heading ("Gr
 group exists, for that group's leader) and, while speakers play along, Ungroup beside it as a glyph
 on a round ground, both as high as Now Playing's speaker pill (44); where the heading and the two do not fit on one line, they stand under it. A speaker that plays carries the ring before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
-from Now Playing's menu, is Off and the server's hosts. Settings ends with the licence line ("© 2026 hazymorning") and, 48 under its baseline, the README's picture
+from Now Playing's menu, is Off and the server's hosts. Settings ends with Amsel's line, "Black feathers. Golden song." (Caption, ink), the licence line ("© 2026 hazymorning", Meta, secondary) a second line's step under it and, 48 under its baseline, the README's picture
 (`SettingsBird.kt`): the icon's blackbird behind three crowns before a 72 dp sun; at night a quiet moon a step above Surface 2,
 centred and cut by the dock's edge it stands on, so the sun rises over that edge as the page reaches
-its end. A picture only: not spoken, no touch, its size the same at any font scale; where the
+its end. Each time six tenths of it come over the dock's edge, the sun grows from nothing into place (650 ms) and then the bird rises from behind the crowns to its perch (900 ms), both settling; once it is under the dock again it waits to rise anew, and with reduced motion it simply stands there. A picture only: not spoken, no touch, its size the same at any font scale; where the
 settings fit a screen it stands at the screen's foot, and it never adds a scroll. Welcome is one
 Display sentence and Find my server; elsewhere the blackbird lives on the icon and the splash.
 
@@ -257,7 +257,8 @@ colour. A finger hands its speed to a critically damped spring.
 - **Track change**: the cover crossfades in 300 ms, the page's hue in 700, the words cross-fade.
 - A page that opens or closes cross-fades; another tab is simply there; only the back gesture moves
   a page, with the finger. Lists appear at once; skeletons are still.
-- Nothing moves that the person did not move, but for one line: what plays, on the dock, glides
+- Nothing moves that the person did not move, but for one line and one picture: the picture at
+  Settings' foot rises as it comes into view (above), and what plays, on the dock, glides
   to its end and back while it is longer than its room, resting 2.5 s at each end, its hidden end
   faded. It rests while Now Playing lies over the dock. The ring is still.
 - A sideways swipe (the dock's row, Now Playing's artwork, the library's kinds) repeats a visible
