@@ -8,6 +8,7 @@
     <string name="player_volume_percent">%1$d\u00A0%%</string>
     <string name="player_volume_still">stumm</string>
     <string name="player_volume_fixed">Die Lautstärke wird am Lautsprecher eingestellt</string>
+    <string name="player_volume_in_group">In der Gruppe</string>
     <string name="player_up_next">Als Nächstes</string>
     <!-- Above the artwork: where the music comes from (the album) -->
     <string name="player_from">aus %1$s</string>
@@ -79,8 +80,6 @@
     <string name="player_repeat_off">Aus</string>
     <string name="player_repeat_all">Alle</string>
     <string name="player_repeat_one">Ein Titel</string>
-    <string name="player_volume_down">Leiser</string>
-    <string name="player_volume_up">Lauter</string>
     <string name="group">Gruppieren</string>
     <string name="group_count">Gruppe +%1$d</string>
     <string name="group_with">Gruppe mit %1$s</string>
