@@ -11,6 +11,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
+import kotlin.math.abs
+import kotlin.math.hypot
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -18,8 +20,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import kotlin.math.abs
-import kotlin.math.hypot
 
 /**
  * The speaker's dot sits on its glyph's outline, half way round the arc of its top, so it is one
