@@ -123,7 +123,8 @@ internal fun Sections(
         }
         if (!state.loading) {
             item(key = FOOTER, contentType = FOOTER) {
-                if (state.editing) EditFooter(editor) else Spacer(Modifier.height(Space.ListEnd))
+                // Home ends a section's distance above the dock, as if the dock were the next section.
+                if (state.editing) EditFooter(editor) else Spacer(Modifier.height(Space.SectionToHeader))
             }
         }
     }

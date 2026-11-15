@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,7 @@ import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.LocalDownloadMarks
+import io.github.hazymorning.amsel.ui.components.LocalMusicPlays
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.navigation.Navigator
@@ -257,7 +259,12 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
     }
 
     val downloads = graph.downloading.marks.collectAsStateWithLifecycle()
-    CompositionLocalProvider(LocalAppActions provides actions, LocalDownloadMarks provides downloads) {
+    val plays = remember { derivedStateOf { nowPlaying?.isPlaying == true } }
+    CompositionLocalProvider(
+        LocalAppActions provides actions,
+        LocalDownloadMarks provides downloads,
+        LocalMusicPlays provides plays,
+    ) {
         AppShell(
             nowPlaying = nowPlaying,
             speaker = speaker,

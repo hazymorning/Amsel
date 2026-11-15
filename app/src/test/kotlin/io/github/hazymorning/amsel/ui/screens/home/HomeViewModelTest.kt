@@ -261,6 +261,20 @@ class HomeViewModelTest {
         assertEquals(SectionLayout.Row, layout.sections.single { it.option == SectionOption.Speakers }.layout)
     }
 
+    @Test fun untilTheServerNamesItsSpeakersTheirRowHoldsItsRoomSoNothingUnderItMoves() {
+        val layout = classicLayout().setOption("s2", SectionOption.Speakers)
+        val shelf = { speakers: HomeSpeakers, offline: Boolean ->
+            homeState(HomeInputs(layout, emptyMap(), offline, emptySet(), speakers), false, mapper::media)
+                .sections.single { it.option == SectionOption.Speakers }
+        }
+        val unknown = shelf(HomeSpeakers(loaded = false), false)
+        assertTrue(unknown.loading)
+        assertFalse(unknown.isEmpty)
+        // Out of reach nothing will answer: no room is held for it.
+        assertTrue(shelf(HomeSpeakers(loaded = false), true).isEmpty)
+        assertTrue(shelf(HomeSpeakers(loaded = true), false).isEmpty)
+    }
+
     @Test fun theCachedSnapshotPaintsTheFirstFrame() {
         val vm = viewModel(FakeHome(items = snapshot), session = MutableStateFlow(SessionState.Waiting(null)))
         // No subscriber yet: the initial value already has the snapshot, so no skeleton flash.

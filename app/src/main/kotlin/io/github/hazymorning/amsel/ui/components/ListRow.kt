@@ -330,7 +330,11 @@ internal fun RowText(
 
 /** The playing ring before the line ([MarkBefore]). */
 @Composable
-internal fun RingBefore(style: TextStyle, line: @Composable () -> Unit) = MarkBefore(style, { PlayingRing() }, line)
+internal fun RingBefore(
+    style: TextStyle,
+    line: @Composable () -> Unit,
+    moving: Boolean = LocalMusicPlays.current.value,
+) = MarkBefore(style, { PlayingRing(moving = moving) }, line)
 
 /** [mark] centred on [style]'s capitals, then the line; the line's baselines are the block's. */
 @Composable

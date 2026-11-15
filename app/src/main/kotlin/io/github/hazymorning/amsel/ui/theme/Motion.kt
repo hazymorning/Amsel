@@ -30,8 +30,8 @@ import kotlin.math.abs
 
 /**
  * Motion like breathing: unhurried, settling without overshoot, and only where a person moved
- * something; nothing loops but a spinner. Where a finger hands over its speed, a critically damped
- * spring carries it on, so a gesture settles at its own pace.
+ * something; nothing loops but a spinner and the playing ring's breath. Where a finger hands over
+ * its speed, a critically damped spring carries it on, so a gesture settles at its own pace.
  */
 object Motion {
     const val PRESS_MS = 120

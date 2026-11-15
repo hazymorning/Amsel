@@ -114,7 +114,14 @@ class HomeViewModel(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
             homeState(
-                HomeInputs(home.layout.value, home.items.value, isOffline(session.value), firstSyncs = emptySet()),
+                HomeInputs(
+                    home.layout.value,
+                    home.items.value,
+                    isOffline(session.value),
+                    firstSyncs = emptySet(),
+                    // Not known before the flow answers: the Speakers row holds its room meanwhile.
+                    speakers = HomeSpeakers(loaded = false),
+                ),
                 editing = editing.value,
                 mapper::media,
             ),
@@ -189,9 +196,16 @@ internal data class HomeInputs(
     val speakers: HomeSpeakers = HomeSpeakers(),
 )
 
-/** Every speaker as Play on lists them, This phone first, and the one music plays on. */
+/**
+ * Every speaker as Play on lists them, This phone first, and the one music plays on; [loaded] once
+ * the server named them in this run of the app.
+ */
 @Immutable
-data class HomeSpeakers(val all: List<SpeakerUi> = emptyList(), val inUse: SpeakerUi? = null) {
+data class HomeSpeakers(
+    val all: List<SpeakerUi> = emptyList(),
+    val inUse: SpeakerUi? = null,
+    val loaded: Boolean = true,
+) {
     fun named(id: String): SpeakerUi? = inUse?.takeIf { it.id == id } ?: all.firstOrNull { it.id == id }
 
     /**
@@ -228,7 +242,9 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
         val noPins = option == SectionOption.Pinned && layout.pinned.isEmpty()
         val waitingForIndex = list.isEmpty() && option.indexKind in inputs.firstSyncs
         val ofSpeakers = option == SectionOption.Speakers
-        val loading = !ofSpeakers && !noPins && !inputs.offline && (cached == null || waitingForIndex)
+        // Speakers keep no snapshot: their row holds its room until the server names them.
+        val loading = !inputs.offline &&
+            if (ofSpeakers) !inputs.speakers.loaded else !noPins && (cached == null || waitingForIndex)
         // Edit mode shows every pin Home holds, so each can be put in its place.
         val shown = if (editing &&
             option == SectionOption.Pinned
