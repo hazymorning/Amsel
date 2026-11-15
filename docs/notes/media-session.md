@@ -126,9 +126,16 @@ cached; `m3/MediaSession.java:2846-2865`) fetches it over the cleartext-allowed 
   playback resumption" (`m3/MediaSessionLegacyStub.java:203-205`); a stale card for a speaker
   someone else now uses would mislead. `onGetLibraryRoot` answers `ERROR_NOT_SUPPORTED` for
   `params.isRecent`.
-- **Controllers.** The 1.11 default `onConnectAsync` gives trusted controllers all commands and others
-  read access (`m3/MediaSession.java:2284-2298`); SystemUI gets the platform state
-  (`m3/MediaSessionImpl.java:975-978`). Keep the default.
+- **Controllers.** The 1.11 default `onConnectAsync` gives trusted controllers all commands and
+  others read access (`m3/MediaSession.java:2284-2298`); SystemUI gets the platform state
+  (`m3/MediaSessionImpl.java:975-978`). `BrowseTree.onConnectAsync` gives trusted controllers and the
+  car the library, less search, and every player command. Media3 knows the car by package name alone
+  (`isAutoCompanionController`, `isAutomotiveController`), which any app can take where Android Auto
+  or the car's media app is not installed, and which a legacy controller names itself before
+  Android 13 (`ControllerInfo.isPackageNameVerified`). So a car counts when Android trusts it, or
+  when its package is a system app installed under the controller's uid (`Cars`, once per uid).
+  Android Auto from Play on Android 9 is no system app: it counts only while trusted, as an app with
+  notification access is; its signing certificate is not checked.
 - **Manifest** (`:playback`): the two FGS permissions; `<service android:exported="true"
   android:foregroundServiceType="mediaPlayback" tools:ignore="ExportedService">` with actions
   `androidx.media3.session.MediaLibraryService` and `android.media.browse.MediaBrowserService`.

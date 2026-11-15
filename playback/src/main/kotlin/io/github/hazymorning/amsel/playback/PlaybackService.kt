@@ -174,6 +174,7 @@ class PlaybackService : MediaLibraryService() {
                     ::getString,
                     applicationInfo.loadLabel(packageManager).toString(),
                     CarArtwork(this),
+                    Cars(packageManager),
                     ::holdPhone,
                     graph::blocked,
                     graph::voiceUri,
