@@ -72,6 +72,13 @@ object Space {
     /** From a sheet's heading baseline to its content's first edge. */
     val HeaderToContent = 16.dp
 
+    /**
+     * A sheet's frame, the margin at its sides on its top and bottom too: from its top edge to its
+     * first ink (the title's capitals, a cover's top), and from its last ink (a baseline, a button's
+     * or a bar's edge) to its bottom edge.
+     */
+    val SheetEdge = 24.dp
+
     /** From a section heading's baseline to its row of covers or list. */
     val HeadingToRow = 22.5.dp
 

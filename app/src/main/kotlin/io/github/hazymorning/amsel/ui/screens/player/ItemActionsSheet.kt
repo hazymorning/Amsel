@@ -36,6 +36,7 @@ import io.github.hazymorning.amsel.ui.components.label
 import io.github.hazymorning.amsel.ui.components.overhang
 import io.github.hazymorning.amsel.ui.components.rowInkBottom
 import io.github.hazymorning.amsel.ui.components.rowInkTop
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.ItemAction
 import io.github.hazymorning.amsel.ui.model.ItemActionsUiState
 import io.github.hazymorning.amsel.ui.model.MediaKind
@@ -50,7 +51,12 @@ import kotlinx.coroutines.flow.first
 fun ItemActionsSheetContent(state: ItemActionsUiState, onAction: (ItemAction) -> Unit, modifier: Modifier = Modifier) {
     val coverTop = rowInkTop(RowLead.Cover, twoLines = true)
     val coverBottom = rowInkBottom(RowLead.Cover, twoLines = true)
-    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = sheetEnd(RowLead.GlyphUnderCover, twoLines = false)),
+    ) {
         ListRow(
             title = state.title,
             subtitle = if (state.djBreak) stringResource(R.string.dj) else state.subtitle,

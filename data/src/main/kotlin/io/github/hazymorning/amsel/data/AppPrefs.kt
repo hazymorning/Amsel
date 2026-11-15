@@ -54,6 +54,8 @@ data class Prefs(
     val sleepOnPlay: Boolean = false,
     /** Opening the app picks the speaker that plays (a group's leader), else This phone. */
     val followPlaying: Boolean = false,
+    /** Above this level a speaker plays louder only after Amsel asked; 0 for no limit. */
+    val volumeLimit: Int = 0,
     /** Each start of the app asks GitHub for a newer version. */
     val lookForUpdates: Boolean = false,
     /** Downloads wait for Wi-Fi (or another network that costs nothing per byte). */
@@ -98,6 +100,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
             sleepShake = p[SLEEP_SHAKE] ?: unset.sleepShake,
             sleepOnPlay = p[SLEEP_ON_PLAY] ?: unset.sleepOnPlay,
             followPlaying = p[FOLLOW_PLAYING] ?: unset.followPlaying,
+            volumeLimit = p[VOLUME_LIMIT] ?: unset.volumeLimit,
             lookForUpdates = p[LOOK_FOR_UPDATES] ?: unset.lookForUpdates,
             downloadOnWifi = p[DOWNLOAD_ON_WIFI] ?: unset.downloadOnWifi,
             absUrl = p[ABS_URL],
@@ -171,6 +174,10 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
 
     suspend fun setSleepFade(seconds: Int) {
         store.edit { it[SLEEP_FADE] = seconds }
+    }
+
+    suspend fun setVolumeLimit(level: Int) {
+        store.edit { it[VOLUME_LIMIT] = level }
     }
 
     suspend fun setSleepShake(on: Boolean) {
@@ -291,6 +298,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val SLEEP_SHAKE = booleanPreferencesKey("sleep_shake")
         val SLEEP_ON_PLAY = booleanPreferencesKey("sleep_on_play")
         val FOLLOW_PLAYING = booleanPreferencesKey("follow_playing")
+        val VOLUME_LIMIT = intPreferencesKey("volume_limit")
         val LOOK_FOR_UPDATES = booleanPreferencesKey("look_for_updates")
         val DOWNLOAD_ON_WIFI = booleanPreferencesKey("download_on_wifi")
         val ABS_URL = stringPreferencesKey("abs_url")

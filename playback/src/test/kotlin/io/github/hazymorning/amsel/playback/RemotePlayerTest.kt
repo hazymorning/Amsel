@@ -52,7 +52,7 @@ class RemotePlayerTest {
         elapsedRealtime,
     )
 
-    private fun player(speaker: FakeSpeaker, commands: SpeakerCommands = speaker) = RemotePlayer(
+    private fun player(speaker: FakeSpeaker, commands: SpeakerCommands = speaker, limit: Int = 0) = RemotePlayer(
         "kitchen",
         speaker.snapshots,
         commands,
@@ -60,6 +60,7 @@ class RemotePlayerTest {
         local = null,
         onCommandFailed = {},
         appScope = commandScope,
+        volumeLimit = { limit },
     )
 
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
@@ -202,6 +203,30 @@ class RemotePlayerTest {
         idle()
         assertEquals(listOf("volume_up", "volume_set:25"), speaker.calls)
         assertEquals(25, p.deviceVolume)
+    }
+
+    @Test
+    fun withALimitTheKeysAndTheSliderStopAtIt() {
+        val speaker = fake { it.copy(volumeLevel = 68) }
+        val p = player(speaker, limit = 70)
+        // The step that would pass the limit stops on it; the next one does nothing.
+        p.increaseDeviceVolume(C.VOLUME_FLAG_SHOW_UI)
+        idle()
+        assertEquals(listOf("volume_set:70"), speaker.calls)
+        p.increaseDeviceVolume(C.VOLUME_FLAG_SHOW_UI)
+        idle()
+        assertEquals(listOf("volume_set:70"), speaker.calls)
+        // The system's slider stops there too, and can always go quieter.
+        p.setDeviceVolume(95, 0)
+        idle()
+        assertEquals(listOf("volume_set:70"), speaker.calls)
+        p.setDeviceVolume(40, 0)
+        idle()
+        assertEquals(listOf("volume_set:70", "volume_set:40"), speaker.calls)
+        // Far under the limit the server steps as ever.
+        p.increaseDeviceVolume(C.VOLUME_FLAG_SHOW_UI)
+        idle()
+        assertEquals("volume_up", speaker.calls.last())
     }
 
     @Test

@@ -25,6 +25,8 @@
     <string name="settings_sleep_shake_detail">A shake sets a running timer back to its full length</string>
     <string name="settings_sleep_on_play">Start with playback</string>
     <string name="settings_sleep_on_play_detail">Sets the timer whenever playback starts</string>
+    <string name="settings_volume_limit">Volume limit</string>
+    <string name="settings_volume_limit_detail">Above the limit, a speaker plays louder only once you have said so in Volume. The phone’s volume buttons stop at it.</string>
     <string name="settings_follow">Follow the music</string>
     <string name="settings_follow_detail">On opening, choose the speaker that plays, else this phone</string>
     <string name="settings_updates">Updates</string>

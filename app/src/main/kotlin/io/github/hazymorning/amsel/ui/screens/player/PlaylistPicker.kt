@@ -21,6 +21,7 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.headerToRow
 import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -30,7 +31,8 @@ import io.github.hazymorning.amsel.ui.theme.Space
 /** "Add to playlist": the playlists you can change, one tap to add; [playlists] is null while they are read. */
 @Composable
 fun PlaylistPicker(playlists: List<MediaUi>?, onPick: (MediaUi) -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().padding(bottom = Space.Group)) {
+    val end = if (playlists.isNullOrEmpty()) Space.SheetEdge else sheetEnd(RowLead.Cover, twoLines = true)
+    Column(modifier.fillMaxWidth().padding(bottom = end)) {
         SheetHeader(stringResource(R.string.add_to_playlist))
         if (playlists == null) return@Column
         if (playlists.isEmpty()) {

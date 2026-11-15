@@ -32,6 +32,7 @@ import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
+import io.github.hazymorning.amsel.ui.components.rowInkBottom
 import io.github.hazymorning.amsel.ui.model.displayName
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Shapes
@@ -51,7 +52,7 @@ internal fun GroupList(
     // What Done changes is counted from the group as it was when this list opened.
     val before = rememberSaveable(leader.id) { state.group.filter { it.member }.map { it.id } }
     var chosen by rememberSaveable(leader.id) { mutableStateOf(before) }
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.SheetEdge)) {
         SheetHeader(stringResource(R.string.group_with, leader.displayName()))
         Spacer(Modifier.height(Space.HeaderToContent))
         state.group.forEach { choice ->
@@ -74,7 +75,8 @@ internal fun GroupList(
                 trailing = { RoundCheck(ticked) },
             )
         }
-        Spacer(Modifier.height(Space.Group))
+        // Done stands a group's distance under the last speaker's name, as Group does in the list.
+        Spacer(Modifier.height((Space.BeforeList - rowInkBottom(RowLead.Glyph, twoLines = false)).coerceAtLeast(0.dp)))
         PrimaryButton(
             stringResource(R.string.home_edit_done),
             onClick = { onDone(leader.id, chosen - before.toSet(), before - chosen.toSet()) },
