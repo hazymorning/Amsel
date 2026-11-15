@@ -40,7 +40,7 @@ import androidx.navigationevent.NavigationEvent
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.Offer
 import io.github.hazymorning.amsel.ui.components.Dock
-import io.github.hazymorning.amsel.ui.components.DockFade
+import io.github.hazymorning.amsel.ui.components.DockShadow
 import io.github.hazymorning.amsel.ui.components.LocalDockInset
 import io.github.hazymorning.amsel.ui.components.MessageHost
 import io.github.hazymorning.amsel.ui.components.NavBarItem
@@ -151,10 +151,8 @@ fun AppShell(
             CompositionLocalProvider(LocalDockInset provides dockInset) {
                 TabPages(tabs, tab, Modifier.fillMaxSize())
             }
-            // What scrolls fades out over the dock's edge; Settings' picture stands on that edge, and keeps it.
-            if (stack.lastOrNull() != Route.Settings) {
-                DockFade(Modifier.align(Alignment.BottomCenter).offset { IntOffset(0, -dockHeight.intValue) })
-            }
+            // The dock stands a little above the page, its short shadow on what scrolls under it.
+            DockShadow(Modifier.align(Alignment.BottomCenter).offset { IntOffset(0, -dockHeight.intValue) })
             Dock(
                 nowPlaying = nowPlaying,
                 speaker = speaker,

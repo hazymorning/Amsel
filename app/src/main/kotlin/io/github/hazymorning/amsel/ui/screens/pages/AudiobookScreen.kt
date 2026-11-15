@@ -94,6 +94,7 @@ fun AudiobookScreen(
         onBack,
         modifier,
         bottom = Space.ListEnd - rowInkBottom(RowLead.Glyph, twoLines = false),
+        art = book?.media?.art,
         actions = { if (book != null) MoreButton(book.title, onClick = { onMore(book.media) }) },
     ) {
         item(key = "art", contentType = PageSlot.Art) { PageArt(book?.art, MediaKind.Audiobook, book?.title) }

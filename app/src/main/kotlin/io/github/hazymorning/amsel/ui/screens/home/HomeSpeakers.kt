@@ -5,6 +5,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -119,6 +120,8 @@ private fun SpeakerCard(
                 Spacer(Modifier.width(Space.S1))
                 SpeakerName(speaker, type.titleSmall, colors.onSurface)
             }
+            // Name and state apart, so the two lines stand as tall as the cover beside them.
+            Spacer(Modifier.height(Space.S2))
             val line: @Composable () -> Unit = {
                 Words(
                     holds,

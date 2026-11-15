@@ -45,7 +45,7 @@ class PlayOnUngroupTest {
         show { PlayOnSheetContent(PlayOnUiState(PlayerSample.speakers, "kitchen", kitchen, alone), onSelect = {}) }
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
         compose.onNodeWithText("Group").performClick()
-        compose.onNodeWithText("Group · Kitchen").assertIsDisplayed()
+        compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
     }
 
     @Test fun aGroupTheSpeakerInUseLeadsNamesItsSizeAndUngroupLetsEveryoneGo() {
@@ -76,7 +76,7 @@ class PlayOnUngroupTest {
         compose.onNodeWithText("Ungroup all").assertIsDisplayed()
         compose.onNodeWithText("Group +2").performClick()
         // The step is the group's, whichever speaker the phone is set to.
-        compose.onNodeWithText("Group · Kitchen").assertIsDisplayed()
+        compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
         compose.onNodeWithText("Bedroom").performClick()
         compose.onNodeWithText("This phone").performClick()
         compose.onNodeWithText("Done").performClick()
@@ -89,22 +89,19 @@ class PlayOnUngroupTest {
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
     }
 
-    @Test fun ungroupIsABigButtonOverTheFirstSpeakerAndGroupOneUnderTheLast() {
+    @Test fun groupAndUngroupAreBigButtonsOverTheFirstSpeaker() {
         val state = PlayOnUiState(grouped, "kitchen", kitchen, kitchensGroup, grouped = true)
         show { PlayOnSheetContent(state, onSelect = {}) }
         val heading = compose.onNodeWithText("Play on").getUnclippedBoundsInRoot()
-        val ungroup = compose.onNodeWithText("Ungroup all").getUnclippedBoundsInRoot()
         val group = compose.onNodeWithText("Group +2").getUnclippedBoundsInRoot()
-        // This phone is the first speaker Play on lists, Kitchen the last.
+        val ungroup = compose.onNodeWithText("Ungroup all").getUnclippedBoundsInRoot()
+        // This phone is the first speaker Play on lists.
         val first = compose.onNodeWithText("This phone").getUnclippedBoundsInRoot()
-        val last = compose.onNodeWithText("Kitchen +2").getUnclippedBoundsInRoot()
-        for (button in listOf(ungroup, group)) {
+        for (button in listOf(group, ungroup)) {
             assertEquals(24f, button.left.value, 0.5f)
             assertEquals(411f - 24f, button.right.value, 0.5f)
             assertTrue(button.bottom - button.top >= 48.dp)
         }
-        assertTrue(heading.bottom < ungroup.top && ungroup.bottom < first.top)
-        // Well apart from the list: 40 under the last speaker's row, on top of the row's own room.
-        assertEquals(40f, (group.top - last.bottom).value, 0.5f)
+        assertTrue(heading.bottom < group.top && group.bottom < ungroup.top && ungroup.bottom < first.top)
     }
 }

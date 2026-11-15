@@ -12,6 +12,7 @@ import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.mapping.albumBesides
 import io.github.hazymorning.amsel.ui.model.ArtRef
+import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
 import kotlinx.coroutines.Deferred
@@ -91,16 +92,26 @@ class ArtistViewModel(
             // Each part lands on its own; the page is unavailable only once all have answered.
             val songs = launch {
                 val list = popular.await()
-                page.update { it.copy(popular = list?.map(mapper::track) ?: it.popular, popularLoading = false) }
+                page.update {
+                    it.copy(
+                        artist = it.artist ?: list?.let(::namedIn),
+                        popular = list?.map(mapper::track) ?: it.popular,
+                        popularLoading = false,
+                    )
+                }
             }
             val discography = launch {
-                albums.await()?.let { list -> page.update { it.copy(albums = mapper.newestFirst(list)) } }
+                albums.await()?.let { list ->
+                    page.update { it.copy(artist = it.artist ?: namedIn(list), albums = mapper.newestFirst(list)) }
+                }
             }
             val served = item.await()
-            val artist = served?.let { artistOf(it) }
-            if (artist != null) page.update { it.copy(artist = artist) }
+            served?.let { artistOf(it) }?.let { artist -> page.update { it.copy(artist = artist) } }
             songs.join()
             discography.join()
+            // The server's own artist, else the one its albums and songs name: an artist a music
+            // service is slow to describe still gets its page from what did answer.
+            val artist = page.value.artist
             val servedAlbums = albums.await()
             val servedPopular = popular.await()
             if (servedAlbums != null || servedPopular != null) {
@@ -122,6 +133,12 @@ class ArtistViewModel(
                 source.keep(key, ShownPage(served, servedPopular, servedAlbums))
             }
         }
+    }
+
+    /** The artist as its own albums and songs name it, where the server has not described it (yet). */
+    private fun namedIn(lists: List<MediaItem>): MediaUi? {
+        val named = lists.firstNotNullOfOrNull { item -> item.artists.firstOrNull { it.uri == key } } ?: return null
+        return MediaUi(key, MediaKind.Artist, named.name, art = mapper.art(named.cover))
     }
 
     /** Without a picture of its own an artist wears its albums, as in the Library's list. */

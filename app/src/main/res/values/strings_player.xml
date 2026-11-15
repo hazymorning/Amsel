@@ -90,6 +90,6 @@
     <string name="player_volume_up">Volume up</string>
     <string name="group">Group</string>
     <string name="group_count">Group +%1$d</string>
-    <string name="group_with">Group</string>
+    <string name="group_with">Group with %1$s</string>
     <string name="ungroup_all">Ungroup all</string>
 </resources>
