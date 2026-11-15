@@ -37,9 +37,9 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
 /**
- * Speakers: the others that play or rest on something, where music can go on, as a row of cards
- * as wide as Home's big tiles and as far apart, so two stand over the two columns below. The
- * speaker in use is the dock's, so it is not among them.
+ * Speakers: those that play or rest on something, where music can go on, as a row of cards as
+ * wide as Home's big tiles and as far apart, so two stand over the two columns below. The speaker
+ * in use is among them: with every speaker grouped under it, the row shows that group.
  */
 @Composable
 internal fun SpeakerShelf(section: SectionUi, onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit) {

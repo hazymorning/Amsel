@@ -190,9 +190,11 @@ internal data class HomeInputs(
 data class HomeSpeakers(val all: List<SpeakerUi> = emptyList(), val inUse: SpeakerUi? = null) {
     fun named(id: String): SpeakerUi? = inUse?.takeIf { it.id == id } ?: all.firstOrNull { it.id == id }
 
-    /** Speakers: the others that play or rest on something, where music can go on; the one in use is the dock's. */
-    val shown: List<SpeakerUi> =
-        all.filter { it.id != inUse?.id && it.available && (it.isPlaying || it.song != null) }
+    /**
+     * Speakers: those that play or rest on something, where music can go on. The one in use is among
+     * them, so speakers grouped under it still show, as the group they play in.
+     */
+    val shown: List<SpeakerUi> = all.filter { it.available && (it.isPlaying || it.song != null) }
 }
 
 /**
