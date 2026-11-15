@@ -54,15 +54,58 @@ class ArtistCoversTest {
         assertEquals("c2", dao.get("library://artist/a")?.albumCovers)
     }
 
+    @Test fun `an artist second on two albums and first on none wears both covers`() = runTest {
+        dao.upsert(
+            listOf(
+                artist("b"),
+                album("1", "a", "c1", year = 2001, with = listOf("b")),
+                album("2", "c", "c2", year = 2020, with = listOf("d", "b")),
+            ),
+        )
+        dao.coverArtists()
+        assertEquals("c2\nc1", dao.get("library://artist/b")?.albumCovers)
+    }
+
+    @Test fun `its own albums lead, then those it shares, each newest first and compilations last`() = runTest {
+        dao.upsert(
+            listOf(
+                artist("a"),
+                album("1", "a", "c1", year = 2001),
+                album("2", "b", "c2", year = 2024, with = listOf("a")),
+                album("3", "b", "c1", year = 2023, with = listOf("a")),
+                album("4", "a", "c4", year = 2010, compilation = true),
+                album("5", "b", "c5", year = 2019, with = listOf("a")),
+            ),
+        )
+        dao.coverArtists()
+        assertEquals("c1\nc4\nc2\nc5", dao.get("library://artist/a")?.albumCovers)
+    }
+
+    @Test fun `an artist whose own albums fill the four takes none it shares`() = runTest {
+        dao.upsert(
+            listOf(artist("a"), album("9", "b", "shared", year = 2030, with = listOf("a"))) +
+                (1..4).map { album("$it", "a", "c$it", year = 2000 + it) },
+        )
+        dao.coverArtists()
+        assertEquals("c4\nc3\nc2\nc1", dao.get("library://artist/a")?.albumCovers)
+    }
+
     private fun artist(id: String, picture: String? = null) = entity("library://artist/$id", "artist", picture)
 
-    private fun album(id: String, artist: String, cover: String?, year: Int?, compilation: Boolean = false) =
-        entity("library://album/$id", "album", cover).copy(
-            artistUri = "library://artist/$artist",
-            year = year,
-            compilation = compilation,
-            addedRank = id.toInt(),
-        )
+    private fun album(
+        id: String,
+        artist: String,
+        cover: String?,
+        year: Int?,
+        compilation: Boolean = false,
+        with: List<String> = emptyList(),
+    ) = entity("library://album/$id", "album", cover).copy(
+        artistUri = "library://artist/$artist",
+        albumArtists = with.joinToString("\n") { "library://artist/$it" }.ifEmpty { null },
+        year = year,
+        compilation = compilation,
+        addedRank = id.toInt(),
+    )
 
     private fun entity(uri: String, type: String, cover: String?) = LibraryItemEntity(
         uri = uri,

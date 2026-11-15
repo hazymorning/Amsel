@@ -88,6 +88,19 @@ class LibraryCoversTest {
         assertEquals(listOf("newest", firstLight), repo.covers(AURORA))
     }
 
+    @Test fun `an album's later artists are kept, and one without a picture wears its cover after its own`() {
+        val shared = albumListing.map { album ->
+            if (album.uri != LOW_END) return@map album
+            val artists = album.getValue("artists").jsonArray
+            val cirrus = artists.first().jsonObject.with("uri", JsonPrimitive(CIRRUS))
+            album.with("artists", JsonArray(artists + cirrus.with("name", JsonPrimitive("Cirrus"))))
+        }
+        synced(shared, artistListing.map { if (it.uri == CIRRUS) it.withoutPicture() else it }) { repo ->
+            assertEquals(CIRRUS, repo.get(LOW_END)?.albumArtists)
+            assertEquals(listOf(repo.cover(HIGH_CLOUDS), repo.cover(LOW_END)), repo.covers(CIRRUS))
+        }
+    }
+
     /** Syncs the recorded 2.11 library with these [albums] and [artists], then runs [block]. */
     private fun synced(
         albums: List<JsonObject> = albumListing,
@@ -132,7 +145,10 @@ class LibraryCoversTest {
     }
 
     private companion object {
+        const val CIRRUS = "library://artist/1"
         const val AURORA = "library://artist/3"
+        const val HIGH_CLOUDS = "library://album/1"
+        const val LOW_END = "library://album/2"
         const val SECOND_WIND = "library://album/3"
         const val FIRST_LIGHT = "library://album/4"
     }

@@ -10,7 +10,6 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.room.Room
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
@@ -28,8 +27,8 @@ import io.github.hazymorning.amsel.data.downloads.PrefsAbsAccountStore
 import io.github.hazymorning.amsel.data.home.HomeLayoutStore
 import io.github.hazymorning.amsel.data.home.HomeRepository
 import io.github.hazymorning.amsel.data.home.SectionSources
-import io.github.hazymorning.amsel.data.library.LibraryDb
 import io.github.hazymorning.amsel.data.library.LibraryRepository
+import io.github.hazymorning.amsel.data.library.openLibraryDb
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
@@ -77,9 +76,7 @@ class DataGraph(
     val prefs = AppPrefs(app, scope)
     val session = Session(prefs, vault, http, scope, deviceName = "Amsel (${Build.MODEL})")
     val discovery = Discovery(app, http)
-    private val db by lazy {
-        Room.databaseBuilder(app, LibraryDb::class.java, "library.db").fallbackToDestructiveMigration(true).build()
-    }
+    private val db by lazy { openLibraryDb(app) }
     val library by lazy {
         LibraryRepository(db.dao(), session.api, userId = { session.user.value?.userId })
     }

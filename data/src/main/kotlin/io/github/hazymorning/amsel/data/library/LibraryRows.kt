@@ -26,6 +26,8 @@ internal fun MediaItem.toEntity(addedRank: Int, playedRank: Int?) = LibraryItemE
     fullyPlayed = fullyPlayed,
     narrators = narratorNames.ifBlank { null },
     altUri = providerMappings.firstOrNull()?.let { ItemUri(it.providerInstance, mediaType, it.itemId).toString() },
+    albumArtists = artists.drop(1).takeIf { mediaType == MediaType.Album.api && it.isNotEmpty() }
+        ?.joinToString("\n") { it.uri },
 )
 
 /** The row an item event leaves: the item as sent, over [existing] for what only the row knows. */
