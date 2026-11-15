@@ -30,7 +30,7 @@ fun SheetQuestion(
     onSecondary: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.SheetEdge)) {
         SheetHeader(title)
         Spacer(Modifier.height(Space.Group))
         Column(Modifier.padding(horizontal = Keyline.Margin)) {

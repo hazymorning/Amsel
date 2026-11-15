@@ -14,6 +14,8 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.data.home.SectionOption
+import io.github.hazymorning.amsel.ui.components.RowLead
+import io.github.hazymorning.amsel.ui.components.rowInkBottom
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -30,8 +32,12 @@ import org.robolectric.annotation.Config
 class HomeEditSheetsTest {
     @get:Rule val compose = createComposeRule()
 
+    /** What a choice row keeps under its words, as the sheet measures its foot from them. */
+    private var under = 0.dp
+
     private fun show(current: SectionOption) = compose.setContent {
         AmselTheme {
+            under = rowInkBottom(RowLead.None, twoLines = false)
             Box(Modifier.height(SHEET)) {
                 WhatSheetContent(current, SpokenWord(books = true, podcasts = true, newEpisodes = true)) {}
             }
@@ -47,7 +53,8 @@ class HomeEditSheetsTest {
     @Test fun theLastChoiceOpensWholeAboveTheSheetsFoot() {
         show(SectionOption.YourPodcasts)
         val row = compose.onNodeWithText("Your podcasts").assertIsDisplayed().getUnclippedBoundsInRoot()
-        assertEquals((SHEET - Space.Group).value, row.bottom.value, 1f)
+        // Its words stand the sheet's frame over the foot, as the title's capitals under the top.
+        assertEquals((SHEET - Space.SheetEdge).value, (row.bottom - under).value, 1f)
     }
 
     @Test fun aChoiceNearTheTopLeavesTheSheetAtItsTitle() {

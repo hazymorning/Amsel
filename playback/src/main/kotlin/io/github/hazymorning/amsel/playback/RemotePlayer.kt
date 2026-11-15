@@ -50,6 +50,11 @@ class RemotePlayer(
      * (the command is still waiting for that join). Each one is bounded by its own timeouts.
      */
     appScope: CoroutineScope,
+    /**
+     * The level a speaker's keys and the system's slider never raise it past, 0 for none: only the
+     * volume sheet goes louder, and asks first.
+     */
+    private val volumeLimit: () -> Int = { 0 },
 ) : SimpleBasePlayer(Looper.getMainLooper()) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val commandScope = appScope + Dispatchers.Main.immediate
@@ -196,12 +201,26 @@ class RemotePlayer(
     }
 
     override fun handleSetDeviceVolume(deviceVolume: Int, flags: Int): ListenableFuture<*> {
-        val level = deviceVolume.coerceIn(0, MAX_VOLUME)
+        val before = snapshot?.volumeLevel ?: 0
+        val asked = deviceVolume.coerceIn(0, MAX_VOLUME)
+        val limit = volumeLimit()
+        // The system's slider goes no louder than the limit, nor louder than a level above it the
+        // volume sheet allowed; it can always go quieter.
+        val level = if (limit in 1..<asked && asked > before) maxOf(limit, before) else asked
+        if (level == before) return Futures.immediateVoidFuture()
         return send({ it.volumeLevel == level }, CONFIRM_VOLUME_MS) { id -> setVolume(id, level) }
     }
 
     override fun handleIncreaseDeviceVolume(flags: Int): ListenableFuture<*> {
         val before = snapshot?.volumeLevel ?: 0
+        val limit = volumeLimit()
+        if (limit > 0) {
+            if (before >= limit) return Futures.immediateVoidFuture()
+            // The server's step grows to 5 at most: the step that would pass the limit stops on it.
+            if (before + MAX_SERVER_STEP > limit) {
+                return send({ it.volumeLevel == limit }, CONFIRM_VOLUME_MS) { id -> setVolume(id, limit) }
+            }
+        }
         return send({ (it.volumeLevel ?: 0) > before }, CONFIRM_VOLUME_MS) { id -> volumeUp(id) }
     }
 
@@ -344,6 +363,9 @@ class RemotePlayer(
         const val MA_RESTART_THRESHOLD_MS = 5_000L
         const val CONFIRM_TIMEOUT_MS = 3_000L
         const val CONFIRM_VOLUME_MS = 1_500L
+
+        /** The largest step the server's volume up takes (`players/controller.py`, adaptive). */
+        const val MAX_SERVER_STEP = 5
 
         /** How long a seek's target may take to show in the snapshot: one hop between threads. */
         private const val SHOWN_TIMEOUT_MS = 500L

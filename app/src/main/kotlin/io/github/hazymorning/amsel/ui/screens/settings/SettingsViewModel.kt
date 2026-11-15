@@ -38,6 +38,7 @@ class SettingsViewModel(
     private val saveShake: suspend (Boolean) -> Unit = {},
     private val saveSleepOnPlay: suspend (Boolean) -> Unit = {},
     private val saveFollow: suspend (Boolean) -> Unit = {},
+    private val saveVolumeLimit: suspend (Int) -> Unit = {},
     private val saveLookForUpdates: suspend (Boolean) -> Unit = {},
     private val saveDownloadOnWifi: suspend (Boolean) -> Unit = {},
     /** Signs out and forgets the server's data (Session.signOut, then DataGraph.clear). */
@@ -72,6 +73,8 @@ class SettingsViewModel(
     fun onSleepOnPlayChange(on: Boolean): Unit = save(again = { onSleepOnPlayChange(on) }) { saveSleepOnPlay(on) }
 
     fun onFollowChange(on: Boolean): Unit = save(again = { onFollowChange(on) }) { saveFollow(on) }
+
+    fun onVolumeLimitChange(level: Int): Unit = save(again = { onVolumeLimitChange(level) }) { saveVolumeLimit(level) }
 
     fun onLookForUpdatesChange(on: Boolean): Unit = save(again = {
         onLookForUpdatesChange(on)
@@ -137,6 +140,7 @@ internal fun settingsState(
     sleepShake = (prefs ?: Prefs()).sleepShake,
     sleepOnPlay = (prefs ?: Prefs()).sleepOnPlay,
     followPlaying = (prefs ?: Prefs()).followPlaying,
+    volumeLimit = (prefs ?: Prefs()).volumeLimit,
     lookForUpdates = (prefs ?: Prefs()).lookForUpdates,
     downloadOnWifi = (prefs ?: Prefs()).downloadOnWifi,
 )
@@ -157,6 +161,8 @@ data class SettingsUiState(
     val sleepShake: Boolean = true,
     val sleepOnPlay: Boolean = false,
     val followPlaying: Boolean = false,
+    /** Above this level a speaker plays louder only after a question; 0 for no limit. */
+    val volumeLimit: Int = 0,
     val lookForUpdates: Boolean = false,
     /** Downloads wait for Wi-Fi rather than use mobile data. */
     val downloadOnWifi: Boolean = true,

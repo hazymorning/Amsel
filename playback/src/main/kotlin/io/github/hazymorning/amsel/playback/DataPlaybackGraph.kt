@@ -48,6 +48,8 @@ class DataPlaybackGraph(
 
     override fun toggleHeart() = onHeart()
 
+    override fun volumeLimit(): Int = data.prefs.prefs.value?.volumeLimit ?: 0
+
     private val api: MaApi get() = data.session.api
 
     override val downloads: Downloads get() = data.downloads

@@ -13,12 +13,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-/** What a sheet leaves of the screen behind it: by day the linen only greys a little; at night it sinks. */
-private const val SHEET_DIM_DAY = 0.16f
-private const val SHEET_DIM_NIGHT = 0.45f
+/**
+ * What a sheet leaves of the screen behind it: black over it, a third by day, and more at night,
+ * when the page is near black itself and only real black still sets the sheet apart from it.
+ */
+private const val SHEET_DIM_DAY = 0.32f
+private const val SHEET_DIM_NIGHT = 0.6f
 
 /** What a sheet's content can do besides lay itself out. */
 interface SheetScope : ColumnScope {
@@ -27,9 +31,10 @@ interface SheetScope : ColumnScope {
 }
 
 /**
- * No handle: content puts its first ink at its own top, 24 dp under the sheet's edge, as far as in
- * from its sides. A pull down or a tap beside it still closes it. ModalBottomSheet is experimental
- * in Material 3; opt-ins live only in this package.
+ * No handle: content puts its first ink at its own top, [Space.SheetEdge] under the sheet's edge,
+ * and ends its last ink as far over the bottom ([sheetEnd]), so a sheet is framed evenly. A pull
+ * down or a tap beside it still closes it. ModalBottomSheet is experimental in Material 3; opt-ins
+ * live only in this package.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,10 +49,10 @@ fun AmselSheet(onDismiss: () -> Unit, content: @Composable SheetScope.() -> Unit
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
-        scrimColor = MaterialTheme.colorScheme.run {
-            scrim.copy(alpha = if (isNight) SHEET_DIM_NIGHT else SHEET_DIM_DAY)
-        },
-        dragHandle = { Spacer(Modifier.height(Space.Group)) },
+        scrimColor = Color.Black.copy(
+            alpha = if (MaterialTheme.colorScheme.isNight) SHEET_DIM_NIGHT else SHEET_DIM_DAY,
+        ),
+        dragHandle = { Spacer(Modifier.height(Space.SheetEdge)) },
     ) {
         val sheet = remember(this) {
             object : SheetScope, ColumnScope by this {

@@ -205,7 +205,7 @@ fun AbsSignInRoute(then: MediaUi, onDone: () -> Unit) {
     val graph = LocalContext.current.graph
     val actions = LocalAppActions.current
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.SheetEdge)) {
         SheetHeader(stringResource(R.string.download))
         Spacer(Modifier.height(Space.HeaderToContent))
         AbsIntro()

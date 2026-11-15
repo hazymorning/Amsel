@@ -1,12 +1,12 @@
-# Tail flick
+# Subsong
 
 ## New
 
-- **Volume:** rebuilt. Each speaker has one wide bar that fills to its level, with its name and level on it; drag anywhere or tap where you want it. A group shows its own bar first, then one per speaker.
+- **Volume limit:** an optional ceiling in Settings, off unless you choose one. Above it, Volume asks before a speaker plays louder, and the phone's volume buttons stop there, so a slip of the finger never means full blast.
 
 ## Better
 
-- **Play on:** the buttons have as much room above as below, and the tick lines up under Group's round end.
-- **Speakers on Home:** each card shows just the cover, the name and what it does, as the mini player does.
-- **Cover colours:** the wash at the top of a page is a little stronger, still calm.
-- **Sheets:** no more handle at the top; pull down or tap beside one to close it.
+- **Play on:** the speakers come first; Group and Ungroup all follow them at the bottom.
+- **Sheets:** the title stands as far from the top as everything stands from the sides, the last line as far from the bottom, and the screen behind a sheet is darker.
+- **Cover colours:** a page's colour appears at once instead of fading in.
+- **Speakers on Home:** speakers that are playing always come first.
