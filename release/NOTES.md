@@ -1,15 +1,12 @@
-# Wing stretch
+# Tail flick
 
 ## New
 
-- **Cover colours:** album, playlist, artist, book and podcast pages take on a soft wash of their cover's colour at the top, easing into the page as you scroll. Black-and-white covers stay plain.
+- **Volume:** rebuilt. Each speaker has one wide bar that fills to its level, with its name and level on it; drag anywhere or tap where you want it. A group shows its own bar first, then one per speaker.
 
 ## Better
 
-- **Mini player:** a short shadow lets it sit a little above the page, in place of the fade, and play stands on a round disc.
-- **Play on:** Group is a big button over the first speaker, with Ungroup all under it, and its step reads "Group with Kitchen".
-- **Speakers on Home:** each card's name and state have more room, in balance with the cover.
-
-## Fixed
-
-- **Artist pages:** an artist your server was slow to describe could end on an empty page after a long wait. Its page now shows what arrived, its albums and popular songs, named from them.
+- **Play on:** the buttons have as much room above as below, and the tick lines up under Group's round end.
+- **Speakers on Home:** each card shows just the cover, the name and what it does, as the mini player does.
+- **Cover colours:** the wash at the top of a page is a little stronger, still calm.
+- **Sheets:** no more handle at the top; pull down or tap beside one to close it.

@@ -1,21 +1,14 @@
 package io.github.hazymorning.amsel.ui.screens.player
 
 import android.os.SystemClock
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -26,54 +19,50 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.MemberVolume
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.EndValue
-import io.github.hazymorning.amsel.ui.components.InkEdge
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkHeight
 import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.inkWidth
 import io.github.hazymorning.amsel.ui.components.label
-import io.github.hazymorning.amsel.ui.components.overhang
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Shapes
-import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
-import io.github.hazymorning.amsel.ui.theme.rememberPress
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /**
- * The volume of [speaker]: its level at the title's end and one slider. A group adds each of its
- * speakers under it ([members]), each with its own level and slider. A level keeps the room of
- * "100 %", so the name before it holds still while a finger changes it.
+ * Volume: a bar for the speaker in use and, for a group, one for each of its speakers under a quiet
+ * line, all alike and a step apart. A bar is the slider itself ([VolumeBar]), so the sheet holds
+ * nothing but the speakers and how loud each one plays.
  */
 @Composable
 fun VolumeSheetContent(
@@ -85,44 +74,131 @@ fun VolumeSheetContent(
     modifier: Modifier = Modifier,
 ) {
     val main = rememberLevel(level ?: 0)
-    val label = stringResource(R.string.player_volume)
-    val loudest = stringResource(R.string.player_volume_percent, 100)
     Column(modifier.fillMaxWidth().padding(bottom = Space.Group)) {
-        SheetHeader(
-            label,
-            name = speaker,
-            value = if (level != null) volumeWords(main.shown) else null,
-            widestValue = loudest,
-        )
-        Spacer(Modifier.height(Space.Group))
-        VolumeRow(main, enabled = level != null, label = label, onLevel = onLevel)
-        members.forEachIndexed { index, member ->
-            key(member.id) {
-                val own = rememberLevel(member.level)
-                // The group's own line stands apart from its speakers'.
-                Spacer(Modifier.height(if (index == 0) Space.S10 else Space.Group))
-                MemberName(member.name, volumeWords(own.shown), loudest)
-                Spacer(Modifier.height(Space.S2))
-                VolumeRow(own, enabled = true, label = member.name, onLevel = { onMember(member.id, it) })
+        SheetHeader(stringResource(R.string.player_volume))
+        Spacer(Modifier.height(Space.HeaderToContent))
+        VolumeBar(speaker, main, enabled = level != null, onLevel = onLevel)
+        if (members.isNotEmpty()) {
+            Spacer(Modifier.height(Space.Group))
+            val style = MaterialTheme.typography.bodyMedium
+            val words = stringResource(R.string.player_volume_in_group)
+            Words(
+                words,
+                style,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = Keyline.Margin).textInk(style).inkStart(words, style),
+            )
+            members.forEach { member ->
+                key(member.id) {
+                    val own = rememberLevel(member.level)
+                    Spacer(Modifier.height(Space.S2))
+                    VolumeBar(member.name, own, enabled = true, onLevel = { onMember(member.id, it) })
+                }
             }
         }
     }
 }
 
+/**
+ * One speaker's volume as a pill of the second tone that fills with ink as far as the level: its
+ * name at the start and the level at the end stand on it, each on the centre of its round end. A
+ * drag anywhere along it moves the level, a tap sets it where it lands, and every step is a detent
+ * the finger feels, an end a firmer one. The level keeps the room of "100 %", so nothing moves while
+ * it changes. TalkBack hears the speaker, its level, and can set it. A speaker that sets its own
+ * volume shows at 38% and says so.
+ */
 @Composable
-private fun MemberName(name: String, value: String, widestValue: String) {
-    val style = MaterialTheme.typography.bodyLarge
-    Row(Modifier.fillMaxWidth().padding(horizontal = Keyline.Margin)) {
+internal fun VolumeBar(
+    name: String,
+    level: LevelState,
+    enabled: Boolean,
+    onLevel: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    val haptics = LocalHapticFeedback.current
+    val set: (Int) -> Unit = { target ->
+        if (level.change(target.coerceIn(0, 100))) {
+            val end = level.shown == 0 || level.shown == 100
+            haptics.performHapticFeedback(
+                if (end) HapticFeedbackType.SegmentTick else HapticFeedbackType.SegmentFrequentTick,
+            )
+            onLevel(level.shown)
+        }
+    }
+    val update by rememberUpdatedState(set)
+    val state = if (enabled) {
+        stringResource(R.string.player_volume_percent, level.shown)
+    } else {
+        stringResource(R.string.player_volume_fixed)
+    }
+    val track = colors.surfaceContainerHigh
+    val fill = colors.onSurface.copy(alpha = FILL_INK)
+    Row(
+        modifier
+            .padding(horizontal = Keyline.Margin)
+            .fillMaxWidth()
+            .height(BarHeight)
+            .clip(Shapes.Pill)
+            .drawBehind {
+                drawRect(track)
+                drawRect(fill, size = Size(size.width * level.shown / 100f, size.height))
+            }
+            .then(
+                if (enabled) {
+                    Modifier
+                        .pointerInput(Unit) { detectTapGestures { update((it.x / size.width * 100).roundToInt()) } }
+                        .pointerInput(Unit) {
+                            var at = 0f
+                            detectHorizontalDragGestures(onDragStart = { at = level.shown.toFloat() }) { change, dx ->
+                                change.consume()
+                                at = (at + dx / size.width * 100f).coerceIn(0f, 100f)
+                                update(at.roundToInt())
+                            }
+                        }
+                } else {
+                    Modifier
+                },
+            )
+            .semantics(mergeDescendants = true) {
+                contentDescription = name
+                stateDescription = state
+                progressBarRangeInfo = ProgressBarRangeInfo(level.shown / 100f, 0f..1f)
+                if (enabled) {
+                    setProgress { target ->
+                        update((target * 100).roundToInt())
+                        true
+                    }
+                } else {
+                    disabled()
+                }
+            }
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
+            .padding(horizontal = BarHeight / 2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val style = MaterialTheme.typography.bodyLarge
         Words(
             name,
-            style = style,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f).alignByBaseline().textInk(style).inkStart(name, style),
+            style,
+            color = colors.onSurface,
+            maxLines = 1,
+            modifier = Modifier.weight(1f).clearAndSetSemantics {}.inkStart(name, style),
         )
         Spacer(Modifier.width(Space.Sibling))
-        EndValue(value, widestValue, Modifier.alignByBaseline())
+        EndValue(
+            volumeWords(level.shown),
+            stringResource(R.string.player_volume_percent, 100),
+            Modifier.clearAndSetSemantics {},
+        )
     }
 }
+
+/** A bar's height, as tall as the sheet's widest button, and a comfortable stretch for a thumb. */
+private val BarHeight = 56.dp
+
+/** How much ink fills a bar as far as the level: plain to read the words over, plain to see where it ends. */
+private const val FILL_INK = 0.14f
 
 /** The volume of the speaker that plays; a group's speakers each have their own under the group's. */
 @Composable
@@ -181,128 +257,3 @@ internal fun rememberLevel(reported: Int): LevelState {
 }
 
 private const val SETTLE_MS = 1_500L
-
-/**
- * − and + on the margins step by one; held, they repeat. The line between them is the one slider.
- * Disabled, for a speaker that sets its own volume, it shows at 38% and says so to TalkBack.
- */
-@Composable
-internal fun VolumeRow(
-    level: LevelState,
-    enabled: Boolean,
-    label: String,
-    onLevel: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val haptics = LocalHapticFeedback.current
-    val set: (Int) -> Unit = { target ->
-        if (level.change(target.coerceIn(0, 100))) {
-            // Every step of the level is a detent the finger feels, and an end a firmer one.
-            val end = level.shown == 0 || level.shown == 100
-            haptics.performHapticFeedback(
-                if (end) HapticFeedbackType.SegmentTick else HapticFeedbackType.SegmentFrequentTick,
-            )
-            onLevel(level.shown)
-        }
-    }
-    // Its layout is the + glyph's ink, so the distances around it are measured to what shows.
-    val trim = (Sizes.TouchTarget - inkHeight(R.drawable.ic_add)) / 2
-    Row(
-        modifier
-            .fillMaxWidth()
-            .padding(horizontal = Keyline.Margin)
-            .overhang(top = trim, bottom = trim)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        StepButton(R.drawable.ic_minus, stringResource(R.string.player_volume_down), InkEdge.Start, enabled) {
-            set(level.shown - 1)
-        }
-        Spacer(Modifier.width(Space.Sibling))
-        LineSlider(
-            fraction = { level.shown / 100f },
-            semanticValue = level.shown / 100f,
-            label = label,
-            stateDescription = if (enabled) {
-                stringResource(R.string.player_volume_percent, level.shown)
-            } else {
-                stringResource(R.string.player_volume_fixed)
-            },
-            onChange = { set((it * 100).roundToInt()) },
-            onChangeFinished = { set((it * 100).roundToInt()) },
-            modifier = Modifier.weight(1f),
-            enabled = enabled,
-        )
-        Spacer(Modifier.width(Space.Sibling))
-        StepButton(R.drawable.ic_add, stringResource(R.string.player_volume_up), InkEdge.End, enabled) {
-            set(level.shown + 1)
-        }
-    }
-}
-
-private const val REPEAT_AFTER_MS = 400L
-private const val REPEAT_FIRST_MS = 100L
-private const val REPEAT_FASTEST_MS = 40L
-private const val REPEAT_SPEEDUP_MS = 4L
-
-/**
- * A step glyph whose ink stands on its margin, in a 48 dp target. A tap steps once; held, it steps
- * again after 400 ms at ten a second, rising to 25, until the finger lifts or the gesture is lost.
- */
-@Composable
-private fun StepButton(@DrawableRes icon: Int, label: String, edge: InkEdge, enabled: Boolean, step: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val stepNow by rememberUpdatedState(step)
-    val active by rememberUpdatedState(enabled)
-    val presses = remember { MutableInteractionSource() }
-    val spare = (Sizes.TouchTarget - inkWidth(icon)) / 2
-    Box(
-        Modifier
-            .overhang(
-                start = if (edge == InkEdge.Start) spare else 0.dp,
-                end = if (edge == InkEdge.End) spare else 0.dp,
-            )
-            .size(Sizes.TouchTarget)
-            .indication(presses, rememberPress(Shapes.Circle))
-            .semantics {
-                contentDescription = label
-                role = Role.Button
-                if (enabled) {
-                    onClick {
-                        stepNow()
-                        true
-                    }
-                } else {
-                    disabled()
-                }
-            }
-            .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    if (!active) return@awaitEachGesture
-                    down.consume()
-                    val press = PressInteraction.Press(down.position)
-                    presses.tryEmit(press)
-                    stepNow()
-                    val repeat = scope.launch {
-                        delay(REPEAT_AFTER_MS)
-                        var every = REPEAT_FIRST_MS
-                        while (active) {
-                            stepNow()
-                            delay(every)
-                            every = (every - REPEAT_SPEEDUP_MS).coerceAtLeast(REPEAT_FASTEST_MS)
-                        }
-                    }
-                    try {
-                        waitForUpOrCancellation()
-                    } finally {
-                        repeat.cancel()
-                        presses.tryEmit(PressInteraction.Release(press))
-                    }
-                }
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        InkGlyph(icon, tint = MaterialTheme.colorScheme.onSurface)
-    }
-}

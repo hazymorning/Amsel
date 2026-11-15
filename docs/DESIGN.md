@@ -24,6 +24,10 @@ The code is the source of truth for the values: `ui/theme` holds the tokens (`Co
 9. **Off the very edge.** What a thumb presses stands in from the screen's edge, never on its
    outermost margin: easier to reach and calmer to look at. A cover or a line of words may sit on
    the margin; a control at a row's end keeps more room from the edge than the margin alone.
+10. **Balance.** A control has as much room over it as under it, measured to the ink on either
+   side (the rhythm of proximity). A glyph that ends a row stands on the centre of the round end of
+   the pill above or below it, not on the bare margin (optical alignment), so the column of ends
+   reads as one line.
 
 ## Rules (from the design review of Now Playing and Home)
 
@@ -191,8 +195,9 @@ Home, which names itself in a slim bar with Done. There a section is its title, 
 (Remove): a tap on the title renames it, a held press on the title or the sentence picks the section
 up, and in Pinned a held press on a pin picks the pin up, the others making way; TalkBack moves both
 through their actions. Pinned shows every pin there, so each can be put in its place. Speakers'
-cards lie on Surface 1 with ink at 3% over it, a breath lighter than Home's ground, the name and
-the state 8 apart so the two lines stand as tall as the cover beside them; until the
+cards lie on Surface 1 with ink at 3% over it, a breath lighter than Home's ground: the cover,
+then the name over the state, 4 apart, as the mini player has them, with no glyph (the row says
+these are speakers, and a cover without a picture wears the speaker's glyph); until the
 server names its speakers, two blank cards hold the row's room, so nothing under it moves. Search
 is a section too: Search's field at rest between the margins, with no heading; a tap opens Search,
 the keyboard up. Home ends 48 above the dock, a section's distance, as if the dock were the next
@@ -248,13 +253,19 @@ song are a list under a slim bar, "Similar to “Lanterns”".
 with the songs already played waiting above it. Only what comes next has a handle. What the
 server's DJ says between two songs is a row like theirs, "DJ" where the artist stands.
 
-**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and a faint handle, over a
+**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle (their title's capitals 24 under the edge, as far as from the sides; a pull down or a tap beside one closes it), over a
 dim of 16% by day and 45% at night; the title on the margin, a second step without a back glyph;
-a choice is marked by its tick alone, no band, and every choice keeps the tick's room, so a name
-breaks alike chosen or not. In Play on, Group ("Group +2" while a group exists, for that group's
+a choice is marked by its tick alone, no band, its middle where a pill button's round end has its
+centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. In Play on, Group ("Group +2" while a group exists, for that group's
 leader) is a primary button the width of the margins over the first speaker; while speakers play
-along, Ungroup all stands 8 under it as a secondary button, so the sheet keeps one focal point; a
-group's distance (24) parts them from the list. A speaker that plays carries the ring before what it plays ("Playing"
+along, Ungroup all stands 8 under it as a secondary button, so the sheet keeps one focal point. The
+buttons stand as far over the first speaker's words as under the heading's baseline, 16 each side
+(principle 10). Volume, from Now Playing's footer, is one bar for the speaker in use and, for a
+group, one for each of its speakers under "In the group" (Meta, secondary), 8 apart: a 56 dp pill
+of Surface 2 that is the slider itself, filled with ink at 14% as far as the level, the speaker's
+name (Body) at its start and the level (Meta, keeping the room of "100 %") at its end, each on the
+centre of its round end. A drag anywhere along it moves the level, a tap sets it, every step a
+detent; TalkBack hears the speaker and its level and can set it. A speaker that plays carries the ring before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
 from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Bottom bar, its
 places named in their order: its page lists every place, those in the bar first, each with its
