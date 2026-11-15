@@ -676,3 +676,8 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-15 | Play on's Group and Ungroup are 44 high, as Now Playing's speaker pill | Owner (too little room above and under) |
 | 2026-11-15 | Settings' foot at night: the moon a step above Surface 2; the licence line is "© 2026 hazymorning" alone | Owner (the disc still glared; "All rights reserved" reads unkind) |
 | 2026-11-15 | Amsel's source is public, in hazymorning/Amsel from a fresh start, under the GNU GPL version 3: copyleft, so whoever changes and passes it on must keep it open. CI and releases run there with a new release key and password, as the old password was lost: 2026.11.31 is installed once after removing the old app. The private repository's history stays private | Owner (the Actions limit must never block the work; a restrictive open source licence is fine) |
+| 2026-11-15 | Home's Speakers include the speaker in use: with every speaker grouped under it, the row showed nothing, though they all play through it. The row keeps its order, so a tap no longer takes a card out of it. Replaces "the other speakers" (2026-11-14) | Owner's test (an empty row makes no sense while a group plays) |
+| 2026-11-15 | The dock reads a size larger: the speaker's name Body at 560 (16), the line under it Body's face at 14/20 | Owner's test (the mini player's text was too small) |
+| 2026-11-15 | Cleanup keeps the newest five releases, still run by hand with one button | Owner |
+| 2026-11-15 | The README no longer says why Amsel was built | Owner |
+| 2026-11-15 | A release's versionCode is the Release workflow's run number, so it began again at 1 in the public repository; 2026.11.31 is installed fresh anyway, under its new key | Q2 (no counter to keep by hand) |

@@ -361,16 +361,20 @@ internal fun MarkBefore(style: TextStyle, mark: @Composable () -> Unit, line: @C
     }
 }
 
-/** Lays out [RowText]'s lines, and the skeleton bars that stand in for them, alike. */
+/**
+ * Lays out [RowText]'s lines, and the skeleton bars that stand in for them, alike. [inset] keeps
+ * room over and under them; the dock's larger lines take less, so they stay within its cover's height.
+ */
 @Composable
 internal fun RowLines(
     titleStyle: TextStyle,
     besideCover: Boolean,
     modifier: Modifier = Modifier,
+    secondStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    inset: Dp = Space.S2,
     lines: @Composable () -> Unit,
 ) {
-    val secondStyle = MaterialTheme.typography.bodyMedium
-    Layout(lines, modifier.padding(vertical = Space.S2)) { measurables, constraints ->
+    Layout(lines, modifier.padding(vertical = inset)) { measurables, constraints ->
         val loose = constraints.copy(minHeight = 0)
         val title = measurables[0].measure(loose)
         val second = measurables.getOrNull(1)?.measure(loose)

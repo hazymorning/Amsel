@@ -18,9 +18,10 @@
 Amsel's source is public here, under the GNU General Public License, version 3 (`LICENSE`); the
 app's update check and Obtainium read the releases.
 
-Actions → Cleanup → Run workflow keeps the newest release and deletes the others with their tags,
-every tag no release keeps, every branch but `main` and `signing` (a branch with an open pull
-request stays), the Actions caches, and every workflow run but the newest of each workflow.
+Cleanup (https://github.com/hazymorning/Amsel/actions/workflows/cleanup.yml, Run workflow) keeps
+the newest five releases and deletes the older ones with their tags, every tag no release keeps,
+every branch but `main` and `signing` (a branch with an open pull request stays), the Actions
+caches, and every workflow run but the newest of each workflow.
 
 ## The signing key
 
