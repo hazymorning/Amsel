@@ -38,4 +38,9 @@
     <string name="updates_install">Install update</string>
     <string name="updates_at_start">Look when Amsel starts</string>
     <string name="updates_at_start_detail">Asks GitHub once at each start, never in the background</string>
+    <string name="settings_bar">Bottom bar</string>
+    <string name="bar_speaker">Speaker</string>
+    <string name="bar_hint">Hold a place and move it to change the order. Home always stays.</string>
+    <string name="bar_home_stays">Always in the bar</string>
+    <string name="bar_arrange">Arrange the bottom bar</string>
 </resources>

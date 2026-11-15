@@ -12,9 +12,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -25,10 +27,12 @@ import androidx.compose.ui.test.swipeUp
 import io.github.hazymorning.amsel.sample.SampleData
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,6 +53,8 @@ class AppShellTest {
     private val opening = mutableStateOf<Opening?>(null)
     private var opened = 0
 
+    private val bar = mutableStateOf(BarPlace.Default)
+
     private fun shell(nowPlaying: NowPlayingUi? = null) = shell(mutableStateOf(nowPlaying))
 
     private fun shell(nowPlaying: State<NowPlayingUi?>) = compose.setContent { Shell(nowPlaying) }
@@ -62,6 +68,7 @@ class AppShellTest {
                 onSpeaker = { speakerTaps++ },
                 onControl = { controls += it },
                 opening = opening.value,
+                bar = bar.value,
                 onOpened = {
                     opened++
                     opening.value = null
@@ -84,6 +91,18 @@ class AppShellTest {
                 ),
             )
         }
+    }
+
+    @Test fun theBarShowsThePlacesChosenAndALongPressArrangesThem() {
+        bar.value = listOf(BarPlace.Library, BarPlace.Home)
+        shell()
+        compose.onNodeWithContentDescription("Search").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Speaker: This phone. Choose speaker").assertDoesNotExist()
+        val library = compose.onNodeWithContentDescription("Library").getUnclippedBoundsInRoot()
+        val home = compose.onNodeWithContentDescription("Home").getUnclippedBoundsInRoot()
+        assertTrue(library.left < home.left)
+        compose.onNodeWithContentDescription("Home").performTouchInput { longClick() }
+        compose.onNodeWithText("page Bar").assertExists()
     }
 
     @Test fun startsOnHome() {

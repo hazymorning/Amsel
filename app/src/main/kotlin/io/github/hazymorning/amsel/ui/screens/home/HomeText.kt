@@ -123,7 +123,8 @@ internal val WhatGroups: List<List<SectionOption>> = listOf(
         SectionOption.PlayedHere,
         SectionOption.ContinueListening,
     ),
-    listOf(SectionOption.Speakers, SectionOption.Search),
+    listOf(SectionOption.Speakers),
+    listOf(SectionOption.Search),
     listOf(
         SectionOption.YourPlaylists,
         SectionOption.FavoritePlaylists,

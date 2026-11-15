@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigationevent.NavigationEvent
+import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.Offer
 import io.github.hazymorning.amsel.ui.components.Dock
 import io.github.hazymorning.amsel.ui.components.DockFade
@@ -49,6 +50,7 @@ import io.github.hazymorning.amsel.ui.components.PreloadCover
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
@@ -97,6 +99,8 @@ fun AppShell(
     offer: Offer? = null,
     onTakeOffer: (Offer) -> Unit = {},
     onDismissOffer: (Offer) -> Unit = {},
+    /** The places the bottom bar shows, in its order. */
+    bar: List<BarPlace> = BarPlace.Default,
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.Home) }
     val scope = rememberCoroutineScope()
@@ -161,18 +165,27 @@ fun AppShell(
                 openDrag = Modifier.layerDrag(layer),
                 covered = layer.isOpen,
             ) {
-                Tab.entries.forEach { t ->
-                    NavBarItem(
-                        selected = t == tab,
-                        onClick = {
-                            tabs.popToRoot(tab)
-                            tab = t
-                        },
-                        label = stringResource(t.label),
-                        icon = t.icon,
-                        selectedIcon = t.selectedIcon,
-                    )
-                    if (t == Tab.Home) NavBarSpeaker(speaker, playing = nowPlaying?.isPlaying == true, onSpeaker)
+                // The places the person chose, in their order; a long press on any arranges them.
+                val arrange = stringResource(R.string.bar_arrange)
+                val onArrange = { tabs.navigator(tab).open(Route.Bar) }
+                bar.forEach { place ->
+                    val t = place.tab
+                    if (t == null) {
+                        NavBarSpeaker(speaker, nowPlaying?.isPlaying == true, onSpeaker, onArrange, arrange)
+                    } else {
+                        NavBarItem(
+                            selected = t == tab,
+                            onClick = {
+                                tabs.popToRoot(tab)
+                                tab = t
+                            },
+                            label = stringResource(t.label),
+                            icon = t.icon,
+                            selectedIcon = t.selectedIcon,
+                            onLongClick = onArrange,
+                            longClickLabel = arrange,
+                        )
+                    }
                 }
             }
             // Back from a non-Home tab's top goes to Home first (NavDisplay only sees a 1-entry stack).

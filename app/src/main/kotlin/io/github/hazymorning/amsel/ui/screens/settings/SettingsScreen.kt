@@ -32,7 +32,9 @@ import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.Navigator
+import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -65,6 +67,9 @@ fun SettingsScreen(
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignIn = { _, _, _ -> null },
     onAbsSignOut: () -> Unit = {},
+    /** The places the bottom bar shows, in its order, and the page that arranges them. */
+    bar: List<BarPlace> = BarPlace.Default,
+    onBar: () -> Unit = {},
 ) {
     val title = stringResource(R.string.settings)
     val scroll = rememberScrollState()
@@ -123,6 +128,11 @@ fun SettingsScreen(
                     ValueRow(stringResource(R.string.settings_theme), stringResource(themeLabel(state.theme)), shape) {
                         choosing = Choice.Theme
                     }
+                }
+                row { shape ->
+                    // What the bar shows, in its order: the page arranges it, as a long press on the bar does.
+                    val names = bar.map { stringResource(it.label) }.joinToString(", ")
+                    SettingRow(stringResource(R.string.settings_bar), shape, subtitle = names, onClick = onBar)
                 }
                 row { shape ->
                     ToggleRow(
@@ -283,6 +293,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,
         onAbsSignIn = graph.downloading::signIn,
         onAbsSignOut = graph.downloading::signOut,
+        bar = BarPlace.of(prefs?.barPlaces),
+        onBar = { navigator.open(Route.Bar) },
         onLanguage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             { context.openLanguageSettings() }
         } else {

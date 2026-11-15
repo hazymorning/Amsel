@@ -68,7 +68,7 @@ Distances are measured ink to ink (cap tops, baselines, glyph ink), so they hold
    solid and edge to edge, never blurred or see-through, never the cover's colour, with no card on
    it and no line along it. The status strip and a slim bar fill in, with a hairline under them,
    only while content runs under them. On the dock what plays stands on the margin: its cover (48)
-   24 under the dock's edge and 24 in from the screen's, the skip's ink on the margin across; a
+   24 under the dock's edge and 24 in from the screen's, the skip's ink 40 in across (principle 9); a
    cover there stands a tone above the dock (Surface 2 empty, and its floor at night). Under it the
    three places on a band a tone darker by day and lighter at night, each its glyph alone (24), 20
    over and under the glyphs; the player's band keeps 24 over and under its cover.
@@ -136,7 +136,7 @@ their cuts and the ink table.
 **Press.** No ripples: a soft ink highlight (6%) in the control's own shape and a press-in to 0.98,
 over 120 ms (`PressIndication`).
 
-## Effects (three, nothing else)
+## Effects (four, nothing else)
 
 1. **Paper** (`Paper.kt`, `Dock.kt`): the dock and the status strip are the page's own paper,
    solid. The strip (and a slim bar on it) fills in with a hairline under it only while content
@@ -149,6 +149,10 @@ over 120 ms (`PressIndication`).
    it breathes, plainly to see: an echo leaves from under it at nine tenths of its strength, widens
    to more than two and a half times its size as it settles and fades, and is gone after 1.9 s; the
    next leaves 2.4 s after the last. Paused, or with reduced motion, it holds still.
+4. **The dock's fade** (`DockFade.kt`): what scrolls fades into the page over the 40 dp above the
+   dock, eased at both ends (smoothstep), so the dock stands apart and neither edge draws a line. The
+   one fade in the app; not over Settings, whose picture stands on the dock's edge. Lists end 40
+   above the dock, clear of it.
 
 A shelf of covers is a plain row: lamp, fold, turn and step back were tried and each was a step
 back from it.
@@ -186,8 +190,10 @@ Home, which names itself in a slim bar with Done. There a section is its title, 
 up, and in Pinned a held press on a pin picks the pin up, the others making way; TalkBack moves both
 through their actions. Pinned shows every pin there, so each can be put in its place. Speakers'
 cards lie on Surface 1 with ink at 3% over it, a breath lighter than Home's ground; until the
-server names its speakers, two blank cards hold the row's room, so nothing under it moves. Home
-ends 48 above the dock, a section's distance, as if the dock were the next section.
+server names its speakers, two blank cards hold the row's room, so nothing under it moves. Search
+is a section too: Search's field at rest between the margins, with no heading; a tap opens Search,
+the keyboard up. Home ends 48 above the dock, a section's distance, as if the dock were the next
+section.
 
 **Library.** "Library" (Display), the chips 16 under it, the order in
 words 16 under them ("Recently played ↓"; a tap moves to the next order; none when there is nothing
@@ -247,7 +253,11 @@ the width of the margins over the first speaker, a group's distance (24) above i
 +2" while a group exists, for that group's leader) is one too, under the last speaker, 40 apart
 from the list. A speaker that plays carries the ring before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
-from Now Playing's menu, is Off and the server's hosts. Settings ends with Amsel's name as the README's picture sets it (Display: its face, weight and tracking; ink, the same in every language), the licence line ("© 2026 hazymorning", Meta's face at 11, secondary) 12 under it and, 48 under its baseline, the README's picture
+from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Bottom bar, its
+places named in their order: its page lists every place, those in the bar first, each with its
+glyph and a switch (Home has none: it always stays), and a held press moves a place as in Edit
+Home; the bar under the page follows at once. A long press on any place in the bar opens the same
+page. Settings ends with Amsel's name as the README's picture sets it (Display: its face, weight and tracking; ink, the same in every language), the licence line ("© 2026 hazymorning", Meta's face at 11, secondary) 12 under it and, 48 under its baseline, the README's picture
 (`SettingsBird.kt`): the icon's blackbird behind three crowns before a 72 dp sun; at night a moon barely off the page, between Surface 1 and 2, darker than the crowns,
 centred and cut by the dock's edge it stands on, so the sun rises over that edge as the page reaches
 its end. Each time six tenths of it come over the dock's edge, the sun grows from nothing into place (650 ms) and then the bird rises from behind the crowns to its perch (900 ms), both settling; once it is under the dock again it waits to rise anew, and with reduced motion it simply stands there. A picture only: not spoken, no touch, its size the same at any font scale; where the
@@ -270,7 +280,7 @@ colour. A finger hands its speed to a critically damped spring.
 - Nothing moves that the person did not move, but for one line and one picture: the picture at
   Settings' foot rises as it comes into view (above), and what plays, on the dock, glides
   to its end and back while it is longer than its room, resting 2.5 s at each end, its hidden end
-  faded. It rests while Now Playing lies over the dock. The ring is still.
+  faded. It rests while Now Playing lies over the dock. The ring breathes while the music plays.
 - A sideways swipe (the dock's row, Now Playing's artwork, the library's kinds) repeats a visible
   control: what it carries lags behind the finger and fades, past 64 dp it acts, and what comes
   fades in where it stands; the library's kinds go round. A message, an offer and a tip can be

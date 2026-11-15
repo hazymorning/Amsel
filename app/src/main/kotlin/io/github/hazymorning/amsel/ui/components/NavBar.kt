@@ -3,7 +3,7 @@ package io.github.hazymorning.amsel.ui.components
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -116,7 +116,8 @@ private fun Modifier.navPlace(): Modifier {
 
 /**
  * Inactive: the glyph in the secondary tone. Active: ink, and filled. TalkBack reads the place's
- * name; the whole strip from the band's top to the screen's edge takes the tap.
+ * name; the whole strip from the band's top to the screen's edge takes the tap. A long press
+ * ([onLongClick]) arranges the bar, as a long press on a heading edits Home.
  */
 @Composable
 fun RowScope.NavBarItem(
@@ -125,6 +126,8 @@ fun RowScope.NavBarItem(
     label: String,
     @DrawableRes icon: Int,
     @DrawableRes selectedIcon: Int,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val tint by animateColorAsState(
@@ -135,12 +138,14 @@ fun RowScope.NavBarItem(
     Box(
         Modifier
             .weight(1f)
-            .selectable(
-                selected = selected,
-                onClick = onClick,
-                role = Role.Tab,
+            .semantics { this.selected = selected }
+            .combinedClickable(
                 interactionSource = null,
                 indication = null,
+                role = Role.Tab,
+                onLongClickLabel = longClickLabel,
+                onLongClick = onLongClick,
+                onClick = onClick,
             )
             .then(Modifier.navPlace()),
         contentAlignment = Alignment.TopCenter,
@@ -164,7 +169,13 @@ fun RowScope.NavBarItem(
  * band's tone. TalkBack hears "Speaker: Kitchen, playing. Choose speaker".
  */
 @Composable
-fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> Unit) {
+fun RowScope.NavBarSpeaker(
+    speaker: SpeakerUi,
+    playing: Boolean,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
+) {
     val colors = MaterialTheme.colorScheme
     val description = stringResource(
         if (playing) R.string.speaker_button_playing else R.string.speaker_button_description,
@@ -176,7 +187,14 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
     Box(
         Modifier
             .weight(1f)
-            .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
+            .combinedClickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onLongClickLabel = longClickLabel,
+                onLongClick = onLongClick,
+                onClick = onClick,
+            )
             .semantics { contentDescription = description }
             .then(Modifier.navPlace()),
         contentAlignment = Alignment.TopCenter,

@@ -21,6 +21,12 @@ class HomeShots : ScreenshotTest() {
 
     @Test fun grid() = snap("home_grid", ShotVariant.entries) { Home(HomeSample.grid) }
 
+    /** Search's field at Home's top, over the sections. */
+    @Test fun search() = snap("home_search", ShotVariant.entries) {
+        val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
+        Home(HomeSample.home.copy(sections = listOf(search) + HomeSample.home.sections))
+    }
+
     @Test fun layouts() = snap("home_layouts", ShotVariant.entries) { Home(HomeSample.layouts) }
 
     @Test fun tip() = snap("home_tip", ShotVariant.entries) { Home(HomeSample.home, Tip.More) }
