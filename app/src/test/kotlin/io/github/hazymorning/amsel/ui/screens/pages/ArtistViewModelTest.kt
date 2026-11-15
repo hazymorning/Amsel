@@ -4,8 +4,11 @@ import io.github.hazymorning.amsel.api.Images
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MediaItem
+import io.github.hazymorning.amsel.api.MediaItemImage
+import io.github.hazymorning.amsel.api.MediaItemMetadata
 import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.data.ShownPage
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -120,6 +123,20 @@ class ArtistViewModelTest {
 
     private fun artist(id: Int, name: String) = MediaItem("$id", "library", name, "library://artist/$id", "artist")
 
+    /** The page's artist, without a picture of its own. */
+    private val bare = MediaItem("3", "library", "Aurora Tone", ARTIST, "artist")
+
+    private fun album(id: Int, year: Int?, cover: String, compilation: Boolean = false) = MediaItem(
+        itemId = "$id",
+        provider = "library",
+        name = "Album $id",
+        uri = "library://album/$id",
+        mediaType = "album",
+        metadata = MediaItemMetadata(images = listOf(MediaItemImage(proxyId = cover))),
+        year = year,
+        albumType = if (compilation) "compilation" else "album",
+    )
+
     private fun page(source: FakeSource, similarOffered: Flow<Boolean> = flowOf(true)) =
         ArtistViewModel(ARTIST, source, mapper, playing, messages, similarOffered)
 
@@ -204,6 +221,67 @@ class ArtistViewModelTest {
         val (cirrus, nimbus) = watch(vm.state).value.similar
         assertEquals(listOf("c1", "c2", "c3", "c4").map { "$IMAGES/$it" }, cirrus.art?.quarters?.map { it.base })
         assertNull(nimbus.art)
+    }
+
+    @Test fun `an artist with no picture, none in the index, wears its albums' covers, compilations last`() = runTest {
+        val source = FakeSource().apply {
+            item = bare
+            albums = listOf(
+                album(1, 2020, "c1"),
+                album(2, 2024, "comp", compilation = true),
+                album(3, 2023, "c3"),
+                album(4, null, "c4"),
+            )
+        }
+        val art = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state).value.artist?.art
+        assertEquals(listOf("c3", "c1", "c4", "comp").map { "$IMAGES/$it" }, art?.quarters?.map { it.base })
+    }
+
+    @Test fun `without albums it wears its popular songs' covers, and one cover alone`() = runTest {
+        val songs = list("music_artists_artist_tracks").take(5)
+        val source = FakeSource().apply {
+            item = bare
+            tracks = songs
+        }
+        val art = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state).value.artist?.art
+        assertEquals("$IMAGES/${songs.first().cover?.proxyId}", art?.base)
+        assertEquals(emptyList<Any>(), art?.quarters)
+
+        source.tracks = emptyList()
+        source.albums = listOf(album(1, 2020, "c1"))
+        val one = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state).value.artist?.art
+        assertEquals("$IMAGES/c1", one?.base)
+        assertEquals(emptyList<Any>(), one?.quarters)
+    }
+
+    @Test fun `its own picture, then the index's covers, come before the page's`() = runTest {
+        val source = FakeSource().apply {
+            item = one("music_artists_get")
+            albums = listOf(album(1, 2020, "c1"))
+        }
+        val own = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state).value.artist?.art
+        assertEquals("$IMAGES/${one("music_artists_get").cover?.proxyId}", own?.base)
+
+        source.item = bare
+        source.rows.value = row(ARTIST, "artist", "Aurora Tone").copy(albumCovers = "i1\ni2")
+        val held = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state).value.artist?.art
+        assertEquals("$IMAGES/i1", held?.base)
+    }
+
+    @Test fun `an artist opened again wears last time's covers before the server answers, and keeps them`() = runTest {
+        val shelf = listOf(album(1, 2020, "c1"), album(2, 2021, "c2"))
+        val source = FakeSource(gated = true).apply {
+            shownPages[ARTIST] = ShownPage(bare, shelf = shelf)
+            item = bare
+            albums = shelf
+        }
+        val state = watch(ArtistViewModel(ARTIST, source, drawn, playing, messages).state)
+        assertEquals("$IMAGES/c2", state.value.artist?.art?.base)
+
+        source.open()
+        advanceUntilIdle()
+        assertFalse(state.value.loading)
+        assertEquals("$IMAGES/c2", state.value.artist?.art?.base)
     }
 
     @Test fun `similar artists alone do not make a page`() {

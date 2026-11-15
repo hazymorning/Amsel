@@ -11,6 +11,7 @@ import io.github.hazymorning.amsel.data.ShownPage
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.mapping.albumBesides
+import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
 import kotlinx.coroutines.Deferred
@@ -47,17 +48,23 @@ class ArtistViewModel(
     private val page = MutableStateFlow(ArtistUiState(loading = true, popularLoading = true))
     private var loading: Job? = null
 
-    val state: StateFlow<ArtistUiState> = combine(page, source.row(key), playing) { page, row, uri ->
-        shown(page, row, uri)
+    /** The covers of the albums and popular songs the page lists ([pageCovers]), last time's until the server's. */
+    private val covers = MutableStateFlow<ArtRef?>(null)
+
+    val state: StateFlow<ArtistUiState> = combine(page, source.row(key), playing, covers) { page, row, uri, covers ->
+        shown(page, row, uri, covers)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         ArtistUiState(loading = true, popularLoading = true),
     )
 
-    /** The index's row paints the header until the server answers, and follows favorites changed anywhere. */
-    private fun shown(page: ArtistUiState, row: LibraryItemEntity?, uri: String?): ArtistUiState {
-        val artist = page.artist ?: row?.let(mapper::media)
+    /**
+     * The index's row paints the header until the server answers, and follows favorites changed anywhere.
+     * An artist with no picture of its own and none in the index wears the [covers] of what its page lists.
+     */
+    private fun shown(page: ArtistUiState, row: LibraryItemEntity?, uri: String?, covers: ArtRef?): ArtistUiState {
+        val artist = (page.artist ?: row?.let(mapper::media))?.let { it.copy(art = it.art ?: covers) }
         return page.copy(artist = row?.let { artist?.copy(favorite = it.favorite) } ?: artist, currentTrackKey = uri)
     }
 
@@ -95,8 +102,12 @@ class ArtistViewModel(
             songs.join()
             discography.join()
             val servedAlbums = albums.await()
+            val servedPopular = popular.await()
+            if (servedAlbums != null || servedPopular != null) {
+                covers.value = mapper.pageCovers(servedAlbums.orEmpty(), servedPopular.orEmpty())
+            }
             // Popular songs or albums alone still make a page; neither, or no artist, does not.
-            val unavailable = artist == null || (popular.await() == null && servedAlbums == null)
+            val unavailable = artist == null || (servedPopular == null && servedAlbums == null)
             page.update {
                 it.copy(
                     loading = false,
@@ -106,8 +117,7 @@ class ArtistViewModel(
                     albums = if (unavailable && servedAlbums == null && albumsFromIndex) emptyList() else it.albums,
                 )
             }
-            messages.loadFailed(load, shown(page.value, source.row(key).first(), null).showUnavailable, retryLoad)
-            val servedPopular = popular.await()
+            messages.loadFailed(load, shown(page.value, source.row(key).first(), null, null).showUnavailable, retryLoad)
             if (served != null && servedPopular != null && servedAlbums != null) {
                 source.keep(key, ShownPage(served, servedPopular, servedAlbums))
             }
@@ -122,6 +132,7 @@ class ArtistViewModel(
     /** What the page showed last time, where the server has not answered yet. */
     private suspend fun paintShown(last: ShownPage) {
         val artist = artistOf(last.item)
+        covers.value = mapper.pageCovers(last.shelf, last.rows)
         page.update {
             it.copy(
                 artist = it.artist ?: artist,
