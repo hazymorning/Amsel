@@ -681,3 +681,4 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-15 | Cleanup keeps the newest five releases, still run by hand with one button | Owner |
 | 2026-11-15 | The README no longer says why Amsel was built | Owner |
 | 2026-11-15 | A release's versionCode is the Release workflow's run number, so it began again at 1 in the public repository; 2026.11.31 is installed fresh anyway, under its new key | Q2 (no counter to keep by hand) |
+| 2026-11-15 | The speaker's button leaves the dock for the band, its second glyph after Home, in the secondary tone; it opens Play on, and a moss dot of 6 on its top end shows while music plays on the speaker in use. The dock's words take the room. Replaces the disc on the dock (2026-11-15) | Owner (more room in the mini player; the band shows at a glance that something plays) |

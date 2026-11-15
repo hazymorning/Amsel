@@ -42,6 +42,7 @@ import io.github.hazymorning.amsel.ui.components.Dock
 import io.github.hazymorning.amsel.ui.components.LocalDockInset
 import io.github.hazymorning.amsel.ui.components.MessageHost
 import io.github.hazymorning.amsel.ui.components.NavBarItem
+import io.github.hazymorning.amsel.ui.components.NavBarSpeaker
 import io.github.hazymorning.amsel.ui.components.OfferHost
 import io.github.hazymorning.amsel.ui.components.PreloadCover
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
@@ -157,6 +158,7 @@ fun AppShell(
                         icon = t.icon,
                         selectedIcon = t.selectedIcon,
                     )
+                    if (t == Tab.Home) NavBarSpeaker(speaker, playing = nowPlaying?.isPlaying == true, onSpeaker)
                 }
             }
             // Back from a non-Home tab's top goes to Home first (NavDisplay only sees a 1-entry stack).

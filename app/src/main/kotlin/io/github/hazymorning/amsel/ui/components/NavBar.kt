@@ -2,6 +2,8 @@ package io.github.hazymorning.amsel.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -20,9 +22,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.model.SpeakerUi
+import io.github.hazymorning.amsel.ui.model.displayName
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -34,6 +44,9 @@ private val AroundPlaces = 20.dp
 private val UnderPlacesOverButtons = Space.S3
 
 private val TabGlyph = Sizes.Icon
+
+/** The speaker's dot while music plays on it, at its glyph's top end. */
+private val Dot = 6.dp
 
 /**
  * The bar at the dock's foot, a band a tone apart from what plays above it: the app's places, each
@@ -94,6 +107,43 @@ fun RowScope.NavBarItem(
                 tint = tint,
                 size = TabGlyph,
                 contentDescription = label,
+                inkHeight = true,
+            )
+        }
+    }
+}
+
+/**
+ * The speaker's place in the band, after Home: its glyph in the secondary tone, as a place's, which
+ * opens the speaker choice rather than a page, and a moss dot at its top end while music plays on
+ * the speaker in use. TalkBack hears "Speaker: Kitchen, playing. Choose speaker".
+ */
+@Composable
+fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val description = stringResource(
+        if (playing) R.string.speaker_button_playing else R.string.speaker_button_description,
+        speaker.displayName(),
+    )
+    val dot by animateFloatAsState(if (playing) 1f else 0f, Motion.effects(), label = "speaker dot")
+    val moss = colors.tertiary
+    Box(
+        Modifier
+            .weight(1f)
+            .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description }
+            .then(Modifier.navPlace()),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Box(Modifier.height(TabGlyph), contentAlignment = Alignment.Center) {
+            InkGlyph(
+                SpeakerButtonGlyph,
+                Modifier.drawWithContent {
+                    drawContent()
+                    if (dot > 0f) drawCircle(moss, Dot.toPx() / 2, Offset(size.width, 0f), alpha = dot)
+                },
+                tint = colors.onSurfaceVariant,
+                size = TabGlyph,
                 inkHeight = true,
             )
         }
