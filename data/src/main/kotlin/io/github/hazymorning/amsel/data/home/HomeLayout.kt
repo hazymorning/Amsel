@@ -9,7 +9,18 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 
-enum class SectionSource { Pinned, RecentlyPlayed, Playlists, Albums, Artists, Radio, Audiobooks, Podcasts, Speakers, Search }
+enum class SectionSource {
+    Pinned,
+    RecentlyPlayed,
+    Playlists,
+    Albums,
+    Artists,
+    Radio,
+    Audiobooks,
+    Podcasts,
+    Speakers,
+    Search,
+}
 
 /**
  * The first chip of a section's sentence, "Show [option] as [layout]": one of its source's
