@@ -23,12 +23,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
@@ -45,11 +45,21 @@ private val UnderPlacesOverButtons = Space.S3
 
 private val TabGlyph = Sizes.Icon
 
-/** The speaker's dot while music plays on it, at its glyph's top end. */
+/** The speaker's dot while music plays on it, on its glyph's outline. */
 private val Dot = 6.dp
 
-/** The ring of the band's own tone around the dot, which parts it from the glyph it sits on. */
+/** The ring of the band's own tone around the dot, which parts it from the line it sits on. */
 private val DotRing = 1.5.dp
+
+/**
+ * Where the speaker glyph's outline turns at its top end, on the glyph's 256 grid: half way round
+ * the arc of its top, whose centre is (128, 88) and radius 64. The dot's centre lies there, on the
+ * line, so the outline runs into its ring from over the top and down the side and the dot is one
+ * with the glyph. The corner of the glyph's box would leave it in the air past the arc.
+ */
+private const val ARC_X = 128f
+private const val ARC_Y = 88f
+private const val HALF_WAY = 64f * 0.70710677f
 
 /**
  * The bar at the dock's foot, a band a tone apart from what plays above it: the app's places, each
@@ -118,9 +128,9 @@ fun RowScope.NavBarItem(
 
 /**
  * The speaker's place in the band, after Home: its glyph in the secondary tone, as a place's, which
- * opens the speaker choice rather than a page, and a moss dot at its top end while music plays on
- * the speaker in use, cut free of the glyph by a ring of the band's tone. TalkBack hears "Speaker:
- * Kitchen, playing. Choose speaker".
+ * opens the speaker choice rather than a page. While music plays on the speaker in use, a moss dot
+ * sits on the glyph's outline where it turns at the top end, cut free of the line by a ring of the
+ * band's tone. TalkBack hears "Speaker: Kitchen, playing. Choose speaker".
  */
 @Composable
 fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> Unit) {
@@ -146,7 +156,9 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
                 Modifier.drawWithContent {
                     drawContent()
                     if (dot > 0f) {
-                        val at = Offset(size.width, 0f)
+                        // At the end side; the glyph is the same both ways round.
+                        val end = if (layoutDirection == LayoutDirection.Ltr) HALF_WAY else -HALF_WAY
+                        val at = inkPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, inkHeight = true)
                         drawCircle(band, Dot.toPx() / 2 + DotRing.toPx(), at, alpha = dot)
                         drawCircle(moss, Dot.toPx() / 2, at, alpha = dot)
                     }
