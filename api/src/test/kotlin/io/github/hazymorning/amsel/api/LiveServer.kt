@@ -24,13 +24,14 @@ internal fun live(block: suspend (MaApi, ServerInfo) -> Unit) = runBlocking {
     val http = OkHttpClient()
     val auth = MaAuth(http)
     val probe = auth.probe(address)
-    val signIn = auth.signIn(address, "amsel", "amsel-test-pw", "Amsel (live test)")
+    val id = probe.info.serverId
+    val signIn = auth.signIn(address, id, "amsel", "amsel-test-pw", "Amsel (live test)")
     assertTrue("sign in: $signIn", signIn is SignInResult.Success)
-    assertEquals(SignInResult.WrongPassword, auth.signIn(address, "amsel", "not-the-password", "Amsel (live test)"))
+    assertEquals(SignInResult.WrongPassword, auth.signIn(address, id, "amsel", "not-the-password", "Amsel (live test)"))
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val client = MaClient(http, scope)
     try {
-        client.start(address, (signIn as SignInResult.Success).token)
+        client.start(address, (signIn as SignInResult.Success).token, id)
         withTimeout(15_000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
         block(MaApi(client), probe.info)
     } finally {

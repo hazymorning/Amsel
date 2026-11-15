@@ -18,7 +18,7 @@ are in `music-assistant/models@1.1.232`; `client:` is `/home/user/ref/client/mus
 ## How a session works
 
 1. Find the server: Android NSD for `_mass._tcp`, TXT `base_url`, or the typed address. Confirm it with `GET /info` (no auth).
-2. Open `ws(s)://host:8095/ws`. The first frame is `server_info` (no `message_id`). Read `schema_version` and pick the gates in §1.
+2. Open `ws(s)://host:8095/ws`. The first frame is `server_info` (no `message_id`). Compare its `server_id` with the one stored at sign-in before sending anything: another id gets no token and the client stays offline, as a home address on another network can lead to anyone; two in a row on the network where the server answered as itself before mean it was set up anew, handled as a refused token (`MaClient`, `CheckedNetwork`). Then read `schema_version` and pick the gates in §1.
 3. No token yet: `auth/login {username, password, device_name}` works before auth and returns a session token; Home Assistant: `auth/authorization_url`, a WebView, and the token in the return URL (§3.4).
 4. Send `auth {token}`. From the success reply on, the server pushes **every** event to this socket. There is no subscribe command.
 5. First sign-in only: `auth/token/create {name}` gives a long-lived token (365 days). Store it and use it in step 4 from then on.
@@ -26,7 +26,7 @@ are in `music-assistant/models@1.1.232`; `client:` is `/home/user/ref/client/mus
 7. Load `players/all` and `player_queues/all`, then keep both current from `player_*` and `queue_*` events.
 8. Library index: page `music/{playlists,albums,artists,audiobooks,podcasts,radios}/library_items` (limit 500) into Room, the kinds side by side, for each kind whose count or favourite count differs from the index's (or after another server or schema). Patch it from `media_item_*` and favourite events; re-sync on `music_sync_completed`.
 9. Every command is `{message_id, command, args}`. Match replies by `message_id`, join `partial:true` chunks, and turn `error_code` into a plain sentence.
-10. On a dropped socket reconnect with backoff and start again at step 2. Events are not replayed, so re-fetch players and queues. `auth` error 23 means the token is gone: show sign-in.
+10. On a dropped socket reconnect with backoff and start again at step 2. Events are not replayed, so re-fetch players and queues. `auth` error 23 means the token is gone: show sign-in. What the server last said holds only while it is current: after two minutes without a connection the speakers rest where they were and no longer keep the socket open, and the next network to come reconnects (`Session.stale`).
 
 ## 1. Versions and schema gates
 
@@ -73,7 +73,7 @@ fails quietly.
 | `GET /info` | none | `server_info` JSON, same fields as §2.2; check a typed address or a discovered one [live] |
 | `GET /ws` | `auth` command | The API socket |
 | `GET /imageproxy/<proxy_id>?size=&fmt=` | none | Artwork (§8) [live] |
-| `GET /sendspin` | first frame `{"type":"auth","token":…}` | Sendspin proxy for "This phone" (`webserver/sendspin_proxy.py:50-113`, close code 4001 on bad auth). Use the API socket's token: the server binds the Sendspin player to API sockets holding the same token, which is how the app sees events for its own private player (`webserver/controller.py:560-582`) |
+| `GET /sendspin` | first frame `{"type":"auth","token":…}` | Sendspin proxy for "This phone" (`webserver/sendspin_proxy.py:50-113`, close code 4001 on bad auth). Use the API socket's token: the server binds the Sendspin player to API sockets holding the same token, which is how the app sees events for its own private player (`webserver/controller.py:560-582`). As the token is the first frame, This phone reconnects by itself over plain http only on the network where the API socket last passed the `server_id` check; over TLS anywhere |
 | `GET /api-docs`, `/api-docs/commands.json` | none | Generated reference; `commands.json` is the machine-readable signature list |
 
 The port is 8095 by default. `POST /auth/login` and `POST /api` exist but the app does not
@@ -83,7 +83,7 @@ need them: everything goes over the socket.
 
 | Field | Type | Since | Notes |
 | --- | --- | --- | --- |
-| `server_id` | str | 28 | Stable per install; key the stored token and the Room cache by it |
+| `server_id` | str | 28 | Stable per install; key the stored token and the Room cache by it. The token and the password go only to the id stored or probed; it is not secret, so this stops a chance listener, not one who knows it |
 | `server_version` | str | 28 | `"2.10.8"`, `"2.11.0b7"` |
 | `schema_version` | int | 28 | 65 / 99 / 100 |
 | `min_supported_schema_version` | int | 28 | 28 |
@@ -164,7 +164,7 @@ Tokens are HS256 JWTs. Observed claims: `sub`, `jti` (equals `token_id` in `auth
 
 ### 3.3 Username and password, exact sequence
 
-1. Socket open, `server_info` read.
+1. Socket open, `server_info` read: its `server_id` must be the probed server's, or nothing is sent.
 2. `auth/login {username, password, device_name: "Amsel (<Build.MODEL>)"}`. `success:false` means "That password didn't work"; keep `error` for the log.
 3. `auth {token: access_token}`.
 4. `auth/token/create {name: "Amsel (<Build.MODEL>)"}`; store the result in Keystore-backed storage, keyed by `server_id`. On error 22 (guest) keep the session token instead; a guest signs in again after a day, a server rule the app cannot change.
@@ -336,7 +336,8 @@ time crosses a multiple of 30 s (`PLAYBACK_REPORT_INTERVAL_SECONDS`), never on a
 125 s). The official app never closes its session on purpose (`KtorServiceClient`: in the
 background it only declines to reconnect a dropped transport while nothing plays), but a lost
 connection rebuilds its phone's queue as well. Amsel keeps the session open while music is paused
-on the phone (`Session.setHolding`); when the phone's client leaves it notes the book or episode
+on the phone (`Session.setHolding`), until the server has been out of reach for two minutes
+(`Session.stale`); when the phone's client leaves it notes the book or episode
 and where it was (`Speakers.left`), and after the next join the rebuilt queue is parked at that
 place (`Speakers.rejoined`, `Seek.Parked`): it shows there and a play is a seek there, until the
 queue plays again or holds something else. A client-side fix that remembered places across runs
@@ -414,9 +415,10 @@ So: send it from an app-wide scope, one per queue, show the pending state from t
 - **uri** = `<provider>://<media_type>/<item_id>` (`models: helpers.py:135-137`). Library items use `library://album/1`. Provider items keep raw ids, spaces included: `filesystem_local--GvtMQCEi://track/Test Artist/First Album/01 - Alpha.mp3`. Parse with `split("://", 1)` then `split("/", 1)` (`helpers/uri.py:81-120`). Never URL-encode a uri inside JSON args.
 - **Every item**: `item_id`, `provider` (`"library"` or a provider instance id), `name`, `version`, `sort_name`, `uri`, `external_ids`, `is_playable`, `media_type`, `provider_mappings`, `metadata`, `favorite`, `position`, `date_added`.
 - **Album** adds `year`, `artists` [ItemMapping], `album_type`. **Track** adds `duration`, `artists`, `album` (ItemMapping), `disc_number`, `track_number`, `last_played`. **Artist** adds `artist_type`. **Playlist** adds `owner`, `is_editable`, `is_dynamic`, `supported_mediatypes`, `access` (71+).
-- **ItemMapping** (nested refs and `recently_played_items`): `item_id, provider, name, version, sort_name, uri, external_ids, is_playable, media_type, available, image, year`. `image` is one `MediaItemImage` or null.
+- **ItemMapping** (nested refs and `recently_played_items`): `item_id, provider, name, version, sort_name, uri, external_ids, is_playable, media_type, available, image, year`. `image` is one `MediaItemImage` or null; the server fills it with the item's first `thumb` only (`models: media_item.py`, `ItemMapping.from_item`).
+- **Whole items nested** in place of an ItemMapping carry `metadata.images` and no `image` [live]: an album's artists on `music/albums/get` and `music/item_by_uri`, the album of a queue's track (`player_queues/items`, `current_item`), a music service's song's album and artists (`similar_tracks`), and an episode's podcast (`podcast_episodes`, `podcast_episode`, `item_by_uri`, the queue; `in_progress_items` sends none). Library listings and search nest ItemMappings; there only a track's album has an `image`, never an artist. `ItemMapping.cover` reads either.
 - **provider_mappings**: `[{item_id, provider_domain, provider_instance, available, in_library, audio_format, url, details}]`. An item is available if any mapping is available on a loaded provider.
-- **metadata.images**: `[{type: "thumb"|"fanart"|..., path, provider, remotely_accessible, proxy_id}]`; the first `thumb` is the cover.
+- **metadata.images**: `[{type, path, provider, remotely_accessible, proxy_id}]`. `type` is `thumb`, `landscape`, `fanart`, `logo`, `clearart`, `banner`, `cutout`, `back`, `discart` or `other`, which an unknown one reads as (`models: enums.py`, `ImageType`). The recorded libraries hold only `thumb`, and `fanart` on the `test` music service's artists [live]; the rest come from metadata providers such as fanart.tv and TheAudioDB. The cover (`coverOf`) is the first `thumb`, else a `fanart` or `landscape`, else any but `banner`, `clearart`, `discart` and `cutout`, which a square crop would spoil.
 - **Summary items.** `library_items` returns slim items by default (`summary=true`, both releases: `media/base.py:603`, @2.10.8 `:492`): fields that are null are **omitted**, `metadata` holds little more than `images`. `summary=false` gives full items. `get`, sub-listings and search return full items.
 - **favorite**: 2.10 `bool`, household-wide. 2.11 (78+): `true` like, `false` dislike, `null` no choice, **for the calling user only**; omitted from summary items when null [live].
 - **Built-in playlists.** A library always holds MA's own smart playlists (provider `builtin`, `owner: "Music Assistant"`, `is_editable: false`): "All favorited tracks", "Random Artist (from library)", "Random Album (from library)", "500 Random tracks (from library)", "Recently played tracks", "Recently added tracks", "Infinite Mix (library)", "Infinite Mix (favorites)" [live]. The two "Infinite Mix" ones have `is_dynamic: true`. The owner can switch each off in the builtin provider's settings (`providers/builtin/constants.py:41-64`).
@@ -616,10 +618,14 @@ Music Assistant streams Audiobookshelf's books but cannot hand out their files, 
 | --- | --- | --- |
 | `POST /login {username, password}`, header `x-return-tokens: true` | `user.accessToken` (1 h), `user.refreshToken` | A server before 2.26 sends only `user.token`, which never runs out |
 | `POST /auth/refresh`, header `x-refresh-token` | both tokens again | The refresh token rotates: keep the new one. 404 before 2.26; 401 once revoked |
-| `GET /api/items/{id}?expanded=1` | `media.tracks[]` (`startOffset`, `duration`, `contentUrl` `/api/items/{id}/file/{ino}`, `metadata.ext`, `metadata.size`), `media.chapters[]` (`start`, `end`, `title`), `media.metadata` (`title`, `authorName`), a podcast's `media.episodes[]` (`id`, `title`, `audioTrack`) | Tracks in timeline order; one m4b or many mp3s [live] |
+| `GET /api/items/{id}?expanded=1` | `media.tracks[]` (`startOffset`, `duration`, `contentUrl` `/api/items/{id}/file/{ino}`, `metadata.ext`, `metadata.size`), `media.chapters[]` (`start`, `end`, `title`), `media.metadata` (`title`, `authorName`), a podcast's `media.episodes[]` (`id`, `title`, `audioTrack`) | Tracks in timeline order; one m4b or many mp3s [live]. A download names its files `001.<ext>` only when `ext` is 1 to 10 letters or digits, else `001.audio`: the server's word becomes a path on the phone |
 | `GET /api/items/{id}/file/{ino}/download` | the file | `Range: bytes=N-` answers 206 [live] |
 | `GET /api/items/{id}/cover` | the cover | 404 when there is none |
 | `GET`, `PATCH /api/me/progress/{id}[/{episode id}]` | `currentTime`, `duration`, `isFinished`, `lastUpdate` (ms) | GET is 404 before the first play; PATCH takes `currentTime`, `duration`, `progress`, `isFinished` |
+
+A download playing on the phone keeps its place there every 10 s and PATCHes it each time it stops playing and every 5 minutes while it plays; after a PATCH fails, none goes while it plays until the phone is on another network (`ProgressSaves`). A start takes the newer of the two places.
+
+Plain http offers no way to tell Audiobookshelf from an impostor, and its first request carries the refresh token. So plain http goes to it only on the network where Music Assistant's `server_id` check last passed over plain http (`Session.reachesHome`, kept across app restarts until the phone restarts); on another network the server's first frame is read first, and without a match the call fails as unreachable without connecting. An address typed without a scheme is tried over https; over plain http only when its host is a home address by its form (an IP literal, a name without a dot, or `.local`, `.lan`, `.internal`, `.home.arpa`, `.fritz.box`, `.home`, `.localdomain`), and never after a certificate the phone does not trust. Audiobookshelf answers a TLS hello with a plain `400`, an SSLException on the phone, which is not a certificate error.
 
 ### 7.11 Extras: endless mix, similar artists and songs, the DJ (2026-11-12; 2.10.9 and 2.11.0b7 [live])
 
@@ -660,7 +666,8 @@ identical @2.10.8 `:332-367`) [live]:
 - **No auth**: 200 without any header [live]. Response has `Cache-Control: max-age=31536000`, so Coil's disk cache can keep it.
 - Use the address the app connected with, not `server_info.base_url` (§2.2). `current_media.image_url` is already a full URL on `base_url`: put its path from `imageproxy` on the connection base and ask the size anew. An outside source's own image address (not under `imageproxy`) is not fetched.
 - The id stays valid for a year after its last use (`metadata/constants.py:133`). A 404 means "no image": show the placeholder.
-- Fallbacks: a `Track` without images uses `album.image`; a `QueueItem` has its own `image`.
+- **Which picture** (`MediaItem.cover`): the item's own (`coverOf`, §7.1), else its `image`, else its album's, else its podcast's; a nested item's is its `image`, else its own `metadata.images`. A `QueueItem` has an `image` of its own besides: the server's choice.
+- **The server's own stand-ins** [src]: `QueueItem.image` is the item's first `thumb`, for a track its album's before its own, for an episode its podcast's after its own (`models: queue_item.py`, `get_image`); `current_media.image_url` is the same picture at size 512 (`models/player.py:3184-3232`). `get_image_url_for_item` (`metadata/images.py:187-238`, @2.10.8 `:195-243`) goes on to an album's first artist and a track's first artist, but only the Music Quiz plugin calls it. Nothing stands in for an artist's own picture: Amsel's index gives an artist without one the covers of its albums (`albumCovers`), which it wears wherever it shows, with no call per row.
 
 ## 9. Events
 

@@ -54,18 +54,12 @@ private val PlayGlyph = 28.dp
  */
 private val Inset = Keyline.Margin
 
-/** Between the disc and play: the speaker reads as its own control, apart from play and skip. */
-private val DiscToPlay = Space.S6
-
-/** The speaker's disc stands this far inside its 48 dp target. */
-private val DiscReach = 4.dp
-
 /**
  * What plays, on the dock's own surface, with no card around it: the cover on the margin, the
- * speaker's name over what plays, the speaker's button, play and a skip, the skip's ink on the
- * margin across. It stays when nothing plays, keeping the speaker's button: where music goes can be
- * chosen before the first song. A cover here, and one still empty, stands a tone above the dock, as
- * a cover does above the page.
+ * speaker's name over what plays, play and a skip, the skip's ink on the margin across. It stays
+ * when nothing plays: where music goes can be chosen before the first song. The speaker's button is
+ * the band's, after Home. A cover here, and one still empty, stands a tone above the dock, as a
+ * cover does above the page.
  */
 @Composable
 internal fun PlayerCard(
@@ -86,7 +80,7 @@ internal fun PlayerCard(
             Crossfade(nowPlaying != null, animationSpec = Motion.effects(), label = "player") { playing ->
                 val shown = nowPlaying ?: last.value
                 if (playing && shown != null) {
-                    PlayerRow(shown, speaker, covered, onOpen, onControl, onSpeaker)
+                    PlayerRow(shown, speaker, covered, onOpen, onControl)
                 } else {
                     IdleRow(speaker, onSpeaker)
                 }
@@ -96,9 +90,9 @@ internal fun PlayerCard(
 }
 
 /**
- * Nothing plays: an empty cover, the speaker's name over "Not playing", and the speaker's button.
- * A tap anywhere on the card opens the speaker choice, the one thing to do here; TalkBack reads
- * the words and finds the button.
+ * Nothing plays: an empty cover and the speaker's name over "Not playing". A tap anywhere on the
+ * card opens the speaker choice, the one thing to do here; TalkBack reads the words, and the band's
+ * speaker after Home chooses.
  */
 @Composable
 private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
@@ -109,7 +103,7 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .pointerInput(onSpeaker) { detectTapGestures { onSpeaker() } }
-            .padding(start = Inset, top = Inset, end = Inset - DiscReach, bottom = Inset)
+            .padding(Inset)
             .heightIn(min = Sizes.DockArt),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -124,13 +118,11 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
                 modifier = Modifier.inkStart(words, type.dockLine),
             )
         }
-        Spacer(Modifier.width(Space.S2))
-        SpeakerDisc(speaker, onSpeaker)
     }
 }
 
 /**
- * Cover and words ([PlayerWords]), then the speaker's button, play and the skip: next for music,
+ * Cover and words ([PlayerWords]), then play and the skip: next for music,
  * forward by seconds for a book or an episode, as the notification has them. A tap or a drag up
  * opens Now Playing; a sideways swipe goes to the next or the one before, the song's line
  * following the finger.
@@ -142,7 +134,6 @@ private fun PlayerRow(
     covered: Boolean,
     onOpen: () -> Unit,
     onControl: (PlayerControl) -> Unit,
-    onSpeaker: () -> Unit,
 ) {
     val openLabel = stringResource(R.string.open_now_playing)
     val nextLabel = stringResource(state.nextLabel)
@@ -193,8 +184,6 @@ private fun PlayerRow(
         Spacer(Modifier.width(Space.Sibling))
         PlayerWords(state, speaker, Modifier.weight(1f), song = swipe.follow, runs = !covered)
         Spacer(Modifier.width(Space.S2))
-        SpeakerDisc(speaker, onSpeaker)
-        Spacer(Modifier.width(DiscToPlay))
         val ink = MaterialTheme.colorScheme.onSurface
         IconAction(
             if (state.isPlaying) R.drawable.ic_pause_slim else R.drawable.ic_play,

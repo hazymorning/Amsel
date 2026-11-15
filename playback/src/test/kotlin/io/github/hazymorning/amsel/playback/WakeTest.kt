@@ -38,7 +38,7 @@ class WakeTest {
         val client = MaClient(OkHttpClient(), scope)
         try {
             assertEquals(ConnectionState.Idle, client.state.value)
-            withTimeout(5_000) { block(MaApi(client), { client.start(fake.address, "token") }, fake) }
+            withTimeout(5_000) { block(MaApi(client), { client.start(fake.address, "token", fake.serverId) }, fake) }
         } finally {
             client.stop()
             scope.cancel()
@@ -55,7 +55,7 @@ class WakeTest {
     }
 
     @Test fun aCarReadReopensTheSocket() = withClosedSocket { api, wake, _ ->
-        val catalog = DataCatalog(api, wake) { false }
+        val catalog = DataCatalog(api, wake, indexed = { false })
         assertTrue(catalog.recent(5).isNotEmpty())
     }
 }

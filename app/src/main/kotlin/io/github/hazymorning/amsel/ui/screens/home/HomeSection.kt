@@ -88,8 +88,8 @@ internal fun Section(
     val title = section.heading()
     if (!editing) {
         Column(modifier) {
-            // Speakers' cards say what they are: they need no heading, only the room one keeps.
-            if (section.option == SectionOption.Speakers) {
+            // Without its heading a section keeps the room one would take above it.
+            if (!section.titled) {
                 if (!first) Spacer(Modifier.height(with(LocalDensity.current) { spaced(Space.SectionToHeader) }))
             } else {
                 SectionHeader(
@@ -135,6 +135,7 @@ internal fun Section(
             ) {
                 SectionTitleLine(
                     title,
+                    section.titled,
                     renaming,
                     onRenaming = { renaming = it },
                     actions.onRename,

@@ -16,6 +16,7 @@
     <string name="download_failed_gone">“%1$s” is no longer on Audiobookshelf</string>
     <string name="download_failed_refused">Audiobookshelf doesn’t let this account download “%1$s”</string>
     <string name="download_failed_unreachable">Couldn’t reach Audiobookshelf to download “%1$s”</string>
+    <string name="download_failed_away">Couldn’t download “%1$s”: plain http to Audiobookshelf works only at home, where Music\u00A0Assistant also answers over plain http</string>
     <string name="download_failed_server">Audiobookshelf couldn’t send “%1$s”</string>
     <string name="download_failed_space">Couldn’t save “%1$s”. Is there space left on this phone?</string>
     <string name="download_not_saved">Couldn’t save the download. Is there space left on this phone?</string>
@@ -28,6 +29,9 @@
     <string name="abs_sign_in_download">Sign in and download</string>
     <string name="abs_error_address">That doesn’t look like an address</string>
     <string name="abs_error_unreachable">Couldn’t reach Audiobookshelf at that address</string>
+    <string name="abs_error_certificate">The server’s certificate isn’t valid</string>
+    <string name="abs_error_https">Couldn’t reach Audiobookshelf over https. For plain http at home, type http:// in front.</string>
+    <string name="abs_error_away">Plain http works only at home, where Music\u00A0Assistant also answers over plain http</string>
     <string name="abs_error_login">That username or password didn’t work</string>
     <string name="abs_error_server">Audiobookshelf didn’t answer as expected. Try again.</string>
     <string name="abs_signed_in">Signed in to Audiobookshelf as %1$s at %2$s.</string>

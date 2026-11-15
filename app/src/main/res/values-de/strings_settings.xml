@@ -14,6 +14,7 @@
     <string name="settings_language">Sprache</string>
     <string name="settings_language_current">Deutsch</string>
     <string name="settings_version">Version %1$s</string>
+    <string name="settings_slogan">Schwarze Federn. Goldener Gesang.</string>
     <string name="settings_rights">© 2026 hazymorning</string>
     <string name="settings_save_failed">Die Einstellung wurde nicht gespeichert</string>
     <string name="settings_sign_out_failed">Abmelden ist fehlgeschlagen</string>
@@ -30,10 +31,11 @@
     <string name="updates_current">Das ist Amsel %1$s.</string>
     <string name="updates_looking">Neuere Version wird gesucht…</string>
     <string name="updates_newest">Amsel %1$s ist die neueste Version.</string>
-    <string name="updates_available">Amsel %1$s ist da. Der Browser lädt das Update herunter. Zum Installieren den Download öffnen.</string>
+    <string name="updates_available">Amsel %1$s ist da.</string>
+    <string name="updates_downloading">Amsel %1$s wird geladen.</string>
     <string name="updates_failed">GitHub ist nicht erreichbar. Bitte gleich noch einmal versuchen.</string>
     <string name="updates_look">Nach Updates suchen</string>
-    <string name="updates_download">Update herunterladen</string>
+    <string name="updates_install">Update installieren</string>
     <string name="updates_at_start">Beim Start suchen</string>
     <string name="updates_at_start_detail">Fragt GitHub einmal bei jedem Start, nie im Hintergrund</string>
 </resources>

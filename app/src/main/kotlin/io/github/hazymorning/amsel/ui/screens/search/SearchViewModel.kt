@@ -12,6 +12,7 @@ import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.SearchResults
 import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
+import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
@@ -36,6 +37,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -54,25 +56,31 @@ class SearchViewModel(
     private val mapper: UiMapper,
     /** The uri playing on the current speaker (or starting there). */
     playing: Flow<String?>,
-    /** The library index for forgiving matches, again whenever it changes. */
+    /** The library index, again whenever it changes: forgiving matches, and the covers its artists wear. */
     library: Flow<List<MediaUi>> = flowOf(emptyList()),
     /** Where matching runs, off the main thread; a test passes its own scheduler. */
     private val background: CoroutineContext = Dispatchers.Default,
 ) : ViewModel() {
-    /** Each library item with the words of its name, made once per change of the library. */
-    private val index: StateFlow<List<Pair<List<String>, MediaUi>>?> =
+    /**
+     * The library in words, and its artists' covers: made while the screen shows or a search waits
+     * for it, again with each change of the library, and let go soon after. A playing book writes its
+     * progress to the index every 30 s, which Search left behind must not read again; a search after
+     * coming back waits for the index as it is then.
+     */
+    private val index: StateFlow<SearchIndex?> =
         library.conflate()
-            .map { items -> items.map { Fuzzy.words(it.title) to it } }
+            .runningFold<List<MediaUi>, SearchIndex?>(null) { last, items -> SearchIndex.of(items, last) }
             .flowOn(background)
-            .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000, replayExpirationMillis = 0), null)
     private val query = handle.getStateFlow(QUERY, "")
     private val retries = MutableSharedFlow<String>(extraBufferCapacity = 1)
 
     /** Kept for the ViewModel's life, so the results are still there when the tab comes back. */
     private val progress = MutableStateFlow(SearchProgress())
 
+    // The index shows nothing itself: collected with the screen, it is ready by the first search.
     val state: StateFlow<SearchUiState> =
-        combine(query, progress, playing) { q, p, uri -> p.toUiState(q).copy(playingKey = uri) }
+        combine(query, progress, playing, index) { q, p, uri, _ -> p.toUiState(q).copy(playingKey = uri) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), progress.value.toUiState(query.value))
 
     init {
@@ -106,10 +114,12 @@ class SearchViewModel(
     }
 
     private suspend fun answer(q: String): SearchEvent {
-        val near = nearMatches(q)
+        // The first search after coming back waits for the index.
+        val ready = index.filterNotNull().first()
+        val near = withContext(background) { ready.near(Fuzzy.words(q), NEAR_MATCHES) }
         return try {
             val raw = search(q)
-            SearchEvent.Found(searchResults(q, raw, mapper).withNear(near))
+            SearchEvent.Found(searchResults(q, raw, mapper, ready.covers).withNear(near))
         } catch (e: MaConnectionException) {
             // The library answers alone while the server cannot.
             if (near.isNotEmpty()) {
@@ -122,17 +132,6 @@ class SearchViewModel(
         } catch (e: MaCommandException) {
             SearchEvent.Failed(q, R.string.search_failed)
         }
-    }
-
-    /** The library's items that [q] fits, best first. */
-    private suspend fun nearMatches(q: String): List<MediaUi> = withContext(background) {
-        val words = Fuzzy.words(q)
-        if (words.isEmpty()) return@withContext emptyList()
-        index.filterNotNull().first()
-            .mapNotNull { (name, item) -> Fuzzy.score(words, name).takeIf { it > 0 }?.let { it to item } }
-            .sortedWith(compareByDescending<Pair<Int, MediaUi>> { it.first }.thenBy { it.second.title.length })
-            .take(NEAR_MATCHES)
-            .map { it.second }
     }
 
     private companion object {
@@ -184,9 +183,15 @@ internal data class SearchProgress(
  * The screen's sections from the server's lists (library matches already first in each). The top
  * result is the item named exactly as typed (artists, then albums, playlists, radio stations,
  * books, podcasts and songs); else the first library artist or album; else the first song. It is
- * not repeated in its own section.
+ * not repeated in its own section. An artist without a picture wears its albums' covers ([listed]):
+ * [held] are those the library index made, by uri.
  */
-internal fun searchResults(query: String, raw: SearchResults, mapper: UiMapper): SearchResultsUi {
+internal fun searchResults(
+    query: String,
+    raw: SearchResults,
+    mapper: UiMapper,
+    held: Map<String, ArtRef> = emptyMap(),
+): SearchResultsUi {
     val exact = sequenceOf(raw.artists, raw.albums, raw.playlists, raw.radio, raw.audiobooks, raw.podcasts, raw.tracks)
         .flatten()
         .firstOrNull { it.name.trim().equals(query, ignoreCase = true) }
@@ -196,12 +201,13 @@ internal fun searchResults(query: String, raw: SearchResults, mapper: UiMapper):
         ?: raw.tracks.firstOrNull()
 
     fun List<MediaItem>.rest() = if (top == null) this else filter { it.uri != top.uri }
+    fun MediaItem.shown() = mapper.listed(this, raw, held)
     return SearchResultsUi(
         query = query,
-        top = top?.let { if (it in raw.tracks) TopResult.Song(mapper.track(it)) else TopResult.Item(mapper.media(it)) },
+        top = top?.let { if (it in raw.tracks) TopResult.Song(mapper.track(it)) else TopResult.Item(it.shown()) },
         songs = raw.tracks.rest().map(mapper::track),
         albums = raw.albums.rest().map(mapper::media),
-        artists = raw.artists.rest().map(mapper::media),
+        artists = raw.artists.rest().map { it.shown() },
         playlists = raw.playlists.rest().map(mapper::media),
         radio = raw.radio.rest().map(mapper::media),
         audiobooks = raw.audiobooks.rest().map(mapper::media),

@@ -32,9 +32,9 @@ class UiMapper(private val images: () -> Images?) {
 
     fun artFromProxyId(proxyId: String?): ArtRef? = proxyId?.let { art(MediaItemImage(proxyId = it)) }
 
-    /** An artist without a picture wears its albums: four two by two, else the newest one. */
-    private fun albumsArt(covers: String?): ArtRef? {
-        val parts = covers?.lines()?.mapNotNull(::artFromProxyId).orEmpty()
+    /** An artist without a picture wears its albums' [covers], in order: four two by two, else the first alone. */
+    fun albumsArt(covers: List<String>): ArtRef? {
+        val parts = covers.distinct().take(ALBUM_COVERS).mapNotNull(::artFromProxyId)
         return parts.firstOrNull()?.copy(quarters = parts.takeIf { it.size == ALBUM_COVERS }.orEmpty())
     }
 
@@ -77,7 +77,8 @@ class UiMapper(private val images: () -> Images?) {
             kind = kind(entity.mediaType),
             title = entity.name,
             subtitle = entity.subtitle,
-            art = artFromProxyId(entity.imageProxyId)?.copy(mosaic = entity.isSmart) ?: albumsArt(entity.albumCovers),
+            art = artFromProxyId(entity.imageProxyId)?.copy(mosaic = entity.isSmart)
+                ?: albumsArt(entity.albumCovers?.lines().orEmpty()),
             favorite = entity.favorite,
             progress = where?.first,
             remainingSec = where?.second,
@@ -95,7 +96,7 @@ class UiMapper(private val images: () -> Images?) {
             kind = kind(item.mediaType),
             title = item.name,
             subtitle = item.subtitle,
-            art = art(item.image)?.copy(mosaic = item.smart),
+            art = art(item.image)?.copy(mosaic = item.smart) ?: albumsArt(item.covers),
             favorite = item.favorite,
             progress = where?.first,
             remainingSec = where?.second,

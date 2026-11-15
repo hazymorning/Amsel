@@ -68,6 +68,16 @@ public class MaAuth(private val http: OkHttpClient) {
         }
     }
 
+    /** Who answers at [address] now, by its first frame; nothing is sent. */
+    public suspend fun serverAt(address: ServerAddress): ServerInfo {
+        val socket = MaSocket(http, address)
+        try {
+            return socket.open()
+        } finally {
+            socket.close()
+        }
+    }
+
     /**
      * The Home Assistant sign-in page for an in-app WebView. The server runs the OAuth exchange
      * itself and finally sends the browser to [HA_RETURN_URL] with the session token as `code`.
@@ -94,10 +104,12 @@ public class MaAuth(private val http: OkHttpClient) {
 
     /**
      * Username and password, then a long-lived token named after the device, so the app never
-     * asks again.
+     * asks again. The password goes only to the server whose first frame names [serverId], the
+     * one probed.
      */
     public suspend fun signIn(
         address: ServerAddress,
+        serverId: String,
         username: String,
         password: String,
         deviceName: String,
@@ -105,7 +117,7 @@ public class MaAuth(private val http: OkHttpClient) {
         val socket = MaSocket(http, address)
         try {
             return orNullOnFailure {
-                socket.open()
+                if (!socket.opensAt(serverId)) return SignInResult.Failed
                 val login = socket.call(
                     "auth/login",
                     buildJsonObject {
@@ -124,12 +136,20 @@ public class MaAuth(private val http: OkHttpClient) {
         }
     }
 
-    /** Turns a short-lived access token (password or Home Assistant sign-in) into a long-lived one. */
-    public suspend fun exchangeToken(address: ServerAddress, accessToken: String, deviceName: String): SignInResult {
+    /**
+     * Turns a short-lived access token (password or Home Assistant sign-in) into a long-lived one,
+     * at the server whose first frame names [serverId].
+     */
+    public suspend fun exchangeToken(
+        address: ServerAddress,
+        serverId: String,
+        accessToken: String,
+        deviceName: String,
+    ): SignInResult {
         val socket = MaSocket(http, address)
         return try {
             orNullOnFailure {
-                socket.open()
+                if (!socket.opensAt(serverId)) return SignInResult.Failed
                 exchange(socket, accessToken, deviceName)
             } ?: SignInResult.Failed
         } finally {
@@ -155,6 +175,9 @@ public class MaAuth(private val http: OkHttpClient) {
         return SignInResult.Success(longLived)
     }
 }
+
+/** Opens the socket; false when another server answers there, which then gets nothing. */
+private suspend fun MaSocket.opensAt(serverId: String): Boolean = open().serverId == serverId
 
 /** Why `auth/login` said no: 2.11 names it with a translation_key, 2.10 only in English. */
 private fun refusal(login: JsonObject): SignInResult {

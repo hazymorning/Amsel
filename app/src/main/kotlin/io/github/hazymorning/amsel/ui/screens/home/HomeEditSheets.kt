@@ -84,12 +84,25 @@ internal fun HowSheetContent(current: SectionLayout, onSelect: (SectionLayout) -
     }
 }
 
-/** A section's ⋯ in edit mode: Remove; moving it is a held press, or TalkBack's actions. */
+/**
+ * A section's ⋯ in edit mode: its heading hidden or shown on Home, and Remove; moving it is a held
+ * press, or TalkBack's actions.
+ */
 @Composable
-internal fun SectionActionsSheetContent(title: String, onRemove: () -> Unit) {
+internal fun SectionActionsSheetContent(
+    title: String,
+    titled: Boolean,
+    onTitled: (Boolean) -> Unit,
+    onRemove: () -> Unit,
+) {
     Column(Modifier.fillMaxWidth().padding(bottom = Space.Group)) {
         SheetHeader(title)
         Spacer(Modifier.height(Space.HeaderToContent))
+        ActionRow(
+            if (titled) R.drawable.ic_title_off else R.drawable.ic_title,
+            stringResource(if (titled) R.string.home_hide_title else R.string.home_show_title),
+            onClick = { onTitled(!titled) },
+        )
         ActionRow(R.drawable.ic_remove, stringResource(R.string.remove), onRemove)
     }
 }
@@ -117,6 +130,8 @@ internal fun EditSheets(
 
             EditSheet.Actions -> SectionActionsSheetContent(
                 title = section.heading(),
+                titled = section.titled,
+                onTitled = { done { editor.setTitled(id, it) } },
                 onRemove = { done { editor.remove(id) } },
             )
         }

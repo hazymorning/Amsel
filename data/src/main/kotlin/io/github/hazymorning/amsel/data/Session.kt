@@ -12,6 +12,7 @@ import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
 import io.github.hazymorning.amsel.api.SignInResult
 import io.github.hazymorning.amsel.api.TokenClaims
+import io.github.hazymorning.amsel.api.orNullOnFailure
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.ProviderException
@@ -62,7 +63,9 @@ sealed interface SessionState {
  * The app's connection lifecycle. The socket stays open while the app is in the foreground,
  * something plays or This phone is paused by a call, and closes 60 s after none is true. A command
  * or library read from outside the app (the notification, a headset, the car) [wake]s it: it opens
- * if closed and stays open for 60 s after the last such use.
+ * if closed and stays open for 60 s after the last such use. What only the server can say, that a
+ * speaker plays or This phone holds music, keeps it open only until the server has been out of
+ * reach for two minutes ([stale]).
  */
 class Session(
     private val prefs: AppPrefs,
@@ -70,9 +73,12 @@ class Session(
     http: OkHttpClient,
     private val scope: CoroutineScope,
     private val deviceName: String,
+    network: PhoneNetwork,
     private val idleCloseMs: Long = IDLE_CLOSE_MS,
+    staleAfterMs: Long = STALE_AFTER_MS,
 ) {
-    val client = MaClient(http, scope)
+    private val checked = CheckedNetwork(network, prefs, scope)
+    val client = MaClient(http, scope, sameNetwork = checked::isHere)
     val api = MaApi(client)
 
     /** Sign-in on short-lived sockets: Setup probes a server and asks for Home Assistant's page here. */
@@ -85,6 +91,7 @@ class Session(
     private val lock = Any()
     private val _foreground = MutableStateFlow(false)
     private var playing = false
+    private var audible = false
     private var inCall = false
     private var holding = false
     private var idleJob: Job? = null
@@ -93,8 +100,19 @@ class Session(
     /** Forgetting a refused session and remembering a new one, one at a time. */
     private val changing = Mutex()
 
-    /** Whether the socket is wanted for its own sake. Read with [lock] held. */
-    private val active: Boolean get() = _foreground.value || playing || inCall || holding
+    /**
+     * What the server last said of the speakers is out of date: the socket has been trying for two
+     * minutes without connecting, and it stays so, closed too, until it connects.
+     */
+    val stale: StateFlow<Boolean> = scope.staleness(client.state, staleAfterMs)
+
+    /**
+     * Whether the socket is wanted for its own sake. Away from home a speaker that last played would
+     * keep it retrying for hours, so the server's word counts only while it is current. Read with
+     * [lock] held.
+     */
+    private val active: Boolean
+        get() = _foreground.value || audible || inCall || (!stale.value && (playing || holding))
 
     /** The app is in front: what only its screens show loads then. */
     val foreground: StateFlow<Boolean> = _foreground.asStateFlow()
@@ -106,6 +124,13 @@ class Session(
 
     /** Who is signed in, as the server last said: kept while offline, forgotten on Sign out. */
     val user: StateFlow<MaUser?> = _user.asStateFlow()
+
+    /**
+     * The phone is on the network where the server last answered with its own id: there a home
+     * address leads to the household's machines, so This phone's Sendspin may ride out a dropped
+     * control socket.
+     */
+    val checkedHere: StateFlow<Boolean> get() = checked.here
 
     /** Artwork URLs on the connected address, or null before there is one. */
     val images: Images? get() = stored.value?.address?.let { Images(it) }
@@ -121,7 +146,8 @@ class Session(
 
                 ConnectionState.Offline -> SessionState.Offline(session.name)
 
-                // The token was refused: it is forgotten (below), and Setup signs in again.
+                // The token was refused, or the server set up anew: it is forgotten (below), and
+                // Setup signs in again.
                 ConnectionState.SignedOut -> SessionState.NeedsSetup
 
                 ConnectionState.Unsupported -> SessionState.Unsupported
@@ -137,6 +163,7 @@ class Session(
             client.state.filterIsInstance<ConnectionState.Connected>().collect { connected ->
                 _user.value = connected.user
                 val session = stored.value ?: return@collect
+                checked.passed()
                 if (connected.server.name != session.name) {
                     stored.value = session.copy(name = connected.server.name)
                     try {
@@ -164,6 +191,7 @@ class Session(
                 }
             }
         }
+        scope.launch { stale.collect { synchronized(lock) { reconcile() } } }
     }
 
     /** The address and token of the current session, for the Sendspin socket ("This phone"). */
@@ -175,7 +203,8 @@ class Session(
         val address = p.serverUrl?.let { ServerAddress.fromBaseUrl(it) }
         val token = p.sealedToken?.let { withContext(Dispatchers.IO) { vault.open(it) } }
         if (address != null && token != null && p.serverId != null) {
-            stored.value = StoredSession(address, p.serverName, token)
+            stored.value = StoredSession(address, p.serverName, token, p.serverId)
+            checked.restore(prefs.checkedNetwork())
         }
         restored.value = true
         synchronized(lock) { reconcile() }
@@ -186,8 +215,15 @@ class Session(
         reconcile()
     }
 
+    /** The session's speaker plays, or is about to, as the server last said. */
     fun setPlaying(value: Boolean) = synchronized(lock) {
         playing = value
+        reconcile()
+    }
+
+    /** This phone's own audio plays, or is about to, whichever speaker the session holds. */
+    fun setAudible(value: Boolean) = synchronized(lock) {
+        audible = value
         reconcile()
     }
 
@@ -230,28 +266,43 @@ class Session(
 
     /**
      * Retries an unreachable server at once instead of waiting out the backoff (Retry, a granted
-     * permission, the network coming back), or one that was too old and may have been updated.
+     * permission, the network coming back), or one that was too old and may have been updated. A
+     * socket that closed while the server was out of reach ([stale]) opens again too: the phone may
+     * be home, and what the speakers do is known once it connects.
      */
     fun reconnect() {
         synchronized(lock) {
             val session = stored.value ?: return
             val state = client.state.value
-            if (state != ConnectionState.Offline && state != ConnectionState.Unsupported) return
-            client.start(session.address, session.token)
-            if (!active) armIdleClose()
+            val closedStale = state == ConnectionState.Idle && stale.value
+            if (state != ConnectionState.Offline && state != ConnectionState.Unsupported && !closedStale) return
+            client.start(session.address, session.token, session.serverId)
+            // A network that keeps coming and going must not put off the close for ever.
+            if (!active && idleJob == null) armIdleClose()
         }
+    }
+
+    /**
+     * Whether plain http reaches the household's network from where the phone is now: the server
+     * answered as itself over plain http on this network. Where that is not known yet, the server
+     * is asked for its first frame, which tells whoever answers instead nothing.
+     */
+    suspend fun reachesHome(): Boolean {
+        val session = stored.value ?: return false
+        if (session.address.baseUrl.isHttps) return false
+        return checked.confirm { orNullOnFailure { auth.serverAt(session.address) }?.serverId == session.serverId }
     }
 
     /** Signs in with username and password and remembers the server. */
     suspend fun signIn(address: ServerAddress, info: ServerInfo, username: String, password: String): SignInResult {
-        val result = auth.signIn(address, username, password, deviceName)
+        val result = auth.signIn(address, info.serverId, username, password, deviceName)
         if (result is SignInResult.Success) remember(address, info, result.token)
         return result
     }
 
     /** Finishes "Sign in with Home Assistant" with the session token from the callback URL. */
     suspend fun completeHomeAssistant(address: ServerAddress, info: ServerInfo, code: String): SignInResult {
-        val result = auth.exchangeToken(address, code, deviceName)
+        val result = auth.exchangeToken(address, info.serverId, code, deviceName)
         if (result is SignInResult.Success) remember(address, info, result.token)
         return result
     }
@@ -284,6 +335,7 @@ class Session(
         synchronized(lock) { rotation.also { rotation = null } }?.cancelAndJoin()
         prefs.clearToken()
         forget()
+        checked.forget()
     }
 
     private fun forget() {
@@ -293,8 +345,9 @@ class Session(
 
     private suspend fun remember(address: ServerAddress, info: ServerInfo, token: String) = changing.withLock {
         val sealed = withContext(Dispatchers.IO) { vault.seal(token) }
+        checked.forget()
         prefs.saveServer(address.toString(), info.serverId, info.name, sealed)
-        stored.value = StoredSession(address, info.name, token)
+        stored.value = StoredSession(address, info.name, token, info.serverId)
         synchronized(lock) {
             // A connection that stopped as signed out or unsupported starts over with the new token.
             client.stop()
@@ -317,7 +370,7 @@ class Session(
     /** Call with [lock] held. */
     private fun startIfIdle(session: StoredSession) {
         if (client.state.value != ConnectionState.Idle) return
-        client.start(session.address, session.token)
+        client.start(session.address, session.token, session.serverId)
         rotation = scope.launch { rotateIfNeeded(session) }
     }
 
@@ -357,7 +410,7 @@ class Session(
             }
             if (!swapped) return
             // Revoking closes every socket on the old token, so reconnect with the new one first.
-            synchronized(lock) { client.start(session.address, fresh) }
+            synchronized(lock) { client.start(session.address, fresh, session.serverId) }
             // Not revoked, the old token lapses by itself within the 30 days it had left.
             api.revokeToken(session.token)
         } catch (e: MaConnectionException) {
@@ -379,10 +432,19 @@ class Session(
         false
     }
 
-    private data class StoredSession(val address: ServerAddress, val name: String?, val token: String)
+    private data class StoredSession(
+        val address: ServerAddress,
+        val name: String?,
+        val token: String,
+        /** The server the token belongs to, which alone is sent it. */
+        val serverId: String,
+    )
 
     private companion object {
         const val IDLE_CLOSE_MS = 60_000L
+
+        /** Well past a Wi-Fi blip, through which This phone's Sendspin keeps its server. */
+        const val STALE_AFTER_MS = 120_000L
         const val ROTATE_WITHIN_S = 30L * 24 * 3600
     }
 }
