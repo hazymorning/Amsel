@@ -1,9 +1,14 @@
 package io.github.hazymorning.amsel.ui.screens.search
 
+import io.github.hazymorning.amsel.api.Images
 import io.github.hazymorning.amsel.api.ItemMapping
 import io.github.hazymorning.amsel.api.MediaItem
+import io.github.hazymorning.amsel.api.MediaItemImage
+import io.github.hazymorning.amsel.api.MediaItemMetadata
 import io.github.hazymorning.amsel.api.SearchResults
+import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
+import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -12,6 +17,13 @@ import org.junit.Test
 
 class SearchResultsTest {
     private val mapper = UiMapper { null }
+
+    /** Draws covers, as the app does once connected. */
+    private val drawn = UiMapper { Images(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
+    private val covers = listOf("c1", "c2", "c3", "c4")
+
+    private fun MediaItem.pictured(proxyId: String) =
+        copy(metadata = MediaItemMetadata(images = listOf(MediaItemImage(proxyId = proxyId))))
 
     private fun item(type: String, n: Int, name: String, provider: String = "library", artist: String? = null) =
         MediaItem(
@@ -110,10 +122,51 @@ class SearchResultsTest {
         assertTrue(!SearchResultsUi("x", podcasts = results.podcasts).isEmpty)
     }
 
+    @Test fun anArtistWithoutAPictureWearsTheCoversTheIndexMadeIt() {
+        val held = mapOf(
+            "library://artist/1" to ArtRef("quarters 1", quarters = covers.map(::ArtRef)),
+            "library://artist/2" to ArtRef("quarters 2", quarters = covers.map(::ArtRef)),
+            "library://artist/3" to ArtRef("quarters 3"),
+        )
+        val raw = SearchResults(
+            artists = listOf(
+                item("artist", 1, "Aurora Tone"),
+                item("artist", 2, "Aurora Borealis"),
+                item("artist", 3, "Auroral").pictured("own"),
+            ),
+        )
+        val results = searchResults("aurora tone", raw, drawn, held)
+        assertEquals(held["library://artist/1"], (results.top as TopResult.Item).item.art)
+        val (borealis, auroral) = results.artists
+        assertEquals(held["library://artist/2"], borealis.art)
+        assertEquals("$IMAGES/own", auroral.art?.base)
+    }
+
+    @Test fun aGuestTheIndexDoesNotHoldWearsTheCoversOfItsAlbumsAndSongsInTheAnswer() {
+        val guest = ItemMapping("Mira Lune", "spotify://artist/7")
+        fun by(type: String, n: Int, cover: String) =
+            item(type, n, "$type $n", "spotify").copy(artists = listOf(guest)).pictured(cover)
+        val raw = SearchResults(
+            artists = listOf(MediaItem("7", "spotify", "Mira Lune", guest.uri, "artist")),
+            albums = listOf(by("album", 1, "a1"), item("album", 2, "Not Hers").pictured("other")),
+            tracks = listOf(by("track", 3, "t3"), by("track", 4, "a1"), by("track", 5, "t5"), by("track", 6, "t6")),
+        )
+        val top = (searchResults("mira lune", raw, drawn).top as TopResult.Item).item
+        assertEquals(listOf("a1", "t3", "t5", "t6").map { "$IMAGES/$it" }, top.art?.quarters?.map { it.base })
+
+        val listed = searchResults("mira", raw.copy(tracks = emptyList()), drawn).artists.single()
+        assertEquals("$IMAGES/a1", listed.art?.base)
+        assertEquals(emptyList<ArtRef>(), listed.art?.quarters)
+    }
+
     @Test fun nothingFoundHasNoTopResult() {
         val results = searchResults("zzyzx", SearchResults(), mapper)
         assertNull(results.top)
         assertTrue(results.isEmpty)
         assertEquals("zzyzx", results.query)
+    }
+
+    private companion object {
+        const val IMAGES = "http://ma.local:8095/imageproxy"
     }
 }

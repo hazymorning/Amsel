@@ -37,7 +37,7 @@ enum class Blocked { SignIn, TooOld }
  * and returns once the session holds it. Plays from any other controller go to whatever player the
  * session holds (the selected speaker). [text] reads the titles from `:playback`'s strings, so
  * they are translated with the app's; the root carries the app's own name, [rootTitle]. Covers are
- * [artwork] URIs, which the car may read once it connects.
+ * [artwork] URIs, which a car that [cars] accepts may read once it connects.
  */
 @OptIn(UnstableApi::class)
 class BrowseTree(
@@ -46,6 +46,7 @@ class BrowseTree(
     private val text: (Int) -> String,
     private val rootTitle: String,
     private val artwork: CarArtwork,
+    private val cars: Cars,
     private val beforeCarPlay: suspend () -> Boolean,
     /** Why there is nothing to browse, once the stored session is known; null when signed in. */
     private val blocked: suspend () -> Blocked?,
@@ -62,15 +63,16 @@ class BrowseTree(
 
     /**
      * The service is exported for the system, the car and Bluetooth. They and the notification
-     * browse the library and control playback, also when Android does not count the car as trusted;
-     * any other app gets Media3's untrusted commands, which neither browse nor control.
+     * browse the library and control playback, also when Android does not count the car as trusted
+     * but [cars] finds it is one; any other app gets Media3's untrusted commands, which neither
+     * browse nor control.
      */
     override fun onConnectAsync(
         session: MediaSession,
         controller: MediaSession.ControllerInfo,
     ): ListenableFuture<MediaSession.ConnectionResult> {
         val builder = MediaSession.ConnectionResult.AcceptedResultBuilder(session, controller)
-        val car = isCar(session, controller)
+        val car = cars.isCar(controller)
         if (car) artwork.allow(controller.packageName)
         val full = controller.isTrusted || car
         if (full) {
@@ -255,7 +257,7 @@ class BrowseTree(
         startIndex: Int,
         startPositionMs: Long,
     ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-        val fromCar = isCar(mediaSession, controller)
+        val fromCar = cars.isCar(controller)
         if (!fromCar) return super.onSetMediaItems(mediaSession, controller, mediaItems, startIndex, startPositionMs)
         val future = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
         scope.launch {
@@ -291,8 +293,3 @@ class BrowseTree(
                 .build()
     }
 }
-
-/** Android Auto on the phone, or a car's own Android Automotive. */
-@OptIn(UnstableApi::class)
-private fun isCar(session: MediaSession, controller: MediaSession.ControllerInfo) =
-    session.isAutoCompanionController(controller) || session.isAutomotiveController(controller)

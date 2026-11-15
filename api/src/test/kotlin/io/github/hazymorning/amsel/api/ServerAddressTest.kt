@@ -21,6 +21,14 @@ class ServerAddressTest {
         assertEquals("http://[fd00::20]:9000", base("[fd00::20]:9000"))
     }
 
+    @Test fun `home names get http and port 8095, other names https`() {
+        assertEquals("http://nas:8095", base("nas"))
+        assertEquals("http://nas.fritz.box:8095", base("NAS.fritz.box"))
+        assertEquals("https://music.example.com", base("music.example.com"))
+        assertEquals("https://music.example.com:8443", base("music.example.com:8443"))
+        assertEquals("https://music.example.com:80", base("music.example.com:80"))
+    }
+
     @Test fun `https keeps its default port`() = assertEquals(
         "https://music.example.com",
         base("https://music.example.com/"),

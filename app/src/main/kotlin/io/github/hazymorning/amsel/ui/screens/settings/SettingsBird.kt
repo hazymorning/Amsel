@@ -1,12 +1,21 @@
 package io.github.hazymorning.amsel.ui.screens.settings
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -15,18 +24,34 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.LocalDockInset
+import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.theme.Keyline
+import io.github.hazymorning.amsel.ui.theme.LocalReducedMotion
+import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
+import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.isNight
+import io.github.hazymorning.amsel.ui.theme.secondLine
 import kotlin.math.roundToInt
 
 /**
  * The README's picture at the foot of Settings: the icon's blackbird behind three crowns, before the
  * sun by day and the moon at night, cut by the edge it stands on. It is the header's drawing in one
- * scale ([ReadmeHeader], `scripts/design/readme-header.py`), so the two stay one picture. A picture and
- * nothing more: it is not spoken, takes no touch and keeps its size at any font scale.
+ * scale ([ReadmeHeader], `scripts/design/readme-header.py`), so the two stay one picture. Each time it
+ * comes into view over the dock, the sun grows into place, then the bird rises from behind the crowns;
+ * with reduced motion it simply stands there. A picture and nothing more: it is not spoken, takes no
+ * touch and keeps its size at any font scale.
  */
 @Composable
 internal fun SettingsBird(modifier: Modifier = Modifier) {
@@ -34,19 +59,48 @@ internal fun SettingsBird(modifier: Modifier = Modifier) {
     val disc = if (colors.isNight) NightMoon else DaySun
     val crowns = if (colors.isNight) NightCrowns else DayCrowns
     val bird = painterResource(R.drawable.ic_launcher_foreground)
-    Canvas(modifier.fillMaxWidth().height(BirdHeight)) {
+    val still = LocalReducedMotion.current
+    val rise = remember { Rise() }
+    var inView by remember { mutableStateOf(false) }
+    LaunchedEffect(inView, still) {
+        when {
+            still -> rise.show()
+            inView -> rise.play()
+            else -> rise.hide()
+        }
+    }
+    val window = LocalWindowInfo.current
+    val dock by LocalDockInset.current
+    val dockPx = with(LocalDensity.current) { dock.toPx() }
+    Canvas(
+        modifier
+            .fillMaxWidth()
+            .height(BirdHeight)
+            .onGloballyPositioned { at ->
+                // Over the dock's edge, not merely in the window: the dock covers the page's foot.
+                val top = at.positionInWindow().y
+                val edge = window.containerSize.height - dockPx
+                if (top + at.size.height * IN_VIEW <= edge) {
+                    inView = true
+                } else if (top >= edge) {
+                    inView = false
+                }
+            },
+    ) {
         val scale = Disc.toPx() / 2 / ReadmeHeader.DISC
         val centre = Offset(size.width / 2, ReadmeHeader.DISC * scale)
         val unit = ReadmeHeader.ICON_UNIT * scale
         // The painter draws from a bitmap of its own: on whole pixels it stays as sharp as the icon.
         val right = (centre.x + ReadmeHeader.Head.x * scale + ReadmeHeader.IconHead.x * unit).roundToInt().toFloat()
         val top = (centre.y + ReadmeHeader.Head.y * scale - ReadmeHeader.IconHead.y * unit).roundToInt().toFloat()
+        // Below the edge the picture is cut by, the whole bird is out of sight.
+        val below = size.height - (top + ReadmeHeader.ICON_CROWN * unit)
         clipRect {
-            drawCircle(disc, ReadmeHeader.DISC * scale, centre)
+            drawCircle(disc, ReadmeHeader.DISC * scale * rise.disc.value, centre)
             crown(ReadmeHeader.Back, crowns.back, centre, scale)
             crown(ReadmeHeader.Behind, crowns.behind, centre, scale)
             withTransform({
-                translate(right, top)
+                translate(right, (top + below * (1f - rise.bird.value)).roundToInt().toFloat())
                 scale(-1f, 1f, Offset.Zero)
             }) {
                 with(bird) { draw(Size(ICON_SIDE * unit, ICON_SIDE * unit)) }
@@ -55,6 +109,33 @@ internal fun SettingsBird(modifier: Modifier = Modifier) {
         }
     }
 }
+
+/** How far the sun has grown and the bird has risen, from 0 to 1, read only where they are drawn. */
+private class Rise {
+    val disc = Animatable(0f)
+    val bird = Animatable(0f)
+
+    suspend fun play() {
+        disc.animateTo(1f, tween(DISC_MS, easing = Motion.Settle))
+        bird.animateTo(1f, tween(BIRD_MS, easing = Motion.Settle))
+    }
+
+    suspend fun hide() {
+        disc.snapTo(0f)
+        bird.snapTo(0f)
+    }
+
+    suspend fun show() {
+        disc.snapTo(1f)
+        bird.snapTo(1f)
+    }
+}
+
+/** The share of the picture above the dock's edge that starts it. */
+private const val IN_VIEW = 0.6f
+
+private const val DISC_MS = 650
+private const val BIRD_MS = 900
 
 private fun DrawScope.crown(crown: Crown, tint: Color, disc: Offset, scale: Float) =
     drawCircle(tint, crown.radius * scale, disc + Offset(crown.x, crown.y) * scale)
@@ -121,6 +202,9 @@ internal object ReadmeHeader {
     val Head = Offset(6f, -12f)
     val IconHead = Offset(46.5f, 62f)
     const val ICON_UNIT = 4.4f
+
+    /** Over the highest thing the icon draws (the sprig over the bird's head, at 42), in its units. */
+    const val ICON_CROWN = 40f
 }
 
 internal data class Crown(val x: Float, val y: Float, val radius: Float)
@@ -145,3 +229,36 @@ internal val BirdHeight = Disc / 2 * ((ReadmeHeader.DISC + ReadmeHeader.FOOT) / 
 private val BirdGap = Space.S12
 
 private const val ICON_SIDE = 108f
+
+/** Amsel's line and whose Amsel is, centred under the last block, quiet: what Amsel is, not a setting. */
+@Composable
+internal fun LicenceNote() {
+    val type = MaterialTheme.typography
+    val colors = MaterialTheme.colorScheme
+    val slogan = stringResource(R.string.settings_slogan)
+    val note = stringResource(R.string.settings_rights)
+    // The licence's baseline a second line's step under the slogan's.
+    val between = with(LocalDensity.current) { secondLine(type.bodyMedium) - capHeight(type.bodyMedium) }
+    Column(Modifier.fillMaxWidth().padding(top = OverLicence, start = Keyline.Margin, end = Keyline.Margin)) {
+        Words(
+            slogan,
+            type.titleSmall,
+            color = colors.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            modifier = Modifier.fillMaxWidth().textInk(type.titleSmall),
+        )
+        Spacer(Modifier.height(between))
+        Words(
+            note,
+            type.bodyMedium,
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            modifier = Modifier.fillMaxWidth().textInk(type.bodyMedium),
+        )
+    }
+}
+
+/** From the last block to the licence: the page's end stands apart from its settings. */
+private val OverLicence = Space.S16

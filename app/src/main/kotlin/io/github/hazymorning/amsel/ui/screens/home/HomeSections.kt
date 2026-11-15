@@ -78,6 +78,8 @@ internal fun Sections(
     var sheet by rememberSaveable { mutableStateOf<Pair<EditSheet, String>?>(null) }
     val loading = stringResource(R.string.loading)
     val sections = order.mapNotNull(byId::get)
+    // A heading is the long press into Edit Home: with every title on show hidden, the first keeps its own.
+    val noHeading = !state.editing && sections.none { it.titled }
     LazyColumn(
         modifier
             .onGloballyPositioned { listBox = it.boundsInWindow() }
@@ -95,7 +97,7 @@ internal fun Sections(
                 Modifier.animateItem()
             }
             Section(
-                section = section,
+                section = if (i == 0 && noHeading) section.copy(titled = true) else section,
                 first = i == 0,
                 editing = state.editing,
                 lifted = lifted,

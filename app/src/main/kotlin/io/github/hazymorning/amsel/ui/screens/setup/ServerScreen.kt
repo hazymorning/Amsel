@@ -195,6 +195,8 @@ private val ServerError.message: Int
     get() = when (this) {
         ServerError.Unreachable -> R.string.setup_error_unreachable
         ServerError.TooOld -> PlaybackR.string.error_too_old
+        ServerError.Certificate -> R.string.setup_error_certificate
+        ServerError.HttpsFailed -> R.string.setup_error_https
     }
 
 /** A Music Assistant server that answered on the network. */
@@ -233,12 +235,18 @@ enum class ServerError {
 
     /** Music Assistant answered, but it is older than the oldest release the app supports (2.10). */
     TooOld,
+
+    /** TLS answered with a certificate this phone does not trust. */
+    Certificate,
+
+    /** A name typed without a scheme did not answer over https; plain http must be typed. */
+    HttpsFailed,
 }
 
 /**
- * Everything "Your server" draws. Ports, TLS and certificates never appear: the logic adds
- * `http://` and port 8095 to what people type and shows addresses without a port, and an
- * `https://` address covers TLS.
+ * Everything "Your server" draws. Ports never appear: the logic adds `http://` and port 8095 to a
+ * home address people type (`https://` to any other name) and shows addresses without a port;
+ * TLS shows only when it fails.
  */
 @Immutable
 data class ServerUiState(

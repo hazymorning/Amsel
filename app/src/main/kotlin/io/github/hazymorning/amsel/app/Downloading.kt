@@ -188,8 +188,14 @@ class Downloading(
 
             AbsException.Reason.Refused -> messages.show(R.string.download_failed_refused, title)
 
-            AbsException.Reason.Unreachable, AbsException.Reason.BadAddress ->
-                messages.show(R.string.download_failed_unreachable, title, retry)
+            AbsException.Reason.Unreachable,
+            AbsException.Reason.BadAddress,
+            AbsException.Reason.Certificate,
+            AbsException.Reason.HttpsFailed,
+            -> messages.show(R.string.download_failed_unreachable, title, retry)
+
+            // A retry from here cannot work: it says why.
+            AbsException.Reason.AwayFromHome -> messages.show(R.string.download_failed_away, title)
 
             AbsException.Reason.WrongLogin, AbsException.Reason.Server ->
                 messages.show(R.string.download_failed_server, title, retry)

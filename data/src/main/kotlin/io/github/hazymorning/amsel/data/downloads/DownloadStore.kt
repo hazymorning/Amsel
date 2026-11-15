@@ -69,7 +69,14 @@ class DownloadStore(private val root: File) {
         if (dir(uri).isDirectory) write(dir(uri).resolve(PROGRESS), progress, LocalProgress.serializer())
     }
 
-    fun file(uri: String, file: DownloadFile): File = dir(uri).resolve(file.name)
+    /**
+     * Throws [IOException] for a name [DownloadJob.plan] does not give: a manifest from before names
+     * were checked may name a file outside the item's folder.
+     */
+    fun file(uri: String, file: DownloadFile): File {
+        if (!file.name.matches(FILE_NAME)) throw IOException("Not a download's file name: ${file.name}")
+        return dir(uri).resolve(file.name)
+    }
 
     fun cover(uri: String): File = dir(uri).resolve(COVER)
 
@@ -101,6 +108,9 @@ class DownloadStore(private val root: File) {
         private const val COVER = "cover"
         private const val TEMP = ".tmp"
         private const val KEY_CHARS = 16
+
+        // Three digits or more, of any script: String.format writes the number in the phone's own digits.
+        private val FILE_NAME = Regex("""\p{Nd}{3,}\.[A-Za-z0-9]{1,10}""")
 
         /** A folder name for [uri]: the uri itself holds slashes and colons. */
         internal fun key(uri: String): String = MessageDigest.getInstance("SHA-256").digest(uri.toByteArray())

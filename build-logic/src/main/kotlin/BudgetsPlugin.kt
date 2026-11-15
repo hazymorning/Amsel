@@ -84,6 +84,8 @@ class BudgetsPlugin : Plugin<Project> {
             // Downloads, which the owner asked for with a notification: the service that runs them, and its notice.
             "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
             "android.permission.POST_NOTIFICATIONS",
+            // Updates installed from the app itself, which the owner asked for: Android's installer needs it.
+            "android.permission.REQUEST_INSTALL_PACKAGES",
         )
     }
 }

@@ -32,8 +32,8 @@ class DockCardTest {
             AmselTheme { Dock(playing, playing.speaker, onOpen = {}, onControl = {}, onSpeaker = {}) {} }
         }
         val dock = compose.onRoot().getUnclippedBoundsInRoot()
-        // The speaker's button stands in the row's middle, which is the cover's.
-        val button = compose.onNode(hasContentDescription("Choose speaker", substring = true))
+        // Play stands in the row's middle, which is the cover's.
+        val button = compose.onNode(hasContentDescription("Pause").or(hasContentDescription("Play")))
             .getUnclippedBoundsInRoot()
         val coverMiddle = Keyline.Margin + Sizes.DockArt / 2
         assertEquals(coverMiddle.value, ((button.top + button.bottom) / 2 - dock.top).value, HALF_A_PIXEL)

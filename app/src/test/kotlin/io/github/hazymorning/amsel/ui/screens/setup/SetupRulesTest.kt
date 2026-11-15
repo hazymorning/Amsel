@@ -9,6 +9,8 @@ import io.github.hazymorning.amsel.api.ServerProbe
 import io.github.hazymorning.amsel.api.SignInResult
 import java.io.IOException
 import java.security.KeyStoreException
+import java.security.cert.CertificateException
+import javax.net.ssl.SSLHandshakeException
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,7 +31,9 @@ class SetupRulesTest {
     @Test fun `an address is filled in as a person would type it, losing nothing`() {
         assertEquals("192.168.1.20", typedForm(requireNotNull(ServerAddress.fromBaseUrl("http://192.168.1.20:8095"))))
         assertEquals("http://music.local:9000", typedForm(address("music.local:9000")))
-        assertEquals("https://music.example.com", typedForm(address("https://music.example.com")))
+        // A name off the home network goes to https by itself.
+        assertEquals("music.example.com", typedForm(address("https://music.example.com")))
+        assertEquals("http://music.example.com:8095", typedForm(address("http://music.example.com:8095")))
         listOf("music.local", "music.local:9000", "https://music.example.com", "http://10.0.0.5:8095/ma").forEach {
             val typed = address(it)
             assertEquals(typed, ServerAddress.parse(typedForm(typed)))
@@ -53,6 +57,23 @@ class SetupRulesTest {
             ServerCheck.Failed(ServerError.Unreachable),
             checkServer(here) { throw MaCommandException("auth/providers", 999, "") },
         )
+    }
+
+    @Test fun `a certificate the phone does not trust is said so`() = runBlocking {
+        val forged = SSLHandshakeException("Handshake failed").apply { initCause(CertificateException("Untrusted")) }
+        assertEquals(
+            ServerCheck.Failed(ServerError.Certificate),
+            checkServer(address("music.example.com")) { throw MaConnectionException("Connection failed", forged) },
+        )
+    }
+
+    @Test fun `a name typed without a scheme that https does not reach asks for http, typed so`() {
+        fun typed(text: String) = Target(address(text), connectingTo = text, field = text, fromList = false)
+        assertEquals(ServerError.HttpsFailed, ServerError.Unreachable.of(typed("music.example.com")))
+        // Typed with its scheme, or a home address over http: nothing more to say.
+        assertEquals(ServerError.Unreachable, ServerError.Unreachable.of(typed("https://music.example.com")))
+        assertEquals(ServerError.Unreachable, ServerError.Unreachable.of(typed("192.168.1.20")))
+        assertEquals(ServerError.Certificate, ServerError.Certificate.of(typed("music.example.com")))
     }
 
     @Test fun `a token that cannot be kept counts as not reaching the server`() = runBlocking {

@@ -18,12 +18,17 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -33,8 +38,32 @@ class CatalogTest {
         fixture("2.11", "music_audiobooks_library_items__in_progress")
             .getValue("response").jsonObject.getValue("result").jsonArray[0]
 
+    /** The uris the car asked the index for covers. */
+    private val askedCovers = mutableListOf<List<String>>()
+
     private fun answer(command: String): JsonObject = when (command) {
         "music/in_progress_items" -> FakeMaServer.recorded("2.11", "music_in_progress_items")
+
+        "music/artists/library_items" -> {
+            val recorded = FakeMaServer.recorded("2.11", "music_artists_library_items")
+            val artists = recorded.getValue("result").jsonArray.map { artist ->
+                val obj = artist.jsonObject
+                if (obj.getValue("uri").jsonPrimitive.content != AURORA) return@map artist
+                // The recorded artists all have a picture: this one has none.
+                JsonObject(obj + ("metadata" to JsonObject(obj.getValue("metadata").jsonObject - "images")))
+            }
+            JsonObject(recorded + ("result" to JsonArray(artists)))
+        }
+
+        "music/recently_played_items" -> FakeMaServer.result(
+            JsonArray(
+                listOf(
+                    played(AURORA, "Aurora Tone", "artist"),
+                    played("library://artist/1", "Cirrus", "artist", image = "own"),
+                    played("library://playlist/9", "Amsel Mix", "playlist"),
+                ),
+            ),
+        )
 
         "music/item_by_uri" -> FakeMaServer.result(book)
 
@@ -53,10 +82,14 @@ class CatalogTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val client = MaClient(OkHttpClient(), scope)
         try {
-            client.start(fake.address, "token")
+            client.start(fake.address, "token", fake.serverId)
             withTimeout(5_000) {
                 client.state.filterIsInstance<ConnectionState.Connected>().first()
-                block(DataCatalog(MaApi(client), wake = {}) { it == MediaType.Audiobook })
+                val covers = { uris: List<String> ->
+                    askedCovers += uris
+                    mapOf(AURORA to "c0ffee").filterKeys { it in uris }
+                }
+                block(DataCatalog(MaApi(client), wake = {}, indexed = { it == MediaType.Audiobook }, covers = covers))
             }
         } finally {
             client.stop()
@@ -88,6 +121,21 @@ class CatalogTest {
         assertFalse(catalog.holds("genre"))
     }
 
+    @Test fun anArtistWithoutAPictureShowsItsNewestAlbumsCoverFromTheIndex() = withCatalog { catalog ->
+        val artists = catalog.library("artist", 0, 50).associateBy { it.uri }
+        assertEquals("c0ffee", artists.getValue(AURORA).cover?.proxyId)
+        assertTrue(artists.values.all { it.cover?.proxyId != null })
+        assertEquals(listOf(listOf(AURORA)), askedCovers)
+    }
+
+    @Test fun recentlyPlayedArtistsWithoutAPictureShowACoverAndNothingElseChanges() = withCatalog { catalog ->
+        val (aurora, cirrus, mix) = catalog.recent(10)
+        assertEquals("c0ffee", aurora.cover?.proxyId)
+        assertEquals("own", cirrus.cover?.proxyId)
+        assertNull(mix.cover)
+        assertEquals(listOf(listOf(AURORA)), askedCovers)
+    }
+
     @Test fun aSpokenNameFindsWhatIsNamedSoBeforeTheClosestSong() {
         fun item(name: String, type: String) = MediaItem(name, "library", name, "library://$type/$name", type)
         val results = SearchResults(
@@ -113,5 +161,27 @@ class CatalogTest {
         assertEquals(PlayRequest("car", listOf("library://track/2")), BrowseIds.toPlayRequest("car", tracks, 1))
         assertEquals(PlayRequest("car", tracks), BrowseIds.toPlayRequest("car", tracks, C.INDEX_UNSET))
         assertEquals(null, BrowseIds.toPlayRequest("car", listOf(""), 0))
+    }
+
+    /** A recently played item as the server lists it, with its [image] proxy id if it has one. */
+    private fun played(uri: String, name: String, type: String, image: String? = null) = buildJsonObject {
+        put("item_id", uri.substringAfterLast('/'))
+        put("provider", "library")
+        put("name", name)
+        put("uri", uri)
+        put("media_type", type)
+        if (image != null) {
+            put(
+                "image",
+                buildJsonObject {
+                    put("type", "thumb")
+                    put("proxy_id", image)
+                },
+            )
+        }
+    }
+
+    private companion object {
+        const val AURORA = "library://artist/3"
     }
 }

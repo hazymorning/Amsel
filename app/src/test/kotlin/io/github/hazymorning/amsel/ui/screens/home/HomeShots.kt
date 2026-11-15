@@ -53,7 +53,14 @@ class HomeShots : ScreenshotTest() {
     @Test fun howSheet() = snapScreen("home_how") { OverEditing { HowSheetContent(SectionLayout.Row) {} } }
 
     @Test fun sectionMore() = snapScreen("home_edit_more") {
-        OverEditing { SectionActionsSheetContent(stringResource(PlaybackR.string.recently_played)) {} }
+        OverEditing {
+            SectionActionsSheetContent(
+                stringResource(PlaybackR.string.recently_played),
+                titled = true,
+                onTitled = {},
+                onRemove = {},
+            )
+        }
     }
 
     @Test fun offline() = snap("home_offline") { Home(HomeSample.offline) }

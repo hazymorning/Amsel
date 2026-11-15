@@ -48,6 +48,8 @@ interface HomeEditor {
 
     fun setTitle(id: String, title: String?) {}
 
+    fun setTitled(id: String, titled: Boolean) {}
+
     /** Moves section [id] to [index] among all sections. */
     fun move(id: String, index: Int) {}
 
@@ -131,6 +133,8 @@ class HomeViewModel(
     override fun setLayout(id: String, layout: SectionLayout) = edit { it.setLayout(id, layout) }
 
     override fun setTitle(id: String, title: String?) = edit { it.setTitle(id, title) }
+
+    override fun setTitled(id: String, titled: Boolean) = edit { it.setTitled(id, titled) }
 
     override fun move(id: String, index: Int) = edit { it.move(id, index) }
 
@@ -242,6 +246,7 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
             loading = loading,
             fallback = cached?.fallback == true,
             title = section.title,
+            titled = section.showsTitle,
             heardOn = cached?.speaker?.let(inputs.speakers::named),
             speakers = if (ofSpeakers) inputs.speakers.shown else emptyList(),
             inUse = inputs.speakers.inUse?.id,
@@ -270,6 +275,8 @@ data class SectionUi(
     val fallback: Boolean = false,
     /** The person's own name for it, if they gave one. */
     val title: String? = null,
+    /** Its heading shows outside edit mode. */
+    val titled: Boolean = option != SectionOption.Speakers,
     /** Played here: the speaker whose plays it shows, named after its title. */
     val heardOn: SpeakerUi? = null,
     /** Speakers: those it shows; none away from them, which hides it. */

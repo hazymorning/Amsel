@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.layout.FirstBaseline
@@ -32,7 +33,9 @@ import androidx.compose.ui.text.font.FontSynthesis
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
@@ -147,21 +150,46 @@ fun InkGlyph(
             .layout { measurable, constraints ->
                 val box = size.roundToPx()
                 val placeable = measurable.measure(Constraints.fixed(box, box))
-                val start = (box * ink.left / GRID).roundToInt()
+                val shift = inkShift(box, ink, inkHeight)
                 val width = (box * (ink.right - ink.left) / GRID).roundToInt()
-                val top = if (inkHeight) {
-                    (box * ink.top / GRID).roundToInt()
-                } else {
-                    (box * ((ink.top + ink.bottom) / 2 - GRID / 2) / GRID).roundToInt()
-                }
                 val height = if (inkHeight) (box * (ink.bottom - ink.top) / GRID).roundToInt() else box
                 layout(width, height) {
                     // A mirrored glyph flips with the layout; a plain one keeps its drawing.
-                    if (ink.mirrored) placeable.placeRelative(-start, -top) else placeable.place(-start, -top)
+                    if (ink.mirrored) placeable.placeRelative(-shift) else placeable.place(-shift)
                 }
             }
             .size(size),
     )
+}
+
+/**
+ * How far an [InkGlyph] of [box] pixels moves its drawing so its ink starts at the layout's start,
+ * and with [inkHeight] at its top; otherwise the ink centres in the box's height.
+ */
+private fun inkShift(box: Int, ink: GlyphInk, inkHeight: Boolean) = IntOffset(
+    (box * ink.left / GRID).roundToInt(),
+    if (inkHeight) {
+        (box * ink.top / GRID).roundToInt()
+    } else {
+        (box * ((ink.top + ink.bottom) / 2 - GRID / 2) / GRID).roundToInt()
+    },
+)
+
+/**
+ * Where the point ([x], [y]) of [icon]'s 256 grid lands in its [InkGlyph] of [size], in pixels from
+ * the layout's top left: for a mark set on the glyph's own lines, as the speaker's dot on its
+ * outline. Not for a glyph that mirrors.
+ */
+internal fun Density.inkPoint(
+    @DrawableRes icon: Int,
+    size: Dp,
+    x: Float,
+    y: Float,
+    inkHeight: Boolean = false,
+): Offset {
+    val box = size.roundToPx()
+    val shift = inkShift(box, inkOf(weighted(icon, size)), inkHeight)
+    return Offset(box * x / GRID - shift.x, box * y / GRID - shift.y)
 }
 
 /**

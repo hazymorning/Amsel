@@ -56,6 +56,9 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
     /** What each page showed last time, by key: never held back, as the phone answers. */
     val shownPages = mutableMapOf<String, ShownPage>()
 
+    /** The album covers the index made each artist without a picture, by uri. */
+    var covers: Map<String, List<String>> = emptyMap()
+
     fun open() = gate.complete(Unit)
 
     /** Holds every answer from now until [open]. */
@@ -98,6 +101,8 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
     override suspend fun keep(key: String, page: ShownPage) {
         shownPages[key] = page
     }
+
+    override suspend fun albumCovers(keys: List<String>) = covers.filterKeys { it in keys }
 
     override suspend fun similarArtists(key: String) = similar()
 

@@ -39,6 +39,30 @@ class LocalCleartextTest {
         }
     }
 
+    @Test fun `the app's rule keeps plain http on the phone, also in every client made from it`() {
+        // As on mobile data without a VPN, where 10.0.0.5 leads into the carrier's network.
+        val refusing = OkHttpClient().plainHttpOnlyWhen { false }
+        val home = requireNotNull(ServerAddress.parse("10.0.0.5"))
+        listOf(refusing.forUrl(home.baseUrl), refusing.localCleartext().localCleartext()).forEach { client ->
+            val call = client.newCall(Request.Builder().url(home.baseUrl).build())
+            val error = assertThrows(IOException::class.java) { call.execute() }
+            assertTrue(error.toString(), causes(error).any { it.message == NOT_HERE })
+        }
+        val socket = assertThrows(MaConnectionException::class.java) { runBlocking { MaSocket(refusing, home).open() } }
+        assertTrue(causes(socket).any { it.message == NOT_HERE })
+    }
+
+    @Test fun `where the app's rule allows it, plain http still goes to the home network`() {
+        // Nothing listens on port 1 here: the connection is tried, and refused by the phone itself.
+        val nobody = requireNotNull(ServerAddress.parse("127.0.0.1:1"))
+        val allowing = OkHttpClient().plainHttpOnlyWhen { true }
+        val call = allowing.forUrl(nobody.baseUrl).newCall(Request.Builder().url(nobody.baseUrl).build())
+        val error = assertThrows(IOException::class.java) { call.execute() }
+        assertTrue(error.toString(), causes(error).none { it.message == NOT_HERE || it.message == REFUSED })
+    }
+
+    private fun causes(error: Throwable) = generateSequence(error) { it.cause }
+
     /** A proxy on this device, as a network's settings or a PAC file give one. */
     private object LocalProxy : ProxySelector() {
         override fun select(uri: URI) = listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 9)))
@@ -52,5 +76,6 @@ class LocalCleartextTest {
 
     private companion object {
         const val REFUSED = "Plain http only reaches the local network"
+        const val NOT_HERE = "Plain http is not allowed on this network"
     }
 }
