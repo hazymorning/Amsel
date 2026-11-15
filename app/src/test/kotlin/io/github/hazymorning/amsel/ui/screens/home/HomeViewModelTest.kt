@@ -239,7 +239,7 @@ class HomeViewModelTest {
         assertEquals(null, shown(whole).heardOn)
     }
 
-    @Test fun speakersAreTheOthersThatPlayOrRestOnSomething() {
+    @Test fun speakersAreThoseThatPlayOrRestOnSomethingTheOneInUseIncluded() {
         val layout = classicLayout().setOption("s2", SectionOption.Speakers)
         val phone = SpeakerUi("phone", "", isPhone = true, song = "Lanterns")
         val kitchen = SpeakerUi("kitchen", "Kitchen", song = "Lanterns", isPlaying = true)
@@ -250,10 +250,14 @@ class HomeViewModelTest {
                 .sections.single { it.option == SectionOption.Speakers }
         }
         val home = shelf(HomeSpeakers(listOf(phone, kitchen, bedroom, garden), inUse = phone))
-        assertEquals(listOf(kitchen, bedroom), home.speakers)
+        assertEquals(listOf(phone, kitchen, bedroom), home.speakers)
         assertFalse(home.loading)
-        assertTrue(shelf(HomeSpeakers(listOf(phone, garden), inUse = phone)).isEmpty)
-        assertTrue(shelf(HomeSpeakers(listOf(phone, kitchen.copy(available = false)), inUse = phone)).isEmpty)
+        assertTrue(shelf(HomeSpeakers(listOf(phone.copy(song = null), garden), inUse = phone)).isEmpty)
+        assertTrue(shelf(HomeSpeakers(listOf(phone.copy(song = null), kitchen.copy(available = false)))).isEmpty)
+        // Every speaker grouped under the one in use: the row shows that group, not nothing.
+        val livingRoom = SpeakerUi("living", "Living room", song = "Lanterns", isPlaying = true, others = 5)
+        val grouped = shelf(HomeSpeakers(listOf(phone.copy(song = null), livingRoom), inUse = livingRoom))
+        assertEquals(listOf(livingRoom), grouped.speakers)
         assertEquals(SectionLayout.Row, layout.sections.single { it.option == SectionOption.Speakers }.layout)
     }
 

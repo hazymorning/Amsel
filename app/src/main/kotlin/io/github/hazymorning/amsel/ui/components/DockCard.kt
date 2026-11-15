@@ -43,6 +43,7 @@ import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
+import io.github.hazymorning.amsel.ui.theme.dockLine
 
 /** The dock's play glyph, a step up from the next beside it. */
 private val PlayGlyph = 28.dp
@@ -114,13 +115,13 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
     ) {
         Artwork(null, Modifier.size(Sizes.DockArt), MediaKind.Track)
         Spacer(Modifier.width(Space.Sibling))
-        RowLines(type.labelLarge, besideCover = true, modifier = Modifier.weight(1f)) {
-            SpeakerName(speaker, type.labelLarge, colors.onSurface)
+        RowLines(type.titleMedium, besideCover = true, Modifier.weight(1f), type.dockLine, Space.S1) {
+            SpeakerName(speaker, type.titleMedium, colors.onSurface)
             Words(
                 words,
-                type.bodyMedium,
+                type.dockLine,
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.inkStart(words, type.bodyMedium),
+                modifier = Modifier.inkStart(words, type.dockLine),
             )
         }
         Spacer(Modifier.width(Space.S2))
@@ -242,13 +243,13 @@ private fun PlayerWords(state: NowPlayingUi, speaker: SpeakerUi, modifier: Modif
     val line = remember(state.title, artist) {
         listOf(state.title, artist).filter { it.isNotBlank() }.joinToString(DOT_SEPARATOR)
     }
-    RowLines(type.labelLarge, besideCover = true, modifier = modifier) {
-        SpeakerName(speaker, type.labelLarge, colors.onSurface)
+    RowLines(type.titleMedium, besideCover = true, modifier, type.dockLine, Space.S1) {
+        SpeakerName(speaker, type.titleMedium, colors.onSurface)
         MarqueeText(
             line,
-            type.bodyMedium,
+            type.dockLine,
             colors.onSurfaceVariant,
-            song.inkStart(line, type.bodyMedium),
+            song.inkStart(line, type.dockLine),
             runs = runs,
         )
     }
