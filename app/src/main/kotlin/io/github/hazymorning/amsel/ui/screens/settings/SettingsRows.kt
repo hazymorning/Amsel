@@ -23,10 +23,17 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
 import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
+import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.TextAction
+import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.headerToRow
+import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.sheetEnd
+import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.components.textInkWidth
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
+import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.firm
 
@@ -103,7 +110,10 @@ internal fun ValueRow(title: String, value: String, shape: Shape, onClick: () ->
     SettingRow(title, shape, subtitle = value, role = Role.DropdownList, onClick = onClick)
 }
 
-/** A setting's values, the current one marked; a tap chooses and closes. */
+/**
+ * A setting's values, the current one marked; a tap chooses and closes. [detail], when the name
+ * alone does not say what the setting does, stands between the title and the values.
+ */
 @Composable
 internal fun <T> ChoiceSheet(
     title: String,
@@ -111,10 +121,26 @@ internal fun <T> ChoiceSheet(
     current: T,
     label: @Composable (T) -> String,
     onPick: (T) -> Unit,
+    detail: String? = null,
 ) {
-    Column(Modifier.fillMaxWidth().selectableGroup().padding(bottom = Space.Group)) {
+    Column(Modifier.fillMaxWidth().selectableGroup().padding(bottom = sheetEnd(RowLead.None, twoLines = false))) {
         SheetHeader(title)
         Spacer(Modifier.height(Space.HeaderToContent))
+        if (detail != null) {
+            val style = MaterialTheme.typography.bodyMedium
+            Words(
+                detail,
+                style,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = Int.MAX_VALUE,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Keyline.Margin)
+                    .textInk(style)
+                    .inkStart(detail, style),
+            )
+            Spacer(Modifier.height(headerToRow(RowLead.None, twoLines = false)))
+        }
         values.forEach { value -> ChoiceRow(label(value), selected = value == current, onClick = { onPick(value) }) }
     }
 }

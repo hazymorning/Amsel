@@ -209,10 +209,13 @@ data class HomeSpeakers(
     fun named(id: String): SpeakerUi? = inUse?.takeIf { it.id == id } ?: all.firstOrNull { it.id == id }
 
     /**
-     * Speakers: those that play or rest on something, where music can go on. The one in use is among
-     * them, so speakers grouped under it still show, as the group they play in.
+     * Speakers: those that play or rest on something, where music can go on, those that play first
+     * and of each the one in use first. The one in use is among them, so speakers grouped under it
+     * still show, as the group they play in.
      */
-    val shown: List<SpeakerUi> = all.filter { it.available && (it.isPlaying || it.song != null) }
+    val shown: List<SpeakerUi> = all
+        .filter { it.available && (it.isPlaying || it.song != null) }
+        .sortedWith(compareBy({ !it.isPlaying }, { it.id != inUse?.id }))
 }
 
 /**

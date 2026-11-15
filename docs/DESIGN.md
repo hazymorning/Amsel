@@ -149,7 +149,8 @@ over 120 ms (`PressIndication`).
    colourfulness, muted strongly; Now Playing's page leans a few percent toward it, and a page with
    a cover (album, playlist, artist, book, podcast) washes its head in the same tint, under the
    bar's clear strip and behind the cover, easing into the plain page by its actions and scrolling
-   away with them. A black-and-white cover leaves the page plain. Nothing glows.
+   away with them. A black-and-white cover leaves the page plain. Nothing glows. The wash is there
+   as soon as the hue is known, with no fade.
 3. **The playing ring** (`PlayingRing.kt`): a thin moss ring (8 dp, 1.5 dp line, as the blackbird's
    eye) before the subtitle of whatever plays, in place of a track's number. While the music plays
    it breathes, plainly to see: an echo leaves from under it at nine tenths of its strength, widens
@@ -194,7 +195,8 @@ cover and its title on a tone). Continue listening comes first. A long press on 
 Home, which names itself in a slim bar with Done. There a section is its title, its sentence and ⋯
 (Remove): a tap on the title renames it, a held press on the title or the sentence picks the section
 up, and in Pinned a held press on a pin picks the pin up, the others making way; TalkBack moves both
-through their actions. Pinned shows every pin there, so each can be put in its place. Speakers'
+through their actions. Pinned shows every pin there, so each can be put in its place. Speakers
+puts those that play first, and of each the one in use first. Their
 cards lie on Surface 1 with ink at 3% over it, a breath lighter than Home's ground: the cover,
 then the name over the state, 4 apart, as the mini player has them, with no glyph (the row says
 these are speakers, and a cover without a picture wears the speaker's glyph); until the
@@ -253,21 +255,28 @@ song are a list under a slim bar, "Similar to “Lanterns”".
 with the songs already played waiting above it. Only what comes next has a handle. What the
 server's DJ says between two songs is a row like theirs, "DJ" where the artist stands.
 
-**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle (their title's capitals 24 under the edge, as far as from the sides; a pull down or a tap beside one closes it), over a
-dim of 16% by day and 45% at night; the title on the margin, a second step without a back glyph;
+**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle, framed by the
+margin on every side (`Space.SheetEdge`): the title's capitals, or a cover's top, 24 under the edge,
+as far as the content stands from the sides, and the last ink, a baseline or a button's or a bar's
+edge, 24 over the bottom (`sheetEnd`: a last row keeps part of it under its words itself). A pull down or a tap beside one closes it. Behind a sheet the screen
+lies under black at 32% by day and 60% at night; the title on the margin, a second step without a back glyph;
 a choice is marked by its tick alone, no band, its middle where a pill button's round end has its
-centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. In Play on, Group ("Group +2" while a group exists, for that group's
-leader) is a primary button the width of the margins over the first speaker; while speakers play
-along, Ungroup all stands 8 under it as a secondary button, so the sheet keeps one focal point. The
-buttons stand as far over the first speaker's words as under the heading's baseline, 16 each side
-(principle 10). Volume, from Now Playing's footer, is one bar for the speaker in use and, for a
+centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. Play on reads as a sentence: its heading, the speakers, then what to do with them. Group ("Group
++2" while a group exists, for that group's leader) is a primary button the width of the margins
+under the last speaker; while speakers play along, Ungroup all stands 8 under it as a secondary
+button, so the sheet keeps one focal point. The buttons stand a group's distance, 32, under the last speaker's words, and the sheet's frame
+under them; the group step's Done stands as far under its speakers. Volume, from Now Playing's footer, is one bar for the speaker in use and, for a
 group, one for each of its speakers under "In the group" (Meta, secondary), 8 apart: a 56 dp pill
 of Surface 2 that is the slider itself, filled with ink at 14% as far as the level, the speaker's
 name (Body) at its start and the level (Meta, keeping the room of "100 %") at its end, each on the
 centre of its round end. A drag anywhere along it moves the level, a tap sets it, every step a
-detent; TalkBack hears the speaker and its level and can set it. A speaker that plays carries the ring before what it plays ("Playing"
+detent; TalkBack hears the speaker and its level and can set it. With a volume limit (Settings,
+Off, 40 to 80 %), a touch that starts at or under it stops there, a firmer detent, and once the
+finger asked for more the sheet asks in place of its bars ("Set Kitchen louder than your limit of
+70 %?", "Set to 85 %" over "Stay at 70 %"); a bar let past asks no more while the sheet is open.
+The phone's volume buttons and the system's slider stop at the limit and never ask. A speaker that plays carries the ring before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
-from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Bottom bar, its
+from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Volume limit (with a sentence over its values on what it does) and Bottom bar, its
 places named in their order: its page lists every place, those in the bar first, each with its
 glyph and a switch (Home has none: it always stays), and a held press moves a place as in Edit
 Home; the bar under the page follows at once. A long press on any place in the bar opens the same

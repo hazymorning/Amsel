@@ -59,6 +59,7 @@ fun SettingsScreen(
     onShakeChange: (Boolean) -> Unit = {},
     onSleepOnPlayChange: (Boolean) -> Unit = {},
     onFollowChange: (Boolean) -> Unit = {},
+    onVolumeLimitChange: (Int) -> Unit = {},
     update: UpdateState = UpdateState.Unknown,
     onLookForUpdatesChange: (Boolean) -> Unit = {},
     onLookForUpdate: () -> Unit = {},
@@ -144,6 +145,11 @@ fun SettingsScreen(
                     )
                 }
                 row { shape ->
+                    ValueRow(stringResource(R.string.settings_volume_limit), limitLabel(state.volumeLimit), shape) {
+                        choosing = Choice.VolumeLimit
+                    }
+                }
+                row { shape ->
                     SettingRow(
                         stringResource(R.string.downloads),
                         shape,
@@ -209,6 +215,18 @@ fun SettingsScreen(
                     onAbsSignOut,
                 )
 
+                Choice.VolumeLimit -> ChoiceSheet(
+                    stringResource(R.string.settings_volume_limit),
+                    LIMITS,
+                    state.volumeLimit,
+                    label = { limitLabel(it) },
+                    detail = stringResource(R.string.settings_volume_limit_detail),
+                    onPick = {
+                        onVolumeLimitChange(it)
+                        close()
+                    },
+                )
+
                 Choice.Fade -> ChoiceSheet(
                     stringResource(R.string.settings_sleep_fade),
                     FADES,
@@ -227,7 +245,14 @@ fun SettingsScreen(
 /** From one block's foot to the next group's name. */
 private val BetweenGroups = Space.S8
 
-private enum class Choice { Theme, Fade, Updates, Downloads }
+private enum class Choice { Theme, Fade, VolumeLimit, Updates, Downloads }
+
+@Composable
+private fun limitLabel(level: Int): String =
+    if (level == 0) stringResource(R.string.sleep_off) else stringResource(R.string.player_volume_percent, level)
+
+/** No limit, or one of these: loud enough for a room, short of what startles. */
+private val LIMITS = listOf(0, 40, 50, 60, 70, 80)
 
 @Composable
 private fun fadeLabel(seconds: Int): String =
@@ -258,6 +283,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             saveShake = data.prefs::setSleepShake,
             saveSleepOnPlay = data.prefs::setSleepOnPlay,
             saveFollow = data.prefs::setFollowPlaying,
+            saveVolumeLimit = data.prefs::setVolumeLimit,
             saveLookForUpdates = data.prefs::setLookForUpdates,
             saveDownloadOnWifi = data.prefs::setDownloadOnWifi,
             // The data graph forgets the server's data once the session has ended.
@@ -285,6 +311,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onShakeChange = viewModel::onShakeChange,
         onSleepOnPlayChange = viewModel::onSleepOnPlayChange,
         onFollowChange = viewModel::onFollowChange,
+        onVolumeLimitChange = viewModel::onVolumeLimitChange,
         update = update,
         onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
         onLookForUpdate = graph.updates::lookNow,

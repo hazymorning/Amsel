@@ -16,8 +16,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.data.downloads.AbsAccount
+import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsIntro
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
@@ -54,7 +56,12 @@ internal fun DownloadsSheetContent(
     onSignIn: AbsSignIn,
     onSignOut: () -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = sheetEnd(RowLead.None, twoLines = true)),
+    ) {
         SheetHeader(stringResource(R.string.downloads))
         Spacer(Modifier.height(Space.HeaderToContent))
         val account = state.account

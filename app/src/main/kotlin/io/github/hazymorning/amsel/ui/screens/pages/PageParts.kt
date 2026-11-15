@@ -2,7 +2,6 @@ package io.github.hazymorning.amsel.ui.screens.pages
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +24,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -63,7 +63,6 @@ import io.github.hazymorning.amsel.ui.components.plus
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
-import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
@@ -123,14 +122,14 @@ internal fun PageScaffold(
 /**
  * The page's head leans to its cover as Now Playing's whole page does: the same muted hue, behind
  * the cover and its title under the bar's clear strip, easing into the plain page by the list. A
- * cover with no hue worth borrowing, or none yet, leaves the page plain.
+ * cover with no hue worth borrowing, or none yet, leaves the page plain. The hue is there as soon
+ * as it is known, with no fade.
  */
 @Composable
 private fun coverWash(art: ArtRef?): State<Color> {
     val colors = rememberCoverColors(art)
     val scheme = MaterialTheme.colorScheme
-    val tint = colors?.wash(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f)
-    return animateColorAsState(tint, Motion.effectsSlow(), label = "page wash")
+    return rememberUpdatedState(colors?.wash(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f))
 }
 
 /** The wash reaches down this many cover heights from the screen's top. */

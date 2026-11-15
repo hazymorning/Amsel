@@ -20,8 +20,10 @@ import io.github.hazymorning.amsel.api.DjHost
 import io.github.hazymorning.amsel.app.ActionTarget
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
+import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.label
+import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.ActionsContext
 import io.github.hazymorning.amsel.ui.theme.Space
 
@@ -37,7 +39,12 @@ fun DjSheetContent(
     onPick: (hostId: String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.Group)) {
+    Column(
+        modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = sheetEnd(RowLead.None, twoLines = false)),
+    ) {
         SheetHeader(stringResource(R.string.dj), name = speaker)
         Spacer(Modifier.height(Space.HeaderToContent))
         Column(Modifier.selectableGroup()) {

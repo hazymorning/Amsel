@@ -17,6 +17,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -60,6 +62,16 @@ fun SheetHeader(
 }
 
 private const val TITLE_LINES = 2
+
+/**
+ * What a sheet keeps under its last row of [lead] so the row's last ink (its last baseline, or its
+ * cover's bottom) stands [Space.SheetEdge] over the sheet's bottom edge, as the title's capitals
+ * stand under its top. Content that ends in its own ink (a button, a bar, a sentence) keeps
+ * [Space.SheetEdge] itself.
+ */
+@Composable
+fun sheetEnd(lead: RowLead, twoLines: Boolean): Dp =
+    (Space.SheetEdge - rowInkBottom(lead, twoLines)).coerceAtLeast(0.dp)
 
 /**
  * A value at a line's end, in the secondary tone, on the baseline of what it belongs to. It keeps

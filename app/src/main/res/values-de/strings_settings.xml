@@ -24,6 +24,8 @@
     <string name="settings_sleep_shake_detail">Ein Schütteln stellt einen laufenden Timer wieder auf die volle Dauer</string>
     <string name="settings_sleep_on_play">Mit der Wiedergabe starten</string>
     <string name="settings_sleep_on_play_detail">Stellt den Timer bei jedem Start der Wiedergabe</string>
+    <string name="settings_volume_limit">Lautstärkegrenze</string>
+    <string name="settings_volume_limit_detail">Über der Grenze spielt ein Lautsprecher erst lauter, wenn du es unter Lautstärke bestätigst. Die Lautstärketasten des Handys halten an ihr.</string>
     <string name="settings_follow">Der Musik folgen</string>
     <string name="settings_follow_detail">Beim Öffnen den Lautsprecher wählen, der spielt, sonst dieses Handy</string>
     <string name="settings_updates">Updates</string>
