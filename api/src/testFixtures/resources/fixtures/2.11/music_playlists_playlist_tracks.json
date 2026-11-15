@@ -1,0 +1,594 @@
+{
+  "request": {
+    "message_id": "36",
+    "command": "music/playlists/playlist_tracks",
+    "args": {
+      "item_id": "9",
+      "provider_instance_id_or_domain": "library"
+    }
+  },
+  "response": {
+    "message_id": "36",
+    "result": [
+      {
+        "item_id": "Aurora Tone/First Light (2021)/01 - Dawn Chorus.flac",
+        "provider": "filesystem_local--Cu6eBeYR",
+        "name": "Dawn Chorus",
+        "version": "",
+        "sort_name": "dawn chorus",
+        "uri": "filesystem_local--Cu6eBeYR://track/Aurora Tone/First Light (2021)/01 - Dawn Chorus.flac",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "Aurora Tone/First Light (2021)/01 - Dawn Chorus.flac",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "flac",
+              "codec_type": "flac",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "flac",
+              "bit_rate": 55
+            },
+            "url": null,
+            "details": "1793560602"
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": null,
+          "grouping": null,
+          "genres": [
+            "Ambient"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2021-01-01T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": 1,
+        "date_added": "2026-11-01T19:16:42+00:00",
+        "duration": 12,
+        "artists": [
+          {
+            "item_id": "3",
+            "provider": "library",
+            "name": "Aurora Tone",
+            "version": "",
+            "sort_name": "aurora tone",
+            "uri": "library://artist/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true,
+            "image": null,
+            "year": null
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "4",
+          "provider": "library",
+          "name": "First Light",
+          "version": "",
+          "sort_name": "first light",
+          "uri": "library://album/4",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "available": true,
+          "image": {
+            "type": "thumb",
+            "path": "Aurora Tone/First Light (2021)/folder.jpg",
+            "provider": "filesystem_local--Cu6eBeYR",
+            "remotely_accessible": false,
+            "proxy_id": "05f580d0ca609f0a830f0ca10471dd21c2f908c209936f2d741e5a9e1c6f4e2e"
+          },
+          "year": 2021
+        },
+        "disc_number": 1,
+        "track_number": 1,
+        "audio_metadata": null
+      },
+      {
+        "item_id": "Basso Continuo/Low End (2022)/01 - Ground Bass.ogg",
+        "provider": "filesystem_local--Cu6eBeYR",
+        "name": "Ground Bass",
+        "version": "",
+        "sort_name": "ground bass",
+        "uri": "filesystem_local--Cu6eBeYR://track/Basso Continuo/Low End (2022)/01 - Ground Bass.ogg",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "Basso Continuo/Low End (2022)/01 - Ground Bass.ogg",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "ogg",
+              "codec_type": "vorbis",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "ogg",
+              "bit_rate": 9243
+            },
+            "url": null,
+            "details": "1793560603"
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": null,
+          "grouping": null,
+          "genres": [
+            "Classical"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2022-01-01T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": 2,
+        "date_added": "2026-11-01T19:16:43+00:00",
+        "duration": 13,
+        "artists": [
+          {
+            "item_id": "2",
+            "provider": "library",
+            "name": "Basso Continuo",
+            "version": "",
+            "sort_name": "basso continuo",
+            "uri": "library://artist/2",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true,
+            "image": null,
+            "year": null
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "2",
+          "provider": "library",
+          "name": "Low End",
+          "version": "",
+          "sort_name": "low end",
+          "uri": "library://album/2",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "available": true,
+          "image": {
+            "type": "thumb",
+            "path": "Basso Continuo/Low End (2022)/folder.jpg",
+            "provider": "filesystem_local--Cu6eBeYR",
+            "remotely_accessible": false,
+            "proxy_id": "d44d5a377d381800ccef0e20239b199e1822085f0fbccf1f7fd95ed107fbfb46"
+          },
+          "year": 2022
+        },
+        "disc_number": 1,
+        "track_number": 1,
+        "audio_metadata": null
+      },
+      {
+        "item_id": "Cirrus/High Clouds (2024)/02 - Jet Stream.mp3",
+        "provider": "filesystem_local--Cu6eBeYR",
+        "name": "Jet Stream",
+        "version": "",
+        "sort_name": "jet stream",
+        "uri": "filesystem_local--Cu6eBeYR://track/Cirrus/High Clouds (2024)/02 - Jet Stream.mp3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "Cirrus/High Clouds (2024)/02 - Jet Stream.mp3",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "mp3",
+              "codec_type": "mp3",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "mp3",
+              "bit_rate": 49
+            },
+            "url": null,
+            "details": "1793560604"
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Cirrus/High Clouds (2024)/02 - Jet Stream.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "3db3d9e4639a29bacfa38ad74c5ccf516635bd70133ba959a102d0c2f9d8480a"
+            }
+          ],
+          "grouping": null,
+          "genres": [
+            "Pop"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2024-01-01T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": 3,
+        "date_added": "2026-11-01T19:16:44+00:00",
+        "duration": 15,
+        "artists": [
+          {
+            "item_id": "1",
+            "provider": "library",
+            "name": "Cirrus",
+            "version": "",
+            "sort_name": "cirrus",
+            "uri": "library://artist/1",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true,
+            "image": null,
+            "year": null
+          },
+          {
+            "item_id": "3",
+            "provider": "library",
+            "name": "Aurora Tone",
+            "version": "",
+            "sort_name": "aurora tone",
+            "uri": "library://artist/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true,
+            "image": null,
+            "year": null
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "1",
+          "provider": "library",
+          "name": "High Clouds",
+          "version": "",
+          "sort_name": "high clouds",
+          "uri": "library://album/1",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "available": true,
+          "image": {
+            "type": "thumb",
+            "path": "Cirrus/High Clouds (2024)/01 - Altitude.mp3",
+            "provider": "filesystem_local--Cu6eBeYR",
+            "remotely_accessible": false,
+            "proxy_id": "9ada74b74fdf046634375c4d119e71527c4097607f770e254db8be69d4b79cfe"
+          },
+          "year": 2024
+        },
+        "disc_number": 1,
+        "track_number": 2,
+        "audio_metadata": null
+      },
+      {
+        "item_id": "Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+        "provider": "filesystem_local--Cu6eBeYR",
+        "name": "Updraft",
+        "version": "",
+        "sort_name": "updraft",
+        "uri": "filesystem_local--Cu6eBeYR://track/Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "mp3",
+              "codec_type": "mp3",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "mp3",
+              "bit_rate": 49
+            },
+            "url": null,
+            "details": "1793560603"
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Aurora Tone/Second Wind (2023)/02 - Updraft.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "50934fac0276b0becd3cccd91fe43e142f621dd3493d03650d0f6ac030333625"
+            }
+          ],
+          "grouping": null,
+          "genres": [
+            "Electronic"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2023-01-01T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": 4,
+        "date_added": "2026-11-01T19:16:43+00:00",
+        "duration": 16,
+        "artists": [
+          {
+            "item_id": "3",
+            "provider": "library",
+            "name": "Aurora Tone",
+            "version": "",
+            "sort_name": "aurora tone",
+            "uri": "library://artist/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true,
+            "image": null,
+            "year": null
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "3",
+          "provider": "library",
+          "name": "Second Wind",
+          "version": "",
+          "sort_name": "second wind",
+          "uri": "library://album/3",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "available": true,
+          "image": {
+            "type": "thumb",
+            "path": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+            "provider": "filesystem_local--Cu6eBeYR",
+            "remotely_accessible": false,
+            "proxy_id": "c76429f60da2c587c072e0448d0cae9ee94f69fc99eb7303b80c6cf5a661cd4d"
+          },
+          "year": 2023
+        },
+        "disc_number": 1,
+        "track_number": 2,
+        "audio_metadata": null
+      },
+      {
+        "item_id": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+        "provider": "filesystem_local--Cu6eBeYR",
+        "name": "Thin Air",
+        "version": "",
+        "sort_name": "thin air",
+        "uri": "filesystem_local--Cu6eBeYR://track/Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "track",
+        "provider_mappings": [
+          {
+            "item_id": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "mp3",
+              "codec_type": "mp3",
+              "sample_rate": 22050,
+              "bit_depth": 16,
+              "channels": 1,
+              "output_format_str": "mp3",
+              "bit_rate": 49
+            },
+            "url": null,
+            "details": "1793560604"
+          }
+        ],
+        "metadata": {
+          "description": null,
+          "description_language": null,
+          "life_span": null,
+          "artist_entity_type": null,
+          "review": null,
+          "explicit": null,
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Cirrus/High Clouds (2024)/03 - Thin Air.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "3a42267d0e76e94daba60f1407c65b1684e6cf94858d6593ca69eb115d447e6c"
+            }
+          ],
+          "grouping": null,
+          "genres": [
+            "Pop"
+          ],
+          "mood": null,
+          "style": null,
+          "copyright": null,
+          "lyrics": null,
+          "lrc_lyrics": null,
+          "transcript": null,
+          "transcript_cues": null,
+          "has_transcript": null,
+          "label": null,
+          "links": null,
+          "performers": null,
+          "preview": null,
+          "popularity": null,
+          "release_date": "2024-01-01T00:00:00+00:00",
+          "languages": null,
+          "chapters": null,
+          "collections": null,
+          "last_refresh": null,
+          "last_musicbrainz_lookup": null
+        },
+        "favorite": null,
+        "position": 5,
+        "date_added": "2026-11-01T19:16:44+00:00",
+        "duration": 18,
+        "artists": [
+          {
+            "item_id": "1",
+            "provider": "library",
+            "name": "Cirrus",
+            "version": "",
+            "sort_name": "cirrus",
+            "uri": "library://artist/1",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true,
+            "image": null,
+            "year": null
+          }
+        ],
+        "last_played": 0,
+        "album": {
+          "item_id": "1",
+          "provider": "library",
+          "name": "High Clouds",
+          "version": "",
+          "sort_name": "high clouds",
+          "uri": "library://album/1",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "album",
+          "available": true,
+          "image": {
+            "type": "thumb",
+            "path": "Cirrus/High Clouds (2024)/01 - Altitude.mp3",
+            "provider": "filesystem_local--Cu6eBeYR",
+            "remotely_accessible": false,
+            "proxy_id": "9ada74b74fdf046634375c4d119e71527c4097607f770e254db8be69d4b79cfe"
+          },
+          "year": 2024
+        },
+        "disc_number": 1,
+        "track_number": 3,
+        "audio_metadata": null
+      }
+    ],
+    "partial": false
+  }
+}

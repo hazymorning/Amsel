@@ -1,0 +1,31 @@
+{
+  "request": null,
+  "response": {
+    "event": "media_item_played",
+    "object_id": "library://track/9",
+    "data": {
+      "uri": "library://track/9",
+      "media_type": "track",
+      "name": "Morning Haze",
+      "duration": 15,
+      "seconds_played": 9,
+      "fully_played": true,
+      "is_playing": false,
+      "mbid": null,
+      "artist": "Aurora Tone",
+      "artists": [
+        "Aurora Tone"
+      ],
+      "artist_mbids": [],
+      "album": "First Light",
+      "album_mbid": null,
+      "album_artist": "Aurora Tone",
+      "album_artist_mbids": [],
+      "image_url": "http://172.17.0.4:8095/imageproxy/05f580d0ca609f0a830f0ca10471dd21c2f908c209936f2d741e5a9e1c6f4e2e?size=0&fmt=jpg",
+      "version": "",
+      "userid": null,
+      "player_id": "upac3a0401"
+    }
+  },
+  "notes": "Server-pushed event; 1 of this type arrived during the recording."
+}

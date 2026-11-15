@@ -1,0 +1,51 @@
+{
+  "request": {
+    "message_id": "23",
+    "command": "music/sort_options",
+    "args": {
+      "listing": "playlist_tracks"
+    }
+  },
+  "response": {
+    "message_id": "23",
+    "result": [
+      {
+        "field": "position",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "position"
+      },
+      {
+        "field": "timestamp_added",
+        "supports_direction": true,
+        "default_direction": "desc",
+        "label_key": "timestamp_added"
+      },
+      {
+        "field": "name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "name"
+      },
+      {
+        "field": "artist_name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "artist_name"
+      },
+      {
+        "field": "album_name",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "album_name"
+      },
+      {
+        "field": "duration",
+        "supports_direction": true,
+        "default_direction": "asc",
+        "label_key": "duration"
+      }
+    ],
+    "partial": false
+  }
+}

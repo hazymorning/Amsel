@@ -1,0 +1,631 @@
+{
+  "request": {
+    "message_id": "3",
+    "command": "player_queues/get",
+    "args": {
+      "queue_id": "upb1c50d43"
+    }
+  },
+  "response": {
+    "message_id": "3",
+    "result": {
+      "queue_id": "upb1c50d43",
+      "active": true,
+      "display_name": "Kitchen",
+      "available": true,
+      "items": 3,
+      "shuffle_enabled": true,
+      "repeat_mode": "off",
+      "crossfade_enabled": false,
+      "autoplay_enabled": false,
+      "overlay_enabled": false,
+      "overlay_source": null,
+      "overlay_volume": 100,
+      "smart_fades_active": false,
+      "smart_shuffle_active": true,
+      "current_index": 0,
+      "index_in_buffer": 2,
+      "ended": false,
+      "elapsed_time": 3.1495563983917236,
+      "elapsed_time_last_updated": 1794446312.062797,
+      "playback_speed": 1.0,
+      "state": "playing",
+      "current_item": {
+        "queue_id": "upb1c50d43",
+        "queue_item_id": "e255cb8983a240d896fd49e809d093e7",
+        "name": "Aurora Tone - Morning Haze",
+        "duration": 15,
+        "sort_index": 0,
+        "streamdetails": {
+          "provider": "filesystem_local--azNbiWTb",
+          "item_id": "Aurora Tone/First Light (2021)/02 - Morning Haze.flac",
+          "audio_format": {
+            "content_type": "flac",
+            "codec_type": "flac",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "flac",
+            "bit_rate": 54
+          },
+          "media_type": "track",
+          "stream_type": "local_file",
+          "duration": 15,
+          "size": 102382,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "lossless",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": {
+                "mode": "measurement_only",
+                "measurement_source": "track",
+                "target_lufs": -14.0,
+                "measured_lufs": -32.1,
+                "applied_gain_db": 18.1
+              },
+              "playback_speed": 1.0,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "upb1c50d43"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "lossless",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": -32.1,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "measurement_only",
+          "volume_normalization_gain_correct": 18.1,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "11",
+          "provider": "library",
+          "name": "Morning Haze",
+          "version": "",
+          "sort_name": "morning haze",
+          "uri": "library://track/11",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/First Light (2021)/02 - Morning Haze.flac",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--azNbiWTb",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "flac",
+                "codec_type": "flac",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "flac",
+                "bit_rate": 54
+              },
+              "url": null,
+              "details": "1794327729"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                "provider": "filesystem_local--azNbiWTb",
+                "remotely_accessible": false,
+                "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Ambient"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": 1794444190
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-10T16:22:09+00:00",
+          "duration": 15,
+          "artists": [
+            {
+              "item_id": "3",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/3",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 1794332822,
+          "album": {
+            "item_id": "3",
+            "provider": "library",
+            "name": "First Light",
+            "version": "",
+            "sort_name": "first light",
+            "uri": "library://album/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "provider_mappings": [
+              {
+                "item_id": "Aurora Tone/First Light (2021)",
+                "provider_domain": "filesystem_local",
+                "provider_instance": "filesystem_local--azNbiWTb",
+                "available": true,
+                "in_library": true,
+                "is_unique": null,
+                "audio_format": {
+                  "content_type": "?",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "?",
+                  "bit_rate": 0
+                },
+                "url": "Aurora Tone/First Light (2021)",
+                "details": null
+              }
+            ],
+            "metadata": {
+              "description": null,
+              "description_language": null,
+              "life_span": null,
+              "artist_entity_type": null,
+              "review": null,
+              "explicit": null,
+              "images": [
+                {
+                  "type": "thumb",
+                  "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                  "provider": "filesystem_local--azNbiWTb",
+                  "remotely_accessible": false,
+                  "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+                }
+              ],
+              "grouping": null,
+              "genres": null,
+              "mood": null,
+              "style": null,
+              "copyright": null,
+              "lyrics": null,
+              "lrc_lyrics": null,
+              "transcript": null,
+              "transcript_cues": null,
+              "has_transcript": null,
+              "label": null,
+              "links": null,
+              "performers": null,
+              "preview": null,
+              "popularity": null,
+              "release_date": null,
+              "languages": null,
+              "chapters": null,
+              "collections": null,
+              "last_refresh": 1794331336
+            },
+            "favorite": false,
+            "position": null,
+            "date_added": "2026-11-10T16:22:09+00:00",
+            "year": 2021,
+            "artists": [
+              {
+                "item_id": "3",
+                "provider": "library",
+                "name": "Aurora Tone",
+                "version": "",
+                "sort_name": "aurora tone",
+                "uri": "library://artist/3",
+                "external_ids": [],
+                "is_playable": true,
+                "media_type": "artist",
+                "available": true,
+                "image": null,
+                "year": null
+              }
+            ],
+            "album_type": "unknown"
+          },
+          "disc_number": 1,
+          "track_number": 2,
+          "audio_metadata": null
+        },
+        "image": {
+          "type": "thumb",
+          "path": "Aurora Tone/First Light (2021)/folder.jpg",
+          "provider": "filesystem_local--azNbiWTb",
+          "remotely_accessible": false,
+          "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+        },
+        "index": 0,
+        "available": true,
+        "extra_attributes": {}
+      },
+      "next_item": {
+        "queue_id": "upb1c50d43",
+        "queue_item_id": "03653fc3a68d4ee899aab2673a0667a8",
+        "name": "Aurora Tone - Sunrise",
+        "duration": 18,
+        "sort_index": 1,
+        "streamdetails": {
+          "provider": "filesystem_local--azNbiWTb",
+          "item_id": "Aurora Tone/First Light (2021)/03 - Sunrise.flac",
+          "audio_format": {
+            "content_type": "flac",
+            "codec_type": "flac",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "flac",
+            "bit_rate": 54
+          },
+          "media_type": "track",
+          "stream_type": "local_file",
+          "duration": 18,
+          "size": 121717,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "lossless",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": {
+                "mode": "measurement_only",
+                "measurement_source": "track",
+                "target_lufs": -14.0,
+                "measured_lufs": -32.1,
+                "applied_gain_db": 18.1
+              },
+              "playback_speed": 1.0,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "upb1c50d43"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "lossless",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": -32.1,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "measurement_only",
+          "volume_normalization_gain_correct": 18.1,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "9",
+          "provider": "library",
+          "name": "Sunrise",
+          "version": "",
+          "sort_name": "sunrise",
+          "uri": "library://track/9",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "Aurora Tone/First Light (2021)/03 - Sunrise.flac",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--azNbiWTb",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "flac",
+                "codec_type": "flac",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "flac",
+                "bit_rate": 54
+              },
+              "url": null,
+              "details": "1794327729"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                "provider": "filesystem_local--azNbiWTb",
+                "remotely_accessible": false,
+                "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+              }
+            ],
+            "grouping": null,
+            "genres": [
+              "Ambient"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": 1794443950
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-10T16:22:09+00:00",
+          "duration": 18,
+          "artists": [
+            {
+              "item_id": "3",
+              "provider": "library",
+              "name": "Aurora Tone",
+              "version": "",
+              "sort_name": "aurora tone",
+              "uri": "library://artist/3",
+              "external_ids": [],
+              "is_playable": true,
+              "media_type": "artist",
+              "available": true,
+              "image": null,
+              "year": null
+            }
+          ],
+          "last_played": 1794332840,
+          "album": {
+            "item_id": "3",
+            "provider": "library",
+            "name": "First Light",
+            "version": "",
+            "sort_name": "first light",
+            "uri": "library://album/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "album",
+            "provider_mappings": [
+              {
+                "item_id": "Aurora Tone/First Light (2021)",
+                "provider_domain": "filesystem_local",
+                "provider_instance": "filesystem_local--azNbiWTb",
+                "available": true,
+                "in_library": true,
+                "is_unique": null,
+                "audio_format": {
+                  "content_type": "?",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "?",
+                  "bit_rate": 0
+                },
+                "url": "Aurora Tone/First Light (2021)",
+                "details": null
+              }
+            ],
+            "metadata": {
+              "description": null,
+              "description_language": null,
+              "life_span": null,
+              "artist_entity_type": null,
+              "review": null,
+              "explicit": null,
+              "images": [
+                {
+                  "type": "thumb",
+                  "path": "Aurora Tone/First Light (2021)/folder.jpg",
+                  "provider": "filesystem_local--azNbiWTb",
+                  "remotely_accessible": false,
+                  "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+                }
+              ],
+              "grouping": null,
+              "genres": null,
+              "mood": null,
+              "style": null,
+              "copyright": null,
+              "lyrics": null,
+              "lrc_lyrics": null,
+              "transcript": null,
+              "transcript_cues": null,
+              "has_transcript": null,
+              "label": null,
+              "links": null,
+              "performers": null,
+              "preview": null,
+              "popularity": null,
+              "release_date": null,
+              "languages": null,
+              "chapters": null,
+              "collections": null,
+              "last_refresh": 1794331336
+            },
+            "favorite": false,
+            "position": null,
+            "date_added": "2026-11-10T16:22:09+00:00",
+            "year": 2021,
+            "artists": [
+              {
+                "item_id": "3",
+                "provider": "library",
+                "name": "Aurora Tone",
+                "version": "",
+                "sort_name": "aurora tone",
+                "uri": "library://artist/3",
+                "external_ids": [],
+                "is_playable": true,
+                "media_type": "artist",
+                "available": true,
+                "image": null,
+                "year": null
+              }
+            ],
+            "album_type": "unknown"
+          },
+          "disc_number": 1,
+          "track_number": 3,
+          "audio_metadata": null
+        },
+        "image": {
+          "type": "thumb",
+          "path": "Aurora Tone/First Light (2021)/folder.jpg",
+          "provider": "filesystem_local--azNbiWTb",
+          "remotely_accessible": false,
+          "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+        },
+        "index": 0,
+        "available": true,
+        "extra_attributes": {}
+      },
+      "sources": [
+        {
+          "item_id": "library://album/3",
+          "provider": "radio_playlist",
+          "name": "First Light Endless Mix",
+          "version": "",
+          "sort_name": "first light endless mix",
+          "uri": "radio_playlist://playlist/library://album/3",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "playlist",
+          "available": true,
+          "image": {
+            "type": "thumb",
+            "path": "Aurora Tone/First Light (2021)/folder.jpg",
+            "provider": "filesystem_local--azNbiWTb",
+            "remotely_accessible": false,
+            "proxy_id": "443491da8a61e71bf98b8cc09dd2ac03617d8afd7e41118e909a03fdbac33e88"
+          },
+          "year": null
+        }
+      ],
+      "flow_mode": true,
+      "resume_pos": 0,
+      "is_dynamic": true,
+      "extra_attributes": {
+        "play_action_in_progress": false
+      },
+      "dont_stop_the_music_enabled": false,
+      "radio_source": []
+    },
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.10.9. Kitchen plays the endless mix of the album First Light: is_dynamic, shuffle forced on, and the mix named in sources."
+}

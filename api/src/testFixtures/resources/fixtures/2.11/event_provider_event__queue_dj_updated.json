@@ -1,0 +1,11 @@
+{
+  "request": null,
+  "response": {
+    "event": "provider_event",
+    "object_id": "ai_radio",
+    "data": {
+      "event": "queue_dj_updated"
+    }
+  },
+  "notes": "Recorded 2026-11-12 against 2.11.0b7. Sent after every change of a queue DJ; it carries no state. 2.10 sends none."
+}

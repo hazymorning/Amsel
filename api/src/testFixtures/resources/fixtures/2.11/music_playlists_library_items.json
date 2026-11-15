@@ -1,0 +1,456 @@
+{
+  "request": {
+    "message_id": "11",
+    "command": "music/playlists/library_items",
+    "args": {
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "response": {
+    "message_id": "11",
+    "result": [
+      {
+        "item_id": "4",
+        "provider": "library",
+        "name": "500 Random tracks (from library)",
+        "version": "",
+        "sort_name": "500 random tracks (from library)",
+        "uri": "library://playlist/4",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "random_tracks",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/random_tracks.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "6d9258bb77963cbb96221b8573c096a8bb9b8c9429b1ff290ce54eb0a2345d67"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "1",
+        "provider": "library",
+        "name": "All favorited tracks",
+        "version": "",
+        "sort_name": "all favorited tracks",
+        "uri": "library://playlist/1",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "all_favorite_tracks",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/all_favorite_tracks.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "1aacdee721e8bfc44fac55498f4473fab9c1060bd83fe2b7c6ad5db0f842ce7e"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "9",
+        "provider": "library",
+        "name": "Amsel Mix",
+        "version": "",
+        "sort_name": "amsel mix",
+        "uri": "library://playlist/9",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "Playlists/Amsel Mix.m3u",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": "1793560604"
+          }
+        ],
+        "metadata": {},
+        "owner": "Local files",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "8",
+        "provider": "library",
+        "name": "Infinite Mix (favorites)",
+        "version": "",
+        "sort_name": "infinite mix (favorites)",
+        "uri": "library://playlist/8",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "infinite_mix_favorites",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/infinite_mix_favorites.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "8c5f451b9444c09f8feb198c59e9942c7d2d4195a9776477d25e7445f6eb3fd8"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": true,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "7",
+        "provider": "library",
+        "name": "Infinite Mix (library)",
+        "version": "",
+        "sort_name": "infinite mix (library)",
+        "uri": "library://playlist/7",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "infinite_mix",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/infinite_mix.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "a1d2b9cf94d76c696f5a310d7f7732fa1064ffe5d721065699ee83a0ec9dd14e"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": true,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "3",
+        "provider": "library",
+        "name": "Random Album (from library)",
+        "version": "",
+        "sort_name": "random album (from library)",
+        "uri": "library://playlist/3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "random_album",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/random_album.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "4fd0b7eefdb898d7fb1e8ead58b9f9d4475dd4cfea8682dda7f79dd1e5e7d402"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "2",
+        "provider": "library",
+        "name": "Random Artist (from library)",
+        "version": "",
+        "sort_name": "random artist (from library)",
+        "uri": "library://playlist/2",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "random_artist",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/random_artist.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "1286a6e82ff924f720e52ba63a65e3f2a3d6f701a1ed15aa0c5f88cd0dd2a0c1"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "6",
+        "provider": "library",
+        "name": "Recently added tracks",
+        "version": "",
+        "sort_name": "recently added tracks",
+        "uri": "library://playlist/6",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "recently_added_tracks",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/recently_added_tracks.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "dcb15588b4894e2ededaf394fb464cb8b51704667f3ff36242ca56eb770a4ac7"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      },
+      {
+        "item_id": "5",
+        "provider": "library",
+        "name": "Recently played tracks",
+        "version": "",
+        "sort_name": "recently played tracks",
+        "uri": "library://playlist/5",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "playlist",
+        "provider_mappings": [
+          {
+            "item_id": "recently_played",
+            "provider_domain": "builtin",
+            "provider_instance": "builtin",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": null,
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "playlists/recently_played.png",
+              "provider": "builtin",
+              "remotely_accessible": false,
+              "proxy_id": "76d2333b13fc9e064d55850d67bbd30bd2b63fa5c2eb2cdf43365832e3e837d9"
+            }
+          ]
+        },
+        "owner": "Music Assistant",
+        "is_editable": false,
+        "is_dynamic": false,
+        "supported_mediatypes": [
+          "track"
+        ],
+        "available": true
+      }
+    ],
+    "partial": false
+  }
+}

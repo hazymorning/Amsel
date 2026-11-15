@@ -1,0 +1,232 @@
+{
+  "request": {
+    "message_id": "1042",
+    "command": "player_queues/get",
+    "args": {
+      "queue_id": "up65dcf249"
+    }
+  },
+  "response": {
+    "message_id": "1042",
+    "result": {
+      "queue_id": "up65dcf249",
+      "active": true,
+      "display_name": "Kitchen",
+      "available": true,
+      "items": 1,
+      "shuffle_enabled": false,
+      "repeat_mode": "off",
+      "crossfade_enabled": false,
+      "autoplay_enabled": false,
+      "overlay_enabled": false,
+      "overlay_source": null,
+      "overlay_volume": 100,
+      "smart_fades_active": false,
+      "smart_shuffle_active": false,
+      "current_index": 0,
+      "index_in_buffer": 0,
+      "ended": false,
+      "elapsed_time": 183.40372943878174,
+      "elapsed_time_last_updated": 1793646166.640669,
+      "playback_speed": 1.5,
+      "state": "playing",
+      "current_item": {
+        "queue_id": "up65dcf249",
+        "queue_item_id": "c636b1d6ca1345e6952d4663e1e7db8d",
+        "name": "The Lantern Road",
+        "duration": 270,
+        "sort_index": 0,
+        "streamdetails": {
+          "provider": "filesystem_local--8VZfxXpg",
+          "item_id": "Ada Quill/The Lantern Road/01 - Chapter 1.mp3",
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "mp3",
+            "sample_rate": 22050,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "mp3",
+            "bit_rate": 32
+          },
+          "media_type": "audiobook",
+          "stream_type": "local_file",
+          "duration": 270,
+          "size": null,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "low",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": {
+                "mode": "measurement_only",
+                "measurement_source": "track",
+                "target_lufs": -14.0,
+                "measured_lufs": -22.1,
+                "applied_gain_db": 8.1
+              },
+              "playback_speed": 1.5,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "up65dcf249"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "low",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": -22.1,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "measurement_only",
+          "volume_normalization_gain_correct": 8.1,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "2",
+          "provider": "library",
+          "name": "The Lantern Road",
+          "version": "",
+          "sort_name": "lantern road, the",
+          "uri": "library://audiobook/2",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "audiobook",
+          "provider_mappings": [
+            {
+              "item_id": "Ada Quill/The Lantern Road/01 - Chapter 1.mp3",
+              "provider_domain": "filesystem_local",
+              "provider_instance": "filesystem_local--8VZfxXpg",
+              "available": true,
+              "in_library": true,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "mp3",
+                "codec_type": "mp3",
+                "sample_rate": 22050,
+                "bit_depth": 16,
+                "channels": 1,
+                "output_format_str": "mp3",
+                "bit_rate": 32
+              },
+              "url": null,
+              "details": "1793645844"
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": null,
+            "grouping": null,
+            "genres": [
+              "Audiobook"
+            ],
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": [
+              {
+                "position": 1,
+                "name": "Chapter 1",
+                "start": 0.0,
+                "end": 90.070204
+              },
+              {
+                "position": 2,
+                "name": "Chapter 2",
+                "start": 90.070204,
+                "end": 180.140408
+              },
+              {
+                "position": 3,
+                "name": "Chapter 3",
+                "start": 180.140408,
+                "end": 270.210612
+              }
+            ],
+            "collections": null,
+            "last_refresh": 1793646137
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": "2026-11-02T19:01:40+00:00",
+          "publisher": null,
+          "authors": [
+            "Ada Quill"
+          ],
+          "narrators": [],
+          "duration": 270,
+          "fully_played": false,
+          "resume_position_ms": 180140
+        },
+        "image": null,
+        "index": 0,
+        "available": true,
+        "extra_attributes": {
+          "playback_speed": 1.5
+        }
+      },
+      "next_item": null,
+      "sources": [],
+      "flow_mode": true,
+      "resume_pos": 0,
+      "is_dynamic": false,
+      "extra_attributes": {
+        "play_action_in_progress": false
+      },
+      "dont_stop_the_music_enabled": false,
+      "radio_source": []
+    }
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

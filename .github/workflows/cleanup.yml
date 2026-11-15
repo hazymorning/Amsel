@@ -1,0 +1,79 @@
+name: Cleanup
+
+# By hand only: Actions → Cleanup → Run workflow. Keeps the newest release and deletes the others
+# with their tags, every tag no release keeps, every branch but main and signing (which holds the
+# release key; a branch with an open pull request stays, so no work in progress is lost), the
+# Actions caches, and every workflow run but the newest of each workflow.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Releases but the newest
+        run: |
+          # Read first: piped straight into the loop, a failed listing would read as "nothing to do".
+          tags=$(gh release list --limit 1000 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[1:] | .[].tagName')
+          while read -r tag; do
+            [ -n "$tag" ] || continue
+            gh release delete "$tag" --cleanup-tag --yes
+            echo "Deleted release $tag and its tag"
+          done <<< "$tags"
+      - name: Tags no release keeps
+        run: |
+          kept=$(gh release list --limit 1000 --json tagName --jq '.[].tagName')
+          tags=$(gh api --paginate "repos/$GH_REPO/tags" --jq '.[].name')
+          while read -r tag; do
+            [ -n "$tag" ] || continue
+            if grep -qxF -- "$tag" <<< "$kept"; then
+              continue
+            fi
+            gh api -X DELETE "repos/$GH_REPO/git/refs/tags/$tag"
+            echo "Deleted tag $tag"
+          done <<< "$tags"
+      - name: Branches but main and signing
+        run: |
+          open=$(gh pr list --state open --limit 1000 --json headRefName --jq '.[].headRefName')
+          branches=$(gh api --paginate "repos/$GH_REPO/branches" --jq '.[].name')
+          while read -r branch; do
+            case "$branch" in ''|main|signing) continue ;; esac
+            if grep -qxF -- "$branch" <<< "$open"; then
+              echo "Kept $branch: its pull request is open"
+              continue
+            fi
+            gh api -X DELETE "repos/$GH_REPO/git/refs/heads/$branch"
+            echo "Deleted branch $branch"
+          done <<< "$branches"
+      - name: Caches
+        run: |
+          caches=$(gh cache list --limit 1000 --json id --jq '.[].id')
+          while read -r cache; do
+            [ -n "$cache" ] || continue
+            gh cache delete "$cache"
+          done <<< "$caches"
+          echo "Deleted the Actions caches"
+      - name: Workflow runs but the newest of each
+        run: |
+          # This run is still going, so it is never among those listed as completed.
+          runs=$(gh run list --limit 1000 --status completed --json databaseId,workflowName,createdAt \
+            --jq 'group_by(.workflowName) | map(sort_by(.createdAt) | reverse | .[1:]) | flatten | .[].databaseId')
+          while read -r run; do
+            [ -n "$run" ] || continue
+            gh run delete "$run"
+          done <<< "$runs"
+          echo "Deleted the older workflow runs"

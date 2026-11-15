@@ -1,0 +1,16 @@
+{
+  "request": {
+    "message_id": "50",
+    "command": "player_queues/items",
+    "args": {
+      "queue_id": "updb709e97",
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "response": {
+    "message_id": "50",
+    "result": [],
+    "partial": false
+  }
+}

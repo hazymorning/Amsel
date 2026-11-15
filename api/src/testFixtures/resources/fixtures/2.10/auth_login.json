@@ -1,0 +1,26 @@
+{
+  "request": {
+    "message_id": "4",
+    "command": "auth/login",
+    "args": {
+      "username": "amsel",
+      "password": "amsel-test-pw",
+      "device_name": "Amsel fixtures"
+    }
+  },
+  "response": {
+    "message_id": "4",
+    "result": {
+      "success": true,
+      "access_token": "<redacted-jwt>",
+      "user": {
+        "user_id": "u3PXw06IO6NYrt6ZfyEFQTyiPFJM2TKC9BC6MJwLy1A",
+        "username": "amsel",
+        "display_name": null,
+        "role": "admin"
+      }
+    },
+    "partial": false
+  },
+  "notes": "Unauthenticated command; returns a short-lived (auto-renewing) access_token."
+}

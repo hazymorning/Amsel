@@ -1,0 +1,19 @@
+{
+  "request": {
+    "message_id": "35",
+    "command": "music/recently_played_items",
+    "args": {
+      "limit": 6,
+      "media_types": [
+        "album",
+        "playlist",
+        "artist"
+      ]
+    }
+  },
+  "response": {
+    "message_id": "35",
+    "result": [],
+    "partial": false
+  }
+}

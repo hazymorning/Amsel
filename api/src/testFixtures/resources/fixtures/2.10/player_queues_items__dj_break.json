@@ -1,0 +1,190 @@
+{
+  "request": {
+    "command": "player_queues/items",
+    "args": {
+      "queue_id": "upb1c50d43",
+      "limit": 100
+    }
+  },
+  "response": {
+    "result": [
+      {
+        "queue_id": "upb1c50d43",
+        "queue_item_id": "bf145390333e41b385d918955fc28f03",
+        "name": "Artist fact",
+        "duration": 3,
+        "sort_index": 1,
+        "streamdetails": {
+          "provider": "ai_radio",
+          "item_id": "dj0170e36d3fa5_008",
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "s16le",
+            "sample_rate": 48000,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "mp3",
+            "bit_rate": 1536
+          },
+          "media_type": "sound_effect",
+          "stream_type": "custom",
+          "duration": 3,
+          "size": null,
+          "stream_metadata": null,
+          "audio_processing": {
+            "input_fidelity": {
+              "quality": "lossless",
+              "bit_perfect": null
+            },
+            "queue_processing": {
+              "pcm_format": {
+                "content_type": "f32le",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 32,
+                "channels": 2,
+                "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=32;channels=2",
+                "bit_rate": 0
+              },
+              "normalization": null,
+              "playback_speed": 1.0,
+              "crossfade_mode": "disabled",
+              "overlay_active": false
+            },
+            "outputs": [
+              {
+                "player_ids": [
+                  "upb1c50d43"
+                ],
+                "dsp": {
+                  "state": "disabled",
+                  "input_gain": 0.0,
+                  "filters": [],
+                  "output_gain": 0.0,
+                  "preset_id": null
+                },
+                "source_channel": null,
+                "output_format": {
+                  "content_type": "s16le",
+                  "codec_type": "?",
+                  "sample_rate": 44100,
+                  "bit_depth": 16,
+                  "channels": 2,
+                  "output_format_str": "pcm;codec=pcm;rate=44100;bitrate=16;channels=2",
+                  "bit_rate": 0
+                },
+                "fidelity": {
+                  "quality": "lossless",
+                  "bit_perfect": false
+                }
+              }
+            ]
+          },
+          "loudness": null,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "disabled",
+          "volume_normalization_gain_correct": null,
+          "target_loudness": -14.0,
+          "stream_title": null
+        },
+        "media_item": {
+          "item_id": "dj0170e36d3fa5_008",
+          "provider": "ai_radio",
+          "name": "Artist fact",
+          "version": "",
+          "sort_name": "artist fact",
+          "uri": "ai_radio://sound_effect/dj0170e36d3fa5_008",
+          "external_ids": [],
+          "is_playable": true,
+          "media_type": "sound_effect",
+          "provider_mappings": [
+            {
+              "item_id": "dj0170e36d3fa5_008",
+              "provider_domain": "ai_radio",
+              "provider_instance": "ai_radio",
+              "available": true,
+              "in_library": null,
+              "is_unique": null,
+              "audio_format": {
+                "content_type": "?",
+                "codec_type": "?",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "?",
+                "bit_rate": 0
+              },
+              "url": null,
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "description_language": null,
+            "life_span": null,
+            "artist_entity_type": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "/app/venv/lib/python3.14/site-packages/music_assistant/providers/ai_radio/air.png",
+                "provider": "builtin",
+                "remotely_accessible": false,
+                "proxy_id": "e77d003324c57429ffb6a1b90d859f43358d2ac2def8b1b542923aa61a7f37e6"
+              }
+            ],
+            "grouping": null,
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "lrc_lyrics": null,
+            "transcript": null,
+            "transcript_cues": null,
+            "has_transcript": null,
+            "label": null,
+            "links": null,
+            "performers": null,
+            "preview": null,
+            "popularity": null,
+            "release_date": null,
+            "languages": null,
+            "chapters": null,
+            "collections": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": null,
+          "date_added": null,
+          "duration": 0
+        },
+        "image": {
+          "type": "thumb",
+          "path": "/app/venv/lib/python3.14/site-packages/music_assistant/providers/ai_radio/air.png",
+          "provider": "builtin",
+          "remotely_accessible": false,
+          "proxy_id": "e77d003324c57429ffb6a1b90d859f43358d2ac2def8b1b542923aa61a7f37e6"
+        },
+        "index": 0,
+        "available": true,
+        "extra_attributes": {
+          "ai_radio_session_id": "dj0170e36d3fa5",
+          "ai_radio_station_id": "",
+          "ai_radio_host_id": "music_nerd",
+          "ai_radio_prompt": "The next track is Aurora Tone - Still Air. Share one specific, well-researched fact about the artist, the recording, or its influence. Keep it precise and avoid generic trivia.\n\nTarget length: around 500 characters. It may exceed by up to 15% if needed to finish naturally. Never stop mid-sentence.",
+          "ai_radio_max_chars": 500,
+          "ai_radio_web_search_mode": "allow",
+          "ai_radio_weather_required": false,
+          "ai_radio_queue_dj": true,
+          "ai_radio_gap_next_id": "198d9453b9114008b35c1160b6253d07",
+          "ai_radio_rendered_text": "That was a fine one. Coming up next, another."
+        }
+      }
+    ],
+    "partial": false
+  },
+  "notes": "Recorded 2026-11-12 against 2.10.9 over HTTP, which numbers no messages; one item of Kitchen's queue with the DJ on, against a stand-in engine. What the DJ says is a queue item of media_type sound_effect from the provider ai_radio, as on 2.11."
+}

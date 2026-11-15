@@ -1,0 +1,12 @@
+{
+  "request": {
+    "message_id": "2",
+    "command": "players/all"
+  },
+  "response": {
+    "message_id": "2",
+    "error_code": 20,
+    "details": "Authentication is required."
+  },
+  "notes": "Any authenticated command sent before 'auth' fails like this."
+}

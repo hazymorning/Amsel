@@ -1,0 +1,29 @@
+{
+  "request": null,
+  "response": {
+    "event": "media_item_played",
+    "object_id": "library://audiobook/2",
+    "data": {
+      "uri": "library://audiobook/2",
+      "media_type": "audiobook",
+      "name": "The Lantern Road",
+      "duration": 270,
+      "seconds_played": 102,
+      "fully_played": false,
+      "is_playing": false,
+      "mbid": null,
+      "artist": null,
+      "artists": [],
+      "artist_mbids": null,
+      "album": null,
+      "album_mbid": null,
+      "album_artist": null,
+      "album_artist_mbids": null,
+      "image_url": null,
+      "version": "",
+      "userid": "qpwVD3og4fhigj5VyI11p7cw3B3ypoHHpbZF2W-mDHc",
+      "player_id": "upbbaa68ee"
+    }
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

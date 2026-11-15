@@ -1,0 +1,15 @@
+{
+  "request": null,
+  "response": {
+    "event": "favorite_updated",
+    "object_id": "library://album/4",
+    "data": {
+      "uri": "library://album/4",
+      "media_type": "album",
+      "item_id": "4",
+      "favorite": true,
+      "user_id": "bqHpRp-xnrXCItYpYsMDM0BClt4UOiioSB9nLwbh5K4"
+    }
+  },
+  "notes": "Server-pushed event; 2 of this type arrived during the recording."
+}

@@ -1,0 +1,11 @@
+{
+  "request": {
+    "message_id": "11",
+    "command": "music/radios/count"
+  },
+  "response": {
+    "message_id": "11",
+    "result": 0,
+    "partial": false
+  }
+}

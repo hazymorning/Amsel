@@ -1,0 +1,154 @@
+{
+  "request": {
+    "message_id": "9",
+    "command": "music/artists/library_items",
+    "args": {
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "response": {
+    "message_id": "9",
+    "result": [
+      {
+        "item_id": "2",
+        "provider": "library",
+        "name": "Aurora Tone",
+        "version": "",
+        "sort_name": "aurora tone",
+        "uri": "library://artist/2",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "artist",
+        "provider_mappings": [
+          {
+            "item_id": "Aurora Tone",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--9AmKqjyh",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Aurora Tone",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Aurora Tone/artist.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "67b00d9706c829ec832277b380f854c965f09976abc0e571cd0765c9d3b9f48d"
+            }
+          ]
+        },
+        "favorite": false,
+        "artist_type": "singer",
+        "available": true
+      },
+      {
+        "item_id": "1",
+        "provider": "library",
+        "name": "Basso Continuo",
+        "version": "",
+        "sort_name": "basso continuo",
+        "uri": "library://artist/1",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "artist",
+        "provider_mappings": [
+          {
+            "item_id": "Basso Continuo",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--9AmKqjyh",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Basso Continuo",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Basso Continuo/artist.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "3c9030ceba93809b0a459ef23bae56238b473469896ec4763330938794785b30"
+            }
+          ]
+        },
+        "favorite": false,
+        "artist_type": "singer",
+        "available": true
+      },
+      {
+        "item_id": "3",
+        "provider": "library",
+        "name": "Cirrus",
+        "version": "",
+        "sort_name": "cirrus",
+        "uri": "library://artist/3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "artist",
+        "provider_mappings": [
+          {
+            "item_id": "Cirrus",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--9AmKqjyh",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Cirrus",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Cirrus/artist.jpg",
+              "provider": "filesystem_local--9AmKqjyh",
+              "remotely_accessible": false,
+              "proxy_id": "1718745120a34b53bc5d61e3caefefaa7e23c4f1e35257183fe8ad2e8aaa609a"
+            }
+          ]
+        },
+        "favorite": false,
+        "artist_type": "singer",
+        "available": true
+      }
+    ],
+    "partial": false
+  }
+}

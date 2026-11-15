@@ -1,0 +1,19 @@
+{
+  "request": {
+    "message_id": "21",
+    "command": "player_queues/play_media",
+    "args": {
+      "queue_id": "up809bcbfa",
+      "media": [
+        "library://radio/1"
+      ],
+      "option": "replace"
+    }
+  },
+  "response": {
+    "message_id": "21",
+    "result": null,
+    "partial": false
+  },
+  "notes": "A radio station plays through play_media like any other uri."
+}

@@ -1,0 +1,15 @@
+{
+  "request": {
+    "message_id": "1020",
+    "command": "music/recommendations/items",
+    "args": {
+      "provider": "recommendations",
+      "item_id": "latest_episodes"
+    }
+  },
+  "response": {
+    "message_id": "1020",
+    "result": []
+  },
+  "notes": "Recorded 2026-11-02 against a local-files library: two audiobooks (three chapter files; one m4b with embedded chapters) and one podcast of three episodes, played on a fake speaker."
+}

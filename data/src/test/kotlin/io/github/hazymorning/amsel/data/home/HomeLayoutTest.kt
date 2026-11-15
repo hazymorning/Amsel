@@ -1,0 +1,211 @@
+package io.github.hazymorning.amsel.data.home
+
+import io.github.hazymorning.amsel.data.home.SectionLayout.Big
+import io.github.hazymorning.amsel.data.home.SectionLayout.Grid
+import io.github.hazymorning.amsel.data.home.SectionLayout.List
+import io.github.hazymorning.amsel.data.home.SectionLayout.Row
+import io.github.hazymorning.amsel.data.home.SectionOption.ContinueListening
+import io.github.hazymorning.amsel.data.home.SectionOption.Everything
+import io.github.hazymorning.amsel.data.home.SectionOption.NewAlbums
+import io.github.hazymorning.amsel.data.home.SectionOption.Pinned
+import io.github.hazymorning.amsel.data.home.SectionOption.SmartPlaylists
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class HomeLayoutTest {
+    /** The defaults without Continue listening: the four sections every edit below works on. */
+    private val home = HomeLayout().remove("s0")
+
+    private fun HomeLayout.options() = sections.map { it.option }
+
+    private fun HomeLayout.ids() = sections.map { it.id }
+
+    @Test fun aNewPersonGetsContinueListeningAndPinnedThenThreeRows() {
+        val fresh = HomeLayout()
+        assertEquals(listOf(ContinueListening, Pinned, Everything, SmartPlaylists, NewAlbums), fresh.options())
+        assertEquals(listOf(Big, Grid, Row, Row, Row), fresh.sections.map { it.layout })
+        assertEquals(listOf("s0", "s1", "s2", "s3", "s4"), fresh.ids())
+        assertTrue(fresh.pinned.isEmpty())
+        assertSame(fresh, fresh.offerListening())
+    }
+
+    @Test fun aHomeMadeBeforeContinueListeningGetsItOnceAtTheTop() {
+        val stored = HomeLayout.decode(home.encode().replace("\"listeningOffered\":true", "\"listeningOffered\":false"))
+        assertFalse(stored.listeningOffered)
+        val offered = stored.offerListening()
+        assertEquals(listOf(ContinueListening, Pinned, Everything, SmartPlaylists, NewAlbums), offered.options())
+        assertEquals(Big, offered.sections.first().layout)
+        assertTrue(offered.listeningOffered)
+        // Removed, it stays away.
+        val removed = offered.remove(offered.sections.first().id)
+        assertSame(removed, removed.offerListening())
+        // An old stored layout never had the flag: it reads as not offered yet.
+        assertFalse(HomeLayout.decode("""{"sections": [], "pinned": []}""").listeningOffered)
+    }
+
+    @Test fun continueListeningIsOfferedToAHomeOfAnyLength() {
+        val long = generateSequence(home) { it.add() }.elementAt(8).copy(listeningOffered = false)
+        val offered = long.offerListening()
+        assertEquals(ContinueListening, offered.sections.first().option)
+        assertEquals(long.sections, offered.sections.drop(1))
+        assertTrue(offered.listeningOffered)
+    }
+
+    @Test fun everyOptionHasItsSource() {
+        assertEquals(SectionSource.RecentlyPlayed, ContinueListening.source)
+        assertEquals(SectionSource.Playlists, SmartPlaylists.source)
+        assertEquals(SectionSource.RecentlyPlayed, Everything.source)
+    }
+
+    @Test fun addingOffersSomethingNotOnHomeYetAsARow() {
+        val added = home.add()
+        val section = added.sections.last()
+        assertEquals(SectionOption.YourPlaylists, section.option)
+        assertEquals(Row, section.layout)
+        assertEquals("s5", section.id)
+        assertEquals(SectionOption.FavoriteAlbums, added.add().sections.last().option)
+    }
+
+    @Test fun homeTakesAsManySectionsAsThePersonAdds() {
+        val long = generateSequence(home) { it.add() }.elementAt(12)
+        assertEquals(home.sections.size + 12, long.sections.size)
+        assertEquals(long.ids().distinct(), long.ids())
+        // Every suggestion is on Home by then: the first of them comes again.
+        assertEquals(SectionOption.Everything, long.sections.last().option)
+    }
+
+    @Test fun newIdsNeverRepeatOneInUse() {
+        val gap = home.remove("s2").add()
+        assertEquals(listOf("s1", "s3", "s4", "s2"), gap.ids())
+    }
+
+    @Test fun removeTakesOnlyThatSection() {
+        assertEquals(listOf("s1", "s3", "s4"), home.remove("s2").ids())
+        assertSame(home.pinned, home.remove("s1").pinned)
+        assertEquals(home, home.remove("nope"))
+    }
+
+    @Test fun moveReordersAndClampsToTheEnds() {
+        assertEquals(listOf("s1", "s3", "s4", "s2"), home.move("s2", 3).ids())
+        assertEquals(listOf("s4", "s1", "s2", "s3"), home.move("s4", -5).ids())
+        assertEquals(listOf("s1", "s3", "s4", "s2"), home.move("s2", 99).ids())
+        assertEquals(home, home.move("nope", 0))
+    }
+
+    @Test fun moveUpAndDownStepOnePlaceAndStopAtTheEnds() {
+        assertEquals(listOf("s1", "s3", "s2", "s4"), home.moveDown("s2").ids())
+        assertEquals(listOf("s2", "s1", "s3", "s4"), home.moveUp("s2").ids())
+        assertEquals(home, home.moveUp("s1"))
+        assertEquals(home, home.moveDown("s4"))
+    }
+
+    @Test fun choosingAnOptionKeepsTheLayout() {
+        val changed = home.setOption("s3", SectionOption.TopArtists).sections[2]
+        assertEquals(SectionOption.TopArtists, changed.option)
+        assertEquals(Row, changed.layout)
+    }
+
+    @Test fun choosingALayoutKeepsTheOption() {
+        val changed = home.setLayout("s2", Big).sections[1]
+        assertEquals(Big, changed.layout)
+        assertEquals(Everything, changed.option)
+    }
+
+    @Test fun pinsGoFirstAndOnlyOnce() {
+        val pinned = home.pin("library://album/1").pin("library://playlist/2").pin("library://album/1")
+        assertEquals(listOf("library://album/1", "library://playlist/2"), pinned.pinned)
+        assertTrue(pinned.isPinned("library://playlist/2"))
+        assertEquals(home.sections, pinned.sections)
+    }
+
+    @Test fun arrangingPinsKeepsThoseHomeCouldNotShowInPlace() {
+        val pins = home.pin("d").pin("c").pin("b").pin("a")
+        // "b" did not load, so Home showed a, c, d; the person moved d to the top.
+        val arranged = pins.arrangePins(listOf("d", "a", "c", "gone"))
+        assertEquals(listOf("d", "b", "a", "c"), arranged.pinned)
+        assertEquals(pins.sections, arranged.sections)
+    }
+
+    @Test fun unpinForgetsThePinButKeepsTheSection() {
+        val unpinned = home.pin("library://album/1").unpin("library://album/1")
+        assertTrue(unpinned.pinned.isEmpty())
+        assertEquals(Pinned, unpinned.sections.first().option)
+    }
+
+    @Test fun theFirstPinBringsBackAPinnedGridAtTheTop() {
+        val withoutPins = home.remove("s1")
+        val pinned = withoutPins.pin("library://album/1")
+        assertEquals(listOf(Pinned, Everything, SmartPlaylists, NewAlbums), pinned.options())
+        assertEquals(Grid, pinned.sections.first().layout)
+        assertEquals("s1", pinned.sections.first().id)
+    }
+
+    @Test fun aNewPinnedSectionTakesNoSectionAway() {
+        val long = home.remove("s1").add().add().add()
+        val pinned = long.pin("library://album/1")
+        assertEquals(Pinned, pinned.sections.first().option)
+        assertEquals(long.sections, pinned.sections.drop(1))
+    }
+
+    @Test fun aGridShowsWholeRowsButEveryPin() {
+        assertEquals(listOf(1, 2, 3, 4, 4, 6, 6, 8, 8), (1..9).map { Grid.shown(it, Everything) })
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8, 8), (1..9).map { Grid.shown(it, Pinned) })
+        assertEquals(12, Row.shown(13, Everything))
+        assertEquals(8, Big.shown(13, Everything))
+        assertEquals(5, List.shown(13, Pinned))
+        assertEquals(3, List.shown(3, Everything))
+        assertEquals(0, Row.shown(0, Everything))
+    }
+
+    @Test fun storedLayoutsReadBackTheSame() {
+        val edited = home.add().setLayout("s3", List).move("s4", 0).pin("library://radio/1")
+        assertEquals(edited, HomeLayout.decode(edited.encode()))
+    }
+
+    @Test fun nothingStoredMeansTheDefaults() {
+        assertEquals(HomeLayout(), HomeLayout.decode(null))
+        assertEquals(HomeLayout(), HomeLayout.decode(""))
+        assertEquals(HomeLayout(), HomeLayout.decode("not json"))
+        assertEquals(HomeLayout(), HomeLayout.decode("[1, 2]"))
+        assertEquals(HomeLayout(), HomeLayout.decode("""{"pinned": []}"""))
+    }
+
+    @Test fun anEmptiedHomeStaysEmpty() {
+        val empty = HomeLayout.decode("""{"sections": [], "pinned": []}""")
+        assertTrue(empty.sections.isEmpty())
+    }
+
+    @Test fun anUnknownSectionIsDroppedNotTheWholeHome() {
+        val json = """
+            {"sections": [
+                {"id": "s1", "source": "Albums", "option": "NewAlbums", "layout": "Grid"},
+                {"id": "s2", "source": "Genres", "option": "NewGenres", "layout": "Row"},
+                {"id": "s3", "source": "Radio", "option": "AllStations", "layout": "Carousel"}
+            ], "pinned": ["library://album/1", "library://album/1"]}
+        """.trimIndent()
+        val layout = HomeLayout.decode(json)
+        assertEquals(listOf("s1"), layout.ids())
+        assertEquals(listOf("library://album/1"), layout.pinned)
+    }
+
+    @Test fun aLayoutStoredWithItsSourcesStillReads() {
+        val json = """{"sections": [{"id": "s1", "source": "Radio", "option": "TopArtists", "layout": "List"}]}"""
+        assertEquals(SectionOption.TopArtists, HomeLayout.decode(json).sections.single().option)
+    }
+
+    @Test fun aFavoriteSectionStoredUnderItsFirstNameStillReads() {
+        val json = """{"sections": [{"id": "s1", "option": "FavouriteAlbums", "layout": "Row"}]}"""
+        assertEquals(SectionOption.FavoriteAlbums, HomeLayout.decode(json).sections.single().option)
+    }
+
+    @Test fun aLongStoredHomeReadsWholeWithEachIdOnce() {
+        val many = (1..10).joinToString(",") {
+            """{"id": "s${minOf(it, 9)}", "option": "NewAlbums", "source": "Albums", "layout": "Row"}"""
+        }
+        val layout = HomeLayout.decode("""{"sections": [$many]}""")
+        assertEquals((1..9).map { "s$it" }, layout.ids())
+    }
+}

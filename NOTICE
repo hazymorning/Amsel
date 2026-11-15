@@ -1,0 +1,27 @@
+Amsel
+Copyright 2026 hazymorning. Free software under the GNU General Public License, version 3 (see LICENSE).
+
+It includes software and fonts by others, under their own licences:
+
+- sendspin/: the Sendspin client module from the Music Assistant mobile app
+  (https://github.com/music-assistant/mobile-app), Apache License 2.0, vendored unchanged at
+  the commit recorded in sendspin/VENDORED.md.
+- app/src/main/res/font/: Commissioner (https://github.com/kosbarts/Commissioner), SIL Open Font
+  License 1.1: instanced and subset by scripts/design/build-fonts.py; the licence ships as
+  app/src/main/assets/licences/OFL-Commissioner.txt.
+- app/src/main/res/drawable/ic_*.xml, the ones scripts/icons/icons.txt does not mark "custom":
+  Phosphor icons (https://github.com/phosphor-icons/core), MIT License; the licence ships as
+  app/src/main/assets/licences/MIT-Phosphor.txt. The custom glyphs and the launcher icon
+  (ic_launcher_*) are Amsel's own.
+- Concentus (https://github.com/lostromb/concentus), the Opus decoder This phone plays through,
+  BSD 3-Clause License; the licence ships as app/src/main/assets/licences/BSD-Concentus.txt.
+- SLF4J (https://www.slf4j.org), which the Sendspin module's network library uses, MIT License; the
+  licence ships as app/src/main/assets/licences/MIT-SLF4J.txt.
+- Bouncy Castle (https://www.bouncycastle.org), whose X25519 the Sendspin module pairs with, MIT
+  License; the licence ships as app/src/main/assets/licences/MIT-BouncyCastle.txt.
+- AndroidX, Media3, OkHttp, Coil, Ktor and the Kotlin libraries, Apache License 2.0; the licence
+  ships as app/src/main/assets/licences/Apache-2.0.txt.
+- Protocol Buffers (https://github.com/protocolbuffers/protobuf), inside AndroidX DataStore, BSD
+  3-Clause License; the licence ships as app/src/main/assets/licences/BSD-Protobuf.txt.
+- docs/design/reference/lissen/: screenshots of Lissen (https://github.com/GrakovNe/lissen-android),
+  MIT License, used only as design references and not shipped in the app.

@@ -1,0 +1,166 @@
+package io.github.hazymorning.amsel.ui
+
+import android.content.Context
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.isSelectable
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.test.core.app.ApplicationProvider
+import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.api.LibrarySort
+import io.github.hazymorning.amsel.app.Offer
+import io.github.hazymorning.amsel.playback.R as PlaybackR
+import io.github.hazymorning.amsel.sample.LibrarySampleData
+import io.github.hazymorning.amsel.sample.PlayerSample
+import io.github.hazymorning.amsel.sample.SampleData
+import io.github.hazymorning.amsel.testing.ScreenshotTest
+import io.github.hazymorning.amsel.testing.ShotVariant
+import io.github.hazymorning.amsel.ui.model.ArtRef
+import io.github.hazymorning.amsel.ui.model.MediaKind
+import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
+import io.github.hazymorning.amsel.ui.screens.library.LibraryScreen
+import io.github.hazymorning.amsel.ui.screens.library.LibraryUiState
+import io.github.hazymorning.amsel.ui.screens.player.NowPlayingScreen
+import org.junit.Test
+
+class ShellShots : ScreenshotTest() {
+    /** The dock, its card of ink and the bar under it, over Library at its top. */
+    @Test fun playing() = snap("shell_playing", ShotVariant.entries, before = { openLibrary() }) { Shell() }
+
+    /** Library's artists scrolled under the slim bar and the dock, which dissolve them into their material. */
+    @Test fun scrolled() = snap(
+        "shell_scrolled",
+        listOf(ShotVariant.Light, ShotVariant.Dark),
+        before = {
+            openLibrary()
+            onRoot().performTouchInput {
+                swipeUp(startY = height * 0.75f, endY = height * 0.45f, durationMillis = 1_000)
+            }
+        },
+    ) { Shell(rows = true) }
+
+    /** Nothing plays yet: the card says so, with the speaker the first song will play on. */
+    @Test fun idle() = snap("shell_idle", listOf(ShotVariant.Light, ShotVariant.Dark), before = { openLibrary() }) {
+        Shell(playing = false)
+    }
+
+    /** Now Playing on its way up: the dock's cover grows into the artwork while the rest fades in. */
+    @Test fun opening() = snap("shell_opening", before = { openLibrary() }) {
+        val layer = remember { PlayerLayerState(open = true) }
+        LaunchedEffect(Unit) {
+            withFrameNanos {}
+            withFrameNanos {}
+            layer.dragBy(layer.heightPx * 0.45f)
+        }
+        Shell(layer = layer)
+    }
+
+    /**
+     * A tap that did not reach the speaker says so over the dock, in German, where the words are
+     * longest: Retry is one short word beside the sentence, and no word of the sentence is broken.
+     */
+    @Test fun messageInGerman() = snap("shell_message_german", qualifiers = "de", before = { openLibrary() }) {
+        val messages = remember { SnackbarHostState() }
+        val sentence = stringResource(PlaybackR.string.error_speaker_busy, PlayerSample.nowPlaying.speaker.name)
+        val retry = stringResource(R.string.retry)
+        LaunchedEffect(messages) { messages.showSnackbar(sentence, retry, duration = SnackbarDuration.Indefinite) }
+        Shell(messages = messages)
+    }
+
+    /** A station tapped on Home, offered over the dock: its cover and name, the speaker in use, one big button. */
+    @Test fun offer() = snap("shell_offer", ShotVariant.entries, before = { openLibrary() }) { Shell(offer = station) }
+
+    /** The same in German, where the button's word is longest. */
+    @Test fun offerInGerman() = snap("shell_offer_german", qualifiers = "de", before = { openLibrary() }) {
+        Shell(offer = station)
+    }
+
+    /** A hint about a speaker, in German: its glyph in place of a cover, a short line, one button. */
+    @Test fun hintInGerman() = snap("shell_hint_german", qualifiers = "de", before = { openLibrary() }) {
+        Shell(
+            offer = Offer(
+                about = "silent:kitchen",
+                title = "Küche",
+                glyph = R.drawable.ic_speaker,
+                line = R.string.hint_silent,
+                button = R.string.hint_louder,
+                hint = "silent",
+                take = {},
+            ),
+        )
+    }
+
+    private val station = Offer(
+        about = "library://radio/13",
+        title = "Blue Note Radio",
+        button = R.string.play,
+        art = ArtRef("sample:radio/13"),
+        kind = MediaKind.Radio,
+        take = {},
+    )
+
+    private fun SemanticsNodeInteractionsProvider.openLibrary() {
+        val library = ApplicationProvider.getApplicationContext<Context>().getString(PlaybackR.string.library)
+        onNode(isSelectable() and hasContentDescription(library)).performClick()
+    }
+}
+
+@Composable
+private fun Shell(
+    layer: PlayerLayerState = remember { PlayerLayerState(open = false) },
+    rows: Boolean = false,
+    playing: Boolean = true,
+    messages: SnackbarHostState = remember { SnackbarHostState() },
+    offer: Offer? = null,
+) {
+    AppShell(
+        nowPlaying = PlayerSample.nowPlaying.takeIf { playing },
+        speaker = PlayerSample.nowPlaying.speaker.copy(isPlaying = playing),
+        onSpeaker = {},
+        snackbarHostState = messages,
+        layer = layer,
+        offer = offer,
+        slots = ShellSlots(
+            screen = { _, _ -> Library(rows, playing) },
+            nowPlaying = { onClose, _ ->
+                NowPlayingScreen(
+                    PlayerSample.nowPlaying,
+                    onControl = {},
+                    onClose = onClose,
+                    onMore = {},
+                    onArtist = {},
+                    onSpeaker = {},
+                    onUpNext = {},
+                )
+            },
+            sheets = {},
+        ),
+    )
+}
+
+/** Library as it opens: albums, Blue Hour among them playing; or the artists, long enough to scroll. */
+@Composable
+private fun Library(rows: Boolean, playing: Boolean) {
+    val state = if (rows) {
+        LibraryUiState(LibraryKind.Artists, LibrarySort.AToZ, LibrarySampleData.artistsAToZ)
+    } else {
+        val blueHour = SampleData.albums.first().key
+        LibraryUiState(
+            LibraryKind.Albums,
+            LibrarySort.RecentlyAdded,
+            SampleData.albums,
+            playing = if (playing) setOf(blueHour) else emptySet(),
+        )
+    }
+    LibraryScreen(state, {}, {}, {}, {}, {}, {})
+}

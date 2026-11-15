@@ -1,0 +1,256 @@
+{
+  "request": {
+    "message_id": "10",
+    "command": "music/albums/library_items",
+    "args": {
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "response": {
+    "message_id": "10",
+    "result": [
+      {
+        "item_id": "4",
+        "provider": "library",
+        "name": "First Light",
+        "version": "",
+        "sort_name": "first light",
+        "uri": "library://album/4",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "album",
+        "provider_mappings": [
+          {
+            "item_id": "Aurora Tone/First Light (2021)",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Aurora Tone/First Light (2021)",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Aurora Tone/First Light (2021)/folder.jpg",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "05f580d0ca609f0a830f0ca10471dd21c2f908c209936f2d741e5a9e1c6f4e2e"
+            }
+          ]
+        },
+        "year": 2021,
+        "artists": [
+          {
+            "item_id": "3",
+            "provider": "library",
+            "name": "Aurora Tone",
+            "version": "",
+            "sort_name": "aurora tone",
+            "uri": "library://artist/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "album_type": "unknown",
+        "available": true
+      },
+      {
+        "item_id": "1",
+        "provider": "library",
+        "name": "High Clouds",
+        "version": "",
+        "sort_name": "high clouds",
+        "uri": "library://album/1",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "album",
+        "provider_mappings": [
+          {
+            "item_id": "Cirrus/High Clouds (2024)",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Cirrus/High Clouds (2024)",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Cirrus/High Clouds (2024)/01 - Altitude.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "9ada74b74fdf046634375c4d119e71527c4097607f770e254db8be69d4b79cfe"
+            }
+          ]
+        },
+        "year": 2024,
+        "artists": [
+          {
+            "item_id": "1",
+            "provider": "library",
+            "name": "Cirrus",
+            "version": "",
+            "sort_name": "cirrus",
+            "uri": "library://artist/1",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "album_type": "unknown",
+        "available": true
+      },
+      {
+        "item_id": "2",
+        "provider": "library",
+        "name": "Low End",
+        "version": "",
+        "sort_name": "low end",
+        "uri": "library://album/2",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "album",
+        "provider_mappings": [
+          {
+            "item_id": "Basso Continuo/Low End (2022)",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Basso Continuo/Low End (2022)",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Basso Continuo/Low End (2022)/folder.jpg",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "d44d5a377d381800ccef0e20239b199e1822085f0fbccf1f7fd95ed107fbfb46"
+            }
+          ]
+        },
+        "year": 2022,
+        "artists": [
+          {
+            "item_id": "2",
+            "provider": "library",
+            "name": "Basso Continuo",
+            "version": "",
+            "sort_name": "basso continuo",
+            "uri": "library://artist/2",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "album_type": "unknown",
+        "available": true
+      },
+      {
+        "item_id": "3",
+        "provider": "library",
+        "name": "Second Wind",
+        "version": "",
+        "sort_name": "second wind",
+        "uri": "library://album/3",
+        "external_ids": [],
+        "is_playable": true,
+        "media_type": "album",
+        "provider_mappings": [
+          {
+            "item_id": "Aurora Tone/Second Wind (2023)",
+            "provider_domain": "filesystem_local",
+            "provider_instance": "filesystem_local--Cu6eBeYR",
+            "available": true,
+            "in_library": true,
+            "is_unique": null,
+            "audio_format": {
+              "content_type": "?",
+              "codec_type": "?",
+              "sample_rate": 44100,
+              "bit_depth": 16,
+              "channels": 2,
+              "output_format_str": "?",
+              "bit_rate": 0
+            },
+            "url": "Aurora Tone/Second Wind (2023)",
+            "details": null
+          }
+        ],
+        "metadata": {
+          "images": [
+            {
+              "type": "thumb",
+              "path": "Aurora Tone/Second Wind (2023)/01 - Tailwind.mp3",
+              "provider": "filesystem_local--Cu6eBeYR",
+              "remotely_accessible": false,
+              "proxy_id": "c76429f60da2c587c072e0448d0cae9ee94f69fc99eb7303b80c6cf5a661cd4d"
+            }
+          ]
+        },
+        "year": 2023,
+        "artists": [
+          {
+            "item_id": "3",
+            "provider": "library",
+            "name": "Aurora Tone",
+            "version": "",
+            "sort_name": "aurora tone",
+            "uri": "library://artist/3",
+            "external_ids": [],
+            "is_playable": true,
+            "media_type": "artist",
+            "available": true
+          }
+        ],
+        "album_type": "unknown",
+        "available": true
+      }
+    ],
+    "partial": false
+  }
+}

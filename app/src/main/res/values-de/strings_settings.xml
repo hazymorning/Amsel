@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Einstellungen</string>
+    <string name="settings_account">Konto</string>
+    <string name="settings_signed_in_as">Angemeldet als %1$s</string>
+    <string name="settings_signed_in">Angemeldet</string>
+    <string name="settings_sign_out">Abmelden</string>
+    <string name="settings_web_ui_detail">Lautsprecher, Musikdienste und mehr</string>
+    <string name="settings_theme">Design</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Hell</string>
+    <string name="settings_theme_dark">Dunkel</string>
+    <string name="settings_app">App</string>
+    <string name="settings_language">Sprache</string>
+    <string name="settings_language_current">Deutsch</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_rights">© 2026 hazymorning</string>
+    <string name="settings_save_failed">Die Einstellung wurde nicht gespeichert</string>
+    <string name="settings_sign_out_failed">Abmelden ist fehlgeschlagen</string>
+    <string name="settings_sleep">Sleep-Timer</string>
+    <string name="settings_sleep_fade">Ausklingen</string>
+    <string name="settings_sleep_seconds">%1$d\u00A0s</string>
+    <string name="settings_sleep_shake">Schütteln startet neu</string>
+    <string name="settings_sleep_shake_detail">Ein Schütteln stellt einen laufenden Timer wieder auf die volle Dauer</string>
+    <string name="settings_sleep_on_play">Mit der Wiedergabe starten</string>
+    <string name="settings_sleep_on_play_detail">Stellt den Timer bei jedem Start der Wiedergabe</string>
+    <string name="settings_follow">Der Musik folgen</string>
+    <string name="settings_follow_detail">Beim Öffnen den Lautsprecher wählen, der spielt, sonst dieses Handy</string>
+    <string name="settings_updates">Updates</string>
+    <string name="updates_current">Das ist Amsel %1$s.</string>
+    <string name="updates_looking">Neuere Version wird gesucht…</string>
+    <string name="updates_newest">Amsel %1$s ist die neueste Version.</string>
+    <string name="updates_available">Amsel %1$s ist da. Der Browser lädt das Update herunter. Zum Installieren den Download öffnen.</string>
+    <string name="updates_failed">GitHub ist nicht erreichbar. Bitte gleich noch einmal versuchen.</string>
+    <string name="updates_look">Nach Updates suchen</string>
+    <string name="updates_download">Update herunterladen</string>
+    <string name="updates_at_start">Beim Start suchen</string>
+    <string name="updates_at_start_detail">Fragt GitHub einmal bei jedem Start, nie im Hintergrund</string>
+</resources>

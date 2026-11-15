@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The shortcut's glyph: ic_speaker's drawing, 44 of the icon's 108, in the app icon's ink. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.171875"
+        android:scaleY="0.171875"
+        android:translateX="32"
+        android:translateY="32">
+        <path
+            android:strokeColor="#FF131211"
+            android:strokeWidth="16"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M64,88A64,64,0,0,1,192,88V168A64,64,0,0,1,64,168Z" />
+        <path
+            android:strokeColor="#FF131211"
+            android:strokeWidth="16"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M98,160A30,30,0,1,0,158,160A30,30,0,1,0,98,160Z" />
+        <path
+            android:fillColor="#FF131211"
+            android:pathData="M117,88A11,11,0,1,0,139,88A11,11,0,1,0,117,88Z" />
+    </group>
+</vector>

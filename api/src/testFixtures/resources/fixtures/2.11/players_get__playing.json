@@ -1,0 +1,149 @@
+{
+  "request": {
+    "message_id": "61",
+    "command": "players/get",
+    "args": {
+      "player_id": "upe2a1d83a"
+    }
+  },
+  "response": {
+    "message_id": "61",
+    "result": {
+      "player_id": "upe2a1d83a",
+      "provider": "universal_player",
+      "type": "player",
+      "name": "Kitchen",
+      "available": true,
+      "device_info": {
+        "model": "Amsel fake player",
+        "manufacturer": "Amsel",
+        "software_version": null,
+        "model_id": null,
+        "manufacturer_id": null,
+        "identifiers": {},
+        "mac_address": null,
+        "ip_address": null
+      },
+      "supported_features": [
+        "set_members",
+        "volume_set",
+        "volume_mute",
+        "multi_device_dsp"
+      ],
+      "playback_state": "playing",
+      "elapsed_time": 0.0,
+      "elapsed_time_last_updated": 1793560701.8631704,
+      "powered": true,
+      "volume_level": 40,
+      "volume_muted": false,
+      "group_members": [],
+      "static_group_members": [],
+      "can_group_with": [
+        "upac3a0401"
+      ],
+      "synced_to": null,
+      "active_sound_mode": null,
+      "sound_mode_list": [],
+      "options": [],
+      "active_source": "upe2a1d83a",
+      "source_list": [
+        {
+          "id": "upe2a1d83a",
+          "name": "Music Assistant Queue",
+          "passive": false,
+          "can_play_pause": true,
+          "can_seek": true,
+          "can_next_previous": true,
+          "can_shuffle": false,
+          "can_repeat": false,
+          "shuffle_enabled": null,
+          "repeat_mode": null,
+          "account_id": null
+        }
+      ],
+      "active_group": null,
+      "current_media": {
+        "uri": "library://track/10",
+        "media_type": "track",
+        "title": "Dawn Chorus",
+        "artist": "Aurora Tone",
+        "album": "First Light",
+        "album_artist": "Aurora Tone",
+        "image_url": "http://172.17.0.4:8095/imageproxy/05f580d0ca609f0a830f0ca10471dd21c2f908c209936f2d741e5a9e1c6f4e2e?size=512&fmt=jpg",
+        "palette": {
+          "background_dark": [
+            11,
+            6,
+            5
+          ],
+          "background_light": [
+            254,
+            248,
+            247
+          ],
+          "primary": [
+            228,
+            124,
+            92
+          ],
+          "accent": null,
+          "on_dark": [
+            232,
+            124,
+            92
+          ],
+          "on_light": [
+            171,
+            93,
+            69
+          ]
+        },
+        "duration": 12,
+        "stream_duration": null,
+        "source_id": "upe2a1d83a",
+        "queue_item_id": "754cfdec80694072acaee1a3ae105e24",
+        "custom_data": null,
+        "elapsed_time": 0,
+        "elapsed_time_last_updated": 1793560701.5698864
+      },
+      "enabled": true,
+      "hide_in_ui": false,
+      "private": false,
+      "expose_to_ha": true,
+      "icon": "speaker",
+      "group_volume": 40,
+      "group_volume_muted": false,
+      "extra_attributes": {},
+      "power_control": "none",
+      "volume_control": "amsel-fake-kitchen",
+      "mute_control": "amsel-fake-kitchen",
+      "output_protocols": [
+        {
+          "output_protocol_id": "amsel-fake-kitchen",
+          "name": "Sendspin",
+          "protocol_domain": "sendspin",
+          "is_native": false,
+          "priority": 40,
+          "available": true,
+          "derived_from": null
+        }
+      ],
+      "active_output_protocol": "amsel-fake-kitchen",
+      "needs_setup": false,
+      "setup_reason": null,
+      "has_setup_flow": false,
+      "sleep_timer_expires_at": null,
+      "active_source_audio": null,
+      "display_name": "Kitchen",
+      "state": "playing",
+      "group_childs": [],
+      "extra_data": {},
+      "hide_player_in_ui": [
+        "when_unavailable",
+        "when_synced",
+        "when_group_active"
+      ]
+    },
+    "partial": false
+  }
+}
