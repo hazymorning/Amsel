@@ -97,13 +97,20 @@ internal fun deviceName(app: Context): String =
  * Which server Sendspin connects to: the control socket's while the phone is [wanted].
  * While the control socket reconnects (Connecting, Offline) it keeps the [last] one, so a
  * Wi-Fi blip, a missed ping or a token rotation does not stop the phone's audio; the
- * module reconnects by itself. Only a closed (Idle), signed-out or unsupported session
- * stops it.
+ * module reconnects by itself. That holds only while its retries can reach no one but the
+ * server ([retriesSafe]): its first frame is the token, which over plain http on another
+ * network could go to whatever answers at a home address, so there it waits for the control
+ * socket to connect. A closed (Idle), signed-out or unsupported session stops it.
  */
-internal fun sendspinServer(wanted: Boolean, connection: ConnectionState, last: ServerInfo?): ServerInfo? = when {
+internal fun sendspinServer(
+    wanted: Boolean,
+    connection: ConnectionState,
+    last: ServerInfo?,
+    retriesSafe: Boolean,
+): ServerInfo? = when {
     !wanted -> null
     connection is ConnectionState.Connected -> connection.server
-    connection is ConnectionState.Connecting || connection is ConnectionState.Offline -> last
+    connection is ConnectionState.Connecting || connection is ConnectionState.Offline -> last.takeIf { retriesSafe }
     else -> null
 }
 

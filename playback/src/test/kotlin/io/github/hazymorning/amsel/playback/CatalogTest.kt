@@ -53,7 +53,7 @@ class CatalogTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val client = MaClient(OkHttpClient(), scope)
         try {
-            client.start(fake.address, "token")
+            client.start(fake.address, "token", fake.serverId)
             withTimeout(5_000) {
                 client.state.filterIsInstance<ConnectionState.Connected>().first()
                 block(DataCatalog(MaApi(client), wake = {}) { it == MediaType.Audiobook })

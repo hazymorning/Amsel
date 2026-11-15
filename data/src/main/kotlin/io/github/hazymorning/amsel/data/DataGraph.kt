@@ -70,12 +70,14 @@ class DataGraph(
     http: OkHttpClient,
     private val scope: CoroutineScope,
     vault: TokenVault,
+    /** The networks the phone is on; the app's, as its http client follows [PhoneNetwork.plainHttpAllowed] too. */
+    network: PhoneNetwork,
     /** Starts the service that runs [Downloads.work]; the app's, as the service is not this module's. */
     startDownloads: () -> Unit = {},
 ) {
     private val app = context.applicationContext
     val prefs = AppPrefs(app, scope)
-    val session = Session(prefs, vault, http, scope, deviceName = "Amsel (${Build.MODEL})")
+    val session = Session(prefs, vault, http, scope, deviceName = "Amsel (${Build.MODEL})", network = network)
     val discovery = Discovery(app, http)
     private val db by lazy {
         Room.databaseBuilder(app, LibraryDb::class.java, "library.db").fallbackToDestructiveMigration(true).build()
@@ -87,7 +89,7 @@ class DataGraph(
     val extras = Extras(session.api)
 
     /** The Audiobookshelf account downloads come from. */
-    val abs = AbsClient(http, PrefsAbsAccountStore(prefs, vault, scope))
+    val abs = AbsClient(http, PrefsAbsAccountStore(prefs, vault, scope), reachesHome = session::reachesHome)
 
     val downloads by lazy {
         Downloads(

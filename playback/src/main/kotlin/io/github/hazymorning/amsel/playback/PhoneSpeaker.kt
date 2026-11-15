@@ -45,9 +45,10 @@ import okhttp3.OkHttpClient
  * "This phone" as a Music Assistant speaker: the vendored Sendspin player plays the audio the
  * server streams. It connects while the phone is the selected speaker, while its music plays or
  * waits paused (choosing another speaker leaves it playing), or while work still needs it on the
- * server ([keepConnectedDuring]), and keeps its server while the control socket reconnects
- * ([sendspinServer]); otherwise nothing touches the network. Transport never goes to the module:
- * the control plane is the Music Assistant API, as for any speaker.
+ * server ([keepConnectedDuring]), and keeps its server while the control socket reconnects, where
+ * its own retries reach no one else ([sendspinServer]); otherwise nothing touches the network.
+ * Transport never goes to the module: the control plane is the Music Assistant API, as for any
+ * speaker.
  *
  * Audio focus, becoming-noisy and call handling live in the module's AudioTrackSink; this class
  * adds the wake and Wi-Fi locks while audio plays, tells the server of the pauses and plays the
@@ -98,6 +99,11 @@ class PhoneSpeaker(
     /** Whether its audio plays or is about to, whichever speaker is selected. */
     val audible: StateFlow<Boolean> = _audible.asStateFlow()
 
+    /** Over TLS the token reaches only the server; over plain http, only on the network checked last. */
+    private val retriesSafe = combine(data.session.address, data.session.checkedHere) { address, here ->
+        here || address?.baseUrl?.isHttps == true
+    }
+
     /** The server drops the phone's queue when it leaves, so it stays while there is music to go on with. */
     private val hasMusic = combine(_playerId, data.speakers.players, data.speakers.gone) { id, players, gone ->
         id !in gone && players[id]?.hasMusic == true
@@ -124,9 +130,17 @@ class PhoneSpeaker(
             }
         }
         scope.launch {
-            combine(wanted, keptBy, hasMusic, data.session.client.state) { want, kept, music, connection ->
-                (want || kept > 0 || music) to connection
-            }.runningFold(null as ServerInfo?) { last, (want, connection) -> sendspinServer(want, connection, last) }
+            combine(
+                wanted,
+                keptBy,
+                hasMusic,
+                data.session.client.state,
+                retriesSafe,
+            ) { want, kept, music, connection, safe ->
+                Triple(want || kept > 0 || music, connection, safe)
+            }.runningFold(null as ServerInfo?) { last, (want, connection, safe) ->
+                sendspinServer(want, connection, last, safe)
+            }
                 // The same address and token make an equal config, so a reconnect of the control
                 // socket leaves Sendspin's own connection alone.
                 .map { server -> server?.let(::configFor) }

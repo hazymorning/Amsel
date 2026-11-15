@@ -12,6 +12,7 @@ import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
 import io.github.hazymorning.amsel.api.SignInResult
 import io.github.hazymorning.amsel.api.TokenClaims
+import io.github.hazymorning.amsel.api.orNullOnFailure
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.ProviderException
@@ -70,9 +71,11 @@ class Session(
     http: OkHttpClient,
     private val scope: CoroutineScope,
     private val deviceName: String,
+    network: PhoneNetwork,
     private val idleCloseMs: Long = IDLE_CLOSE_MS,
 ) {
-    val client = MaClient(http, scope)
+    private val checked = CheckedNetwork(network, prefs, scope)
+    val client = MaClient(http, scope, sameNetwork = checked::isHere)
     val api = MaApi(client)
 
     /** Sign-in on short-lived sockets: Setup probes a server and asks for Home Assistant's page here. */
@@ -107,6 +110,13 @@ class Session(
     /** Who is signed in, as the server last said: kept while offline, forgotten on Sign out. */
     val user: StateFlow<MaUser?> = _user.asStateFlow()
 
+    /**
+     * The phone is on the network where the server last answered with its own id: there a home
+     * address leads to the household's machines, so This phone's Sendspin may ride out a dropped
+     * control socket.
+     */
+    val checkedHere: StateFlow<Boolean> get() = checked.here
+
     /** Artwork URLs on the connected address, or null before there is one. */
     val images: Images? get() = stored.value?.address?.let { Images(it) }
 
@@ -121,7 +131,8 @@ class Session(
 
                 ConnectionState.Offline -> SessionState.Offline(session.name)
 
-                // The token was refused: it is forgotten (below), and Setup signs in again.
+                // The token was refused, or the server set up anew: it is forgotten (below), and
+                // Setup signs in again.
                 ConnectionState.SignedOut -> SessionState.NeedsSetup
 
                 ConnectionState.Unsupported -> SessionState.Unsupported
@@ -137,6 +148,7 @@ class Session(
             client.state.filterIsInstance<ConnectionState.Connected>().collect { connected ->
                 _user.value = connected.user
                 val session = stored.value ?: return@collect
+                checked.passed()
                 if (connected.server.name != session.name) {
                     stored.value = session.copy(name = connected.server.name)
                     try {
@@ -175,7 +187,8 @@ class Session(
         val address = p.serverUrl?.let { ServerAddress.fromBaseUrl(it) }
         val token = p.sealedToken?.let { withContext(Dispatchers.IO) { vault.open(it) } }
         if (address != null && token != null && p.serverId != null) {
-            stored.value = StoredSession(address, p.serverName, token)
+            stored.value = StoredSession(address, p.serverName, token, p.serverId)
+            checked.restore(prefs.checkedNetwork())
         }
         restored.value = true
         synchronized(lock) { reconcile() }
@@ -237,21 +250,32 @@ class Session(
             val session = stored.value ?: return
             val state = client.state.value
             if (state != ConnectionState.Offline && state != ConnectionState.Unsupported) return
-            client.start(session.address, session.token)
+            client.start(session.address, session.token, session.serverId)
             if (!active) armIdleClose()
         }
     }
 
+    /**
+     * Whether plain http reaches the household's network from where the phone is now: the server
+     * answered as itself over plain http on this network. Where that is not known yet, the server
+     * is asked for its first frame, which tells whoever answers instead nothing.
+     */
+    suspend fun reachesHome(): Boolean {
+        val session = stored.value ?: return false
+        if (session.address.baseUrl.isHttps) return false
+        return checked.confirm { orNullOnFailure { auth.serverAt(session.address) }?.serverId == session.serverId }
+    }
+
     /** Signs in with username and password and remembers the server. */
     suspend fun signIn(address: ServerAddress, info: ServerInfo, username: String, password: String): SignInResult {
-        val result = auth.signIn(address, username, password, deviceName)
+        val result = auth.signIn(address, info.serverId, username, password, deviceName)
         if (result is SignInResult.Success) remember(address, info, result.token)
         return result
     }
 
     /** Finishes "Sign in with Home Assistant" with the session token from the callback URL. */
     suspend fun completeHomeAssistant(address: ServerAddress, info: ServerInfo, code: String): SignInResult {
-        val result = auth.exchangeToken(address, code, deviceName)
+        val result = auth.exchangeToken(address, info.serverId, code, deviceName)
         if (result is SignInResult.Success) remember(address, info, result.token)
         return result
     }
@@ -284,6 +308,7 @@ class Session(
         synchronized(lock) { rotation.also { rotation = null } }?.cancelAndJoin()
         prefs.clearToken()
         forget()
+        checked.forget()
     }
 
     private fun forget() {
@@ -293,8 +318,9 @@ class Session(
 
     private suspend fun remember(address: ServerAddress, info: ServerInfo, token: String) = changing.withLock {
         val sealed = withContext(Dispatchers.IO) { vault.seal(token) }
+        checked.forget()
         prefs.saveServer(address.toString(), info.serverId, info.name, sealed)
-        stored.value = StoredSession(address, info.name, token)
+        stored.value = StoredSession(address, info.name, token, info.serverId)
         synchronized(lock) {
             // A connection that stopped as signed out or unsupported starts over with the new token.
             client.stop()
@@ -317,7 +343,7 @@ class Session(
     /** Call with [lock] held. */
     private fun startIfIdle(session: StoredSession) {
         if (client.state.value != ConnectionState.Idle) return
-        client.start(session.address, session.token)
+        client.start(session.address, session.token, session.serverId)
         rotation = scope.launch { rotateIfNeeded(session) }
     }
 
@@ -357,7 +383,7 @@ class Session(
             }
             if (!swapped) return
             // Revoking closes every socket on the old token, so reconnect with the new one first.
-            synchronized(lock) { client.start(session.address, fresh) }
+            synchronized(lock) { client.start(session.address, fresh, session.serverId) }
             // Not revoked, the old token lapses by itself within the 30 days it had left.
             api.revokeToken(session.token)
         } catch (e: MaConnectionException) {
@@ -379,7 +405,13 @@ class Session(
         false
     }
 
-    private data class StoredSession(val address: ServerAddress, val name: String?, val token: String)
+    private data class StoredSession(
+        val address: ServerAddress,
+        val name: String?,
+        val token: String,
+        /** The server the token belongs to, which alone is sent it. */
+        val serverId: String,
+    )
 
     private companion object {
         const val IDLE_CLOSE_MS = 60_000L

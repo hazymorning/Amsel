@@ -115,11 +115,12 @@ class SpeakerGroupsLiveTest {
         assumeTrue("MA_URL not set", url != null)
         val address = checkNotNull(ServerAddress.parse(checkNotNull(url)))
         val http = OkHttpClient()
-        val signIn = MaAuth(http).signIn(address, "amsel", "amsel-test-pw", "Amsel (live test)")
+        val id = MaAuth(http).probe(address).info.serverId
+        val signIn = MaAuth(http).signIn(address, id, "amsel", "amsel-test-pw", "Amsel (live test)")
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val client = MaClient(http, scope)
         try {
-            client.start(address, (signIn as SignInResult.Success).token)
+            client.start(address, (signIn as SignInResult.Success).token, id)
             withTimeout(CONNECT_MS) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val speakers = Speakers(api, elapsedRealtime = { System.nanoTime() / NANOS_PER_MS })

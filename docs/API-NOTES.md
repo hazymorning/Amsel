@@ -18,7 +18,7 @@ are in `music-assistant/models@1.1.232`; `client:` is `/home/user/ref/client/mus
 ## How a session works
 
 1. Find the server: Android NSD for `_mass._tcp`, TXT `base_url`, or the typed address. Confirm it with `GET /info` (no auth).
-2. Open `ws(s)://host:8095/ws`. The first frame is `server_info` (no `message_id`). Read `schema_version` and pick the gates in §1.
+2. Open `ws(s)://host:8095/ws`. The first frame is `server_info` (no `message_id`). Compare its `server_id` with the one stored at sign-in before sending anything: another id gets no token and the client stays offline, as a home address on another network can lead to anyone; two in a row on the network where the server answered as itself before mean it was set up anew, handled as a refused token (`MaClient`, `CheckedNetwork`). Then read `schema_version` and pick the gates in §1.
 3. No token yet: `auth/login {username, password, device_name}` works before auth and returns a session token; Home Assistant: `auth/authorization_url`, a WebView, and the token in the return URL (§3.4).
 4. Send `auth {token}`. From the success reply on, the server pushes **every** event to this socket. There is no subscribe command.
 5. First sign-in only: `auth/token/create {name}` gives a long-lived token (365 days). Store it and use it in step 4 from then on.
@@ -73,7 +73,7 @@ fails quietly.
 | `GET /info` | none | `server_info` JSON, same fields as §2.2; check a typed address or a discovered one [live] |
 | `GET /ws` | `auth` command | The API socket |
 | `GET /imageproxy/<proxy_id>?size=&fmt=` | none | Artwork (§8) [live] |
-| `GET /sendspin` | first frame `{"type":"auth","token":…}` | Sendspin proxy for "This phone" (`webserver/sendspin_proxy.py:50-113`, close code 4001 on bad auth). Use the API socket's token: the server binds the Sendspin player to API sockets holding the same token, which is how the app sees events for its own private player (`webserver/controller.py:560-582`) |
+| `GET /sendspin` | first frame `{"type":"auth","token":…}` | Sendspin proxy for "This phone" (`webserver/sendspin_proxy.py:50-113`, close code 4001 on bad auth). Use the API socket's token: the server binds the Sendspin player to API sockets holding the same token, which is how the app sees events for its own private player (`webserver/controller.py:560-582`). As the token is the first frame, This phone reconnects by itself over plain http only on the network where the API socket last passed the `server_id` check; over TLS anywhere |
 | `GET /api-docs`, `/api-docs/commands.json` | none | Generated reference; `commands.json` is the machine-readable signature list |
 
 The port is 8095 by default. `POST /auth/login` and `POST /api` exist but the app does not
@@ -83,7 +83,7 @@ need them: everything goes over the socket.
 
 | Field | Type | Since | Notes |
 | --- | --- | --- | --- |
-| `server_id` | str | 28 | Stable per install; key the stored token and the Room cache by it |
+| `server_id` | str | 28 | Stable per install; key the stored token and the Room cache by it. The token and the password go only to the id stored or probed; it is not secret, so this stops a chance listener, not one who knows it |
 | `server_version` | str | 28 | `"2.10.8"`, `"2.11.0b7"` |
 | `schema_version` | int | 28 | 65 / 99 / 100 |
 | `min_supported_schema_version` | int | 28 | 28 |
@@ -164,7 +164,7 @@ Tokens are HS256 JWTs. Observed claims: `sub`, `jti` (equals `token_id` in `auth
 
 ### 3.3 Username and password, exact sequence
 
-1. Socket open, `server_info` read.
+1. Socket open, `server_info` read: its `server_id` must be the probed server's, or nothing is sent.
 2. `auth/login {username, password, device_name: "Amsel (<Build.MODEL>)"}`. `success:false` means "That password didn't work"; keep `error` for the log.
 3. `auth {token: access_token}`.
 4. `auth/token/create {name: "Amsel (<Build.MODEL>)"}`; store the result in Keystore-backed storage, keyed by `server_id`. On error 22 (guest) keep the session token instead; a guest signs in again after a day, a server rule the app cannot change.
@@ -620,6 +620,8 @@ Music Assistant streams Audiobookshelf's books but cannot hand out their files, 
 | `GET /api/items/{id}/file/{ino}/download` | the file | `Range: bytes=N-` answers 206 [live] |
 | `GET /api/items/{id}/cover` | the cover | 404 when there is none |
 | `GET`, `PATCH /api/me/progress/{id}[/{episode id}]` | `currentTime`, `duration`, `isFinished`, `lastUpdate` (ms) | GET is 404 before the first play; PATCH takes `currentTime`, `duration`, `progress`, `isFinished` |
+
+Plain http offers no way to tell Audiobookshelf from an impostor, and its first request carries the refresh token. So plain http goes to it only on the network where Music Assistant's `server_id` check last passed over plain http (`Session.reachesHome`, kept across app restarts until the phone restarts); on another network the server's first frame is read first, and without a match the call fails as unreachable without connecting. An address typed without a scheme is tried over https; over plain http only when its host is a home address by its form (an IP literal, a name without a dot, or `.local`, `.lan`, `.internal`, `.home.arpa`, `.fritz.box`, `.home`, `.localdomain`), and never after a certificate the phone does not trust. Audiobookshelf answers a TLS hello with a plain `400`, an SSLException on the phone, which is not a certificate error.
 
 ### 7.11 Extras: endless mix, similar artists and songs, the DJ (2026-11-12; 2.10.9 and 2.11.0b7 [live])
 

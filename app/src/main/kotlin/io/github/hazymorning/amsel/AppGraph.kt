@@ -18,6 +18,7 @@ import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.Schema
 import io.github.hazymorning.amsel.api.itemByUri
 import io.github.hazymorning.amsel.api.localCleartext
+import io.github.hazymorning.amsel.api.plainHttpOnlyWhen
 import io.github.hazymorning.amsel.app.ArtworkKeys
 import io.github.hazymorning.amsel.app.ArtworkLoader
 import io.github.hazymorning.amsel.app.Bookmarks
@@ -40,8 +41,10 @@ import io.github.hazymorning.amsel.app.SpeakerVolumes
 import io.github.hazymorning.amsel.app.Tips
 import io.github.hazymorning.amsel.app.UpdateState
 import io.github.hazymorning.amsel.app.Updates
+import io.github.hazymorning.amsel.data.AndroidPhoneNetwork
 import io.github.hazymorning.amsel.data.DataGraph
 import io.github.hazymorning.amsel.data.KeystoreTokenVault
+import io.github.hazymorning.amsel.data.PhoneNetwork
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.data.TokenVault
 import io.github.hazymorning.amsel.playback.DataPlaybackGraph
@@ -72,16 +75,19 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     /** Outlives screens: play actions and sync must finish even if the user navigates away. */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    private val network: PhoneNetwork by lazy { AndroidPhoneNetwork(app) }
+
     val http: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .pingInterval(20, TimeUnit.SECONDS)
             // An https server redirected to http would carry the token in cleartext, past the local-only guard.
             .followSslRedirects(false)
             .build()
+            .plainHttpOnlyWhen(network::plainHttpAllowed)
     }
 
     val data: DataGraph by lazy {
-        DataGraph(app, http, scope, vault, startDownloads = { DownloadService.start(app) }).also { it.start() }
+        DataGraph(app, http, scope, vault, network, startDownloads = { DownloadService.start(app) }).also { it.start() }
     }
 
     /** Downloads playing on this phone, built on first use. */

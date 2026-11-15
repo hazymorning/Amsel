@@ -28,6 +28,9 @@
     <string name="abs_sign_in_download">Anmelden und herunterladen</string>
     <string name="abs_error_address">Das sieht nicht nach einer Adresse aus</string>
     <string name="abs_error_unreachable">Audiobookshelf ist unter dieser Adresse nicht erreichbar</string>
+    <string name="abs_error_certificate">Das Zertifikat des Servers ist nicht gültig</string>
+    <string name="abs_error_https">Audiobookshelf ist über https nicht erreichbar. Für http zu Hause http:// davor schreiben.</string>
+    <string name="abs_error_away">Unverschlüsseltes http geht nur zu Hause, wo auch Music\u00A0Assistant über http antwortet</string>
     <string name="abs_error_login">Benutzername oder Passwort stimmt nicht</string>
     <string name="abs_error_server">Audiobookshelf hat unerwartet geantwortet. Bitte noch einmal versuchen.</string>
     <string name="abs_signed_in">Bei Audiobookshelf angemeldet als %1$s auf %2$s.</string>
