@@ -256,6 +256,17 @@ class HomeRepositoryTest {
         assertEquals(4, env.repo.layout.value?.sections?.size)
     }
 
+    @Test fun aSnapshotFromBeforeArtistsWoreCoversStillPaints() {
+        val artist = """{"uri": "library://artist/3", "kind": "artist", "name": "Aurora Tone"}"""
+        snapshotFile.writeText("""{"serverId": "server-a", "sections": {"FavouriteArtists": {"items": [$artist]}}}""")
+        withRepo { env ->
+            env.repo.load()
+            val shown = env.repo.items.value?.get(SectionOption.FavoriteArtists)?.items?.single()
+            assertEquals("Aurora Tone", shown?.name)
+            assertEquals(emptyList<String>(), shown?.covers)
+        }
+    }
+
     @Test fun theOldFixedHomeSnapshotIsIgnored() {
         snapshotFile.writeText("""{"jumpBackIn": [], "playlists": [], "recentlyAdded": []}""")
         withRepo { env ->

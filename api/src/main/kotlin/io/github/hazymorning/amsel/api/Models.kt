@@ -30,9 +30,19 @@ public data class Chapter(
     val end: Double? = null,
 )
 
-/** A nested reference to another item (track → album, album → artists). */
+/**
+ * A nested reference to another item (track → album, album → artists). Some answers nest the whole
+ * item instead, which brings [metadata] and no [image].
+ */
 @Serializable
-public data class ItemMapping(val name: String, val uri: String, val image: MediaItemImage? = null)
+public data class ItemMapping(
+    val name: String,
+    val uri: String,
+    val image: MediaItemImage? = null,
+    @Serializable(with = MetadataOrNull::class) val metadata: MediaItemMetadata? = null,
+) {
+    public val cover: MediaItemImage? get() = image ?: metadata?.images.coverOf()
+}
 
 /** Where an item comes from: one music service (or MA's own `builtin` provider) and its id there. */
 @Serializable
@@ -89,10 +99,9 @@ public data class MediaItem(
     /** An episode's podcast. */
     @Serializable(with = MappingOrNull::class) val podcast: ItemMapping? = null,
 ) {
-    /** The cover: first thumb, else any image, else the album's or the podcast's. */
+    /** The cover: the item's own picture ([coverOf]), else the album's or the podcast's. */
     public val cover: MediaItemImage?
-        get() = metadata?.images?.firstOrNull { it.type == "thumb" } ?: metadata?.images?.firstOrNull() ?: image
-            ?: album?.image ?: podcast?.image
+        get() = metadata?.images.coverOf() ?: image ?: album?.cover ?: podcast?.cover
 
     public val artistNames: String get() = artists.joinToString(", ") { it.name }
 

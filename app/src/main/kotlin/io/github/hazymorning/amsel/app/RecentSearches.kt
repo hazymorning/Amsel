@@ -57,6 +57,9 @@ class RecentSearches(context: Context, scope: CoroutineScope) {
         val albumKey: String? = null,
         val artistKey: String? = null,
         val dynamic: Boolean = false,
+        /** An artist's album covers two by two, or a smart playlist's crop of the server's collage. */
+        val quarters: List<String> = emptyList(),
+        val mosaic: Boolean = false,
     ) {
         constructor(track: TrackUi) : this(
             track.key,
@@ -78,11 +81,13 @@ class RecentSearches(context: Context, scope: CoroutineScope) {
             parentKey = item.parentKey,
             artistKey = item.artistKey,
             dynamic = item.dynamic,
+            quarters = item.art?.quarters?.map { it.base }.orEmpty(),
+            mosaic = item.art?.mosaic == true,
         )
 
         fun item(): RecentItem? {
             val kind = MediaKind.entries.firstOrNull { it.name == kind } ?: return null
-            val art = art?.let(::ArtRef)
+            val art = art?.let { ArtRef(it, mosaic, quarters.map(::ArtRef)) }
             return if (kind == MediaKind.Track) {
                 RecentItem.Song(
                     TrackUi(key, title, subtitle.orEmpty(), album, art, albumKey = albumKey, artistKey = artistKey),

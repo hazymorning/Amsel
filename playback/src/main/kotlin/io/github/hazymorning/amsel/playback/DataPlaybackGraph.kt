@@ -97,7 +97,12 @@ class DataPlaybackGraph(
     override val elapsedRealtime: () -> Long = SystemClock::elapsedRealtime
     override val commands: MaSpeakerCommands =
         MaSpeakerCommands(api, dispatcher, data.session::wake, data.speakers, phone, scope, elapsedRealtime)
-    override val catalog: Catalog = DataCatalog(api, data.session::wake) { it in data.library.heldTypes.first() }
+    override val catalog: Catalog = DataCatalog(
+        api,
+        data.session::wake,
+        indexed = { it in data.library.heldTypes.first() },
+        covers = { uris -> data.library.albumCovers(uris).mapValues { (_, covers) -> covers.first() } },
+    )
 
     private val commandFailures =
         MutableSharedFlow<CommandFailure>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)

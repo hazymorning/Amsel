@@ -55,7 +55,7 @@ class WakeTest {
     }
 
     @Test fun aCarReadReopensTheSocket() = withClosedSocket { api, wake, _ ->
-        val catalog = DataCatalog(api, wake) { false }
+        val catalog = DataCatalog(api, wake, indexed = { false })
         assertTrue(catalog.recent(5).isNotEmpty())
     }
 }
