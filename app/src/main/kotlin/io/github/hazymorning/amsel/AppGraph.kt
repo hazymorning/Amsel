@@ -1,12 +1,10 @@
 package io.github.hazymorning.amsel
 
-import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.os.Environment
 import android.os.SystemClock
-import androidx.core.net.toUri
+import androidx.core.content.FileProvider
 import coil3.ImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
@@ -38,7 +36,6 @@ import io.github.hazymorning.amsel.app.SleepTimer
 import io.github.hazymorning.amsel.app.SpeakerGroups
 import io.github.hazymorning.amsel.app.SpeakerVolumes
 import io.github.hazymorning.amsel.app.Tips
-import io.github.hazymorning.amsel.app.UpdateState
 import io.github.hazymorning.amsel.app.Updates
 import io.github.hazymorning.amsel.data.DataGraph
 import io.github.hazymorning.amsel.data.KeystoreTokenVault
@@ -51,6 +48,7 @@ import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.SpokenWord
+import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -217,21 +215,16 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     val bookmarks: Bookmarks by lazy { Bookmarks(app, playing, playback, messages, scope) }
     val recentSearches: RecentSearches by lazy { RecentSearches(app, scope) }
 
-    /** The download opens in the browser, which hands it to Android's installer. */
     val updates: Updates by lazy {
-        Updates(http, BuildConfig.VERSION_NAME, messages, scope) { update ->
-            if (fetchUpdate(update)) {
-                messages.show(R.string.update_downloading, update.version)
-            } else {
-                try {
-                    app.startActivity(
-                        Intent(Intent.ACTION_VIEW, update.apk.toUri()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                    )
-                } catch (e: ActivityNotFoundException) {
-                    messages.show(R.string.error_no_browser_update)
-                }
-            }
-        }
+        Updates(
+            http,
+            BuildConfig.VERSION_NAME,
+            messages,
+            scope,
+            data.session.foreground,
+            app.cacheDir.resolve(UPDATE_FOLDER),
+            ::openInstaller,
+        )
     }
 
     /** What the index holds of spoken word, for Home's and Library's choices. */
@@ -268,29 +261,22 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     /**
-     * [update] goes to Android's download manager, into Downloads, its notification showing how far it
-     * is and, tapped once done, opening the installer. False where the download manager is off: the
-     * browser takes it then.
+     * Android's installer, on an update downloaded into the cache: it asks before it replaces the app,
+     * the first time also to let Amsel install apps. False where nothing on the phone installs one.
      */
-    private fun fetchUpdate(update: UpdateState.Available): Boolean {
-        val manager = app.getSystemService(DownloadManager::class.java) ?: return false
-        return try {
-            manager.enqueue(
-                DownloadManager.Request(update.apk.toUri())
-                    .setTitle(app.getString(R.string.update_title, update.version))
-                    .setMimeType(APK_TYPE)
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Amsel-${update.version}.apk"),
-            )
-            true
-        } catch (e: IllegalArgumentException) {
-            false
-        } catch (e: IllegalStateException) {
-            false
-        } catch (e: SecurityException) {
-            false
-        }
+    private fun openInstaller(apk: File): Boolean = try {
+        app.startActivity(
+            Intent(Intent.ACTION_VIEW)
+                .setDataAndType(FileProvider.getUriForFile(app, "${app.packageName}.updates", apk), APK_TYPE)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        true
+    } catch (e: ActivityNotFoundException) {
+        false
     }
 }
 
 private const val APK_TYPE = "application/vnd.android.package-archive"
+
+/** In the cache, as `res/xml/updates.xml` shares it with the installer. */
+private const val UPDATE_FOLDER = "update"

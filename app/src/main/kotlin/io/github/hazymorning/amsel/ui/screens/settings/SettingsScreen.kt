@@ -60,7 +60,7 @@ fun SettingsScreen(
     update: UpdateState = UpdateState.Unknown,
     onLookForUpdatesChange: (Boolean) -> Unit = {},
     onLookForUpdate: () -> Unit = {},
-    onDownloadUpdate: (UpdateState.Available) -> Unit = {},
+    onInstallUpdate: (UpdateState.Available) -> Unit = {},
     downloads: DownloadSettings = DownloadSettings(),
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignIn = { _, _, _ -> null },
@@ -156,10 +156,10 @@ fun SettingsScreen(
                     SettingRow(
                         stringResource(R.string.settings_updates),
                         shape,
-                        subtitle = if (update is UpdateState.Available) {
-                            stringResource(R.string.update_out, update.version)
-                        } else {
-                            stringResource(R.string.settings_version, state.appVersion)
+                        subtitle = when (update) {
+                            is UpdateState.Available -> stringResource(R.string.update_out, update.version)
+                            is UpdateState.Loading -> stringResource(R.string.update_downloading, update.update.version)
+                            else -> stringResource(R.string.settings_version, state.appVersion)
                         },
                         onClick = { choosing = Choice.Updates },
                     )
@@ -189,7 +189,7 @@ fun SettingsScreen(
                     lookAtStart = state.lookForUpdates,
                     onLookAtStart = onLookForUpdatesChange,
                     onLook = onLookForUpdate,
-                    onDownload = onDownloadUpdate,
+                    onInstall = onInstallUpdate,
                 )
 
                 Choice.Downloads -> DownloadsSheetContent(
@@ -278,7 +278,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         update = update,
         onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
         onLookForUpdate = graph.updates::lookNow,
-        onDownloadUpdate = graph.updates::download,
+        onInstallUpdate = graph.updates::install,
         downloads = DownloadSettings(account, used, last = prefs?.lastAbsAccount()),
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,
         onAbsSignIn = graph.downloading::signIn,

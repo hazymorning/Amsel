@@ -32,10 +32,11 @@
     <string name="updates_current">This is Amsel %1$s.</string>
     <string name="updates_looking">Looking for a newer version…</string>
     <string name="updates_newest">Amsel %1$s is the newest version.</string>
-    <string name="updates_available">Amsel %1$s is out. The browser downloads it, and opening the download installs it.</string>
+    <string name="updates_available">Amsel %1$s is out.</string>
+    <string name="updates_downloading">Amsel %1$s is downloading.</string>
     <string name="updates_failed">GitHub could not be reached. Try again in a moment.</string>
     <string name="updates_look">Look for updates</string>
-    <string name="updates_download">Download update</string>
+    <string name="updates_install">Install update</string>
     <string name="updates_at_start">Look when Amsel starts</string>
     <string name="updates_at_start_detail">Asks GitHub once at each start, never in the background</string>
 </resources>
