@@ -49,6 +49,9 @@ sealed interface Route : NavKey {
 
     @Serializable data object Settings : Route
 
+    /** Which places the bottom bar shows, and in what order. */
+    @Serializable data object Bar : Route
+
     /**
      * [route] opened again above itself (an artist, a similar one, the first again), for the
      * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps

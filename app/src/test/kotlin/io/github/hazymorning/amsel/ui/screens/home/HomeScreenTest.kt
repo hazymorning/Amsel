@@ -178,6 +178,27 @@ class HomeScreenTest {
         compose.onNodeWithText("Recently played").assertDoesNotExist()
     }
 
+    @Test fun homesSearchFieldOpensSearch() {
+        var asked = 0
+        val home = HomeSample.home
+        val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
+        compose.setContent {
+            AmselTheme {
+                HomeScreen(
+                    home.copy(sections = listOf(search) + home.sections),
+                    {},
+                    {},
+                    {},
+                    {},
+                    editor = Recorder(),
+                    onSearch = { asked++ },
+                )
+            }
+        }
+        compose.onNodeWithText("Songs, albums, artists").performClick()
+        assertEquals(1, asked)
+    }
+
     @Test fun withEveryTitleHiddenTheFirstKeepsItsOwnSoEditHomeStaysInReach() {
         val editor = Recorder()
         val home = HomeSample.home

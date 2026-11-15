@@ -59,9 +59,9 @@ fun DrawScope.drawRing(color: Color, stroke: Stroke, centre: Offset, radius: Flo
 }
 
 /** One breath: the echo goes out over [OUT_SHARE] of it, and the rest is still. */
-private const val BREATH_MS = 2_800
-private const val OUT_SHARE = 0.7f
+private const val BREATH_MS = 2_400
+private const val OUT_SHARE = 0.8f
 
 /** How far the echo widens past the ring, as a share of its radius, and how strong it leaves. */
-private const val GROWTH = 0.9f
-private const val ECHO_ALPHA = 0.5f
+private const val GROWTH = 1.6f
+private const val ECHO_ALPHA = 0.9f

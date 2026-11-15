@@ -74,10 +74,12 @@ class NavBarTest {
         assertTrue("no dot drawn", dots > 0)
 
         // On its 256 grid the glyph's ink runs from 56 to 200 across and from 16 down; the line of
-        // its top's arc (centre 128, 88, radius 64) is half way round at (173.25, 42.75).
+        // its top's arc (centre 128, 88, radius 64) is half way round at (173.25, 42.75). The dot's
+        // centre lies 2 dp further out along that radius.
         val unit = (right - left) / 144.0
-        val wantX = right - (200 - 173.25) * unit
-        val wantY = top + (42.75 - 16) * unit
+        val out = 2 * compose.density.density * 0.70710677
+        val wantX = right - (200 - 173.25) * unit + out
+        val wantY = top + (42.75 - 16) * unit - out
         val off = hypot(sumX / dots - wantX, sumY / dots - wantY) / compose.density.density
         assertTrue("the dot's centre is $off dp off the outline", off < 1.0)
     }

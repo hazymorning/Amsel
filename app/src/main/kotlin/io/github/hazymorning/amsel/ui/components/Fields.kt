@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.liveRegion
@@ -76,10 +78,15 @@ private fun FieldText(
 }
 
 @Composable
-private fun FieldBox(error: Boolean, fill: Color, content: @Composable RowScope.() -> Unit) {
+private fun FieldBox(
+    error: Boolean,
+    fill: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .heightIn(min = Sizes.FieldHeight)
             .clip(Shapes.Tile)
@@ -149,6 +156,32 @@ fun SearchField(
             }
         },
     )
+}
+
+/**
+ * The search field at rest, as a button: Home's Search section. It looks as Search's own field does
+ * while empty; a tap opens Search, the keyboard up, where that field takes the words.
+ */
+@Composable
+fun SearchEntry(placeholder: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val glyph = wordGlyph(MaterialTheme.typography.bodyLarge)
+    Box(modifier.fillMaxWidth().padding(horizontal = Keyline.Margin)) {
+        FieldBox(
+            error = false,
+            colors.surfaceContainerLow,
+            Modifier
+                .clip(Shapes.Tile)
+                .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
+                .semantics(mergeDescendants = true) {},
+        ) {
+            Spacer(Modifier.width(Space.Sibling))
+            InkGlyph(R.drawable.ic_search, tint = colors.onSurfaceVariant, size = glyph)
+            Spacer(Modifier.width(Space.S3))
+            FieldText("", placeholder, field = {}, Modifier.weight(1f))
+            Spacer(Modifier.width(Space.Sibling))
+        }
+    }
 }
 
 /**

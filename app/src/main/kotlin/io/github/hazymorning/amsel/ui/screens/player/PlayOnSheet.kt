@@ -142,11 +142,11 @@ private fun SpeakerList(
         Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).selectableGroup().padding(bottom = Space.Group),
     ) {
         val members = state.group.count { it.member }.takeIf { state.group.isNotEmpty() }
-        PlayOnHeader(members, onGrouping)
+        val haptics = LocalHapticFeedback.current
+        SheetHeader(stringResource(R.string.player_play_on))
         Spacer(Modifier.height(Space.HeaderToContent))
         if (state.grouped) {
             // Letting the speakers go is one big tap, over the first of them.
-            val haptics = LocalHapticFeedback.current
             PrimaryButton(
                 stringResource(R.string.ungroup_all),
                 onClick = {
@@ -161,8 +161,23 @@ private fun SpeakerList(
         state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
             SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
         }
+        if (members != null) {
+            // Grouping is one big tap too, under the last speaker and well apart from the list.
+            Spacer(Modifier.height(BeforeGroup))
+            PrimaryButton(
+                stringResource(if (members > 0) R.string.group_count else R.string.group, members),
+                onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    onGrouping()
+                },
+                modifier = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth(),
+            )
+        }
     }
 }
+
+/** Over Group: the list ends, and what changes the speakers stands apart from them. */
+private val BeforeGroup = Space.S10
 
 /** "Transfer playback": the other speakers in reach. The music moves to the one tapped and goes on there. */
 @Composable

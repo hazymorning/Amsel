@@ -26,6 +26,7 @@
     <string name="home_option_your_podcasts">Your podcasts</string>
     <string name="home_option_played_here_choice">Recently played here</string>
     <string name="home_option_speakers">Speakers</string>
+    <string name="home_option_search">Search</string>
 
     <!-- How a section shows its items -->
     <string name="home_layout_grid">Grid</string>
@@ -67,6 +68,7 @@
     <string name="home_sentence_option_new_episodes">new episodes</string>
     <string name="home_sentence_option_your_podcasts">your podcasts</string>
     <string name="home_sentence_option_speakers">the speakers</string>
+    <string name="home_sentence_option_search">the search field</string>
     <string name="home_sentence_layout_grid">a grid</string>
     <string name="home_sentence_layout_small">small covers</string>
     <string name="home_sentence_layout_row">a row</string>

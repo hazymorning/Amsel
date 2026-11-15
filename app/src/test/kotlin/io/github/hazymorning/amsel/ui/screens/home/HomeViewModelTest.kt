@@ -275,6 +275,19 @@ class HomeViewModelTest {
         assertTrue(shelf(HomeSpeakers(loaded = true), false).isEmpty)
     }
 
+    @Test fun searchIsAFieldThatNeitherLoadsNorEmpties() {
+        val layout = classicLayout().setOption("s2", SectionOption.Search)
+        val search = homeState(
+            HomeInputs(layout, null, false, emptySet(), HomeSpeakers(loaded = false)),
+            false,
+            mapper::media,
+        )
+            .sections.single { it.option == SectionOption.Search }
+        assertFalse(search.loading)
+        assertFalse(search.isEmpty)
+        assertFalse(search.titled)
+    }
+
     @Test fun theCachedSnapshotPaintsTheFirstFrame() {
         val vm = viewModel(FakeHome(items = snapshot), session = MutableStateFlow(SessionState.Waiting(null)))
         // No subscriber yet: the initial value already has the snapshot, so no skeleton flash.

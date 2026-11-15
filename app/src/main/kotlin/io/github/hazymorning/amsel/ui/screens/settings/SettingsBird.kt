@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.LocalDockInset
 import io.github.hazymorning.amsel.ui.components.Words
@@ -40,9 +41,7 @@ import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.LocalReducedMotion
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
-import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.isNight
-import io.github.hazymorning.amsel.ui.theme.secondLine
 import kotlin.math.roundToInt
 
 /**
@@ -217,8 +216,8 @@ internal val NightCrowns = CrownTints(Color(0xFF2B3425), Color(0xFF34402C), Colo
 /** The paper raised by the step Surface 1 lies under it: the header's own sun is lost on the app's lighter page. */
 private val DaySun = Color(0xFFFBFAF7)
 
-/** A moon a step above the night's second surface: it lies quietly on the page, no lighter than the crowns before it. */
-private val NightMoon = Color(0xFF34352F)
+/** A moon barely off the page, between its first and second surfaces: there, not shining, darker than the crowns. */
+private val NightMoon = Color(0xFF21221E)
 
 /** The sun: large enough that the bird's eye and beak read, small enough to stay a signature. */
 private val Disc = 72.dp
@@ -230,35 +229,41 @@ private val BirdGap = Space.S12
 
 private const val ICON_SIDE = 108f
 
-/** Amsel's line and whose Amsel is, centred under the last block, quiet: what Amsel is, not a setting. */
+/**
+ * Amsel's name and whose Amsel is, centred under the last block, quiet: what Amsel is, not a
+ * setting. The name is set as the README's picture sets it (Display's face, weight and tracking),
+ * the same in every language; the licence line under it is smaller than any reading text.
+ */
 @Composable
 internal fun LicenceNote() {
     val type = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
-    val slogan = stringResource(R.string.settings_slogan)
     val note = stringResource(R.string.settings_rights)
-    // The licence's baseline a second line's step under the slogan's.
-    val between = with(LocalDensity.current) { secondLine(type.bodyMedium) - capHeight(type.bodyMedium) }
+    val small = type.bodyMedium.copy(fontSize = LicenceSize, lineHeight = LicenceLine)
     Column(Modifier.fillMaxWidth().padding(top = OverLicence, start = Keyline.Margin, end = Keyline.Margin)) {
         Words(
-            slogan,
-            type.titleSmall,
+            stringResource(R.string.app_name),
+            type.displaySmall,
             color = colors.onSurface,
             textAlign = TextAlign.Center,
-            maxLines = 2,
-            modifier = Modifier.fillMaxWidth().textInk(type.titleSmall),
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth().textInk(type.displaySmall),
         )
-        Spacer(Modifier.height(between))
+        Spacer(Modifier.height(Space.S3))
         Words(
             note,
-            type.bodyMedium,
+            small,
             color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            modifier = Modifier.fillMaxWidth().textInk(type.bodyMedium),
+            modifier = Modifier.fillMaxWidth().textInk(small),
         )
     }
 }
+
+/** The licence line: a signature's small print. */
+private val LicenceSize = 11.sp
+private val LicenceLine = 14.sp
 
 /** From the last block to the licence: the page's end stands apart from its settings. */
 private val OverLicence = Space.S16

@@ -55,6 +55,15 @@ private val PlayGlyph = 28.dp
 private val Inset = Keyline.Margin
 
 /**
+ * The skip's ink stands this far in from the screen's edge, off it, where a thumb finds it: the
+ * controls are held, the cover only looked at.
+ */
+private val ControlsInset = Space.S10
+
+/** From the words to play's touch room: play stands apart from what it plays. */
+private val BeforePlay = Space.S6
+
+/**
  * What plays, on the dock's own surface, with no card around it: the cover on the margin, the
  * speaker's name over what plays, play and a skip, the skip's ink on the margin across. It stays
  * when nothing plays: where music goes can be chosen before the first song. The speaker's button is
@@ -169,7 +178,7 @@ private fun PlayerRow(
             .padding(
                 start = Inset,
                 top = Inset,
-                end = (Inset - endReach(skipGlyph, skipSize)).coerceAtLeast(0.dp),
+                end = (ControlsInset - endReach(skipGlyph, skipSize)).coerceAtLeast(0.dp),
                 bottom = Inset,
             )
             .heightIn(min = Sizes.DockArt),
@@ -183,7 +192,7 @@ private fun PlayerRow(
         )
         Spacer(Modifier.width(Space.Sibling))
         PlayerWords(state, speaker, Modifier.weight(1f), song = swipe.follow, runs = !covered)
-        Spacer(Modifier.width(Space.S2))
+        Spacer(Modifier.width(BeforePlay))
         val ink = MaterialTheme.colorScheme.onSurface
         IconAction(
             if (state.isPlaying) R.drawable.ic_pause_slim else R.drawable.ic_play,
