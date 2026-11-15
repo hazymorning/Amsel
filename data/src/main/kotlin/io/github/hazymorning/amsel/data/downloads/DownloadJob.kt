@@ -23,7 +23,8 @@ internal class DownloadJob(private val abs: AbsClient, private val store: Downlo
         val tracks = if (episode != null) listOfNotNull(episode.audioTrack) else media.tracks
         if (tracks.isEmpty()) throw AbsException(AbsException.Reason.NotFound)
         val files = tracks.mapIndexed { i, track ->
-            val ext = track.metadata?.ext?.trimStart('.')?.ifEmpty { null } ?: "audio"
+            // The server's word becomes part of a path on the phone: letters and digits only.
+            val ext = track.metadata?.ext?.trimStart('.')?.takeIf { it.matches(EXT) } ?: "audio"
             DownloadFile(
                 track.ino,
                 "%03d.%s".format(i + 1, ext),
@@ -122,6 +123,7 @@ internal class DownloadJob(private val abs: AbsClient, private val store: Downlo
 
     companion object {
         const val PART = ".part"
+        private val EXT = Regex("[A-Za-z0-9]{1,10}")
         private const val BUFFER = 64 * 1024
         private const val HTTP_OK = 200
         private const val HTTP_PARTIAL = 206

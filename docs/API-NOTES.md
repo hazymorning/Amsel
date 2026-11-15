@@ -617,7 +617,7 @@ Music Assistant streams Audiobookshelf's books but cannot hand out their files, 
 | --- | --- | --- |
 | `POST /login {username, password}`, header `x-return-tokens: true` | `user.accessToken` (1 h), `user.refreshToken` | A server before 2.26 sends only `user.token`, which never runs out |
 | `POST /auth/refresh`, header `x-refresh-token` | both tokens again | The refresh token rotates: keep the new one. 404 before 2.26; 401 once revoked |
-| `GET /api/items/{id}?expanded=1` | `media.tracks[]` (`startOffset`, `duration`, `contentUrl` `/api/items/{id}/file/{ino}`, `metadata.ext`, `metadata.size`), `media.chapters[]` (`start`, `end`, `title`), `media.metadata` (`title`, `authorName`), a podcast's `media.episodes[]` (`id`, `title`, `audioTrack`) | Tracks in timeline order; one m4b or many mp3s [live] |
+| `GET /api/items/{id}?expanded=1` | `media.tracks[]` (`startOffset`, `duration`, `contentUrl` `/api/items/{id}/file/{ino}`, `metadata.ext`, `metadata.size`), `media.chapters[]` (`start`, `end`, `title`), `media.metadata` (`title`, `authorName`), a podcast's `media.episodes[]` (`id`, `title`, `audioTrack`) | Tracks in timeline order; one m4b or many mp3s [live]. A download names its files `001.<ext>` only when `ext` is 1 to 10 letters or digits, else `001.audio`: the server's word becomes a path on the phone |
 | `GET /api/items/{id}/file/{ino}/download` | the file | `Range: bytes=N-` answers 206 [live] |
 | `GET /api/items/{id}/cover` | the cover | 404 when there is none |
 | `GET`, `PATCH /api/me/progress/{id}[/{episode id}]` | `currentTime`, `duration`, `isFinished`, `lastUpdate` (ms) | GET is 404 before the first play; PATCH takes `currentTime`, `duration`, `progress`, `isFinished` |

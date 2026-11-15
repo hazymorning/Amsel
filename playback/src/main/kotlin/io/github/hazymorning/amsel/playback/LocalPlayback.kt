@@ -105,8 +105,15 @@ class LocalPlayback(
         val manifest = downloads.manifest(uri) ?: return
         val exo = exoPlayer()
         if (_now.value?.manifest?.uri != uri) {
-            cover = downloads.cover(uri)?.let(Uri::fromFile)
-            exo.setMediaSource(source(manifest))
+            val art = downloads.cover(uri)?.let(Uri::fromFile)
+            val source = try {
+                source(manifest, art)
+            } catch (e: IOException) {
+                // A manifest from before file names were checked, naming a file outside its folder.
+                return
+            }
+            cover = art
+            exo.setMediaSource(source)
             exo.prepare()
             publish(manifest)
             scope.launch(Dispatchers.Main.immediate) {
@@ -167,7 +174,7 @@ class LocalPlayback(
             )
         }
 
-    private fun source(manifest: DownloadManifest): ConcatenatingMediaSource2 {
+    private fun source(manifest: DownloadManifest, cover: Uri?): ConcatenatingMediaSource2 {
         val files = ProgressiveMediaSource.Factory(FileDataSource.Factory())
         val item = MediaItem.Builder()
             .setMediaId(manifest.uri)
