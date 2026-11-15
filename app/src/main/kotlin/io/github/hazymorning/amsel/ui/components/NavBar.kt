@@ -48,6 +48,9 @@ private val TabGlyph = Sizes.Icon
 /** The speaker's dot while music plays on it, at its glyph's top end. */
 private val Dot = 6.dp
 
+/** The ring of the band's own tone around the dot, which parts it from the glyph it sits on. */
+private val DotRing = 1.5.dp
+
 /**
  * The bar at the dock's foot, a band a tone apart from what plays above it: the app's places, each
  * its glyph alone. The band runs on under the system's own bar: its gesture handle lies in the room
@@ -116,7 +119,8 @@ fun RowScope.NavBarItem(
 /**
  * The speaker's place in the band, after Home: its glyph in the secondary tone, as a place's, which
  * opens the speaker choice rather than a page, and a moss dot at its top end while music plays on
- * the speaker in use. TalkBack hears "Speaker: Kitchen, playing. Choose speaker".
+ * the speaker in use, cut free of the glyph by a ring of the band's tone. TalkBack hears "Speaker:
+ * Kitchen, playing. Choose speaker".
  */
 @Composable
 fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> Unit) {
@@ -127,6 +131,7 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
     )
     val dot by animateFloatAsState(if (playing) 1f else 0f, Motion.effects(), label = "speaker dot")
     val moss = colors.tertiary
+    val band = colors.surfaceContainerHigh
     Box(
         Modifier
             .weight(1f)
@@ -140,7 +145,11 @@ fun RowScope.NavBarSpeaker(speaker: SpeakerUi, playing: Boolean, onClick: () -> 
                 SpeakerButtonGlyph,
                 Modifier.drawWithContent {
                     drawContent()
-                    if (dot > 0f) drawCircle(moss, Dot.toPx() / 2, Offset(size.width, 0f), alpha = dot)
+                    if (dot > 0f) {
+                        val at = Offset(size.width, 0f)
+                        drawCircle(band, Dot.toPx() / 2 + DotRing.toPx(), at, alpha = dot)
+                        drawCircle(moss, Dot.toPx() / 2, at, alpha = dot)
+                    }
                 },
                 tint = colors.onSurfaceVariant,
                 size = TabGlyph,
