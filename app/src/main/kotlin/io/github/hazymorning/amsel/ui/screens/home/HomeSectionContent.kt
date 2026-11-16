@@ -146,7 +146,6 @@ internal fun EmptySectionNote(option: SectionOption, modifier: Modifier = Modifi
     val text = stringResource(
         when (option) {
             SectionOption.Pinned -> R.string.home_section_empty_pinned
-            SectionOption.Speakers -> R.string.home_section_empty_speakers
             else -> R.string.home_section_empty
         },
     )

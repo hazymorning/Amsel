@@ -85,29 +85,6 @@ object HomeSample {
 
     val grid = HomeUiState(listOf(pins, recent, smart))
 
-    /** Speakers over the rest: every speaker in reach with what it plays and how loud. */
-    val speakers = HomeUiState(
-        listOf(
-            SectionUi(
-                "s9",
-                SectionOption.Speakers,
-                SectionLayout.Row,
-                speakers = listOf(
-                    // A group plays: its leader's name with how many play along.
-                    SampleData.speakers.first {
-                        it.id == "kitchen"
-                    }.copy(volume = 35, others = 2, art = SampleData.albums[0].art),
-                    // A long name cut short keeps its group's "+3" right after it; a station with no cover.
-                    SpeakerUi("office", "Mandaloffice", song = "Radio Paradise", isPlaying = true, others = 3),
-                    SampleData.speakers.first { it.id == "bedroom" }.copy(volume = 0, art = playlists[1].art),
-                ),
-                inUse = "phone",
-            ),
-            recent,
-            smart,
-        ),
-    )
-
     /** What last played on the speaker in use, named after the title. */
     val playedHere = HomeUiState(
         listOf(

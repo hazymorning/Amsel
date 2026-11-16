@@ -12,7 +12,6 @@ import io.github.hazymorning.amsel.data.home.SectionOption.NewAlbums
 import io.github.hazymorning.amsel.data.home.SectionOption.Pinned
 import io.github.hazymorning.amsel.data.home.SectionOption.Search
 import io.github.hazymorning.amsel.data.home.SectionOption.SmartPlaylists
-import io.github.hazymorning.amsel.data.home.SectionOption.Speakers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -34,12 +33,11 @@ class HomeLayoutTest {
 
     private fun HomeLayout.ids() = sections.map { it.id }
 
-    @Test fun aNewPersonGetsSearchAndSpeakersThenContinueListeningPinnedAndRows() {
+    @Test fun aNewPersonGetsSearchThenContinueListeningPinnedAndRows() {
         val fresh = HomeLayout()
         assertEquals(
             listOf(
                 Search,
-                Speakers,
                 ContinueListening,
                 Pinned,
                 Everything,
@@ -49,9 +47,9 @@ class HomeLayoutTest {
             ),
             fresh.options(),
         )
-        assertEquals(listOf(Row, Row, Big, Grid, Row, Row, Row, Small), fresh.sections.map { it.layout })
+        assertEquals(listOf(Row, Big, Grid, Row, Row, Row, Small), fresh.sections.map { it.layout })
         // An earlier default's sections keep their ids, so their snapshots still paint.
-        assertEquals(listOf("s5", "s6", "s0", "s1", "s2", "s3", "s4", "s7"), fresh.ids())
+        assertEquals(listOf("s5", "s0", "s1", "s2", "s3", "s4", "s7"), fresh.ids())
         assertTrue(fresh.pinned.isEmpty())
         assertSame(fresh, fresh.offerListening())
     }
@@ -145,22 +143,31 @@ class HomeLayoutTest {
         assertEquals(Everything, changed.option)
     }
 
-    @Test fun everySectionButSpeakersShowsItsTitleUntilThePersonSaysOtherwise() {
+    @Test fun everySectionButSearchShowsItsTitleUntilThePersonSaysOtherwise() {
         assertTrue(home.sections.all { it.showsTitle })
-        val speakers = home.setOption("s3", SectionOption.Speakers)
-        assertFalse(speakers.sections[2].showsTitle)
-        assertTrue(speakers.setTitled("s3", true).sections[2].showsTitle)
+        val search = home.setOption("s3", Search)
+        assertFalse(search.sections[2].showsTitle)
+        assertTrue(search.setTitled("s3", true).sections[2].showsTitle)
         assertFalse(home.setTitled("s2", false).sections[1].showsTitle)
-        // Another option brings its own way: Speakers hide theirs, the rest show.
+        // Another option brings its own way: Search hides its title, the rest show theirs.
         assertTrue(home.setTitled("s2", false).setOption("s2", SectionOption.TopArtists).sections[1].showsTitle)
     }
 
     @Test fun aHiddenTitleIsKeptAndAHomeStoredBeforeItStillReads() {
-        val hidden = home.setTitled("s2", false).setOption("s3", SectionOption.Speakers).setTitled("s3", true)
+        val hidden = home.setTitled("s2", false).setOption("s3", Search).setTitled("s3", true)
         assertEquals(hidden, HomeLayout.decode(hidden.encode()))
-        val older = """{"sections": [{"id": "s1", "option": "Speakers", "layout": "Row"},
+        val older = """{"sections": [{"id": "s1", "option": "Search", "layout": "Row"},
             {"id": "s2", "option": "NewAlbums", "layout": "Row"}]}"""
         assertEquals(listOf(false, true), HomeLayout.decode(older).sections.map { it.showsTitle })
+    }
+
+    @Test fun aHomeStoredWithTheSpeakersRowReadsWithoutIt() {
+        val older = """{"sections": [{"id": "s5", "option": "Search", "layout": "Row"},
+            {"id": "s6", "option": "Speakers", "layout": "Row"},
+            {"id": "s2", "option": "Everything", "layout": "Row"}], "pinned": ["library://album/1"]}"""
+        val read = HomeLayout.decode(older)
+        assertEquals(listOf("s5", "s2"), read.ids())
+        assertEquals(listOf("library://album/1"), read.pinned)
     }
 
     @Test fun pinsGoFirstAndOnlyOnce() {

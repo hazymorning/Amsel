@@ -13,7 +13,6 @@ definition of a useful start screen, without settings screens or a page of toggl
 | Albums | New in your library · Recently played · Favourite albums · Random albums | `music/albums/library_items` with sort/favourite |
 | Artists | Artists you play most · Favourite artists · Recently played artists | `music/artists/library_items` (sort `play_count`, `last_played`, favourite) |
 | Radio | Favourite stations · All stations · Recently played stations | `music/radios/library_items` |
-| Speakers | Speakers: the other speakers that play or rest on something, where music can go on, as a row of low cards with no heading (Show title in edit mode gives it one), each as wide as a big tile and 16 apart, so two stand over the two columns below: the cover of what each holds 12 in from the card's start, its glyph and name, and under them what it plays or that it rests. The speaker in use is among them, so speakers grouped under it show as that group. A tap makes it the speaker in use and opens Now Playing on it, starting nothing; a long press plays there at once. Hidden while no speaker plays or rests on something | none: the app's own speaker state |
 | Search | Search: Search's own field at rest between the margins, with no heading; a tap opens Search, emptied, the keyboard up. In edit mode it is only a section to arrange. Never empty, never loading | none: the app's own Search |
 | Recently played | Everything you played lately (albums, playlists, artists, stations) · Recently played here: what last played on the speaker in use, titled "Recently played · Kitchen", the whole history while nothing has played there · Continue listening (books and episodes in progress) | `music/recently_played_items` (with `queue_id` for here); `music/in_progress_items`, each item looked up with `music/item_by_uri` for where the person stands |
 | Audiobooks | New audiobooks | library index |
@@ -48,8 +47,8 @@ most"), never "Section 1". The layout never appears in the title.
   its choice as the sentence needs it, "Show your pins as a grid", "Zeigt Angeheftetes als große
   Cover", where headings and the sheets keep their names), and ⋯ with Hide title (Show title, once
   hidden: Home then keeps only the room a heading takes, and edit mode shows the title faint) and
-  Remove. Every section shows its title until hidden, but Speakers, whose cards say what they are, which
-  shows it once asked to. A held press on the title or the sentence picks the section up to move it; TalkBack moves it
+  Remove. Every section shows its title until hidden, but Search, a field, which shows it once
+  asked to. A held press on the title or the sentence picks the section up to move it; TalkBack moves it
   through its actions. A chip opens a sheet of choices, as Library's sort does. **Add section** stands
   at the end, however many there are. **Done** (in the slim bar) and Back leave edit mode. Every
   change shows immediately in place.

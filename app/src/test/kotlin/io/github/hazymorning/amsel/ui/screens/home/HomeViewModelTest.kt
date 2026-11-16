@@ -240,51 +240,10 @@ class HomeViewModelTest {
         assertEquals(null, shown(whole).heardOn)
     }
 
-    @Test fun speakersAreThoseThatPlayOrRestOnSomethingTheOneInUseIncluded() {
-        val layout = classicLayout().setOption("s2", SectionOption.Speakers)
-        val phone = SpeakerUi("phone", "", isPhone = true, song = "Lanterns")
-        val kitchen = SpeakerUi("kitchen", "Kitchen", song = "Lanterns", isPlaying = true)
-        val bedroom = SpeakerUi("bedroom", "Bedroom", song = "Cooking")
-        val garden = SpeakerUi("garden", "Garden")
-        val shelf = { speakers: HomeSpeakers ->
-            homeState(HomeInputs(layout, emptyMap(), false, emptySet(), speakers), false, mapper::media)
-                .sections.single { it.option == SectionOption.Speakers }
-        }
-        val home = shelf(HomeSpeakers(listOf(phone, kitchen, bedroom, garden), inUse = phone))
-        // What plays comes first; then the one in use, then the others as Play on lists them.
-        assertEquals(listOf(kitchen, phone, bedroom), home.speakers)
-        // Of two that play, the one in use comes first.
-        val office = SpeakerUi("office", "Office", song = "Rain", isPlaying = true)
-        val two = shelf(HomeSpeakers(listOf(phone, kitchen, bedroom, office), inUse = office))
-        assertEquals(listOf(office, kitchen, phone, bedroom), two.speakers)
-        assertFalse(home.loading)
-        assertTrue(shelf(HomeSpeakers(listOf(phone.copy(song = null), garden), inUse = phone)).isEmpty)
-        assertTrue(shelf(HomeSpeakers(listOf(phone.copy(song = null), kitchen.copy(available = false)))).isEmpty)
-        // Every speaker grouped under the one in use: the row shows that group, not nothing.
-        val livingRoom = SpeakerUi("living", "Living room", song = "Lanterns", isPlaying = true, others = 5)
-        val grouped = shelf(HomeSpeakers(listOf(phone.copy(song = null), livingRoom), inUse = livingRoom))
-        assertEquals(listOf(livingRoom), grouped.speakers)
-        assertEquals(SectionLayout.Row, layout.sections.single { it.option == SectionOption.Speakers }.layout)
-    }
-
-    @Test fun untilTheServerNamesItsSpeakersTheirRowHoldsItsRoomSoNothingUnderItMoves() {
-        val layout = classicLayout().setOption("s2", SectionOption.Speakers)
-        val shelf = { speakers: HomeSpeakers, offline: Boolean ->
-            homeState(HomeInputs(layout, emptyMap(), offline, emptySet(), speakers), false, mapper::media)
-                .sections.single { it.option == SectionOption.Speakers }
-        }
-        val unknown = shelf(HomeSpeakers(loaded = false), false)
-        assertTrue(unknown.loading)
-        assertFalse(unknown.isEmpty)
-        // Out of reach nothing will answer: no room is held for it.
-        assertTrue(shelf(HomeSpeakers(loaded = false), true).isEmpty)
-        assertTrue(shelf(HomeSpeakers(loaded = true), false).isEmpty)
-    }
-
     @Test fun searchIsAFieldThatNeitherLoadsNorEmpties() {
         val layout = classicLayout().setOption("s2", SectionOption.Search)
         val search = homeState(
-            HomeInputs(layout, null, false, emptySet(), HomeSpeakers(loaded = false)),
+            HomeInputs(layout, null, false, emptySet()),
             false,
             mapper::media,
         )

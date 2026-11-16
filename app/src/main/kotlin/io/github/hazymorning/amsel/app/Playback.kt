@@ -25,7 +25,6 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.positionAt
 import java.util.concurrent.ExecutionException
 import kotlin.coroutines.resume
@@ -286,27 +285,6 @@ class Playback(
                 e
             }
             messages.show(failureText(error, play = true), retry = { playFromSearch(query, focus) })
-        }
-    }
-
-    /**
-     * [speaker] goes on where it rests. This phone through the app's own controls; another speaker
-     * by its own command, as the session may still be on the one used before. The tap shows at once.
-     */
-    fun resume(speaker: SpeakerUi) {
-        if (speaker.isPhone) return control(PlayerControl.PlayPause)
-        playing.optimistic.playing(speaker.id, true)
-        scope.launch {
-            val error = try {
-                data.session.api.play(speaker.id)
-                return@launch
-            } catch (e: MaConnectionException) {
-                e
-            } catch (e: MaCommandException) {
-                e
-            }
-            playing.optimistic.clear(speaker.id)
-            messages.show(failureText(error, play = true), playing.nameOf(speaker.id), retry = { resume(speaker) })
         }
     }
 

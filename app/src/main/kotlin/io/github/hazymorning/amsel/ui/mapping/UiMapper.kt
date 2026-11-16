@@ -132,16 +132,9 @@ class UiMapper(private val images: () -> Images?) {
         )
     }
 
-    /**
-     * A speaker row: what it plays, from its current media; [others] is how many play in step with
-     * it. Its cover is the current media's, else that of its [queue]'s item while the queue plays it:
-     * a station on a group's leader may come without one, though its queue holds the station's.
-     */
-    fun speaker(player: Player, isPhone: Boolean, others: Int = 0, queue: PlayerQueue? = null): SpeakerUi {
+    /** A speaker row: what it plays, from its current media; [others] is how many play in step with it. */
+    fun speaker(player: Player, isPhone: Boolean, others: Int = 0): SpeakerUi {
         val media = player.currentMedia
-        val queued = queue?.takeIf { it.active }?.currentItem
-            ?.takeIf { media?.queueItemId == null || it.queueItemId == media.queueItemId }
-            ?.let { item -> item.mediaItem?.cover?.let(::art) ?: art(item.image) }
         return SpeakerUi(
             id = player.playerId,
             name = player.shownName,
@@ -152,7 +145,6 @@ class UiMapper(private val images: () -> Images?) {
             available = player.available,
             others = others,
             volume = player.volume.takeIf { player.hasVolume && !isPhone },
-            art = images()?.rebase(media?.imageUrl)?.let(::ArtRef) ?: queued,
         )
     }
 

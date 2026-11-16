@@ -166,16 +166,16 @@ class HomeScreenTest {
     }
 
     @Test fun aSectionShowsItsTitleOnlyWhereItsTitled() {
-        val speakers = HomeSample.speakers
-        val state = mutableStateOf(speakers)
+        val home = HomeSample.home
+        val state = mutableStateOf(home)
         compose.setContent { AmselTheme { HomeScreen(state.value, {}, {}, {}, {}, editor = Recorder()) } }
-        compose.onNodeWithText("Speakers").assertDoesNotExist()
         compose.onNodeWithText("Recently played").assertIsDisplayed()
-        state.value = speakers.copy(
-            sections = speakers.sections.map { it.copy(titled = it.option == SectionOption.Speakers) },
+        compose.onNodeWithText("Smart playlists").assertIsDisplayed()
+        state.value = home.copy(
+            sections = home.sections.map { it.copy(titled = it.option != SectionOption.Everything) },
         )
-        compose.onNodeWithText("Speakers").assertIsDisplayed()
         compose.onNodeWithText("Recently played").assertDoesNotExist()
+        compose.onNodeWithText("Smart playlists").assertIsDisplayed()
     }
 
     @Test fun homesSearchFieldOpensSearch() {
