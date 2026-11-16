@@ -124,7 +124,7 @@ class HomeRepositoryTest {
         }
         withRepo { env ->
             env.repo.load()
-            assertEquals(5, env.repo.items.value?.size)
+            assertEquals(HomeLayout().sections.size, env.repo.items.value?.size)
             assertTrue(env.loader.asked.isEmpty())
         }
     }
@@ -204,7 +204,12 @@ class HomeRepositoryTest {
         env.repo.load()
         env.repo.refreshIndexed()
         assertEquals(
-            setOf(SectionOption.Everything, SectionOption.SmartPlaylists, SectionOption.NewAlbums),
+            setOf(
+                SectionOption.Everything,
+                SectionOption.SmartPlaylists,
+                SectionOption.NewAlbums,
+                SectionOption.FavoriteStations,
+            ),
             env.loader.asked.toSet(),
         )
     }
@@ -253,7 +258,7 @@ class HomeRepositoryTest {
         env.repo.clear()
         assertNull(env.repo.items.value)
         assertFalse(snapshotFile.exists())
-        assertEquals(4, env.repo.layout.value?.sections?.size)
+        assertEquals(HomeLayout().sections.size - 1, env.repo.layout.value?.sections?.size)
     }
 
     @Test fun aSnapshotFromBeforeArtistsWoreCoversStillPaints() {

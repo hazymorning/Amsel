@@ -58,6 +58,8 @@ fun HomeScreen(
     onTipGone: (Tip) -> Unit = {},
     /** Speakers: a tap makes the speaker the one in use. */
     onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
+    /** Speakers: a card's own button plays or pauses that speaker where it is. */
+    onSpeakerPlay: (SpeakerUi) -> Unit = {},
     /** Search's field: opens Search, the keyboard up. */
     onSearch: () -> Unit = {},
 ) {
@@ -100,6 +102,7 @@ fun HomeScreen(
                         onTipGone,
                         onSpeaker,
                         onSearch,
+                        onSpeakerPlay,
                     )
                 }
 
@@ -160,8 +163,15 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             graph.mapper,
             graph.messages,
             graph.spokenWord,
-            combine(graph.playing.speakers, graph.playing.speaker, data.speakers.loads) { all, inUse, loads ->
-                HomeSpeakers(all, inUse, loaded = loads > 0)
+            combine(
+                graph.playing.speakers,
+                graph.playing.speaker,
+                data.speakers.loads,
+                graph.playing.optimistic.wishes,
+            ) { all, inUse, loads, wishes ->
+                // A card's play or pause shows at once, before the speaker answers.
+                val shown = all.map { s -> wishes[s.id]?.playing?.value?.let { s.copy(isPlaying = it) } ?: s }
+                HomeSpeakers(shown, inUse, loaded = loads > 0)
             },
         )
     }
@@ -200,6 +210,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         tip = tip.takeUnless { told },
         onTipGone = tips::seen,
         onSpeaker = { speaker, play -> if (play) actions.play(speaker) else actions.look(speaker, openPlayer) },
+        onSpeakerPlay = actions::playPause,
         onSearch = LocalStartSearch.current,
         modifier = modifier,
     )

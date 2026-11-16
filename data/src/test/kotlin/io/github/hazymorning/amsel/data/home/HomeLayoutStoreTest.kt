@@ -48,9 +48,9 @@ class HomeLayoutStoreTest {
         val layouts = HomeLayoutStore(store)
         layouts.save("server-a", HomeLayout().remove("s4"))
         layouts.save("server-b", HomeLayout().pin("library://album/9"))
-        assertEquals(4, layouts.layout("server-a").sections.size)
+        assertEquals(HomeLayout().sections.size - 1, layouts.layout("server-a").sections.size)
         assertEquals(emptyList<String>(), layouts.layout("server-a").pinned)
-        assertEquals(5, layouts.layout("server-b").sections.size)
+        assertEquals(HomeLayout().sections.size, layouts.layout("server-b").sections.size)
         assertEquals(listOf("library://album/9"), layouts.layout("server-b").pinned)
     }
 

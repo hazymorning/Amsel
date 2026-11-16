@@ -60,12 +60,12 @@
     <string name="hint_play_here">Hier hören</string>
     <string name="hint_silent">Ist stumm</string>
     <string name="hint_louder">Lauter</string>
-    <string name="hint_sleep">Schlaftimer stellen?</string>
+    <string name="hint_sleep">Sleep-Timer stellen?</string>
     <string name="hint_sleep_minutes">%1$d Min.</string>
     <string name="hint_away">Läuft noch auf %1$s</string>
     <string name="hint_home">Auf %1$s weiterhören?</string>
     <string name="hint_headphones">Kopfhörer verbunden</string>
-    <string name="hint_ended">Alles gespielt. Ähnliches weiterhören?</string>
+    <string name="hint_ended">Alles gespielt. Mit Ähnlichem weitermachen?</string>
     <string name="hint_go_on">Weiter</string>
     <string name="update">Aktualisieren</string>
     <string name="update_out">Amsel %1$s ist da</string>
