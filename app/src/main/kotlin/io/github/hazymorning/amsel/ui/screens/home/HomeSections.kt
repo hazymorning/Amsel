@@ -1,5 +1,6 @@
 package io.github.hazymorning.amsel.ui.screens.home
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -19,9 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -40,7 +44,9 @@ import io.github.hazymorning.amsel.ui.theme.capHeight
 
 /**
  * Home's sections in their order, under a tip while there is one to give; in edit mode each can
- * be carried to another place, and Add section stands under the last.
+ * be carried to another place, and Add section stands under the last. A long press on a free spot
+ * edits Home, as one on the phone's own home screen does, so Home stays editable with every
+ * heading hidden; a cover's, a card's or a heading's own long press comes first.
  */
 @Composable
 internal fun Sections(
@@ -77,12 +83,25 @@ internal fun Sections(
     var sheet by rememberSaveable { mutableStateOf<Pair<EditSheet, String>?>(null) }
     val loading = stringResource(R.string.loading)
     val sections = order.mapNotNull(byId::get)
-    // A heading is the long press into Edit Home: with every title on show hidden, the first keeps its own.
-    val noHeading = !state.editing && sections.none { it.titled }
+    val haptics = LocalHapticFeedback.current
     LazyColumn(
         modifier
             .onGloballyPositioned { listBox = it.boundsInWindow() }
-            .then(if (state.loading) Modifier.clearAndSetSemantics { contentDescription = loading } else Modifier),
+            .then(if (state.loading) Modifier.clearAndSetSemantics { contentDescription = loading } else Modifier)
+            .then(
+                if (state.editing) {
+                    Modifier
+                } else {
+                    Modifier.pointerInput(editor) {
+                        detectTapGestures(
+                            onLongPress = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                editor.startEditing()
+                            },
+                        )
+                    }
+                },
+            ),
         state = list,
         contentPadding = insets.plus(top = Space.Group),
         userScrollEnabled = !state.loading,
@@ -96,7 +115,7 @@ internal fun Sections(
                 Modifier.animateItem()
             }
             Section(
-                section = if (i == 0 && noHeading) section.copy(titled = true) else section,
+                section = section,
                 first = i == 0,
                 editing = state.editing,
                 lifted = lifted,

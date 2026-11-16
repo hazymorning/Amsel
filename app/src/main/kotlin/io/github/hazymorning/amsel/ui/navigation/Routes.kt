@@ -68,6 +68,9 @@ sealed interface Route : NavKey {
     /** What the Library shows as chips, and in what order. */
     @Serializable data object LibraryKinds : Route
 
+    /** Home's edit mode as a page of its own, from Settings: Done comes back. */
+    @Serializable data object HomeEdit : Route
+
     /**
      * [route] opened again above itself (an artist, a similar one, the first again), for the
      * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps

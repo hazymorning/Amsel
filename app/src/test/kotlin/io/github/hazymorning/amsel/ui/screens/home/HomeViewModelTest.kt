@@ -83,6 +83,7 @@ class HomeViewModelTest {
         syncing: Boolean = false,
         uiMapper: UiMapper = mapper,
         libraryEmpty: Flow<Boolean> = MutableStateFlow(false),
+        editOnly: Boolean = false,
     ) = HomeViewModel(
         SavedStateHandle(),
         home,
@@ -92,6 +93,7 @@ class HomeViewModelTest {
         libraryEmpty,
         uiMapper,
         Messages(MutableStateFlow(true)),
+        editOnly = editOnly,
     )
 
     /** A ViewModel whose state is collected for the rest of the test, as the screen collects it. */
@@ -286,6 +288,14 @@ class HomeViewModelTest {
         vm.startEditing()
         assertTrue(vm.state.value.editing)
         assertEquals(4, vm.state.value.visible.size)
+        vm.doneEditing()
+        assertFalse(vm.state.value.editing)
+    }
+
+    @Test fun homesEditPageFromSettingsOpensInEditMode() = runTest {
+        val vm = viewModel(FakeHome(items = snapshot), editOnly = true)
+        assertTrue(vm.state.value.editing)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect() }
         vm.doneEditing()
         assertFalse(vm.state.value.editing)
     }

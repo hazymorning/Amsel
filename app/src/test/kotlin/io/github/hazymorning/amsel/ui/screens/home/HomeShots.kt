@@ -27,6 +27,16 @@ class HomeShots : ScreenshotTest() {
         Home(HomeSample.home.copy(sections = listOf(search) + HomeSample.home.sections))
     }
 
+    /**
+     * Continue listening with its title hidden, under Search's field: a group's gap under the
+     * field, not a heading's room, then the next section's heading as ever.
+     */
+    @Test fun untitled() = snap("home_untitled", ShotVariant.entries) {
+        val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
+        val listening = HomeSample.listening.sections.map { it.copy(titled = false) }
+        Home(HomeSample.home.copy(sections = listOf(search) + listening + HomeSample.home.sections))
+    }
+
     @Test fun layouts() = snap("home_layouts", ShotVariant.entries) { Home(HomeSample.layouts) }
 
     @Test fun tip() = snap("home_tip", ShotVariant.entries) { Home(HomeSample.home, Tip.More) }

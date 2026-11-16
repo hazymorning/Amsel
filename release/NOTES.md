@@ -1,17 +1,15 @@
-# New perches
+# Twig weaving
 
 ## New
 
-- **A bar of your own:** besides Home, Search and the Library, the bottom bar can now hold Playlists, Albums, Artists, Radio, Audiobooks or Podcasts as places of their own, up to five in all. Choose them in Settings, Bottom bar.
-- **Radio in the Library:** your stations have their own chip, a grid of logos.
-- **Choose what the Library shows:** show, hide and reorder its kinds in Settings, Library.
+- **Edit Home anywhere:** long-press any free spot on Home, a margin or a gap between rows, to edit it, just as on your phone's home screen. Headings still work, and Settings now has a Home row that opens the same editing.
 
 ## Better
 
-- **Continue listening:** the progress line runs along the foot of each card, edge to edge, in its cover's colour.
-- **Follow the music** has a page of its own, every speaker on a row of its own.
-- **Settings** name Library, Mini player and Bottom bar in the order they stand on the screen.
+- **Radio on Home:** a new Home shows all your stations, not only your favourite ones. If your Home still had the favourite stations from the start, it now shows every station, so radio no longer stays hidden when you have no favourites.
+- **Hidden titles stay hidden,** even when you hide all of them; before, the first one came back.
+- **Continue listening:** the line along each card's foot is a quiet grey again, not the cover's colour.
 
 ## Fixed
 
-- With nothing playing, the mini player no longer hides its speaker button.
+- A section whose title is hidden no longer leaves a gap where the title was, as under Search at the top of Home.

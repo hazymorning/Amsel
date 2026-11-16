@@ -223,9 +223,9 @@ data class HomeLayout(
 
         /**
          * A new person's Home, seven sections: Search's field first; Continue listening in its
-         * cards and Pinned, each hidden while empty; then three rows of covers and the favourite
-         * stations in small ones. The sections an older default had keep their ids, so a Home never
-         * changed keeps its snapshots.
+         * cards and Pinned, each hidden while empty; then three rows of covers and the stations in
+         * small ones. The sections an older default had keep their ids, so a Home never changed
+         * keeps its snapshots.
          */
         val DEFAULT_SECTIONS = listOf(
             HomeSection("s5", SectionOption.Search, SectionLayout.Row),
@@ -234,8 +234,16 @@ data class HomeLayout(
             HomeSection("s2", SectionOption.Everything, SectionLayout.Row),
             HomeSection("s3", SectionOption.SmartPlaylists, SectionLayout.Row),
             HomeSection("s4", SectionOption.NewAlbums, SectionLayout.Row),
-            HomeSection("s7", SectionOption.FavoriteStations, SectionLayout.Small),
+            HomeSection("s7", SectionOption.AllStations, SectionLayout.Small),
         )
+
+        /**
+         * The stations an earlier default showed: only the favourite ones, so a library with
+         * stations and no favourite among them showed none on Home. Left as it came, it reads as
+         * every station.
+         */
+        private val FAVOURITE_STATIONS_AS_THEY_CAME =
+            HomeSection("s7", SectionOption.FavoriteStations, SectionLayout.Small)
 
         /** What "Add section" offers, most useful first. */
         private val SUGGESTED = listOf(
@@ -273,9 +281,11 @@ data class HomeLayout(
         }
     }
 
-    /** Unique ids and unique pins. */
+    /** Unique ids and unique pins; the earlier default's favourite stations as every station. */
     private fun sanitized(): HomeLayout = HomeLayout(
-        sections = sections.distinctBy { it.id },
+        sections = sections.distinctBy { it.id }.map {
+            if (it == FAVOURITE_STATIONS_AS_THEY_CAME) it.copy(option = SectionOption.AllStations) else it
+        },
         pinned = pinned.distinct(),
         listeningOffered = listeningOffered,
     )

@@ -40,21 +40,23 @@ most"), never "Section 1". The layout never appears in the title.
 
 ## Editing
 
-- **Long-press any section title** to enter edit mode (a tip says so once; with nothing on Home,
-  its empty state offers Edit Home).
+- **Long-press any section title, or any free spot** (a margin, the gap between sections or
+  covers; a cover's long press stays its own) to enter edit mode, as on the phone's home screen;
+  a tip says so once. Settings' Home row opens the same edit mode as a page of its own, whose Done
+  comes back; with nothing on Home, its empty state offers Edit Home.
 - In edit mode each section shows its title (a tap renames it), its sentence with two chips,
   **Show [source ▾] as [layout ▾]** (on two lines, so a longer choice never reflows it; each chip says
   its choice as the sentence needs it, "Show your pins as a grid", "Zeigt Angeheftetes als große
   Cover", where headings and the sheets keep their names), and ⋯ with Hide title (Show title, once
-  hidden: Home then keeps only the room a heading takes, and edit mode shows the title faint) and
-  Remove. Every section shows its title until hidden, but Search, a field, which shows it once
+  hidden: the section then stands a group's gap, 24, under the one before, and edit mode shows the
+  title faint) and Remove. Hidden titles stay hidden, all of them too. Every section shows its title until hidden, but Search, a field, which shows it once
   asked to. A held press on the title or the sentence picks the section up to move it; TalkBack moves it
   through its actions. A chip opens a sheet of choices, as Library's sort does. **Add section** stands
   at the end, however many there are. **Done** (in the slim bar) and Back leave edit mode. Every
   change shows immediately in place.
 - **Pin to Home / Unpin from Home** in the actions of an album, playlist, artist, station, book or podcast. Pinning when no Pinned section exists
   adds one at the top (Grid).
-- No settings screen, no separate editor page: Home edits itself.
+- Home edits itself; Settings' Home row only opens that edit mode as a page.
 
 ## Defaults (a new user)
 
