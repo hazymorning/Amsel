@@ -1,26 +1,60 @@
 package io.github.hazymorning.amsel.ui.screens.home
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import io.github.hazymorning.amsel.ui.components.ListeningTile
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.LastBaseline
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
+import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.Artwork
+import io.github.hazymorning.amsel.ui.components.ProgressLine
 import io.github.hazymorning.amsel.ui.components.ShelfRow
-import io.github.hazymorning.amsel.ui.components.TilePlaceholder
+import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.leftText
+import io.github.hazymorning.amsel.ui.components.lengthText
+import io.github.hazymorning.amsel.ui.components.shelfTileWidth
+import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
+import io.github.hazymorning.amsel.ui.theme.Radius
+import io.github.hazymorning.amsel.ui.theme.Sizes
+import io.github.hazymorning.amsel.ui.theme.SmoothShape
 import io.github.hazymorning.amsel.ui.theme.Space
+import io.github.hazymorning.amsel.ui.theme.capHeight
+import io.github.hazymorning.amsel.ui.theme.isNight
+import io.github.hazymorning.amsel.ui.theme.rememberCoverColors
+import io.github.hazymorning.amsel.ui.theme.rememberPress
+import io.github.hazymorning.amsel.ui.theme.secondLine
+import io.github.hazymorning.amsel.ui.theme.spaced
 
 /**
- * Continue listening as big covers with no card: each tile resumes where the person stopped; a
- * long press opens its actions, which lead to its page.
+ * Continue listening as upright cards, each washed in its cover's hue and as wide as a shelf's
+ * tiles, so they stand over the covers below: a tap resumes where the person stopped; a long press
+ * opens its actions, which lead to its page.
  */
 @Composable
 internal fun ListeningShelf(
@@ -29,22 +63,17 @@ internal fun ListeningShelf(
     onMore: (MediaUi) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val width = bigTileWidth()
+    val width = shelfTileWidth()
+    val card = rememberCardMeasure(width)
     ShelfRow(items, key = { it.key }, modifier) { item ->
-        ListeningTile(
-            item,
-            onPlay = { onResume(item) },
-            onMore = { onMore(item) },
-            width = width,
-            remaining = item.remainingSec?.let { leftText(it) },
-        )
+        ListeningCard(item, card, onPlay = { onResume(item) }, onMore = { onMore(item) })
     }
 }
 
-/** The tiles' twins while Continue listening loads for the first time. */
+/** The cards' twins while Continue listening loads for the first time: their size, their shape. */
 @Composable
 internal fun ListeningSkeleton(modifier: Modifier = Modifier) {
-    val width = bigTileWidth()
+    val card = rememberCardMeasure(shelfTileWidth())
     Row(
         modifier
             .fillMaxWidth()
@@ -52,7 +81,14 @@ internal fun ListeningSkeleton(modifier: Modifier = Modifier) {
             .padding(horizontal = Keyline.Margin),
         horizontalArrangement = Arrangement.spacedBy(Space.Tiles),
     ) {
-        repeat(SKELETON_CARDS) { TilePlaceholder(it, Modifier.width(width), twoLines = false) }
+        repeat(SKELETON_CARDS) {
+            Box(
+                Modifier.size(
+                    card.width,
+                    card.height,
+                ).clip(CardShape).background(MaterialTheme.colorScheme.surfaceContainerLow),
+            )
+        }
     }
 }
 
@@ -62,5 +98,131 @@ internal fun withTimeLeft(items: List<MediaUi>): List<MediaUi> = items.map { ite
     val left = item.remainingSec?.let { leftText(it) } ?: return@map item
     item.copy(subtitle = listOfNotNull(item.subtitle, left).joinToString(DOT_SEPARATOR))
 }
+
+/**
+ * Where a card's lines stand, from its top. Under the cover, two lines that say what it is; then,
+ * a group's gap further, what is left over the line, on the card's foot.
+ */
+private class CardMeasure(val width: Dp, val cover: Dp, val words: Dp, val title: Dp, val second: Dp, val height: Dp)
+
+@Composable
+private fun rememberCardMeasure(width: Dp): CardMeasure {
+    val type = MaterialTheme.typography
+    val density = LocalDensity.current
+    return remember(width, density, type) {
+        with(density) {
+            val cover = width - Frame * 2
+            val title = Frame + cover + spaced(Space.Caption) + capHeight(type.titleSmall)
+            val second = secondLine(type.bodyMedium)
+            val foot =
+                spaced(Space.Group) + capHeight(type.bodyMedium) + spaced(Space.S3) + Sizes.ProgressLine + Space.S4
+            CardMeasure(width, cover, Frame + Radius.under(Radius.cover(cover)), title, second, title + second + foot)
+        }
+    }
+}
+
+/**
+ * Something to pick up again as a card of its cover's paper: the cover in a frame of 8, the card's
+ * corners the cover's plus that frame. Under the cover what it is: the title's two lines, or its one
+ * and who wrote or made it, so no card has a hole where another's title wraps. On the card's foot
+ * what is left over the line every progress is drawn with.
+ */
+@Composable
+private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, onMore: () -> Unit) {
+    val type = MaterialTheme.typography
+    val colors = MaterialTheme.colorScheme
+    val presses = remember { MutableInteractionSource() }
+    val plain = colors.onSurface.copy(alpha = CARD_INK).compositeOver(colors.surfaceContainerLow)
+    val paper: Color = rememberCoverColors(item.art)?.wash(colors.surface, colors.isNight) ?: plain
+    Box(
+        Modifier
+            .size(card.width, card.height)
+            .clip(CardShape)
+            .background(paper)
+            .combinedClickable(
+                interactionSource = presses,
+                indication = rememberPress(shape = null),
+                role = Role.Button,
+                onClickLabel = stringResource(R.string.resume),
+                onClick = onPlay,
+                onLongClickLabel = stringResource(R.string.more_options_for, item.title),
+                onLongClick = onMore,
+            ),
+    ) {
+        Artwork(
+            item.art,
+            Modifier.padding(Frame).size(card.cover),
+            item.kind,
+            interactionSource = presses,
+            name = item.title,
+        )
+        WhatItIs(item, card, Modifier.padding(horizontal = card.words))
+        Column(Modifier.align(Alignment.BottomStart).padding(start = card.words, end = card.words, bottom = Space.S4)) {
+            item.remainingSec?.let { left ->
+                val text = leftText(left)
+                Words(
+                    text,
+                    type.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    shorter = lengthText(left),
+                    modifier = Modifier.textInk(type.bodyMedium).inkStart(text, type.bodyMedium),
+                )
+            }
+            ProgressLine({
+                item.progress ?: 0f
+            }, Modifier.padding(top = with(LocalDensity.current) { spaced(Space.S3) }))
+        }
+    }
+}
+
+/** The title on its two lines; while it takes one, its author or podcast on the second. */
+@Composable
+private fun WhatItIs(item: MediaUi, card: CardMeasure, modifier: Modifier) {
+    val type = MaterialTheme.typography
+    val colors = MaterialTheme.colorScheme
+    val by = item.subtitle?.takeIf { it.isNotBlank() }
+    Layout(
+        content = {
+            Words(
+                item.title,
+                type.titleSmall,
+                color = colors.onSurface,
+                maxLines = 2,
+                modifier = Modifier.inkStart(item.title, type.titleSmall),
+            )
+            if (by !=
+                null
+            ) {
+                Words(
+                    by,
+                    type.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.inkStart(by, type.bodyMedium),
+                )
+            }
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val title = measurables[0].measure(loose)
+        val first = title[FirstBaseline]
+        val oneLine = first == title[LastBaseline]
+        val author = if (oneLine) measurables.getOrNull(1)?.measure(loose) else null
+        val titleAt = card.title.roundToPx() - first
+        layout(constraints.maxWidth, constraints.maxHeight) {
+            title.placeRelative(0, titleAt)
+            author?.placeRelative(0, titleAt + first + card.second.roundToPx() - author[FirstBaseline])
+        }
+    }
+}
+
+/** The cover's frame inside the card. */
+private val Frame = Space.S2
+
+/** The card's corners: the cover's and its frame, so the two curves run side by side. */
+private val CardShape = SmoothShape(Radius.Thumb + Frame)
+
+/** The card's paper where its cover lends no hue: Home's cards' own. */
+private const val CARD_INK = 0.03f
 
 private const val SKELETON_CARDS = 2
