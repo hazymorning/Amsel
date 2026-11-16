@@ -208,7 +208,7 @@ class HomeRepositoryTest {
                 SectionOption.Everything,
                 SectionOption.SmartPlaylists,
                 SectionOption.NewAlbums,
-                SectionOption.FavoriteStations,
+                SectionOption.AllStations,
             ),
             env.loader.asked.toSet(),
         )
