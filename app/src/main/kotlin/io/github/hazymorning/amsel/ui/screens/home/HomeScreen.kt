@@ -58,8 +58,6 @@ fun HomeScreen(
     onTipGone: (Tip) -> Unit = {},
     /** Speakers: a tap makes the speaker the one in use. */
     onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
-    /** Speakers: a card's own button plays or pauses that speaker where it is. */
-    onSpeakerPlay: (SpeakerUi) -> Unit = {},
     /** Search's field: opens Search, the keyboard up. */
     onSearch: () -> Unit = {},
 ) {
@@ -102,7 +100,6 @@ fun HomeScreen(
                         onTipGone,
                         onSpeaker,
                         onSearch,
-                        onSpeakerPlay,
                     )
                 }
 
@@ -210,7 +207,6 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         tip = tip.takeUnless { told },
         onTipGone = tips::seen,
         onSpeaker = { speaker, play -> if (play) actions.play(speaker) else actions.look(speaker, openPlayer) },
-        onSpeakerPlay = actions::playPause,
         onSearch = LocalStartSearch.current,
         modifier = modifier,
     )
