@@ -122,7 +122,7 @@ private fun rememberCardMeasure(width: Dp): CardMeasure {
 }
 
 /**
- * Something to pick up again as a card of its cover's paper: the cover in a frame of 8, the card's
+ * Something to pick up again as a card of its cover's paper: the cover in a frame of 12, the card's
  * corners the cover's plus that frame. Under the cover what it is: the title's two lines, or its one
  * and who wrote or made it, so no card has a hole where another's title wraps. On the card's foot
  * what is left over the line every progress is drawn with.
@@ -216,8 +216,8 @@ private fun WhatItIs(item: MediaUi, card: CardMeasure, modifier: Modifier) {
     }
 }
 
-/** The cover's frame inside the card. */
-private val Frame = Space.S2
+/** The cover's frame inside the card: its edge plus half its corner is where the words stand, 16 in, as from any filled shape's sides. */
+private val Frame = Space.S3
 
 /** The card's corners: the cover's and its frame, so the two curves run side by side. */
 private val CardShape = SmoothShape(Radius.Thumb + Frame)

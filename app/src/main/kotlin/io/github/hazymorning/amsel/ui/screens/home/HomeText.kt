@@ -32,7 +32,6 @@ internal val SectionOption.title: Int
         SectionOption.NewAudiobooks -> R.string.home_option_new_audiobooks
         SectionOption.NewEpisodes -> R.string.home_option_new_episodes
         SectionOption.YourPodcasts -> R.string.home_option_your_podcasts
-        SectionOption.Speakers -> R.string.home_option_speakers
         SectionOption.Search -> R.string.home_option_search
     }
 
@@ -86,7 +85,6 @@ internal val SectionOption.inSentence: Int
         SectionOption.NewAudiobooks -> R.string.home_sentence_option_new_audiobooks
         SectionOption.NewEpisodes -> R.string.home_sentence_option_new_episodes
         SectionOption.YourPodcasts -> R.string.home_sentence_option_your_podcasts
-        SectionOption.Speakers -> R.string.home_sentence_option_speakers
         SectionOption.Search -> R.string.home_sentence_option_search
     }
 
@@ -123,7 +121,6 @@ internal val WhatGroups: List<List<SectionOption>> = listOf(
         SectionOption.PlayedHere,
         SectionOption.ContinueListening,
     ),
-    listOf(SectionOption.Speakers),
     listOf(SectionOption.Search),
     listOf(
         SectionOption.YourPlaylists,

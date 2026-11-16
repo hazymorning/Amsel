@@ -21,14 +21,12 @@ import io.github.hazymorning.amsel.app.Tip
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.LocalAppActions
-import io.github.hazymorning.amsel.ui.LocalOpenNowPlaying
 import io.github.hazymorning.amsel.ui.LocalStartSearch
 import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
@@ -56,8 +54,6 @@ fun HomeScreen(
     /** What to tell above the first section, put away by [onTipGone]. */
     tip: Tip? = null,
     onTipGone: (Tip) -> Unit = {},
-    /** Speakers: a tap makes the speaker the one in use. */
-    onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
     /** Search's field: opens Search, the keyboard up. */
     onSearch: () -> Unit = {},
 ) {
@@ -98,7 +94,6 @@ fun HomeScreen(
                         Modifier.fillMaxSize(),
                         tip,
                         onTipGone,
-                        onSpeaker,
                         onSearch,
                     )
                 }
@@ -160,21 +155,11 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             graph.mapper,
             graph.messages,
             graph.spokenWord,
-            combine(
-                graph.playing.speakers,
-                graph.playing.speaker,
-                data.speakers.loads,
-                graph.playing.optimistic.wishes,
-            ) { all, inUse, loads, wishes ->
-                // A card's play or pause shows at once, before the speaker answers.
-                val shown = all.map { s -> wishes[s.id]?.playing?.value?.let { s.copy(isPlaying = it) } ?: s }
-                HomeSpeakers(shown, inUse, loaded = loads > 0)
-            },
+            combine(graph.playing.speakers, graph.playing.speaker) { all, inUse -> HomeSpeakers(all, inUse) },
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val actions = LocalAppActions.current
-    val openPlayer = LocalOpenNowPlaying.current
     val tips = graph.tips
     val tip by tips.current.collectAsStateWithLifecycle()
     // TalkBack names every long press as it reads, and finds Settings open: it needs no tips.
@@ -206,7 +191,6 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         },
         tip = tip.takeUnless { told },
         onTipGone = tips::seen,
-        onSpeaker = { speaker, play -> if (play) actions.play(speaker) else actions.look(speaker, openPlayer) },
         onSearch = LocalStartSearch.current,
         modifier = modifier,
     )

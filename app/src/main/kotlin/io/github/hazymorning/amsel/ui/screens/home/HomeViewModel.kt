@@ -90,7 +90,7 @@ class HomeViewModel(
     private val messages: Messages,
     /** What the library index holds of spoken word: What to show offers its options only then. */
     spokenWord: Flow<SpokenWord> = flowOf(SpokenWord()),
-    /** The speakers, for Speakers and to name the one Played here shows. */
+    /** The speakers, to name the one Played here shows. */
     speakers: Flow<HomeSpeakers> = flowOf(HomeSpeakers()),
 ) : ViewModel(),
     HomeEditor {
@@ -122,8 +122,6 @@ class HomeViewModel(
                     home.items.value,
                     isOffline(session.value),
                     firstSyncs = emptySet(),
-                    // Not known before the flow answers: the Speakers row holds its room meanwhile.
-                    speakers = HomeSpeakers(loaded = false),
                 ),
                 editing = editing.value,
                 mapper::media,
@@ -201,26 +199,10 @@ internal data class HomeInputs(
     val speakers: HomeSpeakers = HomeSpeakers(),
 )
 
-/**
- * Every speaker as Play on lists them, This phone first, and the one music plays on; [loaded] once
- * the server named them in this run of the app.
- */
+/** Every speaker as Play on lists them, This phone first, and the one music plays on. */
 @Immutable
-data class HomeSpeakers(
-    val all: List<SpeakerUi> = emptyList(),
-    val inUse: SpeakerUi? = null,
-    val loaded: Boolean = true,
-) {
+data class HomeSpeakers(val all: List<SpeakerUi> = emptyList(), val inUse: SpeakerUi? = null) {
     fun named(id: String): SpeakerUi? = inUse?.takeIf { it.id == id } ?: all.firstOrNull { it.id == id }
-
-    /**
-     * Speakers: those that play or rest on something, where music can go on, those that play first
-     * and of each the one in use first. The one in use is among them, so speakers grouped under it
-     * still show, as the group they play in.
-     */
-    val shown: List<SpeakerUi> = all
-        .filter { it.available && (it.isPlaying || it.song != null) }
-        .sortedWith(compareBy({ !it.isPlaying }, { it.id != inUse?.id }))
 }
 
 /**
@@ -249,10 +231,9 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
         }
         val noPins = option == SectionOption.Pinned && layout.pinned.isEmpty()
         val waitingForIndex = list.isEmpty() && option.indexKind in inputs.firstSyncs
-        val ofSpeakers = option == SectionOption.Speakers
-        // Speakers keep no snapshot: their row holds its room until the server names them. Search waits for nothing.
-        val loading = !inputs.offline && option != SectionOption.Search &&
-            if (ofSpeakers) !inputs.speakers.loaded else !noPins && (cached == null || waitingForIndex)
+        // Search waits for nothing.
+        val loading =
+            !inputs.offline && option != SectionOption.Search && !noPins && (cached == null || waitingForIndex)
         // Edit mode shows every pin Home holds, so each can be put in its place.
         val shown = if (editing &&
             option == SectionOption.Pinned
@@ -272,8 +253,6 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
             title = section.title,
             titled = section.showsTitle,
             heardOn = cached?.speaker?.let(inputs.speakers::named),
-            speakers = if (ofSpeakers) inputs.speakers.shown else emptyList(),
-            inUse = inputs.speakers.inUse?.id,
         )
     }
     return HomeUiState(
@@ -300,15 +279,11 @@ data class SectionUi(
     /** The person's own name for it, if they gave one. */
     val title: String? = null,
     /** Its heading shows outside edit mode. */
-    val titled: Boolean = option != SectionOption.Speakers && option != SectionOption.Search,
+    val titled: Boolean = option != SectionOption.Search,
     /** Played here: the speaker whose plays it shows, named after its title. */
     val heardOn: SpeakerUi? = null,
-    /** Speakers: those it shows; none away from them, which hides it. */
-    val speakers: List<SpeakerUi> = emptyList(),
-    /** The speaker music plays on. */
-    val inUse: String? = null,
 ) {
-    val isEmpty: Boolean get() = option != SectionOption.Search && !loading && items.isEmpty() && speakers.isEmpty()
+    val isEmpty: Boolean get() = option != SectionOption.Search && !loading && items.isEmpty()
 }
 
 /**
