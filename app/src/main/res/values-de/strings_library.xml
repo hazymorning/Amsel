@@ -17,5 +17,6 @@
     <string name="library_empty_artists">Noch keine Künstler</string>
     <string name="library_empty_audiobooks">Noch keine Hörbücher</string>
     <string name="library_empty_podcasts">Noch keine Podcasts</string>
+    <string name="library_empty_radio">Noch keine Radiosender</string>
     <string name="library_empty_downloads">Noch nichts heruntergeladen</string>
 </resources>

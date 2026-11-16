@@ -1,7 +1,17 @@
-# Autumn moult
+# New perches
+
+## New
+
+- **A bar of your own:** besides Home, Search and the Library, the bottom bar can now hold Playlists, Albums, Artists, Radio, Audiobooks or Podcasts as places of their own, up to five in all. Choose them in Settings, Bottom bar.
+- **Radio in the Library:** your stations have their own chip, a grid of logos.
+- **Choose what the Library shows:** show, hide and reorder its kinds in Settings, Library.
 
 ## Better
 
-- **A calmer Home:** the row of speaker cards at the top of Home is gone, and Edit Home no longer offers it. If your Home had the row, it simply goes; your other sections and your pins stay as they were. Which speaker plays, and what it plays, is still one tap away in the mini player and in Play on.
-- **Continue listening:** the cards give their cover and their words a little more room, so a title, its author and the time left no longer sit so close to the edges.
-- **Reset Home:** brings back a starting Home with Search, Continue listening and rows of music, now without the speakers.
+- **Continue listening:** the progress line runs along the foot of each card, edge to edge, in its cover's colour.
+- **Follow the music** has a page of its own, every speaker on a row of its own.
+- **Settings** name Library, Mini player and Bottom bar in the order they stand on the screen.
+
+## Fixed
+
+- With nothing playing, the mini player no longer hides its speaker button.

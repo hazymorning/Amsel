@@ -18,7 +18,6 @@ import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpokenWord
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -61,23 +60,33 @@ class LibraryViewModel(
     private val resync: suspend (MediaType) -> Unit,
     private val messages: Messages,
     work: CoroutineDispatcher = Dispatchers.Default,
-    /** What the library holds of spoken word: the Audiobooks and Podcasts chips show only then. */
-    spokenWord: Flow<SpokenWord>,
+    /** The kinds the index holds any of: the Audiobooks, Podcasts and Radio chips show only then. */
+    held: Flow<Set<MediaType>>,
+    /** The kinds the person shows in the Library, in their order (Settings, Library). */
+    arranged: Flow<List<LibraryKind>> = flowOf(LibraryKind.Default.visible),
     /** What plays now and what it comes from (the track, its album, the book or podcast). */
     playing: Flow<Set<String>> = flowOf(emptySet()),
     /** What is downloaded to the phone, or on its way, as rows: the Downloads chip shows while there is some. */
     private val downloads: Flow<List<MediaUi>> = flowOf(emptyList()),
+    /** One kind alone, as a place of its own in the bar: its name for a title, and no chips. */
+    private val only: LibraryKind? = null,
 ) : ViewModel() {
-    private val kinds = combine(spokenWord, downloads.map { it.isNotEmpty() }.distinctUntilChanged(), ::libraryKinds)
-        .distinctUntilChanged()
+    private val kinds: Flow<List<LibraryKind>> = if (only != null) {
+        flowOf(listOf(only))
+    } else {
+        combine(arranged, held, downloads.map { it.isNotEmpty() }.distinctUntilChanged(), ::libraryKinds)
+            .distinctUntilChanged()
+    }
 
-    // A chosen kind the library no longer holds gives way to the first chip.
+    // A chosen kind the library no longer holds, or the person no longer shows, gives way to the first chip.
     private val selection = combine(
-        handle.getStateFlow(KIND, LibraryKind.Playlists.name),
+        handle.getStateFlow(KIND, only?.name ?: LibraryKind.Playlists.name),
         handle.getStateFlow(SORT, LibrarySort.RecentlyPlayed.name),
         kinds,
     ) { kind, sort, shown ->
-        selectionOf(kind, sort).let { if (it.kind in shown) it else it.copy(kind = LibraryKind.Playlists) }
+        selectionOf(kind, sort).let {
+            if (it.kind in shown) it else it.copy(kind = shown.firstOrNull() ?: LibraryKind.Playlists)
+        }
     }.distinctUntilChanged()
 
     /** The signed-in person's names. */
@@ -148,7 +157,7 @@ class LibraryViewModel(
                 val pulled = pulledKind == page.selection.kind
                 val synced = page.selection.kind.type?.let { it in done } ?: true
                 libraryState(page, sync && !pulled, reach, synced)
-                    .copy(refreshing = pulled, kinds = shown)
+                    .copy(refreshing = pulled, kinds = shown, single = only != null)
             },
             failures,
             playing,
@@ -159,8 +168,8 @@ class LibraryViewModel(
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            selectionOf(handle[KIND], handle[SORT]).let {
-                LibraryUiState(kind = it.kind, sort = it.sort, pending = true, kinds = null)
+            selectionOf(only?.name ?: handle[KIND], handle[SORT]).let {
+                LibraryUiState(kind = it.kind, sort = it.sort, pending = true, kinds = null, single = only != null)
             },
         )
 
@@ -280,30 +289,6 @@ internal fun libraryState(page: LibraryPage, syncing: Boolean, reach: Reach, syn
     )
 }
 
-/** The kind in the library index; none for Downloads, which are on the phone. */
-internal val LibraryKind.type: MediaType?
-    get() = when (this) {
-        LibraryKind.Playlists -> MediaType.Playlist
-        LibraryKind.Albums -> MediaType.Album
-        LibraryKind.Artists -> MediaType.Artist
-        LibraryKind.Audiobooks -> MediaType.Audiobook
-        LibraryKind.Podcasts -> MediaType.Podcast
-        LibraryKind.Downloads -> null
-    }
-
-/** Audiobooks and podcasts are offered while the library holds some, Downloads while the phone does. */
-enum class LibraryKind { Downloads, Playlists, Albums, Artists, Audiobooks, Podcasts }
-
-/** The kinds whose chips show; Downloads first, in sight without a connection, where the row would hide it. */
-fun libraryKinds(held: SpokenWord, downloads: Boolean = false): List<LibraryKind> = LibraryKind.entries.filter {
-    when (it) {
-        LibraryKind.Audiobooks -> held.books
-        LibraryKind.Podcasts -> held.podcasts
-        LibraryKind.Downloads -> downloads
-        else -> true
-    }
-}
-
 @Immutable
 data class LibraryUiState(
     val kind: LibraryKind = LibraryKind.Playlists,
@@ -323,7 +308,9 @@ data class LibraryUiState(
     /** A pull to refresh is syncing the list with the server. */
     val refreshing: Boolean = false,
     /** The chips, in order; null until the library says what it holds. */
-    val kinds: List<LibraryKind>? = libraryKinds(SpokenWord()),
+    val kinds: List<LibraryKind>? = libraryKinds(LibraryKind.Default.visible, held = emptySet()),
+    /** One kind alone, a place of its own in the bar: named in the title, with no chips. */
+    val single: Boolean = false,
     /** What plays now and what it comes from; such an item carries the playing ring. */
     val playing: Set<String> = emptySet(),
 ) {

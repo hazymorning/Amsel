@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -29,6 +28,7 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.UpdateState
 import io.github.hazymorning.amsel.data.lastAbsAccount
 import io.github.hazymorning.amsel.graph
+import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
@@ -38,6 +38,9 @@ import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
+import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
+import io.github.hazymorning.amsel.ui.screens.library.label
+import io.github.hazymorning.amsel.ui.screens.library.libraryKinds
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
@@ -60,10 +63,9 @@ fun SettingsScreen(
     onFadeChange: (Int) -> Unit = {},
     onShakeChange: (Boolean) -> Unit = {},
     onSleepOnPlayChange: (Boolean) -> Unit = {},
-    onFollowChange: (Boolean) -> Unit = {},
-    /** The speakers Follow the music may pick, and a change to those it leaves out. */
+    /** The speakers Follow the music may pick, named under it, and its page. */
     followSpeakers: List<FollowSpeaker> = emptyList(),
-    onFollowSkippedChange: (Set<String>) -> Unit = {},
+    onFollow: () -> Unit = {},
     onVolumeLimitChange: (Int) -> Unit = {},
     update: UpdateState = UpdateState.Unknown,
     onLookForUpdatesChange: (Boolean) -> Unit = {},
@@ -73,6 +75,9 @@ fun SettingsScreen(
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignIn = { _, _, _ -> null },
     onAbsSignOut: () -> Unit = {},
+    /** What the Library shows now, in its order, and the page that arranges it. */
+    library: List<LibraryKind> = libraryKinds(LibraryKind.Default.visible, held = emptySet()),
+    onLibrary: () -> Unit = {},
     /** The places the bottom bar shows, in its order, and the page that arranges them. */
     bar: List<BarPlace> = BarPlace.Default,
     onBar: () -> Unit = {},
@@ -141,14 +146,19 @@ fun SettingsScreen(
                         choosing = Choice.Theme
                     }
                 }
+                // Top to bottom as they stand on the screen, the page, the mini player and the bar,
+                // each naming what it shows.
                 row { shape ->
-                    // What the bar shows, in its order: the page arranges it, as a long press on the bar does.
-                    val names = bar.map { stringResource(it.label) }.joinToString(", ")
-                    SettingRow(stringResource(R.string.settings_bar), shape, subtitle = names, onClick = onBar)
+                    val names = library.map { stringResource(it.label) }.joinToString(", ")
+                    SettingRow(stringResource(PlaybackR.string.library), shape, subtitle = names, onClick = onLibrary)
                 }
                 row { shape ->
                     val names = dock.map { stringResource(it.label) }.joinToString(", ")
                     SettingRow(stringResource(R.string.settings_dock), shape, subtitle = names, onClick = onDock)
+                }
+                row { shape ->
+                    val names = bar.map { stringResource(it.label) }.joinToString(", ")
+                    SettingRow(stringResource(R.string.settings_bar), shape, subtitle = names, onClick = onBar)
                 }
                 row { shape ->
                     val on = hintsOn(hintsOff)
@@ -161,16 +171,12 @@ fun SettingsScreen(
                     SettingRow(stringResource(R.string.hints), shape, subtitle = state, onClick = onHints)
                 }
                 row { shape ->
-                    ToggleRow(
+                    SettingRow(
                         stringResource(R.string.settings_follow),
-                        stringResource(R.string.settings_follow_detail),
-                        state.followPlaying,
                         shape,
-                        onFollowChange,
+                        subtitle = followLine(state.followPlaying, followSpeakers, state.followSkipped),
+                        onClick = onFollow,
                     )
-                }
-                if (state.followPlaying && followSpeakers.isNotEmpty()) {
-                    row { shape -> FollowSpeakers(followSpeakers, state.followSkipped, shape, onFollowSkippedChange) }
                 }
                 row { shape ->
                     ValueRow(stringResource(R.string.settings_volume_limit), limitLabel(state.volumeLimit), shape) {
@@ -310,9 +316,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             saveFade = data.prefs::setSleepFade,
             saveShake = data.prefs::setSleepShake,
             saveSleepOnPlay = data.prefs::setSleepOnPlay,
-            saveFollow = data.prefs::setFollowPlaying,
             saveVolumeLimit = data.prefs::setVolumeLimit,
-            saveFollowSkipped = data.prefs::setFollowSkipped,
             saveLookForUpdates = data.prefs::setLookForUpdates,
             saveDownloadOnWifi = data.prefs::setDownloadOnWifi,
             // The data graph forgets the server's data once the session has ended.
@@ -330,15 +334,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
     val entries by graph.downloading.entries.collectAsStateWithLifecycle()
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     val used by produceState<Long?>(null, entries) { value = graph.data.downloads.used() }
-    val players by graph.data.speakers.players.collectAsStateWithLifecycle()
-    val phoneId by graph.phone.playerId.collectAsStateWithLifecycle()
-    // Every speaker, in a group or not: following can pick it whenever it plays, or plays along.
-    val followSpeakers = remember(players, phoneId) {
-        players.values
-            .filter { it.playerId != phoneId && it.copy(syncedTo = null, activeGroup = null).isShownSpeaker(phoneId) }
-            .sortedBy { it.shownName.lowercase() }
-            .map { FollowSpeaker(it.playerId, it.shownName) }
-    }
+    val held by graph.data.library.heldTypes.collectAsStateWithLifecycle(emptySet())
+    val downloaded by graph.downloading.rows.collectAsStateWithLifecycle(emptyList())
     SettingsScreen(
         state = state,
         onBack = { navigator.back() },
@@ -348,10 +345,9 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onFadeChange = viewModel::onFadeChange,
         onShakeChange = viewModel::onShakeChange,
         onSleepOnPlayChange = viewModel::onSleepOnPlayChange,
-        onFollowChange = viewModel::onFollowChange,
         onVolumeLimitChange = viewModel::onVolumeLimitChange,
-        followSpeakers = followSpeakers,
-        onFollowSkippedChange = viewModel::onFollowSkippedChange,
+        followSpeakers = rememberFollowSpeakers(),
+        onFollow = { navigator.open(Route.Follow) },
         update = update,
         onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
         onLookForUpdate = graph.updates::lookNow,
@@ -360,6 +356,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,
         onAbsSignIn = graph.downloading::signIn,
         onAbsSignOut = graph.downloading::signOut,
+        library = libraryKinds(LibraryKind.arrangement(prefs?.libraryKinds).visible, held, downloaded.isNotEmpty()),
+        onLibrary = { navigator.open(Route.LibraryKinds) },
         bar = BarPlace.of(prefs?.barPlaces),
         onBar = { navigator.open(Route.Bar) },
         dock = DockControl.arrangement(prefs?.dockControls).visible,

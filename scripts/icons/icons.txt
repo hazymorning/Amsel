@@ -20,6 +20,12 @@ search              magnifying-glass
 search_selected     magnifying-glass       fill
 library             library                custom
 library_selected    library_selected       custom
+playlist_selected   playlist               fill  mirrored
+album_selected      vinyl-record           fill
+artist_selected     user                   fill
+radio_selected      radio                  fill
+audiobook_selected  book-open              fill
+podcast_selected    microphone             fill
 
 # Transport: filled, as on every media control.
 play                play                   fill
