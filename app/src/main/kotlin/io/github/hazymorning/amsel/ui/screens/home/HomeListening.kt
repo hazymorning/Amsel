@@ -32,9 +32,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.AHEAD_ALPHA
 import io.github.hazymorning.amsel.ui.components.Artwork
-import io.github.hazymorning.amsel.ui.components.HEARD_ALPHA
 import io.github.hazymorning.amsel.ui.components.ShelfRow
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.inkStart
@@ -187,19 +185,20 @@ private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, 
 
 /**
  * How far through, as the card's own foot: edge to edge, square at the moving end, its two ends
- * rounded by the card's corners, heard and ahead in the ink every progress line has. Anything begun
- * fills the first corner's curve, so a book a few minutes in still shows where the line starts.
+ * rounded by the card's corners, in ink, quieter than a thin progress line as it runs the card's
+ * whole width. Anything begun fills the first corner's curve, so a book a few minutes in still
+ * shows where the line starts.
  */
 @Composable
 private fun FootLine(fraction: () -> Float, ink: Color, modifier: Modifier) {
     Canvas(modifier.fillMaxWidth().height(Sizes.ProgressLine)) {
-        drawRect(ink.copy(alpha = AHEAD_ALPHA))
+        drawRect(ink.copy(alpha = FOOT_AHEAD))
         val f = fraction().coerceIn(0f, 1f)
         if (f <= 0f) return@Canvas
         val begun = CardCorner.toPx()
         val along = begun + f * (size.width - begun)
         val start = if (layoutDirection == LayoutDirection.Rtl) size.width - along else 0f
-        drawRect(ink.copy(alpha = HEARD_ALPHA), Offset(start, 0f), Size(along, size.height))
+        drawRect(ink.copy(alpha = FOOT_HEARD), Offset(start, 0f), Size(along, size.height))
     }
 }
 
@@ -256,3 +255,7 @@ private val CardShape = SmoothShape(CardCorner)
 private const val CARD_INK = 0.03f
 
 private const val SKELETON_CARDS = 2
+
+/** The foot line's ink, heard and ahead. */
+private const val FOOT_HEARD = 0.32f
+private const val FOOT_AHEAD = 0.10f

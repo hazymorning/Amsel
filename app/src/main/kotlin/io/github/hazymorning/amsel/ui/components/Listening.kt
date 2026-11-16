@@ -62,9 +62,8 @@ internal fun lengthParts(totalSec: Int): Pair<Int, Int> {
 private const val SECONDS_PER_MINUTE = 60
 private const val MINUTES_PER_HOUR = 60
 
-/** Every progress line's ink: what was heard, and the way still ahead. */
-internal const val HEARD_ALPHA = 0.6f
-internal const val AHEAD_ALPHA = 0.12f
+private const val HEARD_ALPHA = 0.6f
+private const val AHEAD_ALPHA = 0.12f
 
 /**
  * How far through a book, an episode or what plays, as the line every progress is drawn with;
