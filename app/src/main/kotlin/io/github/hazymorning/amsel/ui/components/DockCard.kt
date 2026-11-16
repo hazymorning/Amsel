@@ -194,8 +194,8 @@ private fun PlayerRow(
         PlayerWords(state, speaker, Modifier.weight(1f), song = swipe.follow, runs = !covered)
         Spacer(Modifier.width(BeforePlay))
         val ink = MaterialTheme.colorScheme.onSurface
-        // On a disc of the second tone, so play stands out from the words without shouting.
-        PlayButton(state.isPlaying, { onControl(PlayerControl.PlayPause) }, size = PlayDisc, tonal = true)
+        // In ink, as every page's play: the dock's one focal point, which balances the cover at its start.
+        PlayButton(state.isPlaying, { onControl(PlayerControl.PlayPause) }, size = PlayDisc)
         if (state.spoken) {
             val seconds = (SKIP_FORWARD_MS / 1000).toInt()
             SkipSeconds(

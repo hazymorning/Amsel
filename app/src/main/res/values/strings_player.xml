@@ -11,6 +11,8 @@
     <string name="player_volume_ask">Set %1$s louder than your limit of %2$s?</string>
     <string name="player_volume_ask_louder">Set to %1$s</string>
     <string name="player_volume_ask_stay">Stay at %1$s</string>
+    <string name="speaker_pause">Pause: %1$s</string>
+    <string name="speaker_play">Play: %1$s</string>
     <string name="player_volume_in_group">In the group</string>
     <string name="player_up_next">Up next</string>
     <!-- Above the artwork: where the music comes from (the album) -->
@@ -93,5 +95,6 @@
     <string name="group">Group</string>
     <string name="group_change">Change group</string>
     <string name="group_with">Group with %1$s</string>
+    <string name="group_with_phone">Group with this phone</string>
     <string name="ungroup_all">Ungroup all</string>
 </resources>
