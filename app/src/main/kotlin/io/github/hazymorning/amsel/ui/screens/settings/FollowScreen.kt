@@ -87,9 +87,17 @@ fun FollowScreen(
                                 role = Role.Switch,
                                 onClick = {
                                     when {
-                                        !followsIt -> onSkippedChange(skipped - speaker.id)
+                                        !followsIt -> {
+                                            haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
+                                            onSkippedChange(skipped - speaker.id)
+                                        }
+
                                         last -> haptics.performHapticFeedback(HapticFeedbackType.Reject)
-                                        else -> onSkippedChange(skipped + speaker.id)
+
+                                        else -> {
+                                            haptics.performHapticFeedback(HapticFeedbackType.ToggleOff)
+                                            onSkippedChange(skipped + speaker.id)
+                                        }
                                     }
                                 },
                                 trailing = {

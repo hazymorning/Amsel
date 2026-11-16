@@ -15,7 +15,8 @@ import org.junit.Test
 /** Which tip shows: one at a time, each once, the next on another day. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TipsTest {
-    private val prefs = MutableStateFlow<Prefs?>(Prefs())
+    /** Settings out of the bar, so the pull down that opens them has its tip. */
+    private val prefs = MutableStateFlow<Prefs?>(Prefs(barPlaces = listOf("home", "search", "-settings")))
     private val inFront = MutableStateFlow(true)
     private var day = 20_000L
 
@@ -59,6 +60,15 @@ class TipsTest {
         day++
         reopen()
         assertNull(tips.current.value)
+    }
+
+    @Test fun settingsInTheBarNeedNoTipAboutThePull() = runTest {
+        prefs.value = Prefs()
+        val tips = tips()
+        tips.seen(Tip.EditHome)
+        day++
+        reopen()
+        assertEquals(Tip.More, tips.current.value)
     }
 
     @Test fun whatThePersonFoundUntoldIsNeverTold() = runTest {

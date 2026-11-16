@@ -10,7 +10,7 @@ class ArrangementTest {
         val bar = BarPlace.arrangement(null).with(BarPlace.Search, on = false)
         val tokens = bar.tokens(BarPlace::id)
         assertEquals(
-            listOf("home", "speaker", "-search", "library") +
+            listOf("home", "speaker", "-search", "library", "settings") +
                 listOf("playlists", "albums", "artists", "radio", "audiobooks", "podcasts").map { "-$it" },
             tokens,
         )
@@ -23,7 +23,7 @@ class ArrangementTest {
             listOf(BarPlace.Library, BarPlace.Home, BarPlace.Speaker, BarPlace.Search) + BarPlace.entries.drop(4),
             bar.order,
         )
-        assertEquals(listOf(BarPlace.Library, BarPlace.Home), bar.visible)
+        assertEquals(listOf(BarPlace.Library, BarPlace.Home, BarPlace.Settings), bar.visible)
     }
 
     @Test fun homeAndPlayAlwaysStay() {

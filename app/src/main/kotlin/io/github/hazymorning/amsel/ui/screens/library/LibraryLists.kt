@@ -35,7 +35,6 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.LibrarySort
-import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.components.ChipRowState
 import io.github.hazymorning.amsel.ui.components.ChoiceChipRow
 import io.github.hazymorning.amsel.ui.components.EmptyState
@@ -228,18 +227,6 @@ private const val ARROW = " ↓"
 private val SORTS = listOf(LibrarySort.RecentlyPlayed, LibrarySort.RecentlyAdded, LibrarySort.AToZ)
 
 private fun LibrarySort.next(): LibrarySort = SORTS[(SORTS.indexOf(this) + 1) % SORTS.size]
-
-@get:StringRes
-internal val LibraryKind.label: Int
-    get() = when (this) {
-        LibraryKind.Playlists -> PlaybackR.string.playlists
-        LibraryKind.Albums -> PlaybackR.string.albums
-        LibraryKind.Artists -> PlaybackR.string.artists
-        LibraryKind.Audiobooks -> PlaybackR.string.audiobooks
-        LibraryKind.Podcasts -> PlaybackR.string.podcasts
-        LibraryKind.Radio -> R.string.radio
-        LibraryKind.Downloads -> R.string.downloads
-    }
 
 @get:StringRes
 private val LibrarySort.label: Int

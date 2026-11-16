@@ -222,18 +222,22 @@ data class HomeLayout(
         const val MAX_TITLE = 60
 
         /**
-         * A new person's Home, seven sections: Search's field first; Continue listening in its
-         * cards and Pinned, each hidden while empty; then three rows of covers and the stations in
-         * small ones. The sections an older default had keep their ids, so a Home never changed
-         * keeps its snapshots.
+         * A new person's Home: Search's field, then Continue listening's cards, neither under a
+         * heading, as what is picked up first; Pinned, hidden while empty; then what is played
+         * and kept, in a rhythm of sizes: Recently played in covers, the person's playlists as a
+         * list, new albums in covers, the artists played most in small ones, the smart playlists
+         * in covers and the stations in small ones. The sections an older default had keep their
+         * ids, so a Home never changed keeps its snapshots.
          */
         val DEFAULT_SECTIONS = listOf(
             HomeSection("s5", SectionOption.Search, SectionLayout.Row),
-            HomeSection("s0", SectionOption.ContinueListening, SectionLayout.Big),
+            HomeSection("s0", SectionOption.ContinueListening, SectionLayout.Big, titled = false),
             HomeSection("s1", SectionOption.Pinned, SectionLayout.Grid),
             HomeSection("s2", SectionOption.Everything, SectionLayout.Row),
-            HomeSection("s3", SectionOption.SmartPlaylists, SectionLayout.Row),
+            HomeSection("s8", SectionOption.YourPlaylists, SectionLayout.List),
             HomeSection("s4", SectionOption.NewAlbums, SectionLayout.Row),
+            HomeSection("s6", SectionOption.TopArtists, SectionLayout.Small),
+            HomeSection("s3", SectionOption.SmartPlaylists, SectionLayout.Row),
             HomeSection("s7", SectionOption.AllStations, SectionLayout.Small),
         )
 

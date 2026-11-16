@@ -191,6 +191,29 @@ class AppShellTest {
         compose.onNodeWithText("page Library").assertExists()
     }
 
+    @Test fun aPlaceTakenOutOfTheBarGivesWayToHomeAtItsTop() {
+        shell()
+        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.onNodeWithText("open album").performClick()
+        compose.waitForIdle()
+        // Taken out of the bar from its own pages, the place keeps them open...
+        bar.value = BarPlace.Default - BarPlace.Settings
+        compose.waitForIdle()
+        compose.onNodeWithText("page Album(key=a1)").assertExists()
+        // ...and back at its top, which the bar no longer opens, the person is Home.
+        compose.onNodeWithText("back").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("page Home").assertExists()
+    }
+
+    @Test fun searchOpensOutsideTheBarAndStays() {
+        bar.value = BarPlace.Default - BarPlace.Search
+        shell()
+        opening.value = Opening.Search
+        compose.waitForIdle()
+        compose.onNodeWithText("page Search").assertExists()
+    }
+
     @Test fun reselectingATabReturnsToItsTop() {
         shell()
         compose.onNodeWithText("open album").performClick()

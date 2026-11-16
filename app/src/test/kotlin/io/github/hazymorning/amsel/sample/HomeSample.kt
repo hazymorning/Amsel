@@ -1,5 +1,6 @@
 package io.github.hazymorning.amsel.sample
 
+import io.github.hazymorning.amsel.data.home.HomeLayout
 import io.github.hazymorning.amsel.data.home.SectionLayout
 import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.ui.model.ArtRef
@@ -84,6 +85,24 @@ object HomeSample {
     )
 
     val grid = HomeUiState(listOf(pins, recent, smart))
+
+    /** Home as a new person finds it ([HomeLayout.DEFAULT_SECTIONS]), with music to show. */
+    val asItComes = HomeUiState(
+        HomeLayout.DEFAULT_SECTIONS.map { section ->
+            val items = when (section.option) {
+                SectionOption.ContinueListening -> SpokenSample.continueListening
+                SectionOption.Everything -> played
+                SectionOption.YourPlaylists -> playlists
+                SectionOption.NewAlbums -> recentlyAdded
+                SectionOption.TopArtists -> SampleData.artists
+                SectionOption.SmartPlaylists -> smartPlaylists
+                SectionOption.AllStations -> stations
+                else -> emptyList()
+            }
+            SectionUi(section.id, section.option, section.layout, items, more = true, titled = section.showsTitle)
+        },
+        spoken = SpokenWord(books = true, podcasts = true),
+    )
 
     /** What last played on the speaker in use, named after the title. */
     val playedHere = HomeUiState(
