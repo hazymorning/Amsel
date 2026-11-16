@@ -9,6 +9,7 @@ import io.github.hazymorning.amsel.app.Messages
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.data.home.HomeItem
 import io.github.hazymorning.amsel.data.home.HomeLayout
+import io.github.hazymorning.amsel.data.home.HomeSection
 import io.github.hazymorning.amsel.data.home.HomeSource
 import io.github.hazymorning.amsel.data.home.SectionItems
 import io.github.hazymorning.amsel.data.home.SectionLayout
@@ -387,5 +388,12 @@ class HomeViewModelTest {
     }
 }
 
-/** The defaults without Continue listening: the four sections these tests were written for. */
-private fun classicLayout() = HomeLayout().remove("s0")
+/** The four sections these tests work on: an earlier default without Continue listening. */
+private fun classicLayout() = HomeLayout(
+    listOf(
+        HomeSection("s1", SectionOption.Pinned, SectionLayout.Grid),
+        HomeSection("s2", SectionOption.Everything, SectionLayout.Row),
+        HomeSection("s3", SectionOption.SmartPlaylists, SectionLayout.Row),
+        HomeSection("s4", SectionOption.NewAlbums, SectionLayout.Row),
+    ),
+)

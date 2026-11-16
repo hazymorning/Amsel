@@ -14,7 +14,7 @@
     <string name="download_not_abs">Nur Hörbücher und Podcasts von Audiobookshelf lassen sich herunterladen</string>
     <string name="download_failed_signed_out">Für „%1$s“ bitte erneut bei Audiobookshelf anmelden</string>
     <string name="download_failed_gone">„%1$s“ gibt es auf Audiobookshelf nicht mehr</string>
-    <string name="download_failed_refused">Audiobookshelf lässt dieses Konto „%1$s“ nicht herunterladen</string>
+    <string name="download_failed_refused">Mit diesem Konto lässt Audiobookshelf „%1$s“ nicht herunterladen</string>
     <string name="download_failed_unreachable">Audiobookshelf ist nicht erreichbar, „%1$s“ wurde nicht geladen</string>
     <string name="download_failed_away">„%1$s“ wurde nicht geladen: Unverschlüsseltes http zu Audiobookshelf geht nur zu Hause, wo auch Music\u00A0Assistant über http antwortet</string>
     <string name="download_failed_server">Audiobookshelf konnte „%1$s“ nicht senden</string>

@@ -53,7 +53,16 @@ internal fun GroupList(
     val before = rememberSaveable(leader.id) { state.group.filter { it.member }.map { it.id } }
     var chosen by rememberSaveable(leader.id) { mutableStateOf(before) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.SheetEdge)) {
-        SheetHeader(stringResource(R.string.group_with, leader.displayName()))
+        // "Group with this phone" has words of its own: German wants "mit diesem Handy", not its name.
+        SheetHeader(
+            if (leader.isPhone) {
+                stringResource(
+                    R.string.group_with_phone,
+                )
+            } else {
+                stringResource(R.string.group_with, leader.displayName())
+            },
+        )
         Spacer(Modifier.height(Space.HeaderToRows))
         state.group.forEach { choice ->
             val ticked = choice.id in chosen

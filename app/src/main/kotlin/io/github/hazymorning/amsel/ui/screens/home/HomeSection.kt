@@ -67,6 +67,8 @@ internal data class SectionActions(
     val onArrange: (List<String>) -> Unit = {},
     /** Speakers: a tap makes the speaker the one in use and shows it in Now Playing; [play], a long press, plays there. */
     val onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
+    /** Speakers: a card's own button plays or pauses that speaker where it is. */
+    val onSpeakerPlay: (SpeakerUi) -> Unit = {},
     /** Search's field: opens Search, the keyboard up. */
     val onSearch: () -> Unit = {},
 )
@@ -168,7 +170,7 @@ private fun SectionBody(section: SectionUi, actions: SectionActions) {
     if (section.option == SectionOption.Search) {
         SearchEntry(stringResource(R.string.search_placeholder), stringResource(R.string.tab_search), actions.onSearch)
     } else if (section.option == SectionOption.Speakers) {
-        SpeakerShelf(section, actions.onSpeaker)
+        SpeakerShelf(section, actions.onSpeaker, actions.onSpeakerPlay)
     } else if (section.loading) {
         SectionSkeleton(section)
     } else {
