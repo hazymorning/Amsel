@@ -35,12 +35,14 @@ import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
 import io.github.hazymorning.amsel.ui.rememberRetry
+import kotlinx.coroutines.flow.map
 
 /**
  * The library: its title, the kinds as chips, the order in words, then the items. The header
  * scrolls with them; once the title has gone, a slim bar names the kind that shows. A sideways
  * swipe goes to the chip beside the chosen one, round from the last to the first, and each kind
  * keeps its own place in its list, the header staying where it stood ([LibraryPlaces.handOver]).
+ * One kind alone, a place of its own in the bar ([LibraryUiState.single]), is the title itself.
  */
 @Composable
 fun LibraryScreen(
@@ -54,7 +56,7 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
     onRefresh: () -> Unit = {},
 ) {
-    val title = stringResource(PlaybackR.string.library)
+    val title = stringResource(if (state.single) state.kind.label else PlaybackR.string.library)
     val places = rememberSaveable(saver = LibraryPlaces.Saver) { LibraryPlaces() }
     val list = places.list(state.kind)
     val grid = places.grid(state.kind)
@@ -73,10 +75,11 @@ fun LibraryScreen(
         if (kind != state.kind) places.handOver(state.kind, kind)
         onSelectKind(kind)
     }
-    val swipe = rememberSideSwipe(state.kind, order = kinds, enabled = kinds != null, endless = true) { forward ->
-        kinds?.takeIf { it.size > 1 }?.let { it[(it.indexOf(state.kind) + if (forward) 1 else -1).mod(it.size)] }
-            ?.let(select)
-    }
+    val swipe =
+        rememberSideSwipe(state.kind, order = kinds, enabled = (kinds?.size ?: 0) > 1, endless = true) { forward ->
+            kinds?.takeIf { it.size > 1 }?.let { it[(it.indexOf(state.kind) + if (forward) 1 else -1).mod(it.size)] }
+                ?.let(select)
+        }
     val header = LibraryHeader(title, state, select, onSort, rememberChipRowState()) { titleHeight.intValue = it }
     MaterialScreen(
         modifier,
@@ -119,13 +122,17 @@ fun LibraryScreen(
     }
 }
 
-/** Albums, books and podcasts are known by their covers, so they list as a grid of tiles. */
+/** Albums, stations, books and podcasts are known by their covers, so they list as a grid of tiles. */
 internal val LibraryKind.covers: Boolean
-    get() = this == LibraryKind.Albums || this == LibraryKind.Audiobooks || this == LibraryKind.Podcasts
+    get() = this == LibraryKind.Albums || this == LibraryKind.Radio || this == LibraryKind.Audiobooks ||
+        this == LibraryKind.Podcasts
 
-/** The Library tab, wired to the library index. */
+/**
+ * The Library tab, wired to the library index; or, given [only], that kind alone as a place of its
+ * own in the bar.
+ */
 @Composable
-fun LibraryRoute(navigator: Navigator, modifier: Modifier = Modifier) {
+fun LibraryRoute(navigator: Navigator, modifier: Modifier = Modifier, only: LibraryKind? = null) {
     val graph = LocalContext.current.graph
     val actions = LocalAppActions.current
     val viewModel = viewModel {
@@ -142,8 +149,10 @@ fun LibraryRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             resync = { type -> data.library.syncType(type, data.session.client.server()) },
             messages = graph.messages,
             playing = graph.playing.playingContext,
-            spokenWord = graph.spokenWord,
+            held = data.library.heldTypes,
+            arranged = data.prefs.prefs.map { LibraryKind.arrangement(it?.libraryKinds).visible },
             downloads = graph.downloading.rows,
+            only = only,
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()

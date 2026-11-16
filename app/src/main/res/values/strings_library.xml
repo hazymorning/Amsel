@@ -17,5 +17,6 @@
     <string name="library_empty_artists">No artists yet</string>
     <string name="library_empty_audiobooks">No audiobooks yet</string>
     <string name="library_empty_podcasts">No podcasts yet</string>
+    <string name="library_empty_radio">No radio stations yet</string>
     <string name="library_empty_downloads">Nothing downloaded yet</string>
 </resources>

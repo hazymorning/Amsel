@@ -20,9 +20,10 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.LocalOpenNowPlaying
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
+import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import kotlinx.serialization.Serializable
 
-/** Every destination inside the three tabs. Now Playing, Up next and sheets are layers, not routes. */
+/** Every destination inside the tabs. Now Playing, Up next and sheets are layers, not routes. */
 @Serializable
 sealed interface Route : NavKey {
     @Serializable data object Home : Route
@@ -30,6 +31,9 @@ sealed interface Route : NavKey {
     @Serializable data object Search : Route
 
     @Serializable data object Library : Route
+
+    /** One kind of the library alone, as a place of its own in the bar: Albums, Radio. */
+    @Serializable data class Shelf(val kind: LibraryKind) : Route
 
     @Serializable data class Album(val key: String) : Route
 
@@ -58,6 +62,12 @@ sealed interface Route : NavKey {
     /** Which helpful hints Amsel offers over the dock. */
     @Serializable data object Hints : Route
 
+    /** Whether Amsel opens on the speaker that plays, and which speakers it may pick. */
+    @Serializable data object Follow : Route
+
+    /** What the Library shows as chips, and in what order. */
+    @Serializable data object LibraryKinds : Route
+
     /**
      * [route] opened again above itself (an artist, a similar one, the first again), for the
      * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps
@@ -69,7 +79,10 @@ sealed interface Route : NavKey {
     val page: Route get() = if (this is Again) route else this
 }
 
-/** The three tabs, in order, with labels always visible. */
+/**
+ * The places the bar can open, each with its own pages: Home, Search, the Library, and any kind of
+ * the library on its own. Unselected their glyph is an outline, selected it is filled.
+ */
 enum class Tab(
     val root: Route,
     @StringRes val label: Int,
@@ -79,6 +92,32 @@ enum class Tab(
     Home(Route.Home, R.string.tab_home, R.drawable.ic_home, R.drawable.ic_home_selected),
     Search(Route.Search, R.string.tab_search, R.drawable.ic_search, R.drawable.ic_search_selected),
     Library(Route.Library, PlaybackR.string.library, R.drawable.ic_library, R.drawable.ic_library_selected),
+    Playlists(
+        Route.Shelf(LibraryKind.Playlists),
+        PlaybackR.string.playlists,
+        R.drawable.ic_playlist,
+        R.drawable.ic_playlist_selected,
+    ),
+    Albums(Route.Shelf(LibraryKind.Albums), PlaybackR.string.albums, R.drawable.ic_album, R.drawable.ic_album_selected),
+    Artists(
+        Route.Shelf(LibraryKind.Artists),
+        PlaybackR.string.artists,
+        R.drawable.ic_artist,
+        R.drawable.ic_artist_selected,
+    ),
+    Radio(Route.Shelf(LibraryKind.Radio), R.string.radio, R.drawable.ic_radio, R.drawable.ic_radio_selected),
+    Audiobooks(
+        Route.Shelf(LibraryKind.Audiobooks),
+        PlaybackR.string.audiobooks,
+        R.drawable.ic_audiobook,
+        R.drawable.ic_audiobook_selected,
+    ),
+    Podcasts(
+        Route.Shelf(LibraryKind.Podcasts),
+        PlaybackR.string.podcasts,
+        R.drawable.ic_podcast,
+        R.drawable.ic_podcast_selected,
+    ),
 }
 
 /** What screens may ask of navigation, on their tab's back stack. Back always goes up one level. */

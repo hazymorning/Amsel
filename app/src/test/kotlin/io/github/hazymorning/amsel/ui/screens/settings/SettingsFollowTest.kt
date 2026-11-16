@@ -3,9 +3,8 @@ package io.github.hazymorning.amsel.ui.screens.settings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -17,7 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Follow the music's speakers: all in at first, any can be left out, the last one in stays. */
+/** Follow the music's page: all speakers in at first, any can be left out, the last one in stays. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class SettingsFollowTest {
@@ -31,15 +30,42 @@ class SettingsFollowTest {
 
     @Test fun leavingAllButOneOutFollowsThatOneAlone() {
         var skipped by mutableStateOf(emptySet<String>())
-        compose.setContent { AmselTheme { FollowSpeakers(speakers, skipped, RectangleShape) { skipped = it } } }
-        compose.onNodeWithText("Gandalf").assertIsSelected()
-        compose.onNodeWithText("Hedwig").performClick().assertIsNotSelected()
+        compose.setContent {
+            AmselTheme {
+                FollowScreen(
+                    on = true,
+                    speakers = speakers,
+                    skipped = skipped,
+                    onFollowChange = {},
+                    onSkippedChange = { skipped = it },
+                    onBack = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Gandalf").assertIsOn()
+        compose.onNodeWithText("Hedwig").performClick().assertIsOff()
         compose.onNodeWithText("Potterbox").performClick()
         assertEquals(setOf("hedwig", "potter"), skipped)
         // Gandalf alone is followed, so it stays in.
-        compose.onNodeWithText("Gandalf").performClick().assertIsSelected()
+        compose.onNodeWithText("Gandalf").performClick().assertIsOn()
         assertEquals(setOf("hedwig", "potter"), skipped)
-        compose.onNodeWithText("Hedwig").performClick().assertIsSelected()
+        compose.onNodeWithText("Hedwig").performClick().assertIsOn()
         assertEquals(setOf("potter"), skipped)
+    }
+
+    @Test fun offShowsNoSpeakers() {
+        compose.setContent {
+            AmselTheme {
+                FollowScreen(
+                    on = false,
+                    speakers = speakers,
+                    skipped = emptySet(),
+                    onFollowChange = {},
+                    onSkippedChange = {},
+                    onBack = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Gandalf").assertDoesNotExist()
     }
 }

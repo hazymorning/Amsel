@@ -5,6 +5,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import io.github.hazymorning.amsel.api.LibrarySort
+import io.github.hazymorning.amsel.api.MediaType
+import io.github.hazymorning.amsel.sample.HomeSample
 import io.github.hazymorning.amsel.sample.LibrarySampleData
 import io.github.hazymorning.amsel.sample.SampleData
 import io.github.hazymorning.amsel.sample.SpokenSample
@@ -14,7 +16,6 @@ import io.github.hazymorning.amsel.ui.components.LocalDownloadMarks
 import io.github.hazymorning.amsel.ui.model.DownloadMark
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpokenWord
 import org.junit.Test
 
 class LibraryShots : ScreenshotTest() {
@@ -42,7 +43,7 @@ class LibraryShots : ScreenshotTest() {
                 LibraryUiState(
                     LibraryKind.Audiobooks,
                     items = books,
-                    kinds = libraryKinds(SpokenWord(books = true), downloads = true),
+                    kinds = libraryKinds(LibraryKind.Default.visible, setOf(MediaType.Audiobook), downloads = true),
                 ),
             )
         }
@@ -67,7 +68,35 @@ class LibraryShots : ScreenshotTest() {
             LibraryUiState(
                 LibraryKind.Downloads,
                 items = rows,
-                kinds = libraryKinds(SpokenWord(books = true, podcasts = true), downloads = true),
+                kinds = libraryKinds(
+                    LibraryKind.Default.visible,
+                    setOf(MediaType.Audiobook, MediaType.Podcast, MediaType.Radio),
+                    downloads = true,
+                ),
+            ),
+        )
+    }
+
+    /** Stations, known by their logos, as a grid; their chip after the artists. */
+    @Test fun radio() = snap("library_radio", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        Library(
+            LibraryUiState(
+                LibraryKind.Radio,
+                items = HomeSample.stations,
+                kinds = libraryKinds(LibraryKind.Default.visible, setOf(MediaType.Radio)),
+            ),
+        )
+    }
+
+    /** Albums as a place of their own in the bar: their name is the title, with no chips. */
+    @Test fun alone() = snap("library_alone", ShotVariant.entries) {
+        Library(
+            LibraryUiState(
+                LibraryKind.Albums,
+                LibrarySort.RecentlyAdded,
+                SampleData.albums,
+                kinds = listOf(LibraryKind.Albums),
+                single = true,
             ),
         )
     }

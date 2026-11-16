@@ -1,14 +1,15 @@
 package io.github.hazymorning.amsel.ui.screens.home
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -18,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.FirstBaseline
@@ -27,9 +30,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.Artwork
-import io.github.hazymorning.amsel.ui.components.ProgressLine
 import io.github.hazymorning.amsel.ui.components.ShelfRow
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.inkStart
@@ -101,7 +104,7 @@ internal fun withTimeLeft(items: List<MediaUi>): List<MediaUi> = items.map { ite
 
 /**
  * Where a card's lines stand, from its top. Under the cover, two lines that say what it is; then,
- * a group's gap further, what is left over the line, on the card's foot.
+ * a group's gap further, what is left, 16 over the line along the card's foot.
  */
 private class CardMeasure(val width: Dp, val cover: Dp, val words: Dp, val title: Dp, val second: Dp, val height: Dp)
 
@@ -114,8 +117,7 @@ private fun rememberCardMeasure(width: Dp): CardMeasure {
             val cover = width - Frame * 2
             val title = Frame + cover + spaced(Space.Caption) + capHeight(type.titleSmall)
             val second = secondLine(type.bodyMedium)
-            val foot =
-                spaced(Space.Group) + capHeight(type.bodyMedium) + spaced(Space.S3) + Sizes.ProgressLine + Space.S4
+            val foot = spaced(Space.Group) + capHeight(type.bodyMedium) + spaced(Space.S4) + Sizes.ProgressLine
             CardMeasure(width, cover, Frame + Radius.under(Radius.cover(cover)), title, second, title + second + foot)
         }
     }
@@ -124,16 +126,19 @@ private fun rememberCardMeasure(width: Dp): CardMeasure {
 /**
  * Something to pick up again as a card of its cover's paper: the cover in a frame of 12, the card's
  * corners the cover's plus that frame. Under the cover what it is: the title's two lines, or its one
- * and who wrote or made it, so no card has a hole where another's title wraps. On the card's foot
- * what is left over the line every progress is drawn with.
+ * and who wrote or made it, so no card has a hole where another's title wraps. Over the card's foot
+ * what is left, and along it, edge to edge in the cover's colour, how far the person got.
  */
 @Composable
 private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, onMore: () -> Unit) {
     val type = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val presses = remember { MutableInteractionSource() }
+    val night = colors.isNight
     val plain = colors.onSurface.copy(alpha = CARD_INK).compositeOver(colors.surfaceContainerLow)
-    val paper: Color = rememberCoverColors(item.art)?.wash(colors.surface, colors.isNight) ?: plain
+    val hue = rememberCoverColors(item.art)
+    val paper: Color = hue?.wash(colors.surface, night) ?: plain
+    val heard: Color = hue?.line(paper, night) ?: colors.onSurface.copy(alpha = HEARD_INK).compositeOver(paper)
     Box(
         Modifier
             .size(card.width, card.height)
@@ -157,21 +162,43 @@ private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, 
             name = item.title,
         )
         WhatItIs(item, card, Modifier.padding(horizontal = card.words))
-        Column(Modifier.align(Alignment.BottomStart).padding(start = card.words, end = card.words, bottom = Space.S4)) {
-            item.remainingSec?.let { left ->
-                val text = leftText(left)
-                Words(
-                    text,
-                    type.bodyMedium,
-                    color = colors.onSurfaceVariant,
-                    shorter = lengthText(left),
-                    modifier = Modifier.textInk(type.bodyMedium).inkStart(text, type.bodyMedium),
-                )
-            }
-            ProgressLine({
-                item.progress ?: 0f
-            }, Modifier.padding(top = with(LocalDensity.current) { spaced(Space.S3) }))
+        item.remainingSec?.let { left ->
+            val text = leftText(left)
+            Words(
+                text,
+                type.bodyMedium,
+                color = colors.onSurfaceVariant,
+                shorter = lengthText(left),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(
+                        start = card.words,
+                        end = card.words,
+                        bottom = with(LocalDensity.current) { spaced(Space.S4) } + Sizes.ProgressLine,
+                    )
+                    .textInk(type.bodyMedium)
+                    .inkStart(text, type.bodyMedium),
+            )
         }
+        FootLine({ item.progress ?: 0f }, heard, Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+/**
+ * How far through, as the card's own foot: edge to edge, square at the moving end, its two ends
+ * rounded by the card's corners, the rest of the way a fifth as strong. Anything begun fills the
+ * first corner's curve, so a book a few minutes in still shows its colour where the line starts.
+ */
+@Composable
+private fun FootLine(fraction: () -> Float, heard: Color, modifier: Modifier) {
+    Canvas(modifier.fillMaxWidth().height(Sizes.ProgressLine)) {
+        drawRect(heard.copy(alpha = AHEAD_SHARE))
+        val f = fraction().coerceIn(0f, 1f)
+        if (f <= 0f) return@Canvas
+        val begun = CardCorner.toPx()
+        val along = begun + f * (size.width - begun)
+        val start = if (layoutDirection == LayoutDirection.Rtl) size.width - along else 0f
+        drawRect(heard, Offset(start, 0f), Size(along, size.height))
     }
 }
 
@@ -220,9 +247,17 @@ private fun WhatItIs(item: MediaUi, card: CardMeasure, modifier: Modifier) {
 private val Frame = Space.S3
 
 /** The card's corners: the cover's and its frame, so the two curves run side by side. */
-private val CardShape = SmoothShape(Radius.Thumb + Frame)
+private val CardCorner = Radius.Thumb + Frame
+
+private val CardShape = SmoothShape(CardCorner)
 
 /** The card's paper where its cover lends no hue: Home's cards' own. */
 private const val CARD_INK = 0.03f
+
+/** The line's ink where the cover lends no hue, as every other progress line's. */
+private const val HEARD_INK = 0.6f
+
+/** The way still ahead, as a share of the line's colour. */
+private const val AHEAD_SHARE = 0.2f
 
 private const val SKELETON_CARDS = 2
