@@ -37,6 +37,16 @@ internal fun SettingsGroup(label: String, above: Dp, content: SettingsRows.() ->
     }
 }
 
+/** A block of settings with no name over it: [SettingsGroup]'s rows alone, as a page's first block. */
+@Composable
+internal fun SettingsBlock(content: SettingsRows.() -> Unit) {
+    val rows = SettingsRows().apply(content).rows
+    rows.forEachIndexed { index, row ->
+        if (index > 0) Spacer(Modifier.height(BetweenRows))
+        row(blockShape(first = index == 0, last = index == rows.lastIndex))
+    }
+}
+
 /** A row's corners in its block: the block's own corners round fully, those between rows a little. */
 private fun blockShape(first: Boolean, last: Boolean): Shape {
     val top = if (first) Radius.Large else BetweenCorner

@@ -18,6 +18,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 
 /**
  * The dock, two bands edge to edge with no card and no line: what plays ([PlayerCard]) a tone
@@ -33,6 +34,9 @@ fun Dock(
     onControl: (PlayerControl) -> Unit,
     onSpeaker: () -> Unit,
     modifier: Modifier = Modifier,
+    controls: List<DockControl> = DockControl.Default.visible,
+    onDockControl: (DockControl) -> Unit = {},
+    onArrange: () -> Unit = {},
     openDrag: Modifier = Modifier,
     covered: Boolean = false,
     tabs: @Composable RowScope.() -> Unit,
@@ -54,6 +58,9 @@ fun Dock(
             onControl,
             onSpeaker,
             Modifier.background(colors.surfaceContainerLow).windowInsetsPadding(sides),
+            controls = controls,
+            onDockControl = onDockControl,
+            onArrange = onArrange,
         )
         NavBar(Modifier.background(colors.surfaceContainerHigh).windowInsetsPadding(sides), content = tabs)
     }

@@ -56,6 +56,13 @@ class HomeLayoutTest {
         assertSame(fresh, fresh.offerListening())
     }
 
+    @Test fun aResetBringsBackANewPersonsSectionsAndKeepsThePins() {
+        val mine = home.pin("library://album/9").remove("s2")
+        val reset = mine.reset()
+        assertEquals(HomeLayout().sections, reset.sections)
+        assertEquals(listOf("library://album/9"), reset.pinned)
+    }
+
     @Test fun aHomeMadeBeforeContinueListeningGetsItOnceAtTheTop() {
         val stored = HomeLayout.decode(home.encode().replace("\"listeningOffered\":true", "\"listeningOffered\":false"))
         assertFalse(stored.listeningOffered)

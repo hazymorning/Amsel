@@ -12,7 +12,9 @@ import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.ui.AppShell
 import io.github.hazymorning.amsel.ui.PlayerLayerState
 import io.github.hazymorning.amsel.ui.ShellSlots
+import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
@@ -36,19 +38,47 @@ class SettingsShots : ScreenshotTest() {
 
     /** The bottom bar's page over the shell, its bar following it: Search taken out. */
     @Test fun bar() = snap("settings_bar", ShotVariant.entries) {
-        val places = listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Library)
+        val places = BarPlace.arrangement(null).with(BarPlace.Search, on = false)
         AppShell(
             nowPlaying = PlayerSample.nowPlaying,
             speaker = PlayerSample.nowPlaying.speaker,
             onSpeaker = {},
             layer = remember { PlayerLayerState(open = false) },
-            bar = places,
+            bar = places.visible,
             slots = ShellSlots(
                 screen = { _, _ -> BarScreen(places, onChange = {}, onBack = {}) },
                 nowPlaying = { _, _ -> },
                 sheets = {},
             ),
         )
+    }
+
+    /** The mini player's page over the shell, the dock following it: back, play and the heart. */
+    @Test fun dock() = snap("settings_dock", ShotVariant.entries) {
+        val controls = Arrangement(
+            listOf(DockControl.Previous, DockControl.PlayPause, DockControl.Favorite) +
+                DockControl.entries.filterNot {
+                    it in setOf(DockControl.Previous, DockControl.PlayPause, DockControl.Favorite)
+                },
+            setOf(DockControl.Previous, DockControl.PlayPause, DockControl.Favorite),
+        )
+        AppShell(
+            nowPlaying = PlayerSample.nowPlaying,
+            speaker = PlayerSample.nowPlaying.speaker,
+            onSpeaker = {},
+            layer = remember { PlayerLayerState(open = false) },
+            dock = controls.visible,
+            slots = ShellSlots(
+                screen = { _, _ -> DockScreen(controls, onChange = {}, onBack = {}) },
+                nowPlaying = { _, _ -> },
+                sheets = {},
+            ),
+        )
+    }
+
+    /** Suggestions: every moment on but the end of the queue. */
+    @Test fun hints() = snap("settings_hints", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        HintsScreen(off = setOf("ended"), onChange = {}, onBack = {})
     }
 
     /** Following the music, kept to some speakers: Hedwig left out. */
