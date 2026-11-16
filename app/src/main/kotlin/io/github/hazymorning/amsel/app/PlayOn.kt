@@ -206,7 +206,8 @@ class PlayOn(
             val before = speakers.loads.value
             withTimeoutOrNull(LIST_WAIT_MS) { speakers.loads.first { it > before } } ?: return
         }
-        val leader = speakerToFollow(speakers.players.value, phone.playerId.value, phone.audible.value)
+        val skipped = data.prefs.current().followSkipped
+        val leader = speakerToFollow(speakers.players.value, phone.playerId.value, phone.audible.value, skipped)
         val current = playing.speaker.value
         when {
             leader == null -> if (!current.isPhone) select(playing.speakers.value.first { it.isPhone })
@@ -221,12 +222,21 @@ class PlayOn(
 /**
  * Whom following the music picks: This phone (null) whenever it plays itself; else the speaker
  * that plays, of several the one leading the most others (a group's leader); with none playing,
- * This phone.
+ * This phone. A speaker [skipped] in Settings is followed only as the group of one that is not.
  */
-internal fun speakerToFollow(players: Map<String, Player>, phoneId: String?, phoneAudible: Boolean): Player? {
+internal fun speakerToFollow(
+    players: Map<String, Player>,
+    phoneId: String?,
+    phoneAudible: Boolean,
+    skipped: Set<String> = emptySet(),
+): Player? {
     if (phoneAudible || phoneId?.let(players::get)?.isPlaying == true) return null
     return players.values
         .filter { it.isShownSpeaker(phoneId) && it.available && it.isPlaying }
+        .filter { leader ->
+            leader.playerId !in skipped ||
+                players.membersOf(leader.playerId).any { it.playerId !in skipped }
+        }
         .maxByOrNull { players.membersOf(it.playerId).size }
         ?.takeUnless { it.playerId == phoneId }
 }

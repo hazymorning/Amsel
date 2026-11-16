@@ -51,6 +51,32 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
+    /** Following the music, kept to some speakers: Hedwig left out. */
+    @Test fun follow() = snap("settings_follow", ShotVariant.entries) {
+        SettingsScreen(
+            SettingsUiState(
+                userName = "Anna",
+                serverName = "Home",
+                serverAddress = "192.168.1.20",
+                appVersion = "0.1.0",
+                followPlaying = true,
+                followSkipped = setOf("hedwig"),
+            ),
+            onBack = {},
+            onOpenWebUi = {},
+            onSignOut = {},
+            onThemeChange = {},
+            onLanguage = {},
+            followSpeakers = listOf(
+                FollowSpeaker("gandalf", "Gandalf"),
+                FollowSpeaker("hedwig", "Hedwig"),
+                FollowSpeaker("office", "Mandaloffice"),
+                FollowSpeaker("potter", "Potterbox"),
+                FollowSpeaker("living", "Wohnzimmer"),
+            ),
+        )
+    }
+
     /** Not signed in to Audiobookshelf yet: why, and its sign-in. */
     @Test fun downloadsSignIn() = snapScreen("downloads_sign_in", ShotVariant.entries) {
         Settings()
