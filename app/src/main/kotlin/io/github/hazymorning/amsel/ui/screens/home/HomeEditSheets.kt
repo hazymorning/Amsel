@@ -58,7 +58,7 @@ internal fun WhatSheetContent(current: SectionOption, spoken: SpokenWord, onSele
             .padding(bottom = sheetEnd(RowLead.None, twoLines = false)),
     ) {
         SheetHeader(stringResource(R.string.home_edit_what))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         groups.forEachIndexed { index, group ->
             if (index > 0) Spacer(Modifier.height(between))
             group.forEach { option ->
@@ -85,7 +85,7 @@ private const val UNPLACED = -1
 internal fun HowSheetContent(current: SectionLayout, onSelect: (SectionLayout) -> Unit) {
     Column(Modifier.fillMaxWidth().selectableGroup().padding(bottom = sheetEnd(RowLead.None, twoLines = false))) {
         SheetHeader(stringResource(R.string.home_edit_how))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         SectionLayout.entries.forEach { layout ->
             ChoiceRow(stringResource(layout.label), selected = layout == current, onClick = { onSelect(layout) })
         }
@@ -105,7 +105,7 @@ internal fun SectionActionsSheetContent(
 ) {
     Column(Modifier.fillMaxWidth().padding(bottom = sheetEnd(RowLead.Glyph, twoLines = false))) {
         SheetHeader(title)
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         ActionRow(
             if (titled) R.drawable.ic_title_off else R.drawable.ic_title,
             stringResource(if (titled) R.string.home_hide_title else R.string.home_show_title),

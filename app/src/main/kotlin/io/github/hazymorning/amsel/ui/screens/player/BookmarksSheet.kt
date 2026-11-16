@@ -72,7 +72,7 @@ fun BookmarksSheetContent(
     val end = if (bookmarks.isEmpty()) Space.SheetEdge else bookmarkEnd()
     Column(modifier.fillMaxWidth().padding(bottom = end)) {
         SheetHeader(stringResource(R.string.bookmarks))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(if (bookmarks.isEmpty()) Space.HeaderToContent else Space.HeaderToRows))
         if (bookmarks.isEmpty()) {
             val body = MaterialTheme.typography.bodyLarge
             val sentence = stringResource(R.string.bookmarks_empty)
