@@ -4,11 +4,15 @@ import io.github.hazymorning.amsel.data.home.SectionLayout.Big
 import io.github.hazymorning.amsel.data.home.SectionLayout.Grid
 import io.github.hazymorning.amsel.data.home.SectionLayout.List
 import io.github.hazymorning.amsel.data.home.SectionLayout.Row
+import io.github.hazymorning.amsel.data.home.SectionLayout.Small
 import io.github.hazymorning.amsel.data.home.SectionOption.ContinueListening
 import io.github.hazymorning.amsel.data.home.SectionOption.Everything
+import io.github.hazymorning.amsel.data.home.SectionOption.FavoriteStations
 import io.github.hazymorning.amsel.data.home.SectionOption.NewAlbums
 import io.github.hazymorning.amsel.data.home.SectionOption.Pinned
+import io.github.hazymorning.amsel.data.home.SectionOption.Search
 import io.github.hazymorning.amsel.data.home.SectionOption.SmartPlaylists
+import io.github.hazymorning.amsel.data.home.SectionOption.Speakers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -16,18 +20,38 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeLayoutTest {
-    /** The defaults without Continue listening: the four sections every edit below works on. */
-    private val home = HomeLayout().remove("s0")
+    /** The four sections every edit below works on: an earlier default without Continue listening. */
+    private val home = HomeLayout(
+        listOf(
+            HomeSection("s1", Pinned, Grid),
+            HomeSection("s2", Everything, Row),
+            HomeSection("s3", SmartPlaylists, Row),
+            HomeSection("s4", NewAlbums, Row),
+        ),
+    )
 
     private fun HomeLayout.options() = sections.map { it.option }
 
     private fun HomeLayout.ids() = sections.map { it.id }
 
-    @Test fun aNewPersonGetsContinueListeningAndPinnedThenThreeRows() {
+    @Test fun aNewPersonGetsSearchAndSpeakersThenContinueListeningPinnedAndRows() {
         val fresh = HomeLayout()
-        assertEquals(listOf(ContinueListening, Pinned, Everything, SmartPlaylists, NewAlbums), fresh.options())
-        assertEquals(listOf(Big, Grid, Row, Row, Row), fresh.sections.map { it.layout })
-        assertEquals(listOf("s0", "s1", "s2", "s3", "s4"), fresh.ids())
+        assertEquals(
+            listOf(
+                Search,
+                Speakers,
+                ContinueListening,
+                Pinned,
+                Everything,
+                SmartPlaylists,
+                NewAlbums,
+                FavoriteStations,
+            ),
+            fresh.options(),
+        )
+        assertEquals(listOf(Row, Row, Big, Grid, Row, Row, Row, Small), fresh.sections.map { it.layout })
+        // An earlier default's sections keep their ids, so their snapshots still paint.
+        assertEquals(listOf("s5", "s6", "s0", "s1", "s2", "s3", "s4", "s7"), fresh.ids())
         assertTrue(fresh.pinned.isEmpty())
         assertSame(fresh, fresh.offerListening())
     }

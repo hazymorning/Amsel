@@ -227,15 +227,20 @@ data class HomeLayout(
         const val MAX_TITLE = 60
 
         /**
-         * A new person's Home: Continue listening and Pinned (each hidden while empty), then three
-         * rows. Continue listening keeps the id before the others', so theirs stay as they were.
+         * A new person's Home, eight sections: Search's field and the speakers first, where a
+         * household starts; Continue listening in big covers and Pinned, each hidden while empty;
+         * then three rows of covers and the favourite stations in small ones. The sections an older
+         * default had keep their ids, so a Home never changed keeps its snapshots.
          */
         val DEFAULT_SECTIONS = listOf(
+            HomeSection("s5", SectionOption.Search, SectionLayout.Row),
+            HomeSection("s6", SectionOption.Speakers, SectionLayout.Row),
             HomeSection("s0", SectionOption.ContinueListening, SectionLayout.Big),
             HomeSection("s1", SectionOption.Pinned, SectionLayout.Grid),
             HomeSection("s2", SectionOption.Everything, SectionLayout.Row),
             HomeSection("s3", SectionOption.SmartPlaylists, SectionLayout.Row),
             HomeSection("s4", SectionOption.NewAlbums, SectionLayout.Row),
+            HomeSection("s7", SectionOption.FavoriteStations, SectionLayout.Small),
         )
 
         /** What "Add section" offers, most useful first. */

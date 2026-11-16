@@ -130,6 +130,15 @@ class AppActions(
         }
     }
 
+    /**
+     * Plays or pauses [speaker] where it is, as its card's button shows, and the speaker in use
+     * stays. This phone goes through the app's own controls, so it becomes the one in use first.
+     */
+    fun playPause(speaker: SpeakerUi) {
+        if (speaker.isPhone && graph.playing.speaker.value.id != speaker.id) return play(speaker)
+        if (speaker.isPlaying) graph.playback.pause(speaker) else graph.playback.resume(speaker)
+    }
+
     /** Opens Music Assistant's web UI in the browser. */
     fun openWebUi() {
         val url = graph.data.session.address.value?.toString() ?: return

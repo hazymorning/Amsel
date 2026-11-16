@@ -310,6 +310,24 @@ class Playback(
         }
     }
 
+    /** [speaker] pauses where it is, by its own command as [resume] plays it; the tap shows at once. */
+    fun pause(speaker: SpeakerUi) {
+        if (speaker.isPhone) return control(PlayerControl.PlayPause)
+        playing.optimistic.playing(speaker.id, false)
+        scope.launch {
+            val error = try {
+                data.session.api.pause(speaker.id)
+                return@launch
+            } catch (e: MaConnectionException) {
+                e
+            } catch (e: MaCommandException) {
+                e
+            }
+            playing.optimistic.clear(speaker.id)
+            messages.show(failureText(error), playing.nameOf(speaker.id), retry = { pause(speaker) })
+        }
+    }
+
     /**
      * Transport from the app's own controls. The tap shows at once ([OptimisticTransport]); play
      * and pause follow what the button shows, so a second tap before the speaker answers undoes
