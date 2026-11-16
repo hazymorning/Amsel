@@ -84,7 +84,7 @@
     <string name="player_repeat_all">Alle</string>
     <string name="player_repeat_one">Ein Titel</string>
     <string name="group">Gruppieren</string>
-    <string name="group_count">Gruppe +%1$d</string>
+    <string name="group_change">Gruppe ändern</string>
     <string name="group_with">Gruppe mit %1$s</string>
     <string name="ungroup_all">Gruppe auflösen</string>
 </resources>

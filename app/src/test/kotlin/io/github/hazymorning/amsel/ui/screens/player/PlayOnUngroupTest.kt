@@ -48,7 +48,7 @@ class PlayOnUngroupTest {
         compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
     }
 
-    @Test fun aGroupTheSpeakerInUseLeadsNamesItsSizeAndUngroupLetsEveryoneGo() {
+    @Test fun aGroupTheSpeakerInUseLeadsOffersAChangeAndUngroupLetsEveryoneGo() {
         var ungrouped = 0
         show {
             PlayOnSheetContent(
@@ -57,7 +57,7 @@ class PlayOnUngroupTest {
                 onUngroup = { ungrouped++ },
             )
         }
-        compose.onNodeWithText("Group +2").assertIsDisplayed()
+        compose.onNodeWithText("Change group").assertIsDisplayed()
         // Making a group is not offered while one stands.
         compose.onNodeWithText("Group").assertDoesNotExist()
         compose.onNodeWithText("Ungroup all").performClick()
@@ -74,7 +74,7 @@ class PlayOnUngroupTest {
             )
         }
         compose.onNodeWithText("Ungroup all").assertIsDisplayed()
-        compose.onNodeWithText("Group +2").performClick()
+        compose.onNodeWithText("Change group").performClick()
         // The step is the group's, whichever speaker the phone is set to.
         compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
         compose.onNodeWithText("Bedroom").performClick()
@@ -93,7 +93,7 @@ class PlayOnUngroupTest {
         val state = PlayOnUiState(grouped, "kitchen", kitchen, kitchensGroup, grouped = true)
         show { PlayOnSheetContent(state, onSelect = {}) }
         val heading = compose.onNodeWithText("Play on").getUnclippedBoundsInRoot()
-        val group = compose.onNodeWithText("Group +2").getUnclippedBoundsInRoot()
+        val group = compose.onNodeWithText("Change group").getUnclippedBoundsInRoot()
         val ungroup = compose.onNodeWithText("Ungroup all").getUnclippedBoundsInRoot()
         // This phone is the first speaker Play on lists, Kitchen's group the last.
         val first = compose.onNodeWithText("This phone").getUnclippedBoundsInRoot()

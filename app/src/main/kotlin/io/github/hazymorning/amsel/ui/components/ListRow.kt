@@ -61,8 +61,8 @@ enum class RowLead {
     None,
 }
 
-/** From the ring's edge to the words after it: a space and a little more, as after a symbol. */
-private val RingGap = 6.dp
+/** From a mark's edge (the play bars, a download's) to the words after it: a space and a little more. */
+private val MarkGap = 6.dp
 
 /**
  * The one row anatomy: a lead (cover, glyph or number) on the margin, the words 16 after it, and
@@ -309,9 +309,9 @@ internal fun RowText(
                 modifier = Modifier.inkStart(title, titleStyle),
             )
         }
-        // The playing ring stands where a download's mark would: what plays matters more.
+        // The play bars stand where a download's mark would: what plays matters more.
         val before: (@Composable () -> Unit)? = if (ring) {
-            { PlayingRing() }
+            { PlayBars() }
         } else {
             mark
         }
@@ -331,13 +331,13 @@ internal fun RowText(
     }
 }
 
-/** The playing ring before the line ([MarkBefore]). */
+/** The play bars before the line ([MarkBefore]). */
 @Composable
-internal fun RingBefore(
+internal fun BarsBefore(
     style: TextStyle,
     line: @Composable () -> Unit,
     moving: Boolean = LocalMusicPlays.current.value,
-) = MarkBefore(style, { PlayingRing(moving = moving) }, line)
+) = MarkBefore(style, { PlayBars(moving = moving) }, line)
 
 /** [mark] centred on [style]'s capitals, then the line; the line's baselines are the block's. */
 @Composable
@@ -348,7 +348,7 @@ internal fun MarkBefore(style: TextStyle, mark: @Composable () -> Unit, line: @C
         line()
     }) { measurables, constraints ->
         val ring = measurables[0].measure(constraints.copy(minWidth = 0, minHeight = 0))
-        val gap = RingGap.roundToPx()
+        val gap = MarkGap.roundToPx()
         val text = measurables[1].measure(
             constraints.copy(minWidth = 0, maxWidth = (constraints.maxWidth - ring.width - gap).coerceAtLeast(0)),
         )
@@ -371,6 +371,8 @@ internal fun MarkBefore(style: TextStyle, mark: @Composable () -> Unit, line: @C
 /**
  * Lays out [RowText]'s lines, and the skeleton bars that stand in for them, alike. [inset] keeps
  * room over and under them; the dock's larger lines take less, so they stay within its cover's height.
+ * [baselines] sets how far the second line's baseline stands under the title's, where a list's
+ * rhythm would leave a small card's two lines too far apart.
  */
 @Composable
 internal fun RowLines(
@@ -379,6 +381,7 @@ internal fun RowLines(
     modifier: Modifier = Modifier,
     secondStyle: TextStyle = MaterialTheme.typography.bodyMedium,
     inset: Dp = Space.S2,
+    baselines: Dp? = null,
     lines: @Composable () -> Unit,
 ) {
     Layout(lines, modifier.padding(vertical = inset)) { measurables, constraints ->
@@ -391,7 +394,7 @@ internal fun RowLines(
         val titleBaseline = title.line(LastBaseline, title.height - (titleLine - titleCap) / 2)
         val capTop = firstBaseline - titleCap.roundToInt()
         val secondHeight = lineHeight(secondStyle).toPx()
-        val secondBaseline = titleBaseline + secondLine(secondStyle).roundToPx()
+        val secondBaseline = titleBaseline + (baselines ?: secondLine(secondStyle)).roundToPx()
         // A second text that wraps (a setting's description) adds its further lines under its first.
         val secondSpan = second?.let { it.line(LastBaseline, 0f) - it.line(FirstBaseline, 0f) } ?: 0
         val lastBaseline = if (second == null) titleBaseline else secondBaseline + secondSpan
