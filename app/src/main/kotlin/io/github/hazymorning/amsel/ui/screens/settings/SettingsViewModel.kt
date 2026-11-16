@@ -37,9 +37,7 @@ class SettingsViewModel(
     private val saveFade: suspend (Int) -> Unit = {},
     private val saveShake: suspend (Boolean) -> Unit = {},
     private val saveSleepOnPlay: suspend (Boolean) -> Unit = {},
-    private val saveFollow: suspend (Boolean) -> Unit = {},
     private val saveVolumeLimit: suspend (Int) -> Unit = {},
-    private val saveFollowSkipped: suspend (Set<String>) -> Unit = {},
     private val saveLookForUpdates: suspend (Boolean) -> Unit = {},
     private val saveDownloadOnWifi: suspend (Boolean) -> Unit = {},
     /** Signs out and forgets the server's data (Session.signOut, then DataGraph.clear). */
@@ -73,12 +71,7 @@ class SettingsViewModel(
 
     fun onSleepOnPlayChange(on: Boolean): Unit = save(again = { onSleepOnPlayChange(on) }) { saveSleepOnPlay(on) }
 
-    fun onFollowChange(on: Boolean): Unit = save(again = { onFollowChange(on) }) { saveFollow(on) }
-
     fun onVolumeLimitChange(level: Int): Unit = save(again = { onVolumeLimitChange(level) }) { saveVolumeLimit(level) }
-
-    fun onFollowSkippedChange(skipped: Set<String>): Unit =
-        save(again = { onFollowSkippedChange(skipped) }) { saveFollowSkipped(skipped) }
 
     fun onLookForUpdatesChange(on: Boolean): Unit = save(again = {
         onLookForUpdatesChange(on)

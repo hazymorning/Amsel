@@ -84,6 +84,8 @@ data class Prefs(
     val barPlaces: List<String>? = null,
     /** The mini player's controls in their order, those left out marked; null for the defaults. */
     val dockControls: List<String>? = null,
+    /** What the Library shows, as chips, in their order, those left out marked; null for the defaults. */
+    val libraryKinds: List<String>? = null,
     /** The kinds of hint the person turned off; [HINTS_ALL] among them turns every one off. */
     val hintsOff: Set<String> = emptySet(),
 )
@@ -126,6 +128,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
             sleepOfferedAt = p[SLEEP_OFFERED_AT],
             barPlaces = p[BAR_PLACES]?.split(',')?.filter { it.isNotBlank() },
             dockControls = p[DOCK_CONTROLS]?.split(',')?.filter { it.isNotBlank() },
+            libraryKinds = p[LIBRARY_KINDS]?.split(',')?.filter { it.isNotBlank() },
             hintsOff = p[HINTS_OFF].orEmpty(),
         )
     }
@@ -179,6 +182,10 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
 
     suspend fun setDockControls(ids: List<String>) {
         store.edit { it[DOCK_CONTROLS] = ids.joinToString(",") }
+    }
+
+    suspend fun setLibraryKinds(ids: List<String>) {
+        store.edit { it[LIBRARY_KINDS] = ids.joinToString(",") }
     }
 
     suspend fun setHintsOff(kinds: Set<String>) {
@@ -314,6 +321,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val THEME = stringPreferencesKey("theme")
         val BAR_PLACES = stringPreferencesKey("bar_places")
         val DOCK_CONTROLS = stringPreferencesKey("dock_controls")
+        val LIBRARY_KINDS = stringPreferencesKey("library_kinds")
         val HINTS_OFF = stringSetPreferencesKey("hints_off")
         val SPEAKER = stringPreferencesKey("speaker_id")
         val SPEAKER_NAME = stringPreferencesKey("speaker_name")

@@ -1,13 +1,18 @@
 package io.github.hazymorning.amsel.ui.screens.settings
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.ui.components.GroupLabel
+import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Radius
 import io.github.hazymorning.amsel.ui.theme.SmoothShape
@@ -45,6 +50,22 @@ internal fun SettingsBlock(content: SettingsRows.() -> Unit) {
         if (index > 0) Spacer(Modifier.height(BetweenRows))
         row(blockShape(first = index == 0, last = index == rows.lastIndex))
     }
+}
+
+/** A settings page's few words over its rows: what the page is for. They wrap at any type size. */
+@Composable
+internal fun PageHint(text: String, modifier: Modifier = Modifier) {
+    val style = MaterialTheme.typography.bodyMedium
+    Words(
+        text,
+        style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Start,
+        maxLines = Int.MAX_VALUE,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = Keyline.Margin, end = Keyline.Margin, top = Space.S2, bottom = Space.Group),
+    )
 }
 
 /** A row's corners in its block: the block's own corners round fully, those between rows a little. */

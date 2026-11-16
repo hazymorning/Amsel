@@ -15,6 +15,7 @@ import io.github.hazymorning.amsel.ui.ShellSlots
 import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.DockControl
+import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
@@ -36,9 +37,15 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
-    /** The bottom bar's page over the shell, its bar following it: Search taken out. */
+    /**
+     * The bottom bar's page over the shell, its bar following it: Search taken out, Albums and
+     * Podcasts put in, so the bar is full and the other kinds wait.
+     */
     @Test fun bar() = snap("settings_bar", ShotVariant.entries) {
-        val places = BarPlace.arrangement(null).with(BarPlace.Search, on = false)
+        val places = BarPlace.arrangement(null)
+            .with(BarPlace.Search, on = false)
+            .with(BarPlace.Albums, on = true)
+            .with(BarPlace.Podcasts, on = true)
         AppShell(
             nowPlaying = PlayerSample.nowPlaying,
             speaker = PlayerSample.nowPlaying.speaker,
@@ -76,6 +83,25 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
+    /** What the Library shows: radio moved up, downloads left out, podcasts not in the library yet. */
+    @Test fun libraryKinds() = snap("settings_library", ShotVariant.entries) {
+        val kinds = LibraryKind.arrangement(
+            listOf("playlists", "albums", "radio", "artists", "audiobooks", "podcasts", "-downloads"),
+        )
+        LibraryKindsScreen(
+            kinds,
+            held = setOf(
+                LibraryKind.Playlists,
+                LibraryKind.Albums,
+                LibraryKind.Artists,
+                LibraryKind.Radio,
+                LibraryKind.Audiobooks,
+            ),
+            onChange = {},
+            onBack = {},
+        )
+    }
+
     /** Suggestions: every moment on but the end of the queue. */
     @Test fun hints() = snap("settings_hints", listOf(ShotVariant.Light, ShotVariant.Dark)) {
         HintsScreen(off = setOf("ended"), onChange = {}, onBack = {})
@@ -83,27 +109,31 @@ class SettingsShots : ScreenshotTest() {
 
     /** Following the music, kept to some speakers: Hedwig left out. */
     @Test fun follow() = snap("settings_follow", ShotVariant.entries) {
-        SettingsScreen(
-            SettingsUiState(
-                userName = "Anna",
-                serverName = "Home",
-                serverAddress = "192.168.1.20",
-                appVersion = "0.1.0",
-                followPlaying = true,
-                followSkipped = setOf("hedwig"),
-            ),
-            onBack = {},
-            onOpenWebUi = {},
-            onSignOut = {},
-            onThemeChange = {},
-            onLanguage = {},
-            followSpeakers = listOf(
+        FollowScreen(
+            on = true,
+            speakers = listOf(
                 FollowSpeaker("gandalf", "Gandalf"),
                 FollowSpeaker("hedwig", "Hedwig"),
                 FollowSpeaker("office", "Mandaloffice"),
                 FollowSpeaker("potter", "Potterbox"),
                 FollowSpeaker("living", "Wohnzimmer"),
             ),
+            skipped = setOf("hedwig"),
+            onFollowChange = {},
+            onSkippedChange = {},
+            onBack = {},
+        )
+    }
+
+    /** The last speaker followed stays: its switch dimmed. */
+    @Test fun followOne() = snap("settings_follow_one", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        FollowScreen(
+            on = true,
+            speakers = listOf(FollowSpeaker("gandalf", "Gandalf"), FollowSpeaker("hedwig", "Hedwig")),
+            skipped = setOf("hedwig"),
+            onFollowChange = {},
+            onSkippedChange = {},
+            onBack = {},
         )
     }
 

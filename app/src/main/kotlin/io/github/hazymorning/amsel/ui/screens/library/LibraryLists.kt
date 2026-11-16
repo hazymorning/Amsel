@@ -51,7 +51,6 @@ import io.github.hazymorning.amsel.ui.components.plus
 import io.github.hazymorning.amsel.ui.components.rowInkBottom
 import io.github.hazymorning.amsel.ui.components.rowInkTop
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.ui.model.secondLine
 import io.github.hazymorning.amsel.ui.model.twoLines
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -125,6 +124,8 @@ internal fun CoverGrid(
     itemActions: Modifier,
 ) {
     val scrubber = state.letters.isNotEmpty()
+    // Stations have no second line: "Radio" under each would say what the chip says.
+    val twoLines = remember(state.items) { state.items.twoLines() }
     Box(modifier) {
         TileGrid(
             insets.plus(bottom = Space.ListEnd),
@@ -138,6 +139,7 @@ internal fun CoverGrid(
                     onClick = { onOpen(item) },
                     onMore = { onMore(item) },
                     itemActions,
+                    twoLines = twoLines,
                     playing = item.key in state.playing,
                 )
             }
@@ -165,6 +167,7 @@ internal fun KindEmptyState(
         LibraryKind.Artists -> R.drawable.ic_artist to R.string.library_empty_artists
         LibraryKind.Audiobooks -> R.drawable.ic_audiobook to R.string.library_empty_audiobooks
         LibraryKind.Podcasts -> R.drawable.ic_podcast to R.string.library_empty_podcasts
+        LibraryKind.Radio -> R.drawable.ic_radio to R.string.library_empty_radio
         LibraryKind.Downloads -> R.drawable.ic_download to R.string.library_empty_downloads
     }
     val action = if (kind == LibraryKind.Playlists ||
@@ -234,6 +237,7 @@ internal val LibraryKind.label: Int
         LibraryKind.Artists -> PlaybackR.string.artists
         LibraryKind.Audiobooks -> PlaybackR.string.audiobooks
         LibraryKind.Podcasts -> PlaybackR.string.podcasts
+        LibraryKind.Radio -> R.string.radio
         LibraryKind.Downloads -> R.string.downloads
     }
 
@@ -245,7 +249,10 @@ private val LibrarySort.label: Int
         LibrarySort.AToZ -> R.string.library_sort_a_to_z
     }
 
-/** The title, the chips and the order: the top of every list on this screen; with nothing to sort, no order. */
+/**
+ * The title, the chips and the order: the top of every list on this screen; with nothing to sort,
+ * no order. One kind alone, a place of its own in the bar, is the title and has no chips.
+ */
 internal class LibraryHeader(
     private val title: String,
     private val state: LibraryUiState,
@@ -262,10 +269,12 @@ internal class LibraryHeader(
             TabHeader(
                 title,
                 Modifier.onSizeChanged { onTitleHeight(it.height) },
-                below = with(LocalDensity.current) { spaced(TitleToTabs) },
+                below = if (state.single) 0.dp else with(LocalDensity.current) { spaced(TitleToTabs) },
             )
             val kinds = state.kinds
-            if (kinds != null) {
+            if (state.single) {
+                // No chips to choose from: the order stands under the title as it does under them.
+            } else if (kinds != null) {
                 ChoiceChipRow(
                     kinds,
                     selected = state.kind,
@@ -277,7 +286,7 @@ internal class LibraryHeader(
             } else {
                 // Its place is kept, unseen, until the kinds are known: nothing below moves when they come.
                 ChoiceChipRow(
-                    libraryKinds(SpokenWord()),
+                    libraryKinds(LibraryKind.Default.visible, held = emptySet()),
                     selected = state.kind,
                     onSelect = {},
                     label = { stringResource(it.label) },

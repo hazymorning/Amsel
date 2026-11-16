@@ -27,6 +27,8 @@ import io.github.hazymorning.amsel.testing.ScreenshotTest
 import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.screens.library.LibraryScreen
 import io.github.hazymorning.amsel.ui.screens.library.LibraryUiState
@@ -53,6 +55,20 @@ class ShellShots : ScreenshotTest() {
     @Test fun idle() = snap("shell_idle", listOf(ShotVariant.Light, ShotVariant.Dark), before = { openLibrary() }) {
         Shell(playing = false)
     }
+
+    /** Nothing plays, with the speaker's button kept in the mini player: it stays, to choose where. */
+    @Test fun idleSpeaker() = snap(
+        "shell_idle_speaker",
+        listOf(ShotVariant.Light, ShotVariant.Dark),
+        before = { openLibrary() },
+    ) { Shell(playing = false, dock = listOf(DockControl.PlayPause, DockControl.Next, DockControl.Speaker)) }
+
+    /** Kinds of the library as places of their own: Albums chosen, its glyph filled as Home's is. */
+    @Test fun kinds() = snap(
+        "shell_kinds",
+        listOf(ShotVariant.Light, ShotVariant.Dark),
+        before = { openPlace(PlaybackR.string.albums) },
+    ) { Shell(bar = listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Albums, BarPlace.Radio, BarPlace.Podcasts)) }
 
     /** Now Playing on its way up: the dock's cover grows into the artwork while the rest fades in. */
     @Test fun opening() = snap("shell_opening", before = { openLibrary() }) {
@@ -109,9 +125,11 @@ class ShellShots : ScreenshotTest() {
         take = {},
     )
 
-    private fun SemanticsNodeInteractionsProvider.openLibrary() {
-        val library = ApplicationProvider.getApplicationContext<Context>().getString(PlaybackR.string.library)
-        onNode(isSelectable() and hasContentDescription(library)).performClick()
+    private fun SemanticsNodeInteractionsProvider.openLibrary() = openPlace(PlaybackR.string.library)
+
+    private fun SemanticsNodeInteractionsProvider.openPlace(label: Int) {
+        val name = ApplicationProvider.getApplicationContext<Context>().getString(label)
+        onNode(isSelectable() and hasContentDescription(name)).performClick()
     }
 }
 
@@ -122,6 +140,8 @@ private fun Shell(
     playing: Boolean = true,
     messages: SnackbarHostState = remember { SnackbarHostState() },
     offer: Offer? = null,
+    dock: List<DockControl> = DockControl.Default.visible,
+    bar: List<BarPlace> = BarPlace.Default,
 ) {
     AppShell(
         nowPlaying = PlayerSample.nowPlaying.takeIf { playing },
@@ -130,6 +150,8 @@ private fun Shell(
         snackbarHostState = messages,
         layer = layer,
         offer = offer,
+        dock = dock,
+        bar = bar,
         slots = ShellSlots(
             screen = { _, _ -> Library(rows, playing) },
             nowPlaying = { onClose, _ ->
