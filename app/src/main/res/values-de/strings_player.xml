@@ -11,8 +11,6 @@
     <string name="player_volume_ask">%1$s lauter als deine Grenze von %2$s stellen?</string>
     <string name="player_volume_ask_louder">Auf %1$s stellen</string>
     <string name="player_volume_ask_stay">Bei %1$s bleiben</string>
-    <string name="speaker_pause">Pause: %1$s</string>
-    <string name="speaker_play">Abspielen: %1$s</string>
     <string name="player_volume_in_group">In der Gruppe</string>
     <string name="player_up_next">Als Nächstes</string>
     <!-- Above the artwork: where the music comes from (the album) -->
@@ -45,7 +43,6 @@
     <string name="player_not_playing">Keine Wiedergabe</string>
     <string name="player_playing">Wiedergabe läuft</string>
     <string name="player_paused">Pausiert · %1$s</string>
-    <string name="player_resting">Pausiert</string>
     <!-- Play on asks before music that plays would stop: speaker, what it plays, the person's music -->
     <string name="player_ask_busy">%1$s spielt gerade „%2$s“. Stattdessen „%3$s“ dort abspielen?</string>
     <string name="player_ask_busy_unknown">%1$s spielt bereits etwas. Stattdessen „%2$s“ dort abspielen?</string>

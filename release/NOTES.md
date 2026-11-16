@@ -1,11 +1,11 @@
-# Song post
+# Dawn chorus
 
 ## New
 
-- **Your mini player:** choose up to three buttons beside what plays, and their order: play, next, previous, the heart, the speaker, volume, the sleep timer or shuffle. Find it in Settings, or press and hold the mini player.
-- **Suggestions:** a page in Settings to turn the little suggestions above the mini player off, all at once or one moment at a time, each said in plain words.
-- **Reset Home:** at the end of Edit Home, bring back the new starting Home. Your pins stay.
+- **Continue listening cards:** books and episodes you started now stand on tall cards in the colours of their covers, with the title, who wrote or made it, the time left and a line that shows how far you are. A tap goes on where you stopped.
 
 ## Better
 
-- **Bottom bar and mini player:** switching something off no longer moves it, and each row has a handle to drag it into place.
+- **Speaker cards on Home:** larger covers, with the room's name over what plays in the same lettering as the mini player. A small green dot on the cover shows which speakers play right now.
+- **A calmer row:** the play button on each speaker card is gone; a tap opens the speaker in Now Playing, and pressing and holding plays there.
+- **Narrower cards:** a speaker card and a good part of the next fit side by side again.

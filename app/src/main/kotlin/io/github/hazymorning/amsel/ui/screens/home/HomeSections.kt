@@ -57,7 +57,6 @@ internal fun Sections(
     onTipGone: (Tip) -> Unit = {},
     onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
     onSearch: () -> Unit = {},
-    onSpeakerPlay: (SpeakerUi) -> Unit = {},
 ) {
     val list = rememberLazyListState()
     ScrollEdges(list)
@@ -114,7 +113,6 @@ internal fun Sections(
                     onRename = { editor.setTitle(section.id, it) },
                     onResume = onResume,
                     onSpeaker = onSpeaker,
-                    onSpeakerPlay = onSpeakerPlay,
                     // In edit mode the field is a section to arrange, not a way out of Home.
                     onSearch = if (state.editing) ({}) else onSearch,
                     onMoveUp = { editor.moveUp(section.id) }.takeIf { i > 0 },
