@@ -174,12 +174,6 @@ object Sizes {
     val Thumb = 12.dp
     val ThumbHeld = 20.dp
 
-    /** The playing ring beside an item in a list. */
-    val Ring = 8.dp
-
-    /** The ring's line, a fifth of its width, as the blackbird's eye. */
-    val RingStroke = 1.5.dp
-
     val Measure = 280.dp
 
     val Hairline = 1.dp

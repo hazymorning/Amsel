@@ -65,14 +65,14 @@ fun TrackRow(
     )
 }
 
-/** On the margin, its first figure's ink on the line, level with the title; the ring takes its place while it plays. */
+/** On the margin, its first figure's ink on the line, level with the title; the play bars take its place while it plays. */
 @Composable
 internal fun TrackNumber(number: Int?, playing: Boolean, onTitleLine: Boolean) {
     val type = MaterialTheme.typography
     val lift = if (onTitleLine) with(LocalDensity.current) { lineHeight(type.bodyMedium) } / 2 else null
     val place = Modifier.fillMaxWidth().then(if (lift != null) Modifier.offset(y = -lift) else Modifier)
     if (playing) {
-        Box(place, contentAlignment = Alignment.CenterStart) { PlayingRing() }
+        Box(place, contentAlignment = Alignment.CenterStart) { PlayBars() }
         return
     }
     LeadNumber(number?.toString().orEmpty(), place)

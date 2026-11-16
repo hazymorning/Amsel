@@ -1,20 +1,22 @@
 package io.github.hazymorning.amsel.ui.screens.home
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -23,10 +25,11 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.Artwork
-import io.github.hazymorning.amsel.ui.components.RingBefore
+import io.github.hazymorning.amsel.ui.components.RowLines
 import io.github.hazymorning.amsel.ui.components.ShelfRow
 import io.github.hazymorning.amsel.ui.components.SpeakerName
 import io.github.hazymorning.amsel.ui.components.Words
@@ -35,6 +38,7 @@ import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.glyph
 import io.github.hazymorning.amsel.ui.screens.player.speakerLine
+import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -86,10 +90,11 @@ private fun SpeakerCard(
     val holds = if (speaker.isPlaying) speakerLine(speaker) else stringResource(R.string.player_resting)
     val open = stringResource(R.string.open_now_playing)
     val resume = stringResource(R.string.resume)
+    val card = onSurface(CARD_INK).compositeOver(colors.surfaceContainerLow)
     Row(
         modifier
             .clip(Shapes.Tile)
-            .background(onSurface(CARD_INK).compositeOver(colors.surfaceContainerLow))
+            .background(card)
             .then(
                 if (blank) {
                     Modifier
@@ -112,23 +117,60 @@ private fun SpeakerCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val shown = if (blank) Modifier.alpha(0f) else Modifier
-        Artwork(speaker.art, shown.size(CardArt), MediaKind.Track, glyph = speaker.glyph)
-        Column(shown.weight(1f).padding(start = CardInset)) {
-            // The name alone: the row says these are speakers, and a cover without a picture wears the glyph.
+        PlayingCover(speaker, playing = speaker.isPlaying && !blank, ring = card, modifier = shown)
+        // The name alone (the row says these are speakers, and a cover without a picture wears the
+        // glyph) over what it plays, close: one thing in two lines, its ink centred on the cover.
+        RowLines(
+            type.titleSmall,
+            besideCover = true,
+            modifier = shown.weight(1f).padding(start = CardInset),
+            secondStyle = type.bodyMedium,
+            inset = 0.dp,
+            baselines = NameToState,
+        ) {
             SpeakerName(speaker, type.titleSmall, colors.onSurface)
-            Spacer(Modifier.height(Space.S1))
-            val line: @Composable () -> Unit = {
-                Words(
-                    holds,
-                    type.bodyMedium,
-                    color = colors.onSurfaceVariant,
-                    modifier = Modifier.inkStart(holds, type.bodyMedium),
-                )
-            }
-            if (speaker.isPlaying) RingBefore(type.bodyMedium, line, moving = true) else line()
+            Words(
+                holds,
+                type.bodyMedium,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.inkStart(holds, type.bodyMedium),
+            )
         }
     }
 }
+
+/**
+ * The cover of what [speaker] holds and, while it plays, the moss dot the bar's speaker wears: on
+ * the outline of the cover's top end corner, cut free of it by a ring of the card's tone ([ring]).
+ */
+@Composable
+private fun PlayingCover(speaker: SpeakerUi, playing: Boolean, ring: Color, modifier: Modifier = Modifier) {
+    val moss = MaterialTheme.colorScheme.tertiary
+    val dot by animateFloatAsState(if (playing) 1f else 0f, Motion.effects(), label = "speaker dot")
+    Box(
+        modifier.drawWithContent {
+            drawContent()
+            if (dot > 0f) {
+                val inset = DotInset.toPx()
+                val at = Offset(if (layoutDirection == LayoutDirection.Ltr) size.width - inset else inset, inset)
+                drawCircle(ring, Dot.toPx() / 2 + DotRing.toPx(), at, alpha = dot)
+                drawCircle(moss, Dot.toPx() / 2, at, alpha = dot)
+            }
+        },
+    ) {
+        Artwork(speaker.art, Modifier.size(CardArt), MediaKind.Track, glyph = speaker.glyph)
+    }
+}
+
+/** The bar's speaker dot, the same on a card's cover: 8 across, with a ring of 2 of the card's tone. */
+private val Dot = 8.dp
+private val DotRing = 2.dp
+
+/** The dot's centre lies on the outline of the cover's rounded corner (8 dp), at its middle. */
+private val DotInset = 2.4.dp
+
+/** From the name's baseline to the state's: close, a small card's two lines read as one thing. */
+private val NameToState = 18.dp
 
 /** The cover and the words stand this far from the card's edges and from each other. */
 private val CardInset = Space.S3

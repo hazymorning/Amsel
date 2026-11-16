@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 private const val ELLIPSIS = "…"
@@ -100,7 +101,14 @@ fun Words(
                 ?: measure(whole, TextOverflow.Ellipsis)
         }
         shown = result
-        val w = result.size.width.coerceIn(constraints.minWidth, constraints.maxWidth)
+        // As wide as what shows: a line cut with an ellipsis is laid out over all the room it had,
+        // and whatever follows it (a group's "+2") must stand right after its last letter.
+        val ink = if (textAlign == TextAlign.Start) {
+            (0 until result.lineCount).maxOfOrNull { result.getLineRight(it) }?.let { ceil(it).toInt() }
+        } else {
+            null
+        }
+        val w = (ink ?: result.size.width).coerceIn(constraints.minWidth, constraints.maxWidth)
         val h = result.size.height.coerceIn(constraints.minHeight, constraints.maxHeight)
         layout(
             w,
