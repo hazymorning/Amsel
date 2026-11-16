@@ -71,6 +71,12 @@ sealed interface Route : NavKey {
     /** Home's edit mode as a page of its own, from Settings: Done comes back. */
     @Serializable data object HomeEdit : Route
 
+    /** The theme, the language, and what Home, the Library and the bars show. */
+    @Serializable data object Appearance : Route
+
+    /** How the sleep timer ends and when it starts by itself. */
+    @Serializable data object SleepTimer : Route
+
     /**
      * [route] opened again above itself (an artist, a similar one, the first again), for the
      * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps

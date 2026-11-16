@@ -17,6 +17,7 @@ import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
+import io.github.hazymorning.amsel.ui.theme.ThemeMode
 import org.junit.Test
 
 class SettingsShots : ScreenshotTest() {
@@ -102,6 +103,29 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
+    /** How Amsel looks, and what each place shows, in the order they stand on the screen. */
+    @Test fun appearance() = snap("settings_appearance", ShotVariant.entries) {
+        AppearanceScreen(ThemeMode.System, onThemeChange = {}, onLanguage = {}, onBack = {})
+    }
+
+    /** The sleep timer's ways: a fade of 30 s, a shake starts it over. */
+    @Test fun sleepTimer() = snap("settings_sleep", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        SleepTimerScreen(
+            SettingsUiState(
+                userName = "Anna",
+                serverName = "Home",
+                serverAddress = "192.168.1.20",
+                appVersion = "0.1.0",
+                sleepFadeSec = 30,
+                sleepShake = true,
+            ),
+            onFadeChange = {},
+            onShakeChange = {},
+            onSleepOnPlayChange = {},
+            onBack = {},
+        )
+    }
+
     /** Suggestions: every moment on but the end of the queue. */
     @Test fun hints() = snap("settings_hints", listOf(ShotVariant.Light, ShotVariant.Dark)) {
         HintsScreen(off = setOf("ended"), onChange = {}, onBack = {})
@@ -171,8 +195,6 @@ private fun Settings(account: AbsAccount? = null) = SettingsScreen(
     onBack = {},
     onOpenWebUi = {},
     onSignOut = {},
-    onThemeChange = {},
-    onLanguage = {},
     downloads = DownloadSettings(account),
 )
 

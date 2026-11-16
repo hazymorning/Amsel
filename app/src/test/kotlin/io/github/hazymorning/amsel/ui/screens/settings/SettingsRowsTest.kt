@@ -29,8 +29,6 @@ class SettingsRowsTest {
                 onBack = {},
                 onOpenWebUi = {},
                 onSignOut = { signedOut++ },
-                onThemeChange = {},
-                onLanguage = {},
             )
         }
     }
