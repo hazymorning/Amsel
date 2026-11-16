@@ -58,12 +58,14 @@ import io.github.hazymorning.amsel.ui.screens.pages.PodcastRoute
 import io.github.hazymorning.amsel.ui.screens.pages.SimilarSongsRoute
 import io.github.hazymorning.amsel.ui.screens.player.NowPlayingRoute
 import io.github.hazymorning.amsel.ui.screens.search.SearchRoute
+import io.github.hazymorning.amsel.ui.screens.settings.AppearanceRoute
 import io.github.hazymorning.amsel.ui.screens.settings.BarRoute
 import io.github.hazymorning.amsel.ui.screens.settings.DockRoute
 import io.github.hazymorning.amsel.ui.screens.settings.FollowRoute
 import io.github.hazymorning.amsel.ui.screens.settings.HintsRoute
 import io.github.hazymorning.amsel.ui.screens.settings.LibraryKindsRoute
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsRoute
+import io.github.hazymorning.amsel.ui.screens.settings.SleepTimerRoute
 import io.github.hazymorning.amsel.ui.screens.setup.SetupRoute
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
@@ -298,6 +300,8 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         Route.Follow -> FollowRoute(navigator)
         Route.LibraryKinds -> LibraryKindsRoute(navigator)
         Route.HomeEdit -> HomeRoute(navigator, editOnly = true)
+        Route.Appearance -> AppearanceRoute(navigator)
+        Route.SleepTimer -> SleepTimerRoute(navigator)
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }

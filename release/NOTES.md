@@ -1,15 +1,8 @@
-# Twig weaving
-
-## New
-
-- **Edit Home anywhere:** long-press any free spot on Home, a margin or a gap between rows, to edit it, just as on your phone's home screen. Headings still work, and Settings now has a Home row that opens the same editing.
+# Feather sorting
 
 ## Better
 
-- **Radio on Home:** a new Home shows all your stations, not only your favourite ones. If your Home still had the favourite stations from the start, it now shows every station, so radio no longer stays hidden when you have no favourites.
-- **Hidden titles stay hidden,** even when you hide all of them; before, the first one came back.
-- **Continue listening:** the line along each card's foot is a quiet grey again, not the cover's colour.
-
-## Fixed
-
-- A section whose title is hidden no longer leaves a gap where the title was, as under Search at the top of Home.
+- **Calmer Settings:** the first page now has three short blocks, Account, Playback and App, and fits about one screen. Playback holds Follow the music, the volume limit, the sleep timer and suggestions. The sleep timer's options and Appearance each moved to a page of their own, one tap further in, so nothing got lost.
+- **Appearance:** one page for the theme, the language, and what Home, the Library, the mini player and the bottom bar show, in the order they stand on the screen.
+- **Hidden titles:** a section whose title you hid now sits a little further under the one above it, between the old wide gap and the tight one.
+- **Continue listening:** the line along each card's foot is quieter, so it no longer stands out against the card.

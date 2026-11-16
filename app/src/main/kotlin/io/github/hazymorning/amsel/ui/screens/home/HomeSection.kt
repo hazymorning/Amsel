@@ -88,10 +88,10 @@ internal fun Section(
     val title = section.heading()
     if (!editing) {
         Column(modifier) {
-            // Without its heading a section stands a group's gap under the one before, not a
-            // heading's: that room left a hole where nothing was named.
+            // Without its heading a section stands 32 under the one before: a heading's room left a
+            // hole where nothing was named, a group's gap ran it into the section above.
             if (!section.titled) {
-                if (!first) Spacer(Modifier.height(with(LocalDensity.current) { spaced(Space.Group) }))
+                if (!first) Spacer(Modifier.height(with(LocalDensity.current) { spaced(Space.S8) }))
             } else {
                 SectionHeader(
                     title,
