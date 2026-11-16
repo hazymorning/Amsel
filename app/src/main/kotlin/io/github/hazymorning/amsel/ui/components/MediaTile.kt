@@ -157,7 +157,7 @@ fun MediaTile(
                     }
                     Box(Modifier.underCover().paddingFromBaseline(top = line).textInk(type.bodyMedium, top = false)) {
                         when {
-                            playing -> RingBefore(type.bodyMedium, words)
+                            playing -> BarsBefore(type.bodyMedium, words)
                             mark != null -> MarkBefore(type.bodyMedium, mark, words)
                             else -> words()
                         }

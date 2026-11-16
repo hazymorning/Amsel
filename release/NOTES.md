@@ -1,11 +1,14 @@
-# Homing
-
-## New
-
-- **Follow the music, your way:** when you turn it on in Settings, every speaker shows up under it as a small button, all of them chosen. Leave some out, and Amsel only follows the ones still chosen. Keep just one, and it follows that speaker alone, or the group it plays in.
+# Branch hop
 
 ## Better
 
-- **Room to breathe:** every heading now keeps clear space under it, so a slider or a button never sits right under a title.
-- **Sheets:** the title has more room above it, and the last line just as much below it.
-- **Home:** rows sit a touch further from their headings.
+- **Playing mark:** the pulsing circle is gone. Whatever plays now carries three small moving bars that never grow over anything beside them.
+- **Speakers on Home:** a group's "+2" sits right after the name, the name and what it plays sit closer together, and a speaker that plays wears a small green dot on its cover's corner, as the speaker in the bottom bar does.
+- **Play on:** the group button now simply says "Change group".
+- **Volume:** "In the group" looks like every other group heading.
+- **Follow the music:** the chosen speakers are dark, as anything switched on is, and their names line up on the left.
+- **Settings:** the small print under Amsel is a little smaller.
+
+## Fixed
+
+- **Speakers on Home:** a radio station playing on a group's main speaker shows its cover again.
