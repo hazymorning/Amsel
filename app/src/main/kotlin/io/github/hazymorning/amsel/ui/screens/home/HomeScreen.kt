@@ -96,6 +96,7 @@ fun HomeScreen(
                         tip,
                         onTipGone,
                         onSearch,
+                        onSettings,
                     )
                 }
 

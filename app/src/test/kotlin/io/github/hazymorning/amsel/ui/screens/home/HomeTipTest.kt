@@ -34,7 +34,9 @@ class HomeTipTest {
 
     @Test fun theTipStandsAboveTheFirstSection() {
         show(HomeSample.home, Tip.Settings)
-        val tip = compose.onNodeWithText("Pull Home down to open Settings.").fetchSemanticsNode().boundsInRoot
+        val tip = compose.onNodeWithText(
+            "The gear in the search field opens Settings, and so does pulling Home down.",
+        ).fetchSemanticsNode().boundsInRoot
         val first = compose.onNodeWithText("Recently played").fetchSemanticsNode().boundsInRoot
         assertTrue("the tip is not above the first heading", tip.bottom < first.top)
     }

@@ -61,6 +61,7 @@ internal fun Sections(
     tip: Tip? = null,
     onTipGone: (Tip) -> Unit = {},
     onSearch: () -> Unit = {},
+    onSettings: () -> Unit = {},
 ) {
     val list = rememberLazyListState()
     ScrollEdges(list)
@@ -131,6 +132,7 @@ internal fun Sections(
                     onResume = onResume,
                     // In edit mode the field is a section to arrange, not a way out of Home.
                     onSearch = if (state.editing) ({}) else onSearch,
+                    onSettings = onSettings.takeUnless { state.editing },
                     onMoveUp = { editor.moveUp(section.id) }.takeIf { i > 0 },
                     onMoveDown = { editor.moveDown(section.id) }.takeIf { i < sections.lastIndex },
                     onArrange = editor::arrangePins,

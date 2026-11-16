@@ -13,7 +13,7 @@ definition of a useful start screen, without settings screens or a page of toggl
 | Albums | New in your library · Recently played · Favourite albums · Random albums | `music/albums/library_items` with sort/favourite |
 | Artists | Artists you play most · Favourite artists · Recently played artists | `music/artists/library_items` (sort `play_count`, `last_played`, favourite) |
 | Radio | Favourite stations · All stations · Recently played stations | `music/radios/library_items` |
-| Search | Search: Search's own field at rest between the margins, with no heading; a tap opens Search, emptied, the keyboard up. In edit mode it is only a section to arrange. Never empty, never loading | none: the app's own Search |
+| Search | Search: Search's own field at rest between the margins, with no heading; a tap opens Search, emptied, the keyboard up, and the gear at its end opens Settings. In edit mode it is only a section to arrange, with no gear. Never empty, never loading | none: the app's own Search |
 | Recently played | Everything you played lately (albums, playlists, artists, stations) · Recently played here: what last played on the speaker in use, titled "Recently played · Kitchen", the whole history while nothing has played there · Continue listening (books and episodes in progress) | `music/recently_played_items` (with `queue_id` for here); `music/in_progress_items`, each item looked up with `music/item_by_uri` for where the person stands |
 | Audiobooks | New audiobooks | library index |
 | Podcasts | New episodes (the newest of each podcast; 2.11) · Your podcasts | `music/recommendations/items` row `latest_episodes`; library index |

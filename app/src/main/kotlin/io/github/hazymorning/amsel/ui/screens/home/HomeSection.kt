@@ -66,6 +66,8 @@ internal data class SectionActions(
     val onArrange: (List<String>) -> Unit = {},
     /** Search's field: opens Search, the keyboard up. */
     val onSearch: () -> Unit = {},
+    /** The gear at the end of Search's field; null in edit mode, where the field is only a section. */
+    val onSettings: (() -> Unit)? = null,
 )
 
 /**
@@ -164,7 +166,12 @@ internal fun Section(
 @Composable
 private fun SectionBody(section: SectionUi, actions: SectionActions) {
     if (section.option == SectionOption.Search) {
-        SearchEntry(stringResource(R.string.search_placeholder), stringResource(R.string.tab_search), actions.onSearch)
+        SearchEntry(
+            stringResource(R.string.search_placeholder),
+            stringResource(R.string.tab_search),
+            actions.onSearch,
+            onSettings = actions.onSettings,
+        )
     } else if (section.loading) {
         SectionSkeleton(section)
     } else {
