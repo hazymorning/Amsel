@@ -75,10 +75,6 @@ class HomeShots : ScreenshotTest() {
 
     @Test fun playedHere() = snap("home_played_here", listOf(Light, Dark)) { Home(HomeSample.playedHere) }
 
-    @Test fun speakers() = snap("home_speakers", ShotVariant.entries) { Home(HomeSample.speakers) }
-
-    @Test fun speakersInGerman() = snap("home_speakers_german", qualifiers = "de") { Home(HomeSample.speakers) }
-
     @Test fun playedHereInGerman() = snap("home_played_here_german", qualifiers = "de") { Home(HomeSample.playedHere) }
 }
 

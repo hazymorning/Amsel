@@ -247,15 +247,4 @@ class UiMapperTest {
         // Without a song of its own, the station keeps its name.
         assertEquals(station, station.onAir(player.copy(currentMedia = media.copy(title = "Amsel Test Radio"))))
     }
-
-    @Test fun `a speaker whose own media has no cover shows its queue's item, while that plays`() {
-        val station = QueueItem("q1", "Amsel Test Radio", image = MediaItemImage(proxyId = "station"))
-        val queue = PlayerQueue("leader", active = true, currentItem = station)
-        val bare = Player("leader", currentMedia = PlayerMedia(title = "Lanterns", queueItemId = "q1"))
-        assertEquals(mapper.art(station.image), mapper.speaker(bare, isPhone = false, queue = queue).art)
-        // Something else plays than the queue's item, or the queue is not what plays: no cover.
-        val other = bare.copy(currentMedia = bare.currentMedia?.copy(queueItemId = "q9"))
-        assertEquals(null, mapper.speaker(other, isPhone = false, queue = queue).art)
-        assertEquals(null, mapper.speaker(bare, isPhone = false, queue = queue.copy(active = false)).art)
-    }
 }

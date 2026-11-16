@@ -128,8 +128,6 @@ data class SpeakerUi(
     val others: Int = 0,
     /** Its level, 0 to 100; none for This phone and for a speaker whose volume is fixed. */
     val volume: Int? = null,
-    /** The cover of what it plays. */
-    val art: ArtRef? = null,
 )
 
 /**

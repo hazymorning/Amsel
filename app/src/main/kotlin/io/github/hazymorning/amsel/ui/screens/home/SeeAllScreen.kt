@@ -112,7 +112,6 @@ private val SectionSource.glyph: Int
         SectionSource.Radio -> R.drawable.ic_radio
         SectionSource.Audiobooks -> R.drawable.ic_audiobook
         SectionSource.Podcasts -> R.drawable.ic_podcast
-        SectionSource.Speakers -> R.drawable.ic_speaker
         SectionSource.Search -> R.drawable.ic_search
     }
 

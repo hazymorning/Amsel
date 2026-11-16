@@ -35,7 +35,6 @@ import io.github.hazymorning.amsel.ui.components.moved
 import io.github.hazymorning.amsel.ui.components.plus
 import io.github.hazymorning.amsel.ui.components.rememberReorderable
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
 
@@ -55,7 +54,6 @@ internal fun Sections(
     modifier: Modifier,
     tip: Tip? = null,
     onTipGone: (Tip) -> Unit = {},
-    onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
     onSearch: () -> Unit = {},
 ) {
     val list = rememberLazyListState()
@@ -112,7 +110,6 @@ internal fun Sections(
                     onSectionMore = { sheet = EditSheet.Actions to section.id },
                     onRename = { editor.setTitle(section.id, it) },
                     onResume = onResume,
-                    onSpeaker = onSpeaker,
                     // In edit mode the field is a section to arrange, not a way out of Home.
                     onSearch = if (state.editing) ({}) else onSearch,
                     onMoveUp = { editor.moveUp(section.id) }.takeIf { i > 0 },

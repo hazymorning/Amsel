@@ -1,11 +1,7 @@
-# Dawn chorus
-
-## New
-
-- **Continue listening cards:** books and episodes you started now stand on tall cards in the colours of their covers, with the title, who wrote or made it, the time left and a line that shows how far you are. A tap goes on where you stopped.
+# Autumn moult
 
 ## Better
 
-- **Speaker cards on Home:** larger covers, with the room's name over what plays in the same lettering as the mini player. A small green dot on the cover shows which speakers play right now.
-- **A calmer row:** the play button on each speaker card is gone; a tap opens the speaker in Now Playing, and pressing and holding plays there.
-- **Narrower cards:** a speaker card and a good part of the next fit side by side again.
+- **A calmer Home:** the row of speaker cards at the top of Home is gone, and Edit Home no longer offers it. If your Home had the row, it simply goes; your other sections and your pins stay as they were. Which speaker plays, and what it plays, is still one tap away in the mini player and in Play on.
+- **Continue listening:** the cards give their cover and their words a little more room, so a title, its author and the time left no longer sit so close to the edges.
+- **Reset Home:** brings back a starting Home with Search, Continue listening and rows of music, now without the speakers.
