@@ -16,7 +16,6 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpokenWord
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -79,8 +78,10 @@ class LibraryViewModelTest {
 
     private fun TestScope.viewModel(
         handle: SavedStateHandle = SavedStateHandle(),
-        held: Flow<SpokenWord> = MutableStateFlow(SpokenWord()),
+        held: Flow<Set<MediaType>> = MutableStateFlow(emptySet()),
         downloads: Flow<List<MediaUi>> = MutableStateFlow(emptyList()),
+        arranged: Flow<List<LibraryKind>> = MutableStateFlow(LibraryKind.Default.visible),
+        only: LibraryKind? = null,
     ): LibraryViewModel {
         val vm = LibraryViewModel(
             handle,
@@ -105,8 +106,10 @@ class LibraryViewModelTest {
             },
             messages = messages,
             work = Dispatchers.Main,
-            spokenWord = held,
+            held = held,
+            arranged = arranged,
             downloads = downloads,
+            only = only,
         )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
         return vm
@@ -122,20 +125,51 @@ class LibraryViewModelTest {
         assertFalse(state.loading)
     }
 
-    @Test fun audiobooksAndPodcastsShowOnlyWhileTheLibraryHoldsThem() = runTest {
-        val held = MutableStateFlow(SpokenWord())
+    @Test fun stationsBooksAndPodcastsShowOnlyWhileTheLibraryHoldsThem() = runTest {
+        val held = MutableStateFlow(emptySet<MediaType>())
         sources[MediaType.Audiobook to LibrarySort.RecentlyPlayed] =
             MutableStateFlow(listOf(entity(1, kind = "audiobook", name = "Moby-Dick")))
         val vm = viewModel(SavedStateHandle(mapOf("kind" to LibraryKind.Audiobooks.name)), held)
         assertEquals(listOf(LibraryKind.Playlists, LibraryKind.Albums, LibraryKind.Artists), vm.state.value.kinds)
         // A chosen kind the library does not hold gives way to the first chip.
         assertEquals(LibraryKind.Playlists, vm.state.value.kind)
-        held.value = SpokenWord(books = true)
+        held.value = setOf(MediaType.Audiobook)
         assertEquals(LibraryKind.Audiobooks, vm.state.value.kinds?.last())
         assertEquals(LibraryKind.Audiobooks, vm.state.value.kind)
         assertEquals(MediaKind.Audiobook, vm.state.value.items.single().kind)
-        held.value = SpokenWord(books = true, podcasts = true)
+        held.value = setOf(MediaType.Audiobook, MediaType.Podcast, MediaType.Radio)
         assertEquals(LibraryKind.entries - LibraryKind.Downloads, vm.state.value.kinds)
+    }
+
+    @Test fun stationsAreAKindOfTheirOwn() = runTest {
+        sources[MediaType.Radio to LibrarySort.RecentlyPlayed] =
+            MutableStateFlow(listOf(entity(13, kind = "radio", name = "Blue Note Radio")))
+        val vm = viewModel(held = MutableStateFlow(setOf(MediaType.Radio)))
+        assertEquals(LibraryKind.Radio, vm.state.value.kinds?.last())
+        vm.selectKind(LibraryKind.Radio)
+        assertEquals(MediaKind.Radio, vm.state.value.items.single().kind)
+    }
+
+    @Test fun theChipsAreThoseThePersonShowsInTheirOrder() = runTest {
+        val arranged = MutableStateFlow(listOf(LibraryKind.Artists, LibraryKind.Albums))
+        val vm = viewModel(SavedStateHandle(mapOf("kind" to LibraryKind.Playlists.name)), arranged = arranged)
+        assertEquals(listOf(LibraryKind.Artists, LibraryKind.Albums), vm.state.value.kinds)
+        // Playlists are no longer shown: the first chip shows instead.
+        assertEquals(LibraryKind.Artists, vm.state.value.kind)
+        // Shown, but none in the library: the kind is still there, saying it is empty.
+        arranged.value = listOf(LibraryKind.Podcasts)
+        assertEquals(listOf(LibraryKind.Podcasts), vm.state.value.kinds)
+        assertEquals(LibraryKind.Podcasts, vm.state.value.kind)
+    }
+
+    @Test fun oneKindAloneIsItsOwnPage() = runTest {
+        sources[MediaType.Album to LibrarySort.RecentlyPlayed] = MutableStateFlow(listOf(entity(1, kind = "album")))
+        val vm = viewModel(SavedStateHandle(mapOf("kind" to LibraryKind.Playlists.name)), only = LibraryKind.Albums)
+        assertEquals(LibraryKind.Albums, vm.state.value.kind)
+        assertEquals(listOf(LibraryKind.Albums), vm.state.value.kinds)
+        assertTrue(vm.state.value.single)
+        vm.selectKind(LibraryKind.Playlists)
+        assertEquals(LibraryKind.Albums, vm.state.value.kind)
     }
 
     @Test fun downloadsShowWhileThePhoneHoldsSomeAndNeedNoServer() = runTest {

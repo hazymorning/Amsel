@@ -69,9 +69,9 @@ private val BeforePlay = Space.S6
 /**
  * What plays, on the dock's own surface, with no card around it: the cover on the margin, the
  * speaker's name over what plays, play and a skip, the skip's ink on the margin across. It stays
- * when nothing plays: where music goes can be chosen before the first song. The speaker's button is
- * the band's, after Home. A cover here, and one still empty, stands a tone above the dock, as a
- * cover does above the page.
+ * when nothing plays: where music goes can be chosen before the first song, and the speaker's
+ * button stays where the person put it. A cover here, and one still empty, stands a tone above the
+ * dock, as a cover does above the page.
  */
 @Composable
 internal fun PlayerCard(
@@ -97,7 +97,7 @@ internal fun PlayerCard(
                 if (playing && shown != null) {
                     PlayerRow(shown, speaker, covered, onOpen, onControl, controls, onDockControl, onArrange)
                 } else {
-                    IdleRow(speaker, onSpeaker)
+                    IdleRow(speaker, onSpeaker, speakerButton = DockControl.Speaker in controls)
                 }
             }
         }
@@ -106,19 +106,21 @@ internal fun PlayerCard(
 
 /**
  * Nothing plays: an empty cover and the speaker's name over "Not playing". A tap anywhere on the
- * card opens the speaker choice, the one thing to do here; TalkBack reads the words, and the band's
- * speaker after Home chooses.
+ * card opens the speaker choice, the one thing to do here; TalkBack reads the words, and chooses
+ * with the speaker's button where the person keeps one in the mini player ([speakerButton]), or with
+ * the band's after Home. Play and the rest wait for something to play.
  */
 @Composable
-private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
+private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit, speakerButton: Boolean) {
     val type = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val words = stringResource(R.string.player_not_playing)
+    val end = if (speakerButton) (ControlsInset - endReach(DockControl.Speaker.icon)).coerceAtLeast(0.dp) else Inset
     Row(
         Modifier
             .fillMaxWidth()
             .pointerInput(onSpeaker) { detectTapGestures { onSpeaker() } }
-            .padding(Inset)
+            .padding(start = Inset, top = Inset, end = end, bottom = Inset)
             .heightIn(min = Sizes.DockArt),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -131,6 +133,15 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
                 type.dockLine,
                 color = colors.onSurfaceVariant,
                 modifier = Modifier.inkStart(words, type.dockLine),
+            )
+        }
+        if (speakerButton) {
+            Spacer(Modifier.width(BeforePlay))
+            IconAction(
+                DockControl.Speaker.icon,
+                stringResource(DockControl.Speaker.label),
+                onSpeaker,
+                tint = colors.onSurface,
             )
         }
     }

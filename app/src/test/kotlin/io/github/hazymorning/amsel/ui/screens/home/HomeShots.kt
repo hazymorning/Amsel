@@ -71,7 +71,7 @@ class HomeShots : ScreenshotTest() {
 
     @Test fun offline() = snap("home_offline") { Home(HomeSample.offline) }
 
-    @Test fun listening() = snap("home_listening", listOf(Light, LargeFont)) { Home(HomeSample.listening) }
+    @Test fun listening() = snap("home_listening", listOf(Light, Dark, LargeFont)) { Home(HomeSample.listening) }
 
     @Test fun playedHere() = snap("home_played_here", listOf(Light, Dark)) { Home(HomeSample.playedHere) }
 

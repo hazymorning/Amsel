@@ -3,18 +3,15 @@ package io.github.hazymorning.amsel.ui.screens.settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.Hints
@@ -23,9 +20,7 @@ import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
-import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.navigation.Navigator
-import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
 
@@ -56,17 +51,7 @@ fun HintsScreen(off: Set<String>, onChange: (Set<String>) -> Unit, onBack: () ->
     MaterialScreen(modifier, bar = { PageTopBar(stringResource(R.string.hints), onBack) }) { insets ->
         ScrollEdges(scroll)
         Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(insets).padding(bottom = Space.ListEnd)) {
-            val style = MaterialTheme.typography.bodyMedium
-            Words(
-                stringResource(R.string.hints_intro),
-                style,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Start,
-                maxLines = 4,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = Keyline.Margin, end = Keyline.Margin, top = Space.S2, bottom = Space.Group),
-            )
+            PageHint(stringResource(R.string.hints_intro))
             SettingsBlock {
                 row { shape ->
                     ToggleRow(

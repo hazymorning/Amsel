@@ -60,7 +60,9 @@ import io.github.hazymorning.amsel.ui.screens.player.NowPlayingRoute
 import io.github.hazymorning.amsel.ui.screens.search.SearchRoute
 import io.github.hazymorning.amsel.ui.screens.settings.BarRoute
 import io.github.hazymorning.amsel.ui.screens.settings.DockRoute
+import io.github.hazymorning.amsel.ui.screens.settings.FollowRoute
 import io.github.hazymorning.amsel.ui.screens.settings.HintsRoute
+import io.github.hazymorning.amsel.ui.screens.settings.LibraryKindsRoute
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsRoute
 import io.github.hazymorning.amsel.ui.screens.setup.SetupRoute
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
@@ -281,6 +283,7 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         Route.Home -> HomeRoute(navigator)
         Route.Search -> SearchRoute(navigator)
         Route.Library -> LibraryRoute(navigator)
+        is Route.Shelf -> LibraryRoute(navigator, only = route.kind)
         is Route.Album -> AlbumRoute(navigator, route.key)
         is Route.Artist -> ArtistRoute(navigator, route.key)
         is Route.Playlist -> PlaylistRoute(navigator, route.key)
@@ -292,6 +295,8 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         Route.Bar -> BarRoute(navigator)
         Route.Dock -> DockRoute(navigator)
         Route.Hints -> HintsRoute(navigator)
+        Route.Follow -> FollowRoute(navigator)
+        Route.LibraryKinds -> LibraryKindsRoute(navigator)
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }
