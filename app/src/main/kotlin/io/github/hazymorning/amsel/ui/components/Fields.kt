@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -161,23 +160,13 @@ fun SearchField(
 
 /**
  * The search field at rest, as a button: Home's Search section. It looks as Search's own field does
- * while empty; a tap opens Search, the keyboard up, where that field takes the words. Given
- * [onSettings], the gear stands at its end, its ink as far in as the magnifier's at the start, as an
- * account stands in the search bar of Google's own apps: a tap on it opens Settings, one anywhere
- * else Search.
+ * while empty; a tap opens Search, the keyboard up, where that field takes the words.
  */
 @Composable
-fun SearchEntry(
-    placeholder: String,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    onSettings: (() -> Unit)? = null,
-) {
+fun SearchEntry(placeholder: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val glyph = wordGlyph(MaterialTheme.typography.bodyLarge)
-    val gearEnd = (Space.Sibling - endReach(R.drawable.ic_settings, glyph)).coerceAtLeast(0.dp)
-    Box(modifier.fillMaxWidth().padding(horizontal = Keyline.Margin), contentAlignment = Alignment.CenterEnd) {
+    Box(modifier.fillMaxWidth().padding(horizontal = Keyline.Margin)) {
         FieldBox(
             error = false,
             colors.surfaceContainerLow,
@@ -190,18 +179,7 @@ fun SearchEntry(
             InkGlyph(R.drawable.ic_search, tint = colors.onSurfaceVariant, size = glyph)
             Spacer(Modifier.width(Space.S3))
             FieldText("", placeholder, field = {}, Modifier.weight(1f))
-            // The gear's room, so the words end before it; the gear itself lies over the field.
-            Spacer(Modifier.width(if (onSettings != null) Sizes.TouchTarget + gearEnd else Space.Sibling))
-        }
-        if (onSettings != null) {
-            IconAction(
-                R.drawable.ic_settings,
-                stringResource(R.string.settings),
-                onSettings,
-                Modifier.padding(end = gearEnd),
-                tint = colors.onSurfaceVariant,
-                size = glyph,
-            )
+            Spacer(Modifier.width(Space.Sibling))
         }
     }
 }

@@ -199,34 +199,6 @@ class HomeScreenTest {
         assertEquals(1, asked)
     }
 
-    @Test fun theGearInHomesSearchFieldOpensSettings() {
-        var searched = 0
-        var settings = 0
-        val home = HomeSample.home
-        val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
-        val state = mutableStateOf(home.copy(sections = listOf(search) + home.sections))
-        compose.setContent {
-            AmselTheme {
-                HomeScreen(
-                    state.value,
-                    {},
-                    {},
-                    {},
-                    {},
-                    editor = Recorder(),
-                    onSearch = { searched++ },
-                    onSettings = { settings++ },
-                )
-            }
-        }
-        compose.onNodeWithContentDescription("Settings").performClick()
-        assertEquals(1, settings)
-        assertEquals(0, searched)
-        // In edit mode the field is only a section: no gear on it.
-        state.value = state.value.copy(editing = true)
-        compose.onNodeWithContentDescription("Settings").assertDoesNotExist()
-    }
-
     @Test fun withEveryTitleHiddenALongPressOnAFreeSpotEditsHome() {
         val editor = Recorder()
         val home = HomeSample.home
