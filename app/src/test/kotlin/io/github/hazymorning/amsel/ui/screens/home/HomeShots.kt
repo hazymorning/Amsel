@@ -28,7 +28,7 @@ class HomeShots : ScreenshotTest() {
     }
 
     /**
-     * Continue listening with its title hidden, under Search's field: a group's gap under the
+     * Continue listening with its title hidden, under Search's field: 32 under the
      * field, not a heading's room, then the next section's heading as ever.
      */
     @Test fun untitled() = snap("home_untitled", ShotVariant.entries) {

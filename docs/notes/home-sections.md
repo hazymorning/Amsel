@@ -48,7 +48,7 @@ most"), never "Section 1". The layout never appears in the title.
   **Show [source ▾] as [layout ▾]** (on two lines, so a longer choice never reflows it; each chip says
   its choice as the sentence needs it, "Show your pins as a grid", "Zeigt Angeheftetes als große
   Cover", where headings and the sheets keep their names), and ⋯ with Hide title (Show title, once
-  hidden: the section then stands a group's gap, 24, under the one before, and edit mode shows the
+  hidden: the section then stands 32 under the one before, and edit mode shows the
   title faint) and Remove. Hidden titles stay hidden, all of them too. Every section shows its title until hidden, but Search, a field, which shows it once
   asked to. A held press on the title or the sentence picks the section up to move it; TalkBack moves it
   through its actions. A chip opens a sheet of choices, as Library's sort does. **Add section** stands

@@ -11,6 +11,13 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_app">App</string>
+    <string name="settings_playback">Playback</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_appearance_detail">Theme, language, Home, Library and the bars</string>
+    <string name="appearance_intro">How Amsel looks, and what Home, the Library, the mini player and the bottom bar show.</string>
+    <string name="settings_arrange">What shows where</string>
+    <string name="settings_sleep_detail">How it ends, and when it starts by itself</string>
+    <string name="sleep_intro">The sleep timer stops the music after a while. Here you choose how it ends and when it starts by itself.</string>
     <string name="settings_language">Language</string>
     <!-- The language this text is in, as its speakers write it. -->
     <string name="settings_language_current">English</string>
