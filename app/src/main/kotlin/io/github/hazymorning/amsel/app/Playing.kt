@@ -54,14 +54,9 @@ class Playing(
      * always be chosen: its player leaves the server (or stays as unavailable) once another speaker is
      * chosen, and joins again when it is picked.
      */
-    val speakers: StateFlow<List<SpeakerUi>> = combine(
-        data.speakers.players,
-        data.speakers.queues,
-        phone.playerId,
-    ) { players, queues, phoneId ->
-        // A speaker's queue has its id; its item lends the cover the speaker's own media may lack.
+    val speakers: StateFlow<List<SpeakerUi>> = combine(data.speakers.players, phone.playerId) { players, phoneId ->
         fun row(player: Player, isPhone: Boolean) =
-            mapper.speaker(player, isPhone, players.membersOf(player.playerId).size, queues[player.playerId]?.queue)
+            mapper.speaker(player, isPhone, players.membersOf(player.playerId).size)
         val phoneRow = players[phoneId]?.let { row(it, isPhone = true).copy(available = true) }
             ?: SpeakerUi(id = phoneId ?: PHONE, name = "", isPhone = true)
         listOf(phoneRow) + players.values

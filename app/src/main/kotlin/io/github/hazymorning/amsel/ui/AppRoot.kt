@@ -42,7 +42,6 @@ import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.LocalDownloadMarks
 import io.github.hazymorning.amsel.ui.components.LocalMusicPlays
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
@@ -68,15 +67,10 @@ import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
 import io.github.hazymorning.amsel.ui.theme.applyNightMode
 import io.github.hazymorning.amsel.ui.theme.isNight
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 
 /** What screens may ask of the app shell, wherever they are. Provided by [AppRoot]. */
 class AppActions(
@@ -110,28 +104,6 @@ class AppActions(
     fun more(target: ActionTarget) = open(AppSheet.Actions(target))
 
     fun playOn() = open(AppSheet.PlayOn)
-
-    /**
-     * Makes [speaker] the one music plays on, as Play on does, and shows what it holds in Now
-     * Playing ([openPlayer]) once the dock has it; nothing starts. What plays elsewhere stays where it is.
-     */
-    fun look(speaker: SpeakerUi, openPlayer: () -> Unit) {
-        graph.scope.launch {
-            if (graph.playing.speaker.value.id != speaker.id) graph.playOn.select(speaker)
-            withTimeoutOrNull(SPEAKER_SHOWS_MS) { graph.playing.nowPlaying.first { it?.speaker?.id == speaker.id } }
-                ?: return@launch
-            withContext(Dispatchers.Main) { openPlayer() }
-        }
-    }
-
-    /** Makes [speaker] the one music plays on, and one that rests on something goes on at once. */
-    fun play(speaker: SpeakerUi) {
-        val resting = !speaker.isPlaying && speaker.song != null
-        graph.scope.launch {
-            if (graph.playing.speaker.value.id != speaker.id) graph.playOn.select(speaker)
-            if (resting) withContext(Dispatchers.Main) { graph.playback.resume(speaker) }
-        }
-    }
 
     /** Opens Music Assistant's web UI in the browser. */
     fun openWebUi() {
@@ -323,9 +295,6 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }
-
-/** How long Now Playing waits for a speaker just picked to show what it holds. */
-private const val SPEAKER_SHOWS_MS = 3_000L
 
 /** How long Music Assistant stays out of reach before the app says so. */
 private const val OFFLINE_NOTICE_MS = 8_000L

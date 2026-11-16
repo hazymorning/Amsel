@@ -18,7 +18,6 @@ enum class SectionSource {
     Radio,
     Audiobooks,
     Podcasts,
-    Speakers,
     Search,
 }
 
@@ -63,12 +62,6 @@ enum class SectionOption(val source: SectionSource) {
     /** The newest episode of every podcast in the library. */
     NewEpisodes(SectionSource.Podcasts),
     YourPodcasts(SectionSource.Podcasts),
-
-    /**
-     * Every speaker in reach, This phone first, with what it plays and how loud: the app's own
-     * speakers, not the server's items, and only while a speaker other than This phone is in reach.
-     */
-    Speakers(SectionSource.Speakers),
 
     /** A field that opens Search, the keyboard up: the app's own, not the server's items, never empty. */
     Search(SectionSource.Search),
@@ -120,8 +113,8 @@ data class HomeSection(
     val title: String? = null,
     val titled: Boolean? = null,
 ) {
-    /** Whether its heading shows: as the person set it, else for every option but Speakers, whose cards say what they are. */
-    val showsTitle: Boolean get() = titled ?: (option != SectionOption.Speakers && option != SectionOption.Search)
+    /** Whether its heading shows: as the person set it, else for every option but Search, a field. */
+    val showsTitle: Boolean get() = titled ?: (option != SectionOption.Search)
 }
 
 /**
@@ -168,11 +161,10 @@ data class HomeLayout(
 
     /**
      * A new option brings its own title, shown or not as that option is: a name given to the old one
-     * would no longer fit. Speakers is a shelf and nothing else; Search a field, whose layout is kept.
+     * would no longer fit. The layout stays.
      */
     fun setOption(id: String, option: SectionOption): HomeLayout = update(id) {
-        val layout = if (option == SectionOption.Speakers) SectionLayout.Row else it.layout
-        it.copy(option = option, title = null, titled = null, layout = layout)
+        it.copy(option = option, title = null, titled = null)
     }
 
     /** Shows or hides section [id]'s heading. */
@@ -230,14 +222,13 @@ data class HomeLayout(
         const val MAX_TITLE = 60
 
         /**
-         * A new person's Home, eight sections: Search's field and the speakers first, where a
-         * household starts; Continue listening in big covers and Pinned, each hidden while empty;
-         * then three rows of covers and the favourite stations in small ones. The sections an older
-         * default had keep their ids, so a Home never changed keeps its snapshots.
+         * A new person's Home, seven sections: Search's field first; Continue listening in its
+         * cards and Pinned, each hidden while empty; then three rows of covers and the favourite
+         * stations in small ones. The sections an older default had keep their ids, so a Home never
+         * changed keeps its snapshots.
          */
         val DEFAULT_SECTIONS = listOf(
             HomeSection("s5", SectionOption.Search, SectionLayout.Row),
-            HomeSection("s6", SectionOption.Speakers, SectionLayout.Row),
             HomeSection("s0", SectionOption.ContinueListening, SectionLayout.Big),
             HomeSection("s1", SectionOption.Pinned, SectionLayout.Grid),
             HomeSection("s2", SectionOption.Everything, SectionLayout.Row),
@@ -259,7 +250,8 @@ data class HomeLayout(
 
         /**
          * The stored layout, or the defaults when nothing is stored yet or it cannot be read. One
-         * section this version does not know (a newer app wrote it) is dropped, not the whole Home.
+         * section this version does not know (a newer app wrote it, or an older one showed the
+         * speakers there) is dropped, not the whole Home.
          */
         fun decode(json: String?): HomeLayout {
             // Text that is not JSON, or JSON of another shape, throws IllegalArgumentException.

@@ -25,7 +25,6 @@
     <string name="home_option_new_episodes">New episodes</string>
     <string name="home_option_your_podcasts">Your podcasts</string>
     <string name="home_option_played_here_choice">Recently played here</string>
-    <string name="home_option_speakers">Speakers</string>
     <string name="home_option_search">Search</string>
 
     <!-- How a section shows its items -->
@@ -67,7 +66,6 @@
     <string name="home_sentence_option_new_audiobooks">new audiobooks</string>
     <string name="home_sentence_option_new_episodes">new episodes</string>
     <string name="home_sentence_option_your_podcasts">your podcasts</string>
-    <string name="home_sentence_option_speakers">the speakers</string>
     <string name="home_sentence_option_search">the search field</string>
     <string name="home_sentence_layout_grid">a grid</string>
     <string name="home_sentence_layout_small">small covers</string>
@@ -76,10 +74,9 @@
     <string name="home_sentence_layout_list">a list</string>
     <string name="home_edit_add_section">Add section</string>
     <string name="home_reset">Reset Home</string>
-    <string name="home_reset_question">Your sections make way for a new Home: Search, the speakers, Continue listening and rows of music. What you pinned stays.</string>
+    <string name="home_reset_question">Your sections make way for a new Home: Search, Continue listening and rows of music. What you pinned stays.</string>
     <string name="home_reset_do">Reset</string>
     <string name="home_section_empty">Nothing here yet</string>
-    <string name="home_section_empty_speakers">Shows other speakers that play or are paused</string>
     <string name="home_section_empty_pinned">Nothing pinned yet. Long-press an album, playlist, artist, station, book or podcast and choose Pin to Home.</string>
 
     <!-- Pins, from any item's ⋮ sheet -->

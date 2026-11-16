@@ -40,7 +40,6 @@ import io.github.hazymorning.amsel.ui.components.overhang
 import io.github.hazymorning.amsel.ui.components.plus
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.displayName
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Shapes
@@ -65,8 +64,6 @@ internal data class SectionActions(
     val onMoveDown: (() -> Unit)? = null,
     /** Pinned's new order, after a pin was moved. */
     val onArrange: (List<String>) -> Unit = {},
-    /** Speakers: a tap makes the speaker the one in use and shows it in Now Playing; [play], a long press, plays there. */
-    val onSpeaker: (speaker: SpeakerUi, play: Boolean) -> Unit = { _, _ -> },
     /** Search's field: opens Search, the keyboard up. */
     val onSearch: () -> Unit = {},
 )
@@ -167,8 +164,6 @@ internal fun Section(
 private fun SectionBody(section: SectionUi, actions: SectionActions) {
     if (section.option == SectionOption.Search) {
         SearchEntry(stringResource(R.string.search_placeholder), stringResource(R.string.tab_search), actions.onSearch)
-    } else if (section.option == SectionOption.Speakers) {
-        SpeakerShelf(section, actions.onSpeaker)
     } else if (section.loading) {
         SectionSkeleton(section)
     } else {
