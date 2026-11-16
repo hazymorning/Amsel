@@ -49,6 +49,10 @@
     <string name="bar_speaker">Lautsprecher</string>
     <string name="bar_hint">In die Leiste passen bis zu fünf Plätze. Mit dem Schalter blendest du einen ein oder aus, mit dem Griff verschiebst du ihn. Die Startseite bleibt immer.</string>
     <string name="settings_dock">Mini-Player</string>
+    <plurals name="settings_home_sections">
+        <item quantity="one">%d Bereich</item>
+        <item quantity="other">%d Bereiche</item>
+    </plurals>
     <string name="library_kinds_hint">Wähle, was die Bibliothek zeigt: Mit dem Schalter blendest du etwas ein oder aus, mit dem Griff verschiebst du es. Eins bleibt immer.</string>
     <string name="library_kind_last_stays">An, das letzte bleibt</string>
     <string name="library_kind_waits">Erscheint, sobald es welche gibt</string>

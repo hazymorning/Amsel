@@ -94,7 +94,7 @@
     <string name="move_later">Move later</string>
 
     <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
-    <string name="tip_edit_home">Long-press a heading to edit Home.</string>
+    <string name="tip_edit_home">Long-press a heading or a free spot to edit Home.</string>
     <string name="tip_settings">Pull Home down to open Settings.</string>
     <string name="tip_more">Long-press an album, a playlist or a song for more options.</string>
     <string name="tip_dismiss">Dismiss tip</string>

@@ -92,10 +92,12 @@ class HomeViewModel(
     spokenWord: Flow<SpokenWord> = flowOf(SpokenWord()),
     /** The speakers, to name the one Played here shows. */
     speakers: Flow<HomeSpeakers> = flowOf(HomeSpeakers()),
+    /** Home's edit mode as a page of its own (Settings, Home): it opens in edit mode. */
+    editOnly: Boolean = false,
 ) : ViewModel(),
     HomeEditor {
     // Saved, so an edit sheet restored after process death opens in edit mode again.
-    private val editing = handle.getStateFlow(EDITING, false)
+    private val editing = handle.getStateFlow(EDITING, editOnly)
 
     private val inputs = combine(
         home.layout,

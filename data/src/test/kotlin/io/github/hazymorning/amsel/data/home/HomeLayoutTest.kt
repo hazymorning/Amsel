@@ -5,6 +5,7 @@ import io.github.hazymorning.amsel.data.home.SectionLayout.Grid
 import io.github.hazymorning.amsel.data.home.SectionLayout.List
 import io.github.hazymorning.amsel.data.home.SectionLayout.Row
 import io.github.hazymorning.amsel.data.home.SectionLayout.Small
+import io.github.hazymorning.amsel.data.home.SectionOption.AllStations
 import io.github.hazymorning.amsel.data.home.SectionOption.ContinueListening
 import io.github.hazymorning.amsel.data.home.SectionOption.Everything
 import io.github.hazymorning.amsel.data.home.SectionOption.FavoriteStations
@@ -43,7 +44,7 @@ class HomeLayoutTest {
                 Everything,
                 SmartPlaylists,
                 NewAlbums,
-                FavoriteStations,
+                AllStations,
             ),
             fresh.options(),
         )
@@ -52,6 +53,18 @@ class HomeLayoutTest {
         assertEquals(listOf("s5", "s0", "s1", "s2", "s3", "s4", "s7"), fresh.ids())
         assertTrue(fresh.pinned.isEmpty())
         assertSame(fresh, fresh.offerListening())
+    }
+
+    @Test fun theEarlierDefaultsFavouriteStationsReadAsEveryStation() {
+        val earlier = HomeLayout(
+            HomeLayout.DEFAULT_SECTIONS.map { if (it.id == "s7") it.copy(option = FavoriteStations) else it },
+        )
+        assertEquals(AllStations, HomeLayout.decode(earlier.encode()).sections.last().option)
+        // In another size or under the person's own name, favourites stay favourites.
+        val resized = earlier.setLayout("s7", Row)
+        assertEquals(FavoriteStations, HomeLayout.decode(resized.encode()).sections.last().option)
+        val named = earlier.setTitle("s7", "Sender")
+        assertEquals(FavoriteStations, HomeLayout.decode(named.encode()).sections.last().option)
     }
 
     @Test fun aResetBringsBackANewPersonsSectionsAndKeepsThePins() {

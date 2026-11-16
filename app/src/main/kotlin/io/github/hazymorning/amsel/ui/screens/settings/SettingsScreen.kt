@@ -20,12 +20,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.hazymorning.amsel.BuildConfig
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.UpdateState
+import io.github.hazymorning.amsel.data.home.HomeLayout
 import io.github.hazymorning.amsel.data.lastAbsAccount
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.R as PlaybackR
@@ -75,6 +77,9 @@ fun SettingsScreen(
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignIn = { _, _, _ -> null },
     onAbsSignOut: () -> Unit = {},
+    /** How many sections Home has, and its edit mode as a page of its own. */
+    homeSections: Int = HomeLayout.DEFAULT_SECTIONS.size,
+    onHome: () -> Unit = {},
     /** What the Library shows now, in its order, and the page that arranges it. */
     library: List<LibraryKind> = libraryKinds(LibraryKind.Default.visible, held = emptySet()),
     onLibrary: () -> Unit = {},
@@ -146,8 +151,16 @@ fun SettingsScreen(
                         choosing = Choice.Theme
                     }
                 }
-                // Top to bottom as they stand on the screen, the page, the mini player and the bar,
-                // each naming what it shows.
+                // Top to bottom as they stand on the screen, the pages, the mini player and the bar,
+                // each saying what it shows.
+                row { shape ->
+                    SettingRow(
+                        stringResource(R.string.tab_home),
+                        shape,
+                        subtitle = pluralStringResource(R.plurals.settings_home_sections, homeSections, homeSections),
+                        onClick = onHome,
+                    )
+                }
                 row { shape ->
                     val names = library.map { stringResource(it.label) }.joinToString(", ")
                     SettingRow(stringResource(PlaybackR.string.library), shape, subtitle = names, onClick = onLibrary)
@@ -335,6 +348,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     val used by produceState<Long?>(null, entries) { value = graph.data.downloads.used() }
     val held by graph.data.library.heldTypes.collectAsStateWithLifecycle(emptySet())
+    val home by graph.data.home.layout.collectAsStateWithLifecycle()
     val downloaded by graph.downloading.rows.collectAsStateWithLifecycle(emptyList())
     SettingsScreen(
         state = state,
@@ -356,6 +370,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,
         onAbsSignIn = graph.downloading::signIn,
         onAbsSignOut = graph.downloading::signOut,
+        homeSections = (home ?: HomeLayout()).sections.size,
+        onHome = { navigator.open(Route.HomeEdit) },
         library = libraryKinds(LibraryKind.arrangement(prefs?.libraryKinds).visible, held, downloaded.isNotEmpty()),
         onLibrary = { navigator.open(Route.LibraryKinds) },
         bar = BarPlace.of(prefs?.barPlaces),

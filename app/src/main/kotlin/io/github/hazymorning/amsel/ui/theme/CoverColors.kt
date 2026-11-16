@@ -7,7 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.palette.graphics.Palette
 import coil3.SingletonImageLoader
@@ -45,22 +44,6 @@ data class CoverColors(val hue: Float, val saturation: Float) {
         return lerp(surface, hsl(hue, saturation, lightness.coerceIn(0f, 1f)), TINT_SHARE)
     }
 
-    /**
-     * A line in the cover's own colour, drawn on [paper], its [wash]: the hue about as colourful as
-     * the cover holds it, deepened by day and lightened at night until it stands 3:1 on the paper,
-     * as a line that says something must. A yellow sleeve's line comes out mustard, not lemon.
-     */
-    fun line(paper: Color, night: Boolean): Color {
-        val saturation = saturation.coerceIn(LINE_SATURATION_MIN, LINE_SATURATION_MAX)
-        var lightness = if (night) LINE_LIGHTNESS_NIGHT else LINE_LIGHTNESS_DAY
-        var line = hsl(hue, saturation, lightness)
-        while (contrast(line, paper) < LINE_CONTRAST && lightness in LINE_STEP..1f - LINE_STEP) {
-            lightness += if (night) LINE_STEP else -LINE_STEP
-            line = hsl(hue, saturation, lightness)
-        }
-        return line
-    }
-
     /** Covers with little colour lend little: a grey-blue sleeve tints less than a red one. */
     private val strength: Float get() = (saturation / FULL_SATURATION).coerceIn(0.4f, 1f)
 }
@@ -77,19 +60,6 @@ private const val NIGHT_TINT_LIFT = 0.04f
 
 /** How much plainer a page's wash is than Now Playing's tint. */
 private const val WASH_STRENGTH = 1.6f
-
-private const val LINE_SATURATION_MIN = 0.3f
-private const val LINE_SATURATION_MAX = 0.62f
-private const val LINE_LIGHTNESS_DAY = 0.46f
-private const val LINE_LIGHTNESS_NIGHT = 0.66f
-private const val LINE_CONTRAST = 3f
-private const val LINE_STEP = 0.02f
-
-/** WCAG's contrast ratio of two colours, 1 to 21. */
-private fun contrast(a: Color, b: Color): Float {
-    val (light, dark) = a.luminance().let { la -> b.luminance().let { lb -> maxOf(la, lb) to minOf(la, lb) } }
-    return (light + 0.05f) / (dark + 0.05f)
-}
 
 /** Covers are sampled at this size: plenty for a palette, and cheap to decode. */
 private const val SAMPLE_PX = 64
