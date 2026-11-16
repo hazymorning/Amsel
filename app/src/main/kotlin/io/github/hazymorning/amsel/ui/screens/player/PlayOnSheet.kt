@@ -37,7 +37,7 @@ import io.github.hazymorning.amsel.app.GroupChoice
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
-import io.github.hazymorning.amsel.ui.components.PlayingRing
+import io.github.hazymorning.amsel.ui.components.PlayBars
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SecondaryButton
@@ -166,7 +166,8 @@ private fun SpeakerList(
         val wide = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth()
         if (members != null) {
             PrimaryButton(
-                stringResource(if (members > 0) R.string.group_count else R.string.group, members),
+                // While a group stands, the button changes it: plain words, not a count.
+                stringResource(if (members > 0) R.string.group_change else R.string.group),
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     onGrouping()
@@ -226,8 +227,8 @@ private fun SpeakerRow(speaker: SpeakerUi, selected: Boolean, onClick: () -> Uni
         subtitle = subtitle,
         lead = RowLead.Glyph,
         playing = plays,
-        // The ring that marks what plays in every list, before what the speaker plays.
-        mark = if (plays) ({ PlayingRing(moving = true) }) else null,
+        // The bars that mark what plays in every list, before what the speaker plays.
+        mark = if (plays) ({ PlayBars(moving = true) }) else null,
         selected = selected,
         enabled = speaker.available,
         textMaxWidth = SpeakerTextMax,

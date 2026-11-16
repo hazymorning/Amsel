@@ -55,12 +55,12 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.MemberVolume
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.EndValue
+import io.github.hazymorning.amsel.ui.components.GroupLabel
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.label
-import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -130,18 +130,15 @@ fun VolumeSheetContent(
                 onPast = { asking = Louder(MAIN, speaker, it) },
             )
             if (members.isNotEmpty()) {
-                Spacer(Modifier.height(Space.Group))
-                val style = MaterialTheme.typography.bodyMedium
-                val words = stringResource(R.string.player_volume_in_group)
-                Words(
-                    words,
-                    style,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = Keyline.Margin).textInk(style).inkStart(words, style),
+                // A small heading over the group's speakers, as Settings names its groups.
+                GroupLabel(
+                    stringResource(R.string.player_volume_in_group),
+                    above = Space.S8,
+                    below = Space.LabelToContent,
                 )
-                members.forEach { member ->
+                members.forEachIndexed { index, member ->
                     val own = levels.getValue(member.id)
-                    Spacer(Modifier.height(Space.S2))
+                    if (index > 0) Spacer(Modifier.height(Space.S2))
                     VolumeBar(
                         member.name,
                         own,

@@ -93,7 +93,12 @@ object HomeSample {
                 SectionOption.Speakers,
                 SectionLayout.Row,
                 speakers = listOf(
-                    SampleData.speakers.first { it.id == "kitchen" }.copy(volume = 35, art = SampleData.albums[0].art),
+                    // A group plays: its leader's name with how many play along.
+                    SampleData.speakers.first {
+                        it.id == "kitchen"
+                    }.copy(volume = 35, others = 2, art = SampleData.albums[0].art),
+                    // A long name cut short keeps its group's "+3" right after it; a station with no cover.
+                    SpeakerUi("office", "Mandaloffice", song = "Radio Paradise", isPlaying = true, others = 3),
                     SampleData.speakers.first { it.id == "bedroom" }.copy(volume = 0, art = playlists[1].art),
                 ),
                 inUse = "phone",

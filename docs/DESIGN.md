@@ -95,7 +95,7 @@ Distances are measured ink to ink (cap tops, baselines, glyph ink), so they hold
 | Ink | `#E6E5DE` | `#191A17` | `onSurface`, `primary` | text, the filled play circle |
 | Secondary | `#9A998F` | `#66665E` | `onSurfaceVariant` | artists, counts, times, inactive tabs |
 | Faint | `#67675F` | `#87877E` | `outline` | inactive glyphs, separators; never reading text |
-| Moss | `#A3B486` | `#4F6A3B` | `tertiary` | the playing ring, a running sleep timer |
+| Moss | `#A3B486` | `#4F6A3B` | `tertiary` | the play bars, the speaker's dot, a running sleep timer |
 
 Moss covers far less than 1% of any screen. The crowns of the picture at the foot of Settings are the
 README's tints of moss; its sun by day is the paper raised by the step Surface 1 lies under it
@@ -156,11 +156,12 @@ over 120 ms (`PressIndication`).
    bar's clear strip and behind the cover, easing into the plain page by its actions and scrolling
    away with them. A black-and-white cover leaves the page plain. Nothing glows. The wash is there
    as soon as the hue is known, with no fade.
-3. **The playing ring** (`PlayingRing.kt`): a thin moss ring (8 dp, 1.5 dp line, as the blackbird's
-   eye) before the subtitle of whatever plays, in place of a track's number. While the music plays
-   it breathes, plainly to see: an echo leaves from under it at nine tenths of its strength, widens
-   to more than two and a half times its size as it settles and fades, and is gone after 1.9 s; the
-   next leaves 2.4 s after the last. Paused, or with reduced motion, it holds still.
+3. **The play bars** (`PlayBars.kt`): three short moss bars (2 dp wide, 1.5 apart, 10 high,
+   round ends) standing on the baseline before the subtitle of whatever plays, in place of a track's
+   number. While the music plays each rises and falls at its own pace (0.8 to 1.1 s, from a third of
+   its height to all of it) inside the mark's own box: nothing beside them ever moves or is
+   covered. Paused, or with reduced motion, they stand still at three heights. On Home's speaker
+   cards the bar's moss dot marks what plays instead (below).
 4. **The dock's shadow** (`DockShadow.kt`): a short shadow over the dock's top edge, 12 dp, darkest
    at the edge and falling off as the square of the way down, black at 10% by day and 40% at night,
    where a shadow on dark paper would vanish: the dock stands a little above the page. Lists end 40
@@ -202,9 +203,13 @@ Home, which names itself in a slim bar with Done. There a section is its title, 
 up, and in Pinned a held press on a pin picks the pin up, the others making way; TalkBack moves both
 through their actions. Pinned shows every pin there, so each can be put in its place. Speakers
 puts those that play first, and of each the one in use first. Their
-cards lie on Surface 1 with ink at 3% over it, a breath lighter than Home's ground: the cover,
-then the name over the state, 4 apart, as the mini player has them, with no glyph (the row says
-these are speakers, and a cover without a picture wears the speaker's glyph); until the
+cards lie on Surface 1 with ink at 3% over it, a breath lighter than Home's ground: the cover (44),
+then the name, a group's "+2" right after its last letter however it is cut, over the state, their
+baselines 18 apart and their ink centred on the cover, with no glyph (the row says these are
+speakers, and a cover without a picture wears the speaker's glyph) and no mark in the words: while
+a speaker plays, the bar's moss dot (8, in a 2 ring of the card's tone) sits on the outline of its
+cover's top end corner. A station on a group's leader lends the card its queue's cover where the
+speaker's own media has none; until the
 server names its speakers, two blank cards hold the row's room, so nothing under it moves. Search
 is a section too: Search's field at rest between the margins, with no heading; a tap opens Search,
 the keyboard up. Home ends 48 above the dock, a section's distance, as if the dock were the next
@@ -219,7 +224,7 @@ the chip beside the chosen one, round from the last to the first, the items foll
 while the header stays, and each kind keeps its own place in its list. Every kind's list is at hand
 while the Library is open, so a swipe let go or a chip tapped hands over at once: the next list
 comes in from its side as faint as the last one left, and fades up; there is never an empty frame. A playlist names its owner only when that is someone else.
-What plays (or its album, book or podcast) carries the ring.
+What plays (or its album, book or podcast) carries the play bars.
 
 **Now Playing.** Collapse and the menu on the words' keyline (8 in from the margins), "from Blue
 Hour" (Meta, secondary) between them. Artwork at the content width (16). Then three groups: title (Title, two lines)
@@ -269,12 +274,13 @@ field's edge, a sentence's capitals), a list's first row its band 16 under the b
 cover lands 24 under it and words further down. A pull down or a tap beside one closes it. Behind a sheet the screen
 lies under black at 32% by day and 60% at night; the title on the margin, a second step without a back glyph;
 a choice is marked by its tick alone, no band, its middle where a pill button's round end has its
-centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. Play on reads as a sentence: its heading, the speakers, then what to do with them. Group ("Group
-+2" while a group exists, for that group's leader) is a primary button the width of the margins
+centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. Play on reads as a sentence: its heading, the speakers, then what to do with them. Group ("Change
+group" while a group exists, for that group's leader: plain words, not a count) is a primary button the width of the margins
 under the last speaker; while speakers play along, Ungroup all stands 8 under it as a secondary
 button, so the sheet keeps one focal point. The buttons stand a group's distance, 32, under the last speaker's words, and the sheet's frame
 under them; the group step's Done stands as far under its speakers. Volume, from Now Playing's footer, is one bar for the speaker in use and, for a
-group, one for each of its speakers under "In the group" (Meta, secondary), 8 apart: a 56 dp pill
+group, one for each of its speakers under "In the group" (a group label, as Settings names its
+groups: 32 under the group's bar to its capitals, its baseline 18 over the first speaker's), 8 apart: a 56 dp pill
 of Surface 2 that is the slider itself, filled with ink at 14% as far as the level, the speaker's
 name (Body) at its start and the level (Meta, keeping the room of "100 %") at its end, each on the
 centre of its round end. A drag anywhere along it moves the level, a tap sets it, every step a
@@ -282,13 +288,13 @@ detent; TalkBack hears the speaker and its level and can set it. With a volume l
 Off, 40 to 80 %), a touch that starts at or under it stops there, a firmer detent, and once the
 finger asked for more the sheet asks in place of its bars ("Set Kitchen louder than your limit of
 70 %?", "Set to 85 %" over "Stay at 70 %"); a bar let past asks no more while the sheet is open.
-The phone's volume buttons and the system's slider stop at the limit and never ask. A speaker that plays carries the ring before what it plays ("Playing"
+The phone's volume buttons and the system's slider stop at the limit and never ask. A speaker that plays carries the play bars before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
-from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Follow the music, and while it is on, under it, every speaker as a choice chip two to a line (Surface 2 while followed, the name alone in the secondary tone while left out; all in when following is turned on, the last one in stays), Volume limit (with a sentence over its values on what it does) and Bottom bar, its
+from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Follow the music, and while it is on, under it, every speaker as a small plain button two to a line (36 high, 8 apart, the name on the start 16 in, as every setting's words stand; ink with the paper's tone while followed, as a switch that is on, Surface 2 with ink while left out; all in when following is turned on, the last one in stays), Volume limit (with a sentence over its values on what it does) and Bottom bar, its
 places named in their order: its page lists every place, those in the bar first, each with its
 glyph and a switch (Home has none: it always stays), and a held press moves a place as in Edit
 Home; the bar under the page follows at once. A long press on any place in the bar opens the same
-page. Settings ends with Amsel's name as the README's picture sets it (Display: its face, weight and tracking; ink, the same in every language), the licence line ("© 2026 hazymorning", Meta's face at 11, secondary) 12 under it and, 48 under its baseline, the README's picture
+page. Settings ends with Amsel's name as the README's picture sets it (Display: its face, weight and tracking; ink, the same in every language), the licence line ("© 2026 hazymorning", Meta's face at 8.5, about as wide as the name over it, secondary) 12 under it and, 48 under its baseline, the README's picture
 (`SettingsBird.kt`): the icon's blackbird behind three crowns before a 72 dp sun; at night a moon barely off the page, between Surface 1 and 2, darker than the crowns,
 centred and cut by the dock's edge it stands on, so the sun rises over that edge as the page reaches
 its end. Each time six tenths of it come over the dock's edge, the sun grows from nothing into place (650 ms) and then the bird rises from behind the crowns to its perch (900 ms), both settling; once it is under the dock again it waits to rise anew, and with reduced motion it simply stands there. A picture only: not spoken, no touch, its size the same at any font scale; where the
@@ -311,7 +317,7 @@ colour. A finger hands its speed to a critically damped spring.
 - Nothing moves that the person did not move, but for one line and one picture: the picture at
   Settings' foot rises as it comes into view (above), and what plays, on the dock, glides
   to its end and back while it is longer than its room, resting 2.5 s at each end, its hidden end
-  faded. It rests while Now Playing lies over the dock. The ring breathes while the music plays.
+  faded. It rests while Now Playing lies over the dock. The play bars move while the music plays.
 - A sideways swipe (the dock's row, Now Playing's artwork, the library's kinds) repeats a visible
   control: what it carries lags behind the finger and fades, past 64 dp it acts, and what comes
   fades in where it stands; the library's kinds go round. A message, an offer and a tip can be

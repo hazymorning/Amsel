@@ -91,7 +91,7 @@
     <string name="player_repeat_all">All</string>
     <string name="player_repeat_one">One song</string>
     <string name="group">Group</string>
-    <string name="group_count">Group +%1$d</string>
+    <string name="group_change">Change group</string>
     <string name="group_with">Group with %1$s</string>
     <string name="ungroup_all">Ungroup all</string>
 </resources>

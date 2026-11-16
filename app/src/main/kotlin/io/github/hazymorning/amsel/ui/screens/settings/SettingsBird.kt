@@ -261,9 +261,9 @@ internal fun LicenceNote() {
     }
 }
 
-/** The licence line: a signature's small print. */
-private val LicenceSize = 11.sp
-private val LicenceLine = 14.sp
+/** The licence line: a signature's small print, about as wide as Amsel's name over it. */
+private val LicenceSize = 8.5.sp
+private val LicenceLine = 11.sp
 
 /** From the last block to the licence: the page's end stands apart from its settings. */
 private val OverLicence = Space.S16
