@@ -1,5 +1,6 @@
 package io.github.hazymorning.amsel.app
 
+import io.github.hazymorning.amsel.data.HINTS_ALL
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
@@ -64,6 +65,18 @@ class OffersTest {
         hints.offer(hint())
         assertNull(hints.shown.value)
         assertEquals(listOf("here"), taken)
+    }
+
+    @Test fun aKindTurnedOffInSettingsIsNeverOfferedAndAllOffTurnsEveryOneOff() {
+        val off = mutableSetOf("headphones")
+        val hints = Offers(off = { off })
+        fun hint(kind: String) = Offer(kind, title = kind, button = 0, hint = kind, take = {})
+        assertEquals(false, hints.offer(hint("headphones")))
+        assertEquals(true, hints.offer(hint("ended")))
+        off += HINTS_ALL
+        assertEquals(false, hints.offer(hint("sleep")))
+        // What answers a tap is no hint, and always comes.
+        assertEquals(true, hints.offer(offer("radio/1")))
     }
 
     @Test fun nothingIsOfferedWhileTheAppIsAwayAndWhatShowedGoesWhenItLeaves() = runTest {

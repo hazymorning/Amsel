@@ -75,6 +75,9 @@
     <string name="home_sentence_layout_big">große Cover</string>
     <string name="home_sentence_layout_list">Liste</string>
     <string name="home_edit_add_section">Abschnitt hinzufügen</string>
+    <string name="home_reset">Startseite zurücksetzen</string>
+    <string name="home_reset_question">Deine Abschnitte weichen einer neuen Startseite: Suche, Lautsprecher, Weiterhören und Reihen mit Musik. Angeheftetes bleibt.</string>
+    <string name="home_reset_do">Zurücksetzen</string>
     <string name="home_section_empty">Hier ist noch nichts</string>
     <string name="home_section_empty_speakers">Erscheint, wenn ein anderer Lautsprecher spielt oder pausiert</string>
     <string name="home_section_empty_pinned">Noch nichts angeheftet. Ein Album, eine Playlist, einen Künstler, einen Sender, ein Hörbuch oder einen Podcast lange drücken und „An die Startseite anheften“ wählen.</string>

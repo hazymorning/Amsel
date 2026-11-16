@@ -51,6 +51,7 @@ import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
@@ -101,6 +102,10 @@ fun AppShell(
     onDismissOffer: (Offer) -> Unit = {},
     /** The places the bottom bar shows, in its order. */
     bar: List<BarPlace> = BarPlace.Default,
+    /** The mini player's controls beside what plays, in the person's order. */
+    dock: List<DockControl> = DockControl.Default.visible,
+    /** The mini player's controls that open something or change it: the heart, volume, sleep, the speaker. */
+    onDockControl: (DockControl) -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.Home) }
     val scope = rememberCoroutineScope()
@@ -159,6 +164,10 @@ fun AppShell(
                 onOpen = openPlayer,
                 onControl = onControl,
                 onSpeaker = onSpeaker,
+                controls = dock,
+                onDockControl = onDockControl,
+                // A long press on what plays arranges its controls, as one on the bar arranges the bar.
+                onArrange = { tabs.navigator(tab).open(Route.Dock) },
                 modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged { dockHeight.intValue = it.height },
                 openDrag = Modifier.layerDrag(layer),
                 covered = layer.isOpen,

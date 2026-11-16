@@ -376,7 +376,8 @@ class Hints(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(AudioDeviceInfo.TYPE_BLE_HEADSET)
     }
 
-    private companion object {
+    companion object {
+        /** The kinds of hint, as Settings turns them off and as their passes are counted. */
         const val HINT_LIKED = "liked"
         const val HINT_SILENT = "silent"
         const val HINT_SLEEP = "sleep"
@@ -386,22 +387,22 @@ class Hints(
         const val HINT_ENDED = "ended"
 
         /** A level to hear, not to startle: the speaker's or the phone's, in percent. */
-        const val LOUDER = 30
+        private const val LOUDER = 30
 
         /** Once a night: not again within this long. */
-        const val NIGHT_MS = 8 * 60 * 60 * 1000L
+        private const val NIGHT_MS = 8 * 60 * 60 * 1000L
 
         /** The speaker and what plays are known again this long after the app comes back. */
-        const val SETTLE_MS = 1_500L
+        private const val SETTLE_MS = 1_500L
 
         /** Devices named this soon after listening began were there already. */
-        const val ALREADY_THERE_MS = 1_000L
+        private const val ALREADY_THERE_MS = 1_000L
 
         /** Wi-Fi that came up within this long before the app came back: the person just got home. */
-        const val ARRIVED_MS = 30 * 60 * 1000L
+        private const val ARRIVED_MS = 30 * 60 * 1000L
 
         /** Wi-Fi that was up before the app listened: when it came is not known. */
-        const val LONG_AGO = Long.MIN_VALUE / 2
+        private const val LONG_AGO = Long.MIN_VALUE / 2
     }
 }
 

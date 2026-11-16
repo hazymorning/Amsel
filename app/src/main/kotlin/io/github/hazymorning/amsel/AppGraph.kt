@@ -130,6 +130,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             data.session.foreground,
             passes = { data.prefs.prefs.value?.hintPasses.orEmpty() },
             setPasses = { kind, passes -> scope.launch { data.prefs.setHintPasses(kind, passes) } },
+            off = { data.prefs.prefs.value?.hintsOff.orEmpty() },
             scope = scope,
         )
     }

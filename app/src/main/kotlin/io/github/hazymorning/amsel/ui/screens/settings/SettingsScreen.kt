@@ -34,6 +34,7 @@ import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
@@ -75,6 +76,12 @@ fun SettingsScreen(
     /** The places the bottom bar shows, in its order, and the page that arranges them. */
     bar: List<BarPlace> = BarPlace.Default,
     onBar: () -> Unit = {},
+    /** The mini player's controls, in their order, and the page that arranges them. */
+    dock: List<DockControl> = DockControl.Default.visible,
+    onDock: () -> Unit = {},
+    /** The kinds of suggestion turned off, and their page. */
+    hintsOff: Set<String> = emptySet(),
+    onHints: () -> Unit = {},
 ) {
     val title = stringResource(R.string.settings)
     val scroll = rememberScrollState()
@@ -138,6 +145,20 @@ fun SettingsScreen(
                     // What the bar shows, in its order: the page arranges it, as a long press on the bar does.
                     val names = bar.map { stringResource(it.label) }.joinToString(", ")
                     SettingRow(stringResource(R.string.settings_bar), shape, subtitle = names, onClick = onBar)
+                }
+                row { shape ->
+                    val names = dock.map { stringResource(it.label) }.joinToString(", ")
+                    SettingRow(stringResource(R.string.settings_dock), shape, subtitle = names, onClick = onDock)
+                }
+                row { shape ->
+                    val on = hintsOn(hintsOff)
+                    val all = HintKind.entries.size
+                    val state = when (on) {
+                        all -> stringResource(R.string.hints_on_all)
+                        0 -> stringResource(R.string.hints_on_none)
+                        else -> stringResource(R.string.hints_on_some, on, all)
+                    }
+                    SettingRow(stringResource(R.string.hints), shape, subtitle = state, onClick = onHints)
                 }
                 row { shape ->
                     ToggleRow(
@@ -341,6 +362,10 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onAbsSignOut = graph.downloading::signOut,
         bar = BarPlace.of(prefs?.barPlaces),
         onBar = { navigator.open(Route.Bar) },
+        dock = DockControl.arrangement(prefs?.dockControls).visible,
+        onDock = { navigator.open(Route.Dock) },
+        hintsOff = prefs?.hintsOff.orEmpty(),
+        onHints = { navigator.open(Route.Hints) },
         onLanguage = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             { context.openLanguageSettings() }
         } else {
