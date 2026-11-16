@@ -4,7 +4,7 @@
 
 - **A bar of your own:** besides Home, Search and the Library, the bottom bar can now hold Playlists, Albums, Artists, Radio, Audiobooks or Podcasts as places of their own, up to five in all. Choose them in Settings, Bottom bar.
 - **Radio in the Library:** your stations have their own chip, a grid of logos.
-- **Choose what the Library shows:** Settings, Library shows, hides and orders its kinds.
+- **Choose what the Library shows:** show, hide and reorder its kinds in Settings, Library.
 
 ## Better
 

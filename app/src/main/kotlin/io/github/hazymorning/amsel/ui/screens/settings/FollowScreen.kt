@@ -110,8 +110,12 @@ internal fun followLine(on: Boolean, speakers: List<FollowSpeaker>, skipped: Set
     val followed = speakers.filter { it.id !in skipped }
     return when {
         !on -> stringResource(R.string.follow_off)
-        speakers.isEmpty() -> stringResource(R.string.follow_on)
+
+        // No speaker known yet, or only ones left out that are gone since: following is on all the same.
+        followed.isEmpty() -> stringResource(R.string.follow_on)
+
         followed.size == speakers.size -> stringResource(R.string.follow_all)
+
         else -> followed.joinToString(", ") { it.name }
     }
 }

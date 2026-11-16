@@ -34,7 +34,6 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.graph
-import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
@@ -48,10 +47,6 @@ import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
-import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
-import io.github.hazymorning.amsel.ui.screens.library.icon
-import io.github.hazymorning.amsel.ui.screens.library.isHeld
-import io.github.hazymorning.amsel.ui.screens.library.label
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import kotlinx.coroutines.launch
@@ -103,36 +98,6 @@ fun DockScreen(
 )
 
 /**
- * What the Library shows as chips, and in what order. One always stays; one the library has none
- * of says it shows once there is some.
- */
-@Composable
-fun LibraryKindsScreen(
-    kinds: Arrangement<LibraryKind>,
-    /** The kinds the Library has anything of now (LibraryKind.isHeld). */
-    held: Set<LibraryKind>,
-    onChange: (Arrangement<LibraryKind>) -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val waits = stringResource(R.string.library_kind_waits)
-    ArrangeScreen(
-        title = stringResource(PlaybackR.string.library),
-        hint = stringResource(R.string.library_kinds_hint),
-        arrangement = kinds,
-        key = LibraryKind::id,
-        label = { stringResource(it.label) },
-        icon = { it.icon },
-        fixed = null,
-        fixedLine = stringResource(R.string.library_kind_last_stays),
-        onChange = onChange,
-        onBack = onBack,
-        modifier = modifier,
-        note = { if (it in held) null else waits },
-    )
-}
-
-/**
  * A page that arranges things, the bar's places, the mini player's controls or the Library's
  * kinds: each a row with its glyph, its name, a switch and a handle, in the person's order, which a
  * switch never changes, so nothing jumps. The handle picks a row up at once, a held press anywhere
@@ -142,7 +107,7 @@ fun LibraryKindsScreen(
  * way until another goes; TalkBack hears why ([fullLine]). [note] says something under a row.
  */
 @Composable
-private fun <T> ArrangeScreen(
+internal fun <T> ArrangeScreen(
     title: String,
     hint: String,
     arrangement: Arrangement<T>,
@@ -270,22 +235,6 @@ fun BarRoute(navigator: Navigator) {
     BarScreen(
         places = BarPlace.arrangement(stored?.barPlaces),
         onChange = { places -> scope.launch { prefs.setBarPlaces(places.tokens(BarPlace::id)) } },
-        onBack = navigator::back,
-    )
-}
-
-@Composable
-fun LibraryKindsRoute(navigator: Navigator) {
-    val graph = LocalContext.current.graph
-    val prefs = graph.data.prefs
-    val stored by prefs.prefs.collectAsStateWithLifecycle()
-    val types by graph.data.library.heldTypes.collectAsStateWithLifecycle(emptySet())
-    val downloads by graph.downloading.rows.collectAsStateWithLifecycle(emptyList())
-    val scope = rememberCoroutineScope()
-    LibraryKindsScreen(
-        kinds = LibraryKind.arrangement(stored?.libraryKinds),
-        held = LibraryKind.entries.filter { it.isHeld(types, downloads.isNotEmpty()) }.toSet(),
-        onChange = { kinds -> scope.launch { prefs.setLibraryKinds(kinds.tokens(LibraryKind::id)) } },
         onBack = navigator::back,
     )
 }

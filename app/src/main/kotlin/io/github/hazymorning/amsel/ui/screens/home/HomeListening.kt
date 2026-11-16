@@ -138,7 +138,10 @@ private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, 
     val plain = colors.onSurface.copy(alpha = CARD_INK).compositeOver(colors.surfaceContainerLow)
     val hue = rememberCoverColors(item.art)
     val paper: Color = hue?.wash(colors.surface, night) ?: plain
-    val heard: Color = hue?.line(paper, night) ?: colors.onSurface.copy(alpha = HEARD_INK).compositeOver(paper)
+    val ink = colors.onSurface
+    val heard: Color = remember(hue, paper, night, ink) {
+        hue?.line(paper, night) ?: ink.copy(alpha = HEARD_INK).compositeOver(paper)
+    }
     Box(
         Modifier
             .size(card.width, card.height)

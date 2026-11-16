@@ -13,9 +13,11 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.DockControl
+import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -36,7 +38,7 @@ class BarScreenTest {
         val before = compose.onNodeWithText("Search").getUnclippedBoundsInRoot()
         compose.onNodeWithText("Search").assertIsOn().performClick().assertIsOff()
         // It left the bar but kept its row: nothing jumped.
-        assertEquals(BarPlace.Default, places.order)
+        assertEquals(BarPlace.entries, places.order)
         assertEquals(listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Library), places.visible)
         assertEquals(before, compose.onNodeWithText("Search").getUnclippedBoundsInRoot())
         compose.onNodeWithText("Search").performClick()
@@ -54,7 +56,42 @@ class BarScreenTest {
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         val actions = compose.onNodeWithText("Search").fetchSemanticsNode().config[SemanticsActions.CustomActions]
         actions.first { it.label == "Move up" }.action()
-        assertEquals(listOf(BarPlace.Home, BarPlace.Search, BarPlace.Speaker, BarPlace.Library), places.order)
+        assertEquals(
+            listOf(BarPlace.Home, BarPlace.Search, BarPlace.Speaker, BarPlace.Library) + BarPlace.entries.drop(4),
+            places.order,
+        )
+    }
+
+    @Test fun theBarTakesFiveAtMost() {
+        var places by mutableStateOf(BarPlace.arrangement(null))
+        compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
+        compose.onNodeWithText("Albums").performScrollTo().performClick().assertIsOn()
+        assertEquals(BarPlace.Default + BarPlace.Albums, places.visible)
+        // Five shown: one more waits, and TalkBack hears why.
+        compose.onNodeWithText("Radio").performScrollTo().performClick().assertIsOff()
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.StateDescription,
+                    "Five at most: turn another one off first",
+                ),
+            )
+        assertEquals(5, places.shown.size)
+    }
+
+    @Test fun theLibraryKeepsItsLastKind() {
+        val albumsAlone = LibraryKind.entries.map { if (it == LibraryKind.Albums) it.id else "-" + it.id }
+        var kinds by mutableStateOf(LibraryKind.arrangement(albumsAlone))
+        compose.setContent {
+            AmselTheme {
+                LibraryKindsScreen(kinds, held = setOf(LibraryKind.Albums), onChange = { kinds = it }, onBack = {})
+            }
+        }
+        compose.onNodeWithText("Albums").performClick().assertIsOn()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "On, the last one stays"))
+        assertEquals(listOf(LibraryKind.Albums), kinds.visible)
+        compose.onNodeWithText("Artists").performScrollTo().performClick().assertIsOn()
+        compose.onNodeWithText("Albums").performClick().assertIsOff()
+        assertEquals(listOf(LibraryKind.Artists), kinds.visible)
     }
 
     @Test fun theMiniPlayerTakesThreeAtMostAndPlayStays() {

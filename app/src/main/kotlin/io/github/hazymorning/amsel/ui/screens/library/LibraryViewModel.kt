@@ -84,7 +84,9 @@ class LibraryViewModel(
         handle.getStateFlow(SORT, LibrarySort.RecentlyPlayed.name),
         kinds,
     ) { kind, sort, shown ->
-        selectionOf(kind, sort).let { if (it.kind in shown) it else it.copy(kind = shown.first()) }
+        selectionOf(kind, sort).let {
+            if (it.kind in shown) it else it.copy(kind = shown.firstOrNull() ?: LibraryKind.Playlists)
+        }
     }.distinctUntilChanged()
 
     /** The signed-in person's names. */
