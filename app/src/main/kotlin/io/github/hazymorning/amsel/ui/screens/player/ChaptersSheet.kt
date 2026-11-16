@@ -50,7 +50,7 @@ fun ChaptersSheetContent(state: NowPlayingUi, onPick: (ChapterUi) -> Unit, modif
     val end = if (state.chapters.isEmpty()) Space.SheetEdge else sheetEnd(RowLead.Glyph, twoLines = false)
     Column(modifier.fillMaxWidth().padding(bottom = end)) {
         SheetHeader(stringResource(R.string.player_chapters))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(if (state.chapters.isEmpty()) Space.HeaderToContent else Space.HeaderToRows))
         if (state.chapters.isEmpty()) {
             val body = MaterialTheme.typography.bodyLarge
             Text(

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -59,6 +60,9 @@ fun SettingsScreen(
     onShakeChange: (Boolean) -> Unit = {},
     onSleepOnPlayChange: (Boolean) -> Unit = {},
     onFollowChange: (Boolean) -> Unit = {},
+    /** The speakers Follow the music may pick, and a change to those it leaves out. */
+    followSpeakers: List<FollowSpeaker> = emptyList(),
+    onFollowSkippedChange: (Set<String>) -> Unit = {},
     onVolumeLimitChange: (Int) -> Unit = {},
     update: UpdateState = UpdateState.Unknown,
     onLookForUpdatesChange: (Boolean) -> Unit = {},
@@ -143,6 +147,9 @@ fun SettingsScreen(
                         shape,
                         onFollowChange,
                     )
+                }
+                if (state.followPlaying && followSpeakers.isNotEmpty()) {
+                    row { shape -> FollowSpeakers(followSpeakers, state.followSkipped, shape, onFollowSkippedChange) }
                 }
                 row { shape ->
                     ValueRow(stringResource(R.string.settings_volume_limit), limitLabel(state.volumeLimit), shape) {
@@ -284,6 +291,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             saveSleepOnPlay = data.prefs::setSleepOnPlay,
             saveFollow = data.prefs::setFollowPlaying,
             saveVolumeLimit = data.prefs::setVolumeLimit,
+            saveFollowSkipped = data.prefs::setFollowSkipped,
             saveLookForUpdates = data.prefs::setLookForUpdates,
             saveDownloadOnWifi = data.prefs::setDownloadOnWifi,
             // The data graph forgets the server's data once the session has ended.
@@ -301,6 +309,15 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
     val entries by graph.downloading.entries.collectAsStateWithLifecycle()
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     val used by produceState<Long?>(null, entries) { value = graph.data.downloads.used() }
+    val players by graph.data.speakers.players.collectAsStateWithLifecycle()
+    val phoneId by graph.phone.playerId.collectAsStateWithLifecycle()
+    // Every speaker, in a group or not: following can pick it whenever it plays, or plays along.
+    val followSpeakers = remember(players, phoneId) {
+        players.values
+            .filter { it.playerId != phoneId && it.copy(syncedTo = null, activeGroup = null).isShownSpeaker(phoneId) }
+            .sortedBy { it.shownName.lowercase() }
+            .map { FollowSpeaker(it.playerId, it.shownName) }
+    }
     SettingsScreen(
         state = state,
         onBack = { navigator.back() },
@@ -312,6 +329,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier) {
         onSleepOnPlayChange = viewModel::onSleepOnPlayChange,
         onFollowChange = viewModel::onFollowChange,
         onVolumeLimitChange = viewModel::onVolumeLimitChange,
+        followSpeakers = followSpeakers,
+        onFollowSkippedChange = viewModel::onFollowSkippedChange,
         update = update,
         onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
         onLookForUpdate = graph.updates::lookNow,

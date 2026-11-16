@@ -28,6 +28,11 @@ The code is the source of truth for the values: `ui/theme` holds the tokens (`Co
    side (the rhythm of proximity). A glyph that ends a row stands on the centre of the round end of
    the pill above or below it, not on the bare margin (optical alignment), so the column of ends
    reads as one line.
+11. **Room.** Nothing crowds a heading: its content's first ink stands at least 24 under its
+   baseline (`Space.HeaderToContent`), a shape's edge or a sentence's capitals exactly that, a row's
+   words further at the row's own inset. A sheet's title stands 32 under the sheet's edge and its
+   last ink 32 over the bottom (`Space.SheetEdge`): over a bold title the margin's 24 looks tight.
+   Groups stand 32 apart. Room is judged by eye after the numbers: what looks tight is too tight.
 
 ## Rules (from the design review of Now Playing and Home)
 
@@ -48,7 +53,7 @@ Distances are measured ink to ink (cap tops, baselines, glyph ink), so they hold
    Weight and colour make every other difference: Now Playing's artist is Body at 400, its "from"
    line Caption at 400. List titles and sentences are Body at 440, so headings carry the weight; a
    button's words stand at 520.
-5. **Rhythm**: heading baseline to its row 22.5; cover to caption capitals 14; a small label's
+5. **Rhythm**: heading baseline to its row 24 (principle 11); cover to caption capitals 14; a small label's
    baseline (a settings group, the library's order) to what it labels 18; one section's last
    baseline to the next heading's capitals 48. Now Playing: cover 84 from the screen's top (28 under the bar), its foot
    to the title's capitals 46.5, title to artist baselines 26, artist baseline to the line 29.5, line
@@ -255,10 +260,13 @@ song are a list under a slim bar, "Similar to “Lanterns”".
 with the songs already played waiting above it. Only what comes next has a handle. What the
 server's DJ says between two songs is a row like theirs, "DJ" where the artist stands.
 
-**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle, framed by the
-margin on every side (`Space.SheetEdge`): the title's capitals, or a cover's top, 24 under the edge,
-as far as the content stands from the sides, and the last ink, a baseline or a button's or a bar's
-edge, 24 over the bottom (`sheetEnd`: a last row keeps part of it under its words itself). A pull down or a tap beside one closes it. Behind a sheet the screen
+**Sheets, Settings, setup.** Sheets on Surface 1 with 16 dp corners and no handle, framed 32 at
+the top and bottom (`Space.SheetEdge`, principle 11): the title's capitals, or a cover's top, 32
+under the edge, and the last ink, a baseline or a button's or a bar's edge, 32 over the bottom
+(`sheetEnd`: a last row keeps part of it under its words itself); the content stands on the
+margin, 24 from the sides. Under the title its content keeps 24 to its first ink (a bar's or a
+field's edge, a sentence's capitals), a list's first row its band 16 under the baseline, so a
+cover lands 24 under it and words further down. A pull down or a tap beside one closes it. Behind a sheet the screen
 lies under black at 32% by day and 60% at night; the title on the margin, a second step without a back glyph;
 a choice is marked by its tick alone, no band, its middle where a pill button's round end has its
 centre (principle 10), and every choice keeps the tick's room, so a name breaks alike chosen or not. Play on reads as a sentence: its heading, the speakers, then what to do with them. Group ("Group
@@ -276,7 +284,7 @@ finger asked for more the sheet asks in place of its bars ("Set Kitchen louder t
 70 %?", "Set to 85 %" over "Stay at 70 %"); a bar let past asks no more while the sheet is open.
 The phone's volume buttons and the system's slider stop at the limit and never ask. A speaker that plays carries the ring before what it plays ("Playing"
 where that has no name); one that rests on something says so ("Paused · Lanterns"). The DJ's sheet,
-from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Volume limit (with a sentence over its values on what it does) and Bottom bar, its
+from Now Playing's menu, is Off and the server's hosts. Settings' App block holds Follow the music, and while it is on, under it, every speaker as a choice chip two to a line (Surface 2 while followed, the name alone in the secondary tone while left out; all in when following is turned on, the last one in stays), Volume limit (with a sentence over its values on what it does) and Bottom bar, its
 places named in their order: its page lists every place, those in the bar first, each with its
 glyph and a switch (Home has none: it always stays), and a held press moves a place as in Edit
 Home; the bar under the page follows at once. A long press on any place in the bar opens the same

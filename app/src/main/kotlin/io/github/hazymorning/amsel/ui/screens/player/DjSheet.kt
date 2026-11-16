@@ -46,7 +46,7 @@ fun DjSheetContent(
             .padding(bottom = sheetEnd(RowLead.None, twoLines = false)),
     ) {
         SheetHeader(stringResource(R.string.dj), name = speaker)
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         Column(Modifier.selectableGroup()) {
             ChoiceRow(stringResource(R.string.sleep_off), selected = current == null, onClick = { onPick(null) })
             hosts.forEach { host ->

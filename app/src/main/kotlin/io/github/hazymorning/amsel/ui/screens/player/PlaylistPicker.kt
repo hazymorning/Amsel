@@ -19,7 +19,6 @@ import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
-import io.github.hazymorning.amsel.ui.components.headerToRow
 import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.components.textInk
@@ -51,7 +50,7 @@ fun PlaylistPicker(playlists: List<MediaUi>?, onPick: (MediaUi) -> Unit, modifie
             )
             return@Column
         }
-        Spacer(Modifier.height(headerToRow(RowLead.Cover, twoLines = true)))
+        Spacer(Modifier.height(Space.HeaderToRows))
         LazyColumn {
             items(playlists, key = { it.key }) { playlist ->
                 ListRow(
