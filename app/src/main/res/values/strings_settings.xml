@@ -50,6 +50,10 @@
     <string name="bar_speaker">Speaker</string>
     <string name="bar_hint">Up to five places fit in the bar. Flip a switch to show or hide one; drag the handle to move it. Home always stays.</string>
     <string name="settings_dock">Mini player</string>
+    <plurals name="settings_home_sections">
+        <item quantity="one">%d section</item>
+        <item quantity="other">%d sections</item>
+    </plurals>
     <string name="library_kinds_hint">Choose what the Library shows: flip a switch to show or hide one; drag the handle to move it. One always stays.</string>
     <string name="library_kind_last_stays">On, the last one stays</string>
     <string name="library_kind_waits">Shows once there is some</string>

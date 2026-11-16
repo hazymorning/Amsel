@@ -297,6 +297,7 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         Route.Hints -> HintsRoute(navigator)
         Route.Follow -> FollowRoute(navigator)
         Route.LibraryKinds -> LibraryKindsRoute(navigator)
+        Route.HomeEdit -> HomeRoute(navigator, editOnly = true)
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }

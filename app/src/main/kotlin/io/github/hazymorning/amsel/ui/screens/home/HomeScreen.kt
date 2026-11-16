@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -140,8 +141,12 @@ fun HomeScreen(
     }
 }
 
+/**
+ * Home, wired to the Home repository; or, [editOnly], its edit mode as a page of its own from
+ * Settings, which goes back once Done or Back ends it.
+ */
 @Composable
-fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
+fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boolean = false) {
     val graph = LocalContext.current.graph
     val viewModel = viewModel {
         val data = graph.data
@@ -156,9 +161,14 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier) {
             graph.messages,
             graph.spokenWord,
             combine(graph.playing.speakers, graph.playing.speaker) { all, inUse -> HomeSpeakers(all, inUse) },
+            editOnly = editOnly,
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    if (editOnly) {
+        LaunchedEffect(Unit) { graph.tips.seen(Tip.EditHome) }
+        LaunchedEffect(state.editing) { if (!state.editing) navigator.back() }
+    }
     val actions = LocalAppActions.current
     val tips = graph.tips
     val tip by tips.current.collectAsStateWithLifecycle()

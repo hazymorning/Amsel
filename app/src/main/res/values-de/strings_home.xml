@@ -94,7 +94,7 @@
     <string name="move_later">Nach hinten</string>
 
     <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
-    <string name="tip_edit_home">Eine Überschrift lange drücken, um die Startseite zu bearbeiten.</string>
+    <string name="tip_edit_home">Eine Überschrift oder eine freie Stelle lange drücken, um die Startseite zu bearbeiten.</string>
     <string name="tip_settings">Die Startseite nach unten ziehen, um die Einstellungen zu öffnen.</string>
     <string name="tip_more">Album, Playlist oder Titel lange drücken für weitere Optionen.</string>
     <string name="tip_dismiss">Tipp ausblenden</string>

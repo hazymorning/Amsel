@@ -199,12 +199,32 @@ class HomeScreenTest {
         assertEquals(1, asked)
     }
 
-    @Test fun withEveryTitleHiddenTheFirstKeepsItsOwnSoEditHomeStaysInReach() {
+    @Test fun withEveryTitleHiddenALongPressOnAFreeSpotEditsHome() {
         val editor = Recorder()
         val home = HomeSample.home
-        show(home.copy(sections = home.sections.map { it.copy(titled = false) }), editor)
+        var more = 0
+        compose.setContent {
+            AmselTheme {
+                HomeScreen(
+                    home.copy(sections = home.sections.map { it.copy(titled = false) }),
+                    onOpen = {},
+                    onMore = { more++ },
+                    onSeeAll = {},
+                    onOpenWebUi = {},
+                    editor = editor,
+                )
+            }
+        }
+        // Hidden titles stay hidden: no heading is put back to press on.
+        compose.onNodeWithText("Recently played").assertDoesNotExist()
         compose.onNodeWithText("Smart playlists").assertDoesNotExist()
-        compose.onNodeWithText("Recently played").performTouchInput { longClick() }
+        // A cover's long press is its own: its actions, not Edit Home.
+        val cover = home.sections.first { it.items.isNotEmpty() }.items.first().title
+        compose.onNodeWithText(cover).performTouchInput { longClick() }
+        assertEquals(1, more)
+        assertEquals(emptyList<String>(), editor.calls)
+        // The margin beside the covers is free.
+        compose.onRoot().performTouchInput { longClick(Offset(width * 0.02f, height * 0.5f)) }
         assertEquals(listOf("start"), editor.calls)
     }
 

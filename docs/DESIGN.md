@@ -198,9 +198,11 @@ there is one to give (Components). Sections of
 headings over small covers, tiles, big covers, a list, or a grid of cards (two columns, each a
 cover and its title on a tone). A new person's Home has seven sections: Search's field first;
 Continue listening in its own cards and Pinned, each hidden while empty; then Recently played, the
-smart playlists and new albums in rows, and the favourite stations in small covers, hidden while
-there are none. Home shows no speakers: where music plays is the mini player's and Play on's. A long
-press on a section's title opens Edit Home, which names itself in a slim bar with Done. There a section is its title, its sentence and ⋯
+smart playlists and new albums in rows, and the stations in small covers, hidden while there are
+none. Home shows no speakers: where music plays is the mini player's and Play on's. A long
+press on a section's title, or on any free spot (as on the phone's home screen; a cover keeps its
+own long press), opens Edit Home, as Settings' Home row does as a page of its own. A section whose
+title is hidden stands 24 under the one before, a group's gap, not a heading's room. Edit Home names itself in a slim bar with Done. There a section is its title, its sentence and ⋯
 (Remove): a tap on the title renames it, a held press on the title or the sentence picks the section
 up, and in Pinned a held press on a pin picks the pin up, the others making way; TalkBack moves both
 through their actions. Pinned shows every pin there, so each can be put in its place. Search
