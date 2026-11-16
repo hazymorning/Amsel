@@ -11,8 +11,6 @@
     <string name="player_volume_ask">Set %1$s louder than your limit of %2$s?</string>
     <string name="player_volume_ask_louder">Set to %1$s</string>
     <string name="player_volume_ask_stay">Stay at %1$s</string>
-    <string name="speaker_pause">Pause: %1$s</string>
-    <string name="speaker_play">Play: %1$s</string>
     <string name="player_volume_in_group">In the group</string>
     <string name="player_up_next">Up next</string>
     <!-- Above the artwork: where the music comes from (the album) -->
@@ -51,7 +49,6 @@
     <string name="player_playing">Playing</string>
     <string name="player_paused">Paused · %1$s</string>
     <!-- On Home's speaker cards, where the cover shows what it rests on -->
-    <string name="player_resting">Paused</string>
     <!-- Play on asks before music that plays would stop: speaker, what it plays, the person's music -->
     <string name="player_ask_busy">%1$s is playing “%2$s”. Play “%3$s” there instead?</string>
     <string name="player_ask_busy_unknown">%1$s is already playing. Play “%2$s” there instead?</string>

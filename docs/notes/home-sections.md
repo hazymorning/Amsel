@@ -59,8 +59,9 @@ most"), never "Section 1". The layout never appears in the title.
 
 ## Defaults (a new user)
 
-1. Continue listening · Big covers (hidden while empty): the cover alone, its title and what is
-   left; a tap resumes, a long press opens its actions. A Home stored before it
+1. Continue listening · Big (hidden while empty): upright cards in their cover's hue, the title
+   (or the title and its author), what is left and how far; a tap resumes, a long press opens its
+   actions. A Home stored before it
    existed gets it once at the top when the library first holds audiobooks or podcasts.
 2. Pinned · Grid (hidden while empty; the first pin shows it)
 3. Recently played · Row ("Your albums" for a brand-new library, as today)

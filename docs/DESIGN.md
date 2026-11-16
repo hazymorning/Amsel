@@ -182,7 +182,7 @@ back from it.
 | Home card (`HomeCards.kt`) | The grid's item: a 56 dp cover and its title (Caption, two lines at most) on a card of Surface 1 with the cover's corners (8), two to a row, 8 apart both ways. |
 | Artist without a picture (`Artwork.kt`) | Four covers of its albums two by two, edge to edge in the one cover shape: its own first, then those it shares as a later artist, each newest first and compilations last, each picture once. With fewer than four, the first alone; with none, it is set in type as any cover without a picture. The index keeps them (`albumCovers`): worked out again after albums or artists sync, when an album comes, changes or goes, and when the artist loses its picture; an update to the artist keeps them. It wears them wherever it shows, read from the index with no call per row: the Library, Home and See all, Search and its top result, Similar artists, Recent searches; the car shows the first alone. An artist Search finds that the index does not hold wears the covers of the answer's own albums and songs by it. On its page, an artist the index has none for (a guest, an author, a music service's artist) wears those of the albums and popular songs the page lists, from what it showed last time until the server answers. |
 | Cover without a picture (`TypeCover.kt`) | Set in type on Surface 1: one letter, the first letter or figure of the name as a capital, in the Display face as large as the cover, 36% of the side in from the start edge with its baseline at 110% of the side, so the cover's own edges cut it; in ink at 8%, a tone in the paper rather than a label. From 96 dp up the name stands over it from the top corner (12% of the side, 10% in) in the secondary ink, for every kind, artists too; under that the letter stands alone. Its letters keep their size at any font scale. |
-| Continue listening (`ListeningTile.kt`) | A big cover with no card and no progress drawn on it, nothing on its corner. Title and the time left under it ("24 h 23 min left"), as any tile's caption; a tap offers to resume it. |
+| Continue listening (`HomeListening.kt`) | Upright cards as wide as a shelf's tiles, so they stand over the covers below, washed in their cover's hue (Home's card where the cover lends none): the cover in a frame of 8, the corners 16. Under the cover what it is: the title's two lines, or its one and its author or podcast, so no card has a hole where another's title wraps. On the card's foot, a group's gap further, what is left ("13 h 38 min left") over the line every progress is drawn with; the line means how far and nothing else. A tap resumes, a long press opens its actions. In another layout what is left joins each item's second line. |
 | Offer (`OfferBar.kt`, `Offers.kt`) | On Home, what plays at a tap (a station, an episode, Continue listening) wears nothing on its cover; a tap brings up a bar over the dock that offers it: on the margins in Surface 2 like a message, the cover (48) 12 in from its start, the title, under it the speaker's glyph and name, which a tap changes through Play on, and one big button in ink at its end, "Play" or "Resume". A second tap on the same cover plays at once. Something that rests on the speaker in use is asked about too; only what plays right now opens Now Playing at once. It rises half its height into place and goes after 8 s, with a swipe aside, or once taken; a message stands over it. Elsewhere a station or an episode plays at a tap, as a row does. |
 | Hints (`Hints.kt`) | The same bar, right after something happened, with one step that helps: a song just liked goes into the last playlist used (or one chosen); after adding to a playlist, Open; a speaker that cannot be reached plays on This phone instead; one all the way down is turned up to 30 %; headphones connected, or the app opened with no Wi-Fi beneath any VPN, while a speaker plays brings the music to the phone; opened within half an hour of joining Wi-Fi while the phone plays, it goes back to the speaker last used; a queue that ran to its end goes on as an endless mix; a book or an episode started between 21 and 5 offers the sleep timer, once a night. About a speaker or a setting, the bar shows its glyph in place of a cover. Only while the app is in front, one at a time; a kind passed up three times in a row does not come again. Unliking a song says so with Undo, as a message. |
 | Section heading (`SectionHeader.kt`) | Heading on the margin; "All" (Meta, secondary) on the right margin on its baseline; the whole row taps; no chevron. Heading to content 12; section to section 40. |
@@ -199,24 +199,25 @@ there is one to give (Components). Sections of
 headings over small covers, tiles, big covers, a list, or a grid of cards (two columns, each a
 cover and its title on a tone). A new person's Home has eight sections, at most six showing while a
 library has nothing to go on with and no favourite stations: Search's field and the speakers first,
-where a household starts; Continue listening in big covers and Pinned, each hidden while empty; then
+where a household starts; Continue listening in its own cards and Pinned, each hidden while empty; then
 Recently played, the smart playlists and new albums in rows, and the favourite stations in small
 covers. A long press on a section's title opens Edit
 Home, which names itself in a slim bar with Done. There a section is its title, its sentence and ⋯
 (Remove): a tap on the title renames it, a held press on the title or the sentence picks the section
 up, and in Pinned a held press on a pin picks the pin up, the others making way; TalkBack moves both
 through their actions. Pinned shows every pin there, so each can be put in its place. Speakers
-puts those that play first, and of each the one in use first. Their
-cards, a column and a half wide so the next one peeks in at the screen's edge, lie on Surface 1
-with ink at 3% over it, a breath lighter than Home's ground: the cover (44), then the name, a
-group's "+2" right after its last letter however it is cut, over the state, their baselines 18
-apart and their ink centred on the cover, with no glyph (the row says these are speakers, and a
-cover without a picture wears the speaker's glyph), and at the end the speaker's own play, as the
-mini player has one: pause on a 40 dp disc of ink while it plays, so what plays holds the eye,
-play on a quiet disc of Surface 2 while it rests. That button plays or pauses that speaker where
-it is and leaves the speaker in use alone; a tap on the card makes it the one in use. A station on
-a group's leader lends the card its queue's cover where the speaker's own media has none; until the
-server names its speakers, two blank cards hold the row's room, so nothing under it moves. Search
+puts those that play first, and of each the one in use first. Their cards, 14 ems of body text
+wide (224 at the usual size) and as tall as a list row, lie on Surface 1 with ink at 3% over it, a
+breath lighter than Home's ground: the cover (56) in a frame of 8, the card's corners the cover's
+and the frame (16), so the two curves nest; beside it, as the mini player speaks, the name (Body
+560), a group's "+2" right after its last letter however it is cut, over what it plays or "Paused ·"
+what it rests on (the dock's line), their ink centred on the cover, with no glyph (the row says
+these are speakers, and a cover without a picture wears the speaker's glyph). While a speaker
+plays, its cover wears the band's moss dot on the outline of its top end corner, cut free by a ring
+of the card's tone; no button, no mark in the words. A tap on the card makes the speaker the one
+in use and opens Now Playing; a long press plays there at once. A station on a group's leader lends
+the card its queue's cover where the speaker's own media has none; until the server names its
+speakers, two blank cards hold the row's room, so nothing under it moves. Search
 is a section too: Search's field at rest between the margins, with no heading; a tap opens Search,
 the keyboard up. Home ends 48 above the dock, a section's distance, as if the dock were the next
 section.
