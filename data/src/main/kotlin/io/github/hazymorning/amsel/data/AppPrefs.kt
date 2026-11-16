@@ -82,6 +82,10 @@ data class Prefs(
     val sleepOfferedAt: Long? = null,
     /** The places the bar shows, in its order, by their ids; null for the bar as it comes. */
     val barPlaces: List<String>? = null,
+    /** The mini player's controls in their order, those left out marked; null for the defaults. */
+    val dockControls: List<String>? = null,
+    /** The kinds of hint the person turned off; [HINTS_ALL] among them turns every one off. */
+    val hintsOff: Set<String> = emptySet(),
 )
 
 class AppPrefs(context: Context, scope: CoroutineScope) {
@@ -121,6 +125,8 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
             lastPlaylistName = p[LAST_PLAYLIST_NAME],
             sleepOfferedAt = p[SLEEP_OFFERED_AT],
             barPlaces = p[BAR_PLACES]?.split(',')?.filter { it.isNotBlank() },
+            dockControls = p[DOCK_CONTROLS]?.split(',')?.filter { it.isNotBlank() },
+            hintsOff = p[HINTS_OFF].orEmpty(),
         )
     }
 
@@ -169,6 +175,14 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
 
     suspend fun setBarPlaces(ids: List<String>) {
         store.edit { it[BAR_PLACES] = ids.joinToString(",") }
+    }
+
+    suspend fun setDockControls(ids: List<String>) {
+        store.edit { it[DOCK_CONTROLS] = ids.joinToString(",") }
+    }
+
+    suspend fun setHintsOff(kinds: Set<String>) {
+        store.edit { it[HINTS_OFF] = kinds }
     }
 
     suspend fun setSleepMinutes(minutes: Int) {
@@ -299,6 +313,8 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val SERVER_NAME = stringPreferencesKey("server_name")
         val THEME = stringPreferencesKey("theme")
         val BAR_PLACES = stringPreferencesKey("bar_places")
+        val DOCK_CONTROLS = stringPreferencesKey("dock_controls")
+        val HINTS_OFF = stringSetPreferencesKey("hints_off")
         val SPEAKER = stringPreferencesKey("speaker_id")
         val SPEAKER_NAME = stringPreferencesKey("speaker_name")
         val PHONE_PLAYER = stringPreferencesKey("phone_client_id")
@@ -327,3 +343,6 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val SLEEP_OFFERED_AT = longPreferencesKey("sleep_offered_at")
     }
 }
+
+/** In [Prefs.hintsOff]: every hint is off, whatever the others say. */
+const val HINTS_ALL = "all"

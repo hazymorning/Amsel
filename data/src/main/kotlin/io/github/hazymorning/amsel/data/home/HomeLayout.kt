@@ -149,6 +149,9 @@ data class HomeLayout(
 
     fun remove(id: String): HomeLayout = copy(sections = sections.filterNot { it.id == id })
 
+    /** A new person's sections again ([DEFAULT_SECTIONS]); the pins stay, for they are the person's own. */
+    fun reset(): HomeLayout = copy(sections = DEFAULT_SECTIONS, listeningOffered = true)
+
     /** Moves section [id] to [index] in the order (clamped to the list). */
     fun move(id: String, index: Int): HomeLayout {
         val from = sections.indexOfFirst { it.id == id }

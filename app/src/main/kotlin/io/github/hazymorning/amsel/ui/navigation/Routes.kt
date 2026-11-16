@@ -52,6 +52,12 @@ sealed interface Route : NavKey {
     /** Which places the bottom bar shows, and in what order. */
     @Serializable data object Bar : Route
 
+    /** Which controls the mini player shows beside what plays, and in what order. */
+    @Serializable data object Dock : Route
+
+    /** Which helpful hints Amsel offers over the dock. */
+    @Serializable data object Hints : Route
+
     /**
      * [route] opened again above itself (an artist, a similar one, the first again), for the
      * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps
