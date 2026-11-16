@@ -8,6 +8,7 @@
 
 - **Radio on Home:** a new Home shows all your stations, not only your favourite ones. If your Home still had the favourite stations from the start, it now shows every station, so radio no longer stays hidden when you have no favourites.
 - **Hidden titles stay hidden,** even when you hide all of them; before, the first one came back.
+- **Continue listening:** the line along each card's foot is a quiet grey again, not the cover's colour.
 
 ## Fixed
 
