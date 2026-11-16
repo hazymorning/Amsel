@@ -153,7 +153,7 @@ private fun SpeakerList(
     ) {
         val haptics = LocalHapticFeedback.current
         SheetHeader(stringResource(R.string.player_play_on))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
         state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
             SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
@@ -194,7 +194,7 @@ fun TransferSheetContent(speakers: List<SpeakerUi>, onTransfer: (SpeakerUi) -> U
     val end = sheetEnd(RowLead.Glyph, twoLines = true)
     Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = end)) {
         SheetHeader(stringResource(R.string.player_transfer))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         speakers.forEach { speaker ->
             SpeakerRow(speaker, selected = false, role = Role.Button, onClick = { onTransfer(speaker) })
         }

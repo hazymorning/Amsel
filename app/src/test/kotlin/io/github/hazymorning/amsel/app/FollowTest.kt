@@ -29,6 +29,24 @@ class FollowTest {
         assertNull(speakerToFollow(quiet, "phone", phoneAudible = true))
     }
 
+    @Test fun `only the speakers left in are followed, one in a group as that group`() {
+        val players = of(
+            speaker("kitchen", playing = true),
+            speaker("living", playing = true),
+            speaker("bedroom", playing = true, syncedTo = "living"),
+            speaker("phone", playing = false),
+        )
+        // Kitchen alone is left in: the larger group no longer wins.
+        assertEquals(
+            "kitchen",
+            speakerToFollow(players, "phone", false, skipped = setOf("living", "bedroom"))?.playerId,
+        )
+        // The bedroom alone: it plays in the living room's group, so that group is followed.
+        assertEquals("living", speakerToFollow(players, "phone", false, skipped = setOf("living", "kitchen"))?.playerId)
+        // None of those left in plays: this phone.
+        assertNull(speakerToFollow(players, "phone", false, skipped = setOf("living", "kitchen", "bedroom")))
+    }
+
     @Test fun `with nothing playing it is this phone`() {
         assertNull(speakerToFollow(of(speaker("kitchen", playing = false)), "phone", phoneAudible = false))
     }

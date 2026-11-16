@@ -39,6 +39,7 @@ class SettingsViewModel(
     private val saveSleepOnPlay: suspend (Boolean) -> Unit = {},
     private val saveFollow: suspend (Boolean) -> Unit = {},
     private val saveVolumeLimit: suspend (Int) -> Unit = {},
+    private val saveFollowSkipped: suspend (Set<String>) -> Unit = {},
     private val saveLookForUpdates: suspend (Boolean) -> Unit = {},
     private val saveDownloadOnWifi: suspend (Boolean) -> Unit = {},
     /** Signs out and forgets the server's data (Session.signOut, then DataGraph.clear). */
@@ -75,6 +76,9 @@ class SettingsViewModel(
     fun onFollowChange(on: Boolean): Unit = save(again = { onFollowChange(on) }) { saveFollow(on) }
 
     fun onVolumeLimitChange(level: Int): Unit = save(again = { onVolumeLimitChange(level) }) { saveVolumeLimit(level) }
+
+    fun onFollowSkippedChange(skipped: Set<String>): Unit =
+        save(again = { onFollowSkippedChange(skipped) }) { saveFollowSkipped(skipped) }
 
     fun onLookForUpdatesChange(on: Boolean): Unit = save(again = {
         onLookForUpdatesChange(on)
@@ -140,6 +144,7 @@ internal fun settingsState(
     sleepShake = (prefs ?: Prefs()).sleepShake,
     sleepOnPlay = (prefs ?: Prefs()).sleepOnPlay,
     followPlaying = (prefs ?: Prefs()).followPlaying,
+    followSkipped = (prefs ?: Prefs()).followSkipped,
     volumeLimit = (prefs ?: Prefs()).volumeLimit,
     lookForUpdates = (prefs ?: Prefs()).lookForUpdates,
     downloadOnWifi = (prefs ?: Prefs()).downloadOnWifi,
@@ -161,6 +166,8 @@ data class SettingsUiState(
     val sleepShake: Boolean = true,
     val sleepOnPlay: Boolean = false,
     val followPlaying: Boolean = false,
+    /** The speakers following the music leaves out. */
+    val followSkipped: Set<String> = emptySet(),
     /** Above this level a speaker plays louder only after a question; 0 for no limit. */
     val volumeLimit: Int = 0,
     val lookForUpdates: Boolean = false,

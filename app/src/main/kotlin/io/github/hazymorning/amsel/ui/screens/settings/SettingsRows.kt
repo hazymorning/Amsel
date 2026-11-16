@@ -125,7 +125,7 @@ internal fun <T> ChoiceSheet(
 ) {
     Column(Modifier.fillMaxWidth().selectableGroup().padding(bottom = sheetEnd(RowLead.None, twoLines = false))) {
         SheetHeader(title)
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(if (detail != null) Space.HeaderToContent else Space.HeaderToRows))
         if (detail != null) {
             val style = MaterialTheme.typography.bodyMedium
             Words(

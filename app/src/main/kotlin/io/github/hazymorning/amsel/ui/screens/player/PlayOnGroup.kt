@@ -54,7 +54,7 @@ internal fun GroupList(
     var chosen by rememberSaveable(leader.id) { mutableStateOf(before) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.SheetEdge)) {
         SheetHeader(stringResource(R.string.group_with, leader.displayName()))
-        Spacer(Modifier.height(Space.HeaderToContent))
+        Spacer(Modifier.height(Space.HeaderToRows))
         state.group.forEach { choice ->
             val ticked = choice.id in chosen
             val name = if (choice.isPhone) stringResource(R.string.this_phone) else choice.name

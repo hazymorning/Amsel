@@ -69,18 +69,27 @@ object Space {
     /** From a page's header (its play button, or its last letters) to the first ink of its list. */
     val HeaderToList = 48.dp
 
-    /** From a sheet's heading baseline to its content's first edge. */
-    val HeaderToContent = 16.dp
+    /**
+     * From a heading's baseline to its content's first ink, a shape's edge or a sentence's capitals:
+     * never less (principle 11).
+     */
+    val HeaderToContent = 24.dp
 
     /**
-     * A sheet's frame, the margin at its sides on its top and bottom too: from its top edge to its
-     * first ink (the title's capitals, a cover's top), and from its last ink (a baseline, a button's
-     * or a bar's edge) to its bottom edge.
+     * From a sheet title's baseline to its first row's band: a cover's top lands [HeaderToContent]
+     * under the baseline, and a row's words further down, at the row's own inset.
      */
-    val SheetEdge = 24.dp
+    val HeaderToRows = 16.dp
+
+    /**
+     * A sheet's frame at its top and bottom: from its top edge to its first ink (the title's
+     * capitals, a cover's top), and from its last ink (a baseline, a button's or a bar's edge) to its
+     * bottom edge. More than the margin at its sides: the same room looks tight over a bold title.
+     */
+    val SheetEdge = 32.dp
 
     /** From a section heading's baseline to its row of covers or list. */
-    val HeadingToRow = 22.5.dp
+    val HeadingToRow = 24.dp
 
     /** From one section's last letters to the next heading's capitals. */
     val SectionToHeader = 48.dp

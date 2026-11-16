@@ -54,6 +54,8 @@ data class Prefs(
     val sleepOnPlay: Boolean = false,
     /** Opening the app picks the speaker that plays (a group's leader), else This phone. */
     val followPlaying: Boolean = false,
+    /** The speakers following the music leaves out; none at first, so it follows every one. */
+    val followSkipped: Set<String> = emptySet(),
     /** Above this level a speaker plays louder only after Amsel asked; 0 for no limit. */
     val volumeLimit: Int = 0,
     /** Each start of the app asks GitHub for a newer version. */
@@ -100,6 +102,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
             sleepShake = p[SLEEP_SHAKE] ?: unset.sleepShake,
             sleepOnPlay = p[SLEEP_ON_PLAY] ?: unset.sleepOnPlay,
             followPlaying = p[FOLLOW_PLAYING] ?: unset.followPlaying,
+            followSkipped = p[FOLLOW_SKIPPED].orEmpty(),
             volumeLimit = p[VOLUME_LIMIT] ?: unset.volumeLimit,
             lookForUpdates = p[LOOK_FOR_UPDATES] ?: unset.lookForUpdates,
             downloadOnWifi = p[DOWNLOAD_ON_WIFI] ?: unset.downloadOnWifi,
@@ -188,8 +191,16 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         store.edit { it[SLEEP_ON_PLAY] = on }
     }
 
+    /** Turned on, following takes in every speaker again. */
     suspend fun setFollowPlaying(on: Boolean) {
-        store.edit { it[FOLLOW_PLAYING] = on }
+        store.edit {
+            it[FOLLOW_PLAYING] = on
+            if (on) it.remove(FOLLOW_SKIPPED)
+        }
+    }
+
+    suspend fun setFollowSkipped(ids: Set<String>) {
+        store.edit { it[FOLLOW_SKIPPED] = ids }
     }
 
     suspend fun setLookForUpdates(on: Boolean) {
@@ -298,6 +309,7 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val SLEEP_SHAKE = booleanPreferencesKey("sleep_shake")
         val SLEEP_ON_PLAY = booleanPreferencesKey("sleep_on_play")
         val FOLLOW_PLAYING = booleanPreferencesKey("follow_playing")
+        val FOLLOW_SKIPPED = stringSetPreferencesKey("follow_skipped")
         val VOLUME_LIMIT = intPreferencesKey("volume_limit")
         val LOOK_FOR_UPDATES = booleanPreferencesKey("look_for_updates")
         val DOWNLOAD_ON_WIFI = booleanPreferencesKey("download_on_wifi")
