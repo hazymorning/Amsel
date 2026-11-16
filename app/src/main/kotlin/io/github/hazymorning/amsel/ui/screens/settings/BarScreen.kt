@@ -1,9 +1,11 @@
 package io.github.hazymorning.amsel.ui.screens.settings
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -14,7 +16,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -22,8 +26,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
@@ -39,79 +45,146 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.holdToMove
-import io.github.hazymorning.amsel.ui.components.moved
 import io.github.hazymorning.amsel.ui.components.rememberReorderable
+import io.github.hazymorning.amsel.ui.components.reorderHandle
+import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
+import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Keyline
+import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
 
-/**
- * Which places the bottom bar shows, and in what order: each place a row with its glyph, its name
- * and a switch, those in the bar first, in its order. A held press on a row picks it up and moves
- * it, as in Edit Home; TalkBack moves it through its actions. Home has no switch: it always stays.
- * The bar under the page follows every change at once.
- */
+/** Which places the bottom bar shows, and in what order. Home always stays. */
 @Composable
 fun BarScreen(
-    places: List<BarPlace>,
-    onChange: (List<BarPlace>) -> Unit,
+    places: Arrangement<BarPlace>,
+    onChange: (Arrangement<BarPlace>) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+) = ArrangeScreen(
+    title = stringResource(R.string.settings_bar),
+    hint = stringResource(R.string.bar_hint),
+    arrangement = places,
+    key = BarPlace::id,
+    label = { stringResource(it.label) },
+    icon = BarPlace::icon,
+    fixed = BarPlace.Home,
+    fixedLine = stringResource(R.string.bar_home_stays),
+    onChange = onChange,
+    onBack = onBack,
+    modifier = modifier,
+)
+
+/** Which controls the mini player shows beside what plays, and in what order. Play always stays. */
+@Composable
+fun DockScreen(
+    controls: Arrangement<DockControl>,
+    onChange: (Arrangement<DockControl>) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) = ArrangeScreen(
+    title = stringResource(R.string.settings_dock),
+    hint = stringResource(R.string.dock_hint),
+    arrangement = controls,
+    key = DockControl::id,
+    label = { stringResource(it.label) },
+    icon = DockControl::icon,
+    fixed = DockControl.PlayPause,
+    fixedLine = stringResource(R.string.dock_play_stays),
+    onChange = onChange,
+    onBack = onBack,
+    modifier = modifier,
+    max = DockControl.MAX,
+    fullLine = stringResource(R.string.dock_full),
+)
+
+/**
+ * A page that arranges things, the bar's places or the mini player's controls: each a row with its
+ * glyph, its name, a switch and a handle, in the person's order, which a switch never changes, so
+ * nothing jumps. The handle picks a row up at once, a held press anywhere on it too, and moves it;
+ * TalkBack moves it through its actions. [fixed] has no switch: it always stays. With [max] shown,
+ * those left out wait, their switch dimmed and a tap answered with a no, until another goes;
+ * TalkBack hears why ([fullLine]).
+ */
+@Composable
+private fun <T> ArrangeScreen(
+    title: String,
+    hint: String,
+    arrangement: Arrangement<T>,
+    key: (T) -> String,
+    label: @Composable (T) -> String,
+    /** The glyph's drawable for each thing. */
+    icon: (T) -> Int,
+    fixed: T,
+    fixedLine: String,
+    onChange: (Arrangement<T>) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    max: Int = Int.MAX_VALUE,
+    fullLine: String? = null,
 ) {
     val haptics = LocalHapticFeedback.current
-    val all = places + BarPlace.entries.filterNot { it in places }
-    // The order while a drag swaps places; the stored one replaces it once the drop is saved.
-    var order by remember(all) { mutableStateOf(all) }
-    val shown = { list: List<BarPlace> -> list.filter { it in places } }
+    // The order while a drag swaps rows; the stored one replaces it once the drop is saved.
+    var order by remember(arrangement.order) { mutableStateOf(arrangement.order) }
     val list = rememberLazyListState()
+    val keys = arrangement.order.map(key).toSet()
     val reorder = rememberReorderable(
         list,
-        movable = { key -> BarPlace.entries.any { it.id == key } },
+        movable = { it in keys },
         onSwap = { from, to ->
-            order = order.moved(order.indexOfFirst { it.id == from }, order.indexOfFirst { it.id == to })
+            val a = order.indexOfFirst { key(it) == from }
+            val b = order.indexOfFirst { key(it) == to }
+            if (a >= 0 && b >= 0) order = order.toMutableList().apply { add(b, removeAt(a)) }
         },
-        onDrop = { onChange(shown(order)) },
+        onDrop = {
+            haptics.performHapticFeedback(HapticFeedbackType.GestureEnd)
+            onChange(arrangement.copy(order = order))
+        },
     )
     val up = stringResource(R.string.move_up)
     val down = stringResource(R.string.move_down)
-    MaterialScreen(modifier, bar = { PageTopBar(stringResource(R.string.settings_bar), onBack) }) { insets ->
+    val full = arrangement.shown.size >= max
+    MaterialScreen(modifier, bar = { PageTopBar(title, onBack) }) { insets ->
         ScrollEdges(list)
         LazyColumn(Modifier.fillMaxSize(), state = list, contentPadding = insets) {
             item(key = HINT) {
                 val style = MaterialTheme.typography.bodyMedium
                 Words(
-                    stringResource(R.string.bar_hint),
+                    hint,
                     style,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Start,
-                    maxLines = 3,
+                    maxLines = 4,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = Keyline.Margin, end = Keyline.Margin, top = Space.S2, bottom = Space.Group),
                 )
             }
-            items(order, key = { it.id }) { place ->
-                val index = order.indexOf(place)
-                val lifted = reorder.draggingKey == place.id || reorder.settlingKey == place.id
-                val inBar = place in places
+            items(order, key = key) { item ->
+                val id = key(item)
+                val index = order.indexOf(item)
+                val lifted = reorder.draggingKey == id || reorder.settlingKey == id
+                val on = item in arrangement.shown
+                val waits = !on && full
                 val moves = listOfNotNull(
                     CustomAccessibilityAction(up) {
-                        onChange(shown(order.moved(index, index - 1)))
+                        onChange(arrangement.moved(index, index - 1))
                         true
                     }.takeIf { index > 0 },
                     CustomAccessibilityAction(down) {
-                        onChange(shown(order.moved(index, index + 1)))
+                        onChange(arrangement.moved(index, index + 1))
                         true
                     }.takeIf { index < order.lastIndex },
                 )
                 ListRow(
-                    title = stringResource(place.label),
+                    title = label(item),
                     modifier = Modifier
                         .then(
                             if (lifted) {
-                                Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offsetOf(place.id) }
+                                Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offsetOf(id) }
                             } else {
                                 Modifier.animateItem()
                             },
@@ -119,34 +192,45 @@ fun BarScreen(
                         .holdToMove(
                             onStart = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                reorder.start(place.id)
+                                reorder.start(id)
                             },
                             onMove = { reorder.drag(it.y) },
                             onEnd = reorder::end,
                         )
                         .semantics {
                             customActions = moves
-                            if (place != BarPlace.Home) toggleableState = ToggleableState(inBar)
+                            if (item != fixed) toggleableState = ToggleableState(on)
+                            if (waits && fullLine != null) stateDescription = fullLine
                         },
-                    subtitle = if (place == BarPlace.Home) stringResource(R.string.bar_home_stays) else null,
+                    subtitle = if (item == fixed) fixedLine else null,
                     lead = RowLead.Glyph,
-                    role = if (place == BarPlace.Home) Role.Button else Role.Switch,
-                    onClick = if (place == BarPlace.Home) {
-                        null
-                    } else {
-                        {
-                            val next = if (inBar) places - place else shown(order) + place
-                            onChange(order.filter { it in next })
-                        }
+                    role = if (item == fixed) Role.Button else Role.Switch,
+                    onClick = when {
+                        item == fixed -> null
+
+                        // Full: the row stays a switch, says why it waits, and answers a tap with a no.
+                        waits -> ({ haptics.performHapticFeedback(HapticFeedbackType.Reject) })
+
+                        else -> ({ onChange(arrangement.with(item, !on)) })
                     },
-                    leading = { InkGlyph(place.icon, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    // Off the very edge, as a switch stands in a Settings block.
-                    trailing = if (place ==
-                        BarPlace.Home
-                    ) {
-                        null
-                    } else {
-                        ({ Box(Modifier.padding(end = Space.S2)) { SettingSwitch(inBar) } })
+                    leading = { InkGlyph(icon(item), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    trailing = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // Full, those left out wait with their switch dimmed; the hint above says why.
+                            if (item != fixed) {
+                                Box(Modifier.alpha(if (waits) DISABLED_ALPHA else 1f)) { SettingSwitch(on) }
+                            }
+                            // The handle: a press on it picks the row up at once.
+                            Box(
+                                Modifier
+                                    .size(Sizes.TouchTarget)
+                                    .reorderHandle(reorder, id)
+                                    .clearAndSetSemantics {},
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                InkGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     },
                 )
             }
@@ -160,8 +244,20 @@ fun BarRoute(navigator: Navigator) {
     val stored by prefs.prefs.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     BarScreen(
-        places = BarPlace.of(stored?.barPlaces),
-        onChange = { places -> scope.launch { prefs.setBarPlaces(places.map { it.id }) } },
+        places = BarPlace.arrangement(stored?.barPlaces),
+        onChange = { places -> scope.launch { prefs.setBarPlaces(places.tokens(BarPlace::id)) } },
+        onBack = navigator::back,
+    )
+}
+
+@Composable
+fun DockRoute(navigator: Navigator) {
+    val prefs = LocalContext.current.graph.data.prefs
+    val stored by prefs.prefs.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    DockScreen(
+        controls = DockControl.arrangement(stored?.dockControls),
+        onChange = { controls -> scope.launch { prefs.setDockControls(controls.tokens(DockControl::id)) } },
         onBack = navigator::back,
     )
 }

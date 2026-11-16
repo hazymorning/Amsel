@@ -21,11 +21,16 @@ enum class BarPlace(val id: String, @StringRes val label: Int, @DrawableRes val 
         /** The bar as it comes: every place, in this order. */
         val Default: List<BarPlace> = entries
 
-        /** The bar from what is stored ([ids]; null for [Default]): each known place once, Home kept. */
-        fun of(ids: List<String>?): List<BarPlace> {
-            if (ids == null) return Default
-            val places = ids.mapNotNull { id -> entries.firstOrNull { it.id == id } }.distinct()
-            return if (Home in places) places else listOf(Home) + places
+        /** Every place in the person's order, those in the bar shown, Home always among them. */
+        fun arrangement(tokens: List<String>?): Arrangement<BarPlace> {
+            val stored = Arrangement.of(tokens, entries, BarPlace::id, Arrangement(entries, entries.toSet()))
+            // A stored bar without Home gets it back first, where the way back belongs.
+            val homeless = tokens != null && tokens.none { it.removePrefix(Arrangement.HIDDEN) == Home.id }
+            val order = if (homeless) listOf(Home) + (stored.order - Home) else stored.order
+            return Arrangement(order, stored.shown + Home)
         }
+
+        /** The bar from what is stored ([tokens]; null for [Default]): the places shown, in order. */
+        fun of(tokens: List<String>?): List<BarPlace> = arrangement(tokens).visible
     }
 }

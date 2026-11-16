@@ -1,7 +1,7 @@
 package io.github.hazymorning.amsel.ui.components
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.playback.R as PlaybackR
+import io.github.hazymorning.amsel.playback.SKIP_BACK_MS
 import io.github.hazymorning.amsel.playback.SKIP_FORWARD_MS
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.MediaKind
@@ -36,6 +37,7 @@ import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.byline
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.screens.player.SkipSeconds
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Motion
@@ -80,6 +82,9 @@ internal fun PlayerCard(
     onControl: (PlayerControl) -> Unit,
     onSpeaker: () -> Unit,
     modifier: Modifier = Modifier,
+    controls: List<DockControl> = DockControl.Default.visible,
+    onDockControl: (DockControl) -> Unit = {},
+    onArrange: () -> Unit = {},
 ) {
     val last = remember { mutableStateOf(nowPlaying) }
     SideEffect { if (nowPlaying != null) last.value = nowPlaying }
@@ -90,7 +95,7 @@ internal fun PlayerCard(
             Crossfade(nowPlaying != null, animationSpec = Motion.effects(), label = "player") { playing ->
                 val shown = nowPlaying ?: last.value
                 if (playing && shown != null) {
-                    PlayerRow(shown, speaker, covered, onOpen, onControl)
+                    PlayerRow(shown, speaker, covered, onOpen, onControl, controls, onDockControl, onArrange)
                 } else {
                     IdleRow(speaker, onSpeaker)
                 }
@@ -132,10 +137,11 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit) {
 }
 
 /**
- * Cover and words ([PlayerWords]), then play and the skip: next for music,
- * forward by seconds for a book or an episode, as the notification has them. A tap or a drag up
- * opens Now Playing; a sideways swipe goes to the next or the one before, the song's line
- * following the finger.
+ * Cover and words ([PlayerWords]), then the [controls] the person chose, in their order: play, and
+ * as they like next and previous (by seconds for a book or an episode, as the notification has
+ * them), the heart, the speaker, volume, the sleep timer or shuffle. A tap or a drag up opens Now
+ * Playing; a sideways swipe goes to the next or the one before, the song's line following the
+ * finger; a long press arranges the controls ([onArrange]).
  */
 @Composable
 private fun PlayerRow(
@@ -144,6 +150,9 @@ private fun PlayerRow(
     covered: Boolean,
     onOpen: () -> Unit,
     onControl: (PlayerControl) -> Unit,
+    controls: List<DockControl>,
+    onDockControl: (DockControl) -> Unit,
+    onArrange: () -> Unit,
 ) {
     val openLabel = stringResource(R.string.open_now_playing)
     val nextLabel = stringResource(state.nextLabel)
@@ -152,12 +161,25 @@ private fun PlayerRow(
         onControl(if (forward) PlayerControl.Next else PlayerControl.Previous)
     }
     val swipe = rememberSideSwipe(state.key ?: state.title, enabled = state.canSkip, onGo = skip)
-    val skipGlyph = if (state.spoken) R.drawable.ic_skip_forward else R.drawable.ic_skip_next
-    val skipSize = if (state.spoken) PlayGlyph else Sizes.Icon
+    // The last control's ink stands [ControlsInset] in from the screen's edge, whichever it is.
+    val endSpare = when (val end = controls.lastOrNull() ?: DockControl.PlayPause) {
+        DockControl.PlayPause -> (Sizes.TouchTarget - PlayDisc) / 2
+        DockControl.Next -> if (state.spoken) endReach(R.drawable.ic_skip_forward, PlayGlyph) else endReach(end.icon)
+        DockControl.Previous -> if (state.spoken) endReach(R.drawable.ic_skip_back, PlayGlyph) else endReach(end.icon)
+        else -> endReach(end.icon)
+    }
+    val arrangeLabel = stringResource(R.string.dock_arrange)
     Row(
         Modifier
             .fillMaxWidth()
-            .clickable(null, indication = null, role = Role.Button, onClick = onOpen)
+            .combinedClickable(
+                null,
+                indication = null,
+                role = Role.Button,
+                onClick = onOpen,
+                onLongClickLabel = arrangeLabel,
+                onLongClick = onArrange,
+            )
             .then(swipe.detect)
             .semantics {
                 onClick(label = openLabel) {
@@ -178,7 +200,7 @@ private fun PlayerRow(
             .padding(
                 start = Inset,
                 top = Inset,
-                end = (ControlsInset - endReach(skipGlyph, skipSize)).coerceAtLeast(0.dp),
+                end = (ControlsInset - endSpare).coerceAtLeast(0.dp),
                 bottom = Inset,
             )
             .heightIn(min = Sizes.DockArt),
@@ -193,10 +215,25 @@ private fun PlayerRow(
         Spacer(Modifier.width(Space.Sibling))
         PlayerWords(state, speaker, Modifier.weight(1f), song = swipe.follow, runs = !covered)
         Spacer(Modifier.width(BeforePlay))
-        val ink = MaterialTheme.colorScheme.onSurface
+        controls.forEach { control -> DockButton(control, state, onControl, onDockControl) }
+    }
+}
+
+/** One of the mini player's controls, as [PlayerRow] lines them up. */
+@Composable
+private fun DockButton(
+    control: DockControl,
+    state: NowPlayingUi,
+    onControl: (PlayerControl) -> Unit,
+    onDockControl: (DockControl) -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val ink = colors.onSurface
+    when (control) {
         // In ink, as every page's play: the dock's one focal point, which balances the cover at its start.
-        PlayButton(state.isPlaying, { onControl(PlayerControl.PlayPause) }, size = PlayDisc)
-        if (state.spoken) {
+        DockControl.PlayPause -> PlayButton(state.isPlaying, { onControl(PlayerControl.PlayPause) }, size = PlayDisc)
+
+        DockControl.Next -> if (state.spoken) {
             val seconds = (SKIP_FORWARD_MS / 1000).toInt()
             SkipSeconds(
                 R.drawable.ic_skip_forward,
@@ -209,12 +246,66 @@ private fun PlayerRow(
         } else {
             IconAction(
                 R.drawable.ic_skip_next,
-                nextLabel,
+                stringResource(state.nextLabel),
                 { onControl(PlayerControl.Next) },
                 tint = ink,
                 enabled = state.canSkip,
             )
         }
+
+        DockControl.Previous -> if (state.spoken) {
+            val seconds = (SKIP_BACK_MS / 1000).toInt()
+            SkipSeconds(
+                R.drawable.ic_skip_back,
+                seconds,
+                pluralStringResource(PlaybackR.plurals.back_seconds, seconds, seconds),
+                size = PlayGlyph,
+            ) {
+                onControl(PlayerControl.SeekBack)
+            }
+        } else {
+            IconAction(
+                R.drawable.ic_skip_previous,
+                stringResource(state.previousLabel),
+                { onControl(PlayerControl.Previous) },
+                tint = ink,
+                enabled = state.canSkip,
+            )
+        }
+
+        // Only a song is a favourite here; a station, a book or an episode leaves the heart dimmed.
+        DockControl.Favorite -> IconAction(
+            if (state.favorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite,
+            stringResource(
+                if (state.favorite) R.string.player_action_remove_favorite else R.string.player_action_add_favorite,
+            ),
+            { onDockControl(DockControl.Favorite) },
+            tint = ink,
+            enabled = state.kind == MediaKind.Track && state.key != null && !state.djBreak,
+        )
+
+        DockControl.Shuffle -> IconAction(
+            control.icon,
+            stringResource(control.label),
+            { onControl(PlayerControl.SetShuffle(!state.shuffle)) },
+            tint = if (state.shuffle) ink else colors.onSurfaceVariant,
+            enabled = state.canShuffle,
+        )
+
+        DockControl.Volume -> IconAction(
+            control.icon,
+            stringResource(control.label),
+            { onDockControl(control) },
+            tint = ink,
+            enabled = state.volume != null,
+        )
+
+        DockControl.Speaker, DockControl.Sleep -> IconAction(
+            control.icon,
+            stringResource(control.label),
+            { onDockControl(control) },
+            tint = ink,
+        )
     }
 }
 

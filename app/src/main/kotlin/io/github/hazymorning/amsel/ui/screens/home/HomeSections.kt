@@ -1,6 +1,6 @@
 package io.github.hazymorning.amsel.ui.screens.home
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -129,22 +129,36 @@ internal fun Sections(
         if (!state.loading) {
             item(key = FOOTER, contentType = FOOTER) {
                 // Home ends a section's distance above the dock, as if the dock were the next section.
-                if (state.editing) EditFooter(editor) else Spacer(Modifier.height(Space.SectionToHeader))
+                if (state.editing) {
+                    EditFooter(editor, onReset = { sheet = EditSheet.Reset to "" })
+                } else {
+                    Spacer(Modifier.height(Space.SectionToHeader))
+                }
             }
         }
     }
     EditSheets(sheet, sections, editor, onClose = { sheet = null }, spoken = state.spoken)
 }
 
-/** In edit mode, Add section, centred under the last section a section's distance down. */
+/**
+ * In edit mode, Add section, centred under the last section a section's distance down, and under
+ * it, quieter, the way back to a new person's Home ([onReset] asks first).
+ */
 @Composable
-private fun EditFooter(editor: HomeEditor) {
+private fun EditFooter(editor: HomeEditor, onReset: () -> Unit) {
     val cap = with(LocalDensity.current) { capHeight(MaterialTheme.typography.bodyLarge) }
-    Box(
+    Column(
         Modifier.fillMaxWidth().baselineFrame(top = Space.SectionToHeader + cap, bottom = Space.ListEnd),
-        contentAlignment = Alignment.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         TextAction(stringResource(R.string.home_edit_add_section), editor::add, icon = R.drawable.ic_add)
+        Spacer(Modifier.height(Space.S8))
+        TextAction(
+            stringResource(R.string.home_reset),
+            onReset,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 

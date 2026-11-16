@@ -25,6 +25,7 @@ import io.github.hazymorning.amsel.ui.components.ActionRow
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
+import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
@@ -125,6 +126,19 @@ internal fun EditSheets(
     spoken: SpokenWord,
 ) {
     val (kind, id) = open ?: return
+    if (kind == EditSheet.Reset) {
+        AmselSheet(onDismiss = onClose) {
+            SheetQuestion(
+                title = stringResource(R.string.home_reset),
+                question = stringResource(R.string.home_reset_question),
+                primary = stringResource(R.string.home_reset_do),
+                onPrimary = { close { editor.reset() } },
+                secondary = stringResource(R.string.player_confirm_cancel),
+                onSecondary = { close() },
+            )
+        }
+        return
+    }
     val section = sections.firstOrNull { it.id == id } ?: return
     AmselSheet(onDismiss = onClose) {
         fun done(change: () -> Unit) {
@@ -146,4 +160,4 @@ internal fun EditSheets(
     }
 }
 
-internal enum class EditSheet { What, How, Actions }
+internal enum class EditSheet { What, How, Actions, Reset }

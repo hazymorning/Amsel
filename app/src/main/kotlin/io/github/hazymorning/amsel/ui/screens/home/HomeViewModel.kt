@@ -61,6 +61,9 @@ interface HomeEditor {
 
     fun add() {}
 
+    /** A new person's sections again; the pins stay. */
+    fun reset() {}
+
     /** The pins Home shows, in the order the person put them. */
     fun arrangePins(order: List<String>) {}
 
@@ -152,6 +155,8 @@ class HomeViewModel(
     override fun remove(id: String) = edit { it.remove(id) }
 
     override fun add() = edit { it.add() }
+
+    override fun reset() = edit { it.reset() }
 
     override fun arrangePins(order: List<String>) = edit { it.arrangePins(order) }
 

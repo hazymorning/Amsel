@@ -44,6 +44,7 @@ import io.github.hazymorning.amsel.ui.components.LocalMusicPlays
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
@@ -59,6 +60,8 @@ import io.github.hazymorning.amsel.ui.screens.pages.SimilarSongsRoute
 import io.github.hazymorning.amsel.ui.screens.player.NowPlayingRoute
 import io.github.hazymorning.amsel.ui.screens.search.SearchRoute
 import io.github.hazymorning.amsel.ui.screens.settings.BarRoute
+import io.github.hazymorning.amsel.ui.screens.settings.DockRoute
+import io.github.hazymorning.amsel.ui.screens.settings.HintsRoute
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsRoute
 import io.github.hazymorning.amsel.ui.screens.setup.SetupRoute
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
@@ -273,6 +276,7 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
     val plays = remember { derivedStateOf { nowPlaying?.isPlaying == true } }
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     val bar = remember(prefs?.barPlaces) { BarPlace.of(prefs?.barPlaces) }
+    val dock = remember(prefs?.dockControls) { DockControl.arrangement(prefs?.dockControls).visible }
     CompositionLocalProvider(
         LocalAppActions provides actions,
         LocalDownloadMarks provides downloads,
@@ -290,6 +294,15 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
             onTakeOffer = graph.offers::take,
             onDismissOffer = graph.offers::dismiss,
             bar = bar,
+            dock = dock,
+            onDockControl = { control ->
+                when (control) {
+                    DockControl.Favorite -> graph.playing.toggleHeart()
+                    DockControl.Volume -> actions.open(AppSheet.Volume)
+                    DockControl.Sleep -> actions.open(AppSheet.SleepTimer)
+                    else -> actions.playOn()
+                }
+            },
             slots = ShellSlots(
                 screen = { route, nav -> RouteContent(route, nav) },
                 nowPlaying = { onClose, nav -> NowPlayingRoute(onClose, nav) },
@@ -314,6 +327,8 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         is Route.SeeAll -> SeeAllRoute(navigator, route.option, title = route.title)
         Route.Settings -> SettingsRoute(navigator)
         Route.Bar -> BarRoute(navigator)
+        Route.Dock -> DockRoute(navigator)
+        Route.Hints -> HintsRoute(navigator)
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }

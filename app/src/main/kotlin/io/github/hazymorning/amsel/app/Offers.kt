@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.app
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import io.github.hazymorning.amsel.data.HINTS_ALL
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
@@ -45,12 +46,14 @@ class Offer(
 /**
  * The offer showing, one at a time: a new one takes the place of the last. Offers are for whoever
  * has the app in front ([inFront]); one made while it is away is dropped, and the one showing goes
- * when it leaves. [passes] and [setPasses] keep how often each hint went untaken.
+ * when it leaves. [passes] and [setPasses] keep how often each hint went untaken; [off] holds the
+ * kinds the person turned off in Settings, or [HINTS_ALL].
  */
 class Offers(
     private val inFront: StateFlow<Boolean> = MutableStateFlow(true),
     private val passes: () -> Map<String, Int> = { emptyMap() },
     private val setPasses: (String, Int) -> Unit = { _, _ -> },
+    private val off: () -> Set<String> = { emptySet() },
     scope: CoroutineScope? = null,
 ) {
     private val _shown = MutableStateFlow<Offer?>(null)
@@ -75,6 +78,8 @@ class Offers(
             !inFront.value -> false
 
             offer.hint != null && (passes()[offer.hint] ?: 0) >= GIVE_UP -> false
+
+            offer.hint != null && off().let { HINTS_ALL in it || offer.hint in it } -> false
 
             else -> {
                 _shown.value = offer
