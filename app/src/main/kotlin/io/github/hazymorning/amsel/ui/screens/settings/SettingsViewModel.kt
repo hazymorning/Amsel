@@ -1,8 +1,12 @@
 package io.github.hazymorning.amsel.ui.screens.settings
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.hazymorning.amsel.BuildConfig
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.ServerAddress
@@ -10,6 +14,7 @@ import io.github.hazymorning.amsel.app.Messages
 import io.github.hazymorning.amsel.app.retryWhileOpen
 import io.github.hazymorning.amsel.data.Prefs
 import io.github.hazymorning.amsel.data.SessionState
+import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.screens.setup.hostOf
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
 import java.io.IOException
@@ -131,6 +136,11 @@ internal fun settingsState(
     userName = user?.shownName.orEmpty(),
     serverName = serverNameOf(session),
     serverAddress = address?.let(::hostOf).orEmpty(),
+    connection = when (session) {
+        is SessionState.Ready -> Connection.Connected
+        is SessionState.Offline -> Connection.Offline
+        else -> Connection.Connecting
+    },
     theme = chosenTheme ?: ThemeMode.of(prefs?.theme),
     appVersion = appVersion,
     sleepFadeSec = (prefs ?: Prefs()).sleepFadeSec,
@@ -142,6 +152,9 @@ internal fun settingsState(
     lookForUpdates = (prefs ?: Prefs()).lookForUpdates,
     downloadOnWifi = (prefs ?: Prefs()).downloadOnWifi,
 )
+
+/** Whether Music Assistant answers: connected, still connecting, or out of reach. */
+enum class Connection { Connected, Connecting, Offline }
 
 /** Settings fit one phone screen: account, theme, Open Music Assistant, the app. All of it is local. */
 @Immutable
@@ -166,4 +179,33 @@ data class SettingsUiState(
     val lookForUpdates: Boolean = false,
     /** Downloads wait for Wi-Fi rather than use mobile data. */
     val downloadOnWifi: Boolean = true,
+    /** Whether the server answers now, said after where it is. */
+    val connection: Connection = Connection.Connected,
 )
+
+/** The settings wired to the session and the stored preferences, for Settings and its pages. */
+@Composable
+internal fun rememberSettingsViewModel(): SettingsViewModel {
+    val graph = LocalContext.current.graph
+    return viewModel {
+        val data = graph.data
+        SettingsViewModel(
+            session = data.session.state,
+            address = data.session.address,
+            user = data.session.user,
+            prefs = data.prefs.prefs,
+            saveTheme = data.prefs::setTheme,
+            saveFade = data.prefs::setSleepFade,
+            saveShake = data.prefs::setSleepShake,
+            saveSleepOnPlay = data.prefs::setSleepOnPlay,
+            saveVolumeLimit = data.prefs::setVolumeLimit,
+            saveLookForUpdates = data.prefs::setLookForUpdates,
+            saveDownloadOnWifi = data.prefs::setDownloadOnWifi,
+            // The data graph forgets the server's data once the session has ended.
+            signOutAndForget = data.session::signOut,
+            messages = graph.messages,
+            appScope = graph.scope,
+            appVersion = BuildConfig.VERSION_NAME,
+        )
+    }
+}

@@ -28,6 +28,7 @@ import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.model.MediaUi
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
@@ -51,7 +52,8 @@ fun HomeScreen(
     onRetry: () -> Unit = {},
     /** Continue listening's play button: resume where the person stopped. */
     onResume: (MediaUi) -> Unit = onOpen,
-    onSettings: () -> Unit = {},
+    /** Settings behind a pull down at Home's top: null while they have a place of their own in the bar. */
+    onSettings: (() -> Unit)? = {},
     /** What to tell above the first section, put away by [onTipGone]. */
     tip: Tip? = null,
     onTipGone: (Tip) -> Unit = {},
@@ -79,10 +81,10 @@ fun HomeScreen(
         when {
             state.editing || state.visible.isNotEmpty() ->
                 SettingsPull(
-                    onSettings,
+                    onSettings ?: {},
                     insets.calculateTopPadding(),
                     Modifier.fillMaxSize(),
-                    enabled = !state.editing,
+                    enabled = onSettings != null && !state.editing,
                 ) {
                     Sections(
                         state,
@@ -165,6 +167,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boo
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     if (editOnly) {
         LaunchedEffect(Unit) { graph.tips.seen(Tip.EditHome) }
         LaunchedEffect(state.editing) { if (!state.editing) navigator.back() }
@@ -198,7 +201,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boo
         onSettings = {
             tips.seen(Tip.Settings)
             navigator.open(Route.Settings)
-        },
+        }.takeIf { BarPlace.Settings !in BarPlace.of(prefs?.barPlaces) },
         tip = tip.takeUnless { told },
         onTipGone = tips::seen,
         onSearch = LocalStartSearch.current,

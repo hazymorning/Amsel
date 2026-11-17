@@ -42,15 +42,24 @@ class HomeLayoutTest {
                 ContinueListening,
                 Pinned,
                 Everything,
-                SmartPlaylists,
+                SectionOption.YourPlaylists,
                 NewAlbums,
+                SectionOption.TopArtists,
+                SmartPlaylists,
                 AllStations,
             ),
             fresh.options(),
         )
-        assertEquals(listOf(Row, Big, Grid, Row, Row, Row, Small), fresh.sections.map { it.layout })
+        assertEquals(listOf(Row, Big, Grid, Row, List, Row, Small, Row, Small), fresh.sections.map { it.layout })
+        // Search and Continue listening stand without a heading; the rest under theirs.
+        assertEquals(
+            listOf(false, false, true, true, true, true, true, true, true),
+            fresh.sections.map {
+                it.showsTitle
+            },
+        )
         // An earlier default's sections keep their ids, so their snapshots still paint.
-        assertEquals(listOf("s5", "s0", "s1", "s2", "s3", "s4", "s7"), fresh.ids())
+        assertEquals(listOf("s5", "s0", "s1", "s2", "s8", "s4", "s6", "s3", "s7"), fresh.ids())
         assertTrue(fresh.pinned.isEmpty())
         assertSame(fresh, fresh.offerListening())
     }

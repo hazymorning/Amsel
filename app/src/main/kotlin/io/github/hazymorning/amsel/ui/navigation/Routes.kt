@@ -53,6 +53,9 @@ sealed interface Route : NavKey {
 
     @Serializable data object Settings : Route
 
+    /** Settings as a place of its own in the bar: its top has no way back, as every place's has none. */
+    @Serializable data object SettingsPlace : Route
+
     /** Which places the bottom bar shows, and in what order. */
     @Serializable data object Bar : Route
 
@@ -89,8 +92,8 @@ sealed interface Route : NavKey {
 }
 
 /**
- * The places the bar can open, each with its own pages: Home, Search, the Library, and any kind of
- * the library on its own. Unselected their glyph is an outline, selected it is filled.
+ * The places the bar can open, each with its own pages: Home, Search, the Library, any kind of the
+ * library on its own, and Settings. Unselected their glyph is an outline, selected it is filled.
  */
 enum class Tab(
     val root: Route,
@@ -127,6 +130,7 @@ enum class Tab(
         R.drawable.ic_podcast,
         R.drawable.ic_podcast_selected,
     ),
+    Settings(Route.SettingsPlace, R.string.settings, R.drawable.ic_settings, R.drawable.ic_settings_selected),
 }
 
 /** What screens may ask of navigation, on their tab's back stack. Back always goes up one level. */

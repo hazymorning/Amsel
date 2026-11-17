@@ -167,14 +167,14 @@ class HomeRepositoryTest {
     @Test fun aRetryAfterAnEditLoadsOnlyWhatFailed() = withRepo { env ->
         env.repo.load()
         env.repo.refresh()
-        env.loader.failing = setOf(SectionOption.TopArtists)
+        env.loader.failing = setOf(SectionOption.FavoriteAlbums)
         assertThrows(MaConnectionException::class.java) {
-            runBlocking { env.repo.edit { it.setOption("s4", SectionOption.TopArtists) } }
+            runBlocking { env.repo.edit { it.setOption("s4", SectionOption.FavoriteAlbums) } }
         }
         env.loader.failing = emptySet()
         env.loader.asked.clear()
         env.repo.reloadFailed()
-        assertEquals(listOf(SectionOption.TopArtists), env.loader.asked.toList())
+        assertEquals(listOf(SectionOption.FavoriteAlbums), env.loader.asked.toList())
     }
 
     @Test fun randomAlbumsChangeOnlyWhenReshuffled() = withRepo { env ->
@@ -194,9 +194,11 @@ class HomeRepositoryTest {
         env.loader.asked.clear()
         env.repo.edit { it.setLayout("s2", SectionLayout.Big) }
         assertTrue(env.loader.asked.isEmpty())
-        env.repo.edit { it.setOption("s3", SectionOption.TopArtists) }
-        assertEquals(listOf(SectionOption.TopArtists), env.loader.asked)
-        val layout = env.repo.layout.first { it?.sections?.any { s -> s.option == SectionOption.TopArtists } == true }!!
+        env.repo.edit { it.setOption("s3", SectionOption.FavoriteAlbums) }
+        assertEquals(listOf(SectionOption.FavoriteAlbums), env.loader.asked)
+        val layout = env.repo.layout.first {
+            it?.sections?.any { s -> s.option == SectionOption.FavoriteAlbums } == true
+        }!!
         assertEquals(SectionLayout.Big, layout.sections.single { it.id == "s2" }.layout)
     }
 
@@ -207,6 +209,7 @@ class HomeRepositoryTest {
             setOf(
                 SectionOption.Everything,
                 SectionOption.SmartPlaylists,
+                SectionOption.YourPlaylists,
                 SectionOption.NewAlbums,
                 SectionOption.AllStations,
             ),
@@ -218,7 +221,7 @@ class HomeRepositoryTest {
         env.repo.load()
         env.repo.refresh()
         val option = env.repo.layout.value!!.sections.single { it.id == "s4" }.option
-        env.repo.edit { it.setOption("s4", SectionOption.TopArtists) }
+        env.repo.edit { it.setOption("s4", SectionOption.FavoriteAlbums) }
         assertFalse(option in env.repo.items.value!!)
         env.loader.round = 1
         env.repo.edit { it.setOption("s4", option) }
