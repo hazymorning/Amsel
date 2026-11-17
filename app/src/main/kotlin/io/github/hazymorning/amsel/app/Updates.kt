@@ -17,6 +17,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -53,6 +54,8 @@ class Updates(
     private val scope: CoroutineScope,
     private val inFront: StateFlow<Boolean>,
     private val folder: File,
+    /** Whether a downloaded APK is Amsel under this app's own name and key. */
+    private val isOurs: (File) -> Boolean,
     private val openInstaller: (File) -> Boolean,
 ) {
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Unknown)
@@ -101,6 +104,11 @@ class Updates(
             _state.value = update
             if (apk == null) {
                 messages.show(R.string.update_not_downloaded, update.version) { install(update) }
+            } else if (!withContext(Dispatchers.IO) { isOurs(apk) }) {
+                // Another app's name or another key: Android would install it beside Amsel, or refuse it.
+                downloaded = null
+                folder.deleteRecursively()
+                messages.show(R.string.update_not_ours, update.version)
             } else {
                 inFront.first { it }
                 if (!openInstaller(apk)) messages.show(R.string.error_no_installer)
@@ -109,7 +117,7 @@ class Updates(
     }
 
     private suspend fun download(update: UpdateState.Available): File = withContext(Dispatchers.IO) {
-        if (!update.apk.startsWith(RELEASES)) throw IOException("Not one of Amsel's releases: ${update.apk}")
+        if (!isRelease(update.apk)) throw IOException("Not one of Amsel's releases: ${update.apk}")
         folder.deleteRecursively()
         if (!folder.isDirectory && !folder.mkdirs()) throw IOException("No room for the update in the cache")
         val part = File(folder, "amsel.apk.part")
@@ -181,7 +189,14 @@ class Updates(
         const val LATEST = "https://api.github.com/repos/hazymorning/Amsel/releases/latest"
 
         /** Where an asset of Amsel's releases downloads from; GitHub sends it on to its file host. */
-        const val RELEASES = "https://github.com/hazymorning/Amsel/releases/download/"
+        val RELEASE_PATH = listOf("hazymorning", "Amsel", "releases", "download")
+
+        /** An asset of Amsel's releases on GitHub, by its path once dot segments are resolved, not its text. */
+        fun isRelease(url: String): Boolean {
+            val parsed = url.toHttpUrlOrNull() ?: return false
+            return parsed.isHttps && parsed.host == "github.com" &&
+                parsed.pathSegments.take(RELEASE_PATH.size) == RELEASE_PATH
+        }
 
         /** Far over the 8 MB an APK may take (rule 6): what is larger is not Amsel. */
         const val MAX_BYTES = 64L * 1024 * 1024

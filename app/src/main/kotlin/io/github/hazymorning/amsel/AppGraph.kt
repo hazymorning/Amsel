@@ -3,6 +3,10 @@ package io.github.hazymorning.amsel
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.CERT_INPUT_RAW_X509
+import android.content.pm.PackageManager.PackageInfoFlags
+import android.os.Build
 import android.os.SystemClock
 import androidx.core.content.FileProvider
 import coil3.ImageLoader
@@ -227,6 +231,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             scope,
             data.session.foreground,
             app.cacheDir.resolve(UPDATE_FOLDER),
+            ::isOurs,
             ::openInstaller,
         )
     }
@@ -262,6 +267,25 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
                 DiskCache.Builder().directory(app.cacheDir.resolve("artwork")).maxSizeBytes(256L * 1024 * 1024).build()
             }
             .build()
+    }
+
+    /**
+     * Whether [apk] is Amsel under this app's name and signed with a key this app holds: Android
+     * keeps an update to the same name and key, but would install another name as a new app.
+     */
+    private fun isOurs(apk: File): Boolean {
+        val pm = app.packageManager
+        val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pm.getPackageArchiveInfo(apk.path, PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
+        } else {
+            // The flags as an Int are deprecated from API 33, where PackageInfoFlags replaces them.
+            @Suppress("DEPRECATION")
+            pm.getPackageArchiveInfo(apk.path, PackageManager.GET_SIGNING_CERTIFICATES)
+        } ?: return false
+        val signing = info.signingInfo ?: return false
+        val signers = with(signing) { if (hasMultipleSigners()) apkContentsSigners else signingCertificateHistory }
+        return info.packageName == app.packageName &&
+            signers.orEmpty().any { pm.hasSigningCertificate(app.packageName, it.toByteArray(), CERT_INPUT_RAW_X509) }
     }
 
     /**

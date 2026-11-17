@@ -66,6 +66,23 @@ class UpdatesTest {
             assertTrue(opened.tryReceive().isFailure)
         }
 
+    @Test fun aReleaseAddressThatLeadsElsewhereIsNeverFetched() = updating(
+        // Its text starts as Amsel's releases do; resolved, it is another repository's.
+        github(release(url = "$RELEASES../../../../evil/r/releases/download/v1/x.apk")),
+    ) {
+        updates.install(find())
+        assertEquals(R.string.update_not_downloaded, messages.pending.first { it.isNotEmpty() }.single().text)
+        assertTrue(asked.none { "/evil/" in it })
+        assertTrue(opened.tryReceive().isFailure)
+    }
+
+    @Test fun anUpdateNotSignedAsAmselIsNeverInstalled() = updating(github(), ours = false) {
+        updates.install(find())
+        assertEquals(R.string.update_not_ours, messages.pending.first { it.isNotEmpty() }.single().text)
+        assertTrue(opened.tryReceive().isFailure)
+        assertFalse(temp.root.resolve("update/amsel.apk").exists())
+    }
+
     @Test fun theInstallerWaitsUntilAmselIsInFront() = updating(github(), inFront = false) {
         val found = find()
         updates.install(found)
@@ -106,12 +123,17 @@ class UpdatesTest {
         }
     }
 
-    private fun updating(http: OkHttpClient, inFront: Boolean = true, block: suspend Run.() -> Unit) = runBlocking {
+    private fun updating(
+        http: OkHttpClient,
+        inFront: Boolean = true,
+        ours: Boolean = true,
+        block: suspend Run.() -> Unit,
+    ) = runBlocking {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val front = MutableStateFlow(inFront)
         val messages = Messages(MutableStateFlow(true))
         val opened = Channel<File>(Channel.UNLIMITED)
-        val updates = Updates(http, "2026.11.33", messages, scope, front, temp.root.resolve("update")) {
+        val updates = Updates(http, "2026.11.33", messages, scope, front, temp.root.resolve("update"), { ours }) {
             opened.trySend(it).isSuccess
         }
         try {
@@ -142,7 +164,8 @@ class UpdatesTest {
             """"size":${apk.size}}]}"""
 
     private companion object {
-        const val ASSET = "https://github.com/hazymorning/Amsel/releases/download/v2026.12.1/amsel-v2026.12.1.apk"
+        const val RELEASES = "https://github.com/hazymorning/Amsel/releases/download/"
+        const val ASSET = "${RELEASES}v2026.12.1/amsel-v2026.12.1.apk"
         val APK = "application/vnd.android.package-archive".toMediaType()
         val JSON = "application/json".toMediaType()
     }
