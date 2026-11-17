@@ -29,7 +29,7 @@ class DownloadsTest {
     private val abs = FakeAbs()
     private val root: File = Files.createTempDirectory("downloads").toFile()
     private val accounts = MemoryAbsAccounts()
-    private val client = AbsClient(OkHttpClient(), accounts)
+    private val client = AbsClient(OkHttpClient(), accounts, reachesHome = { true })
     private val network = FakeNetwork()
     private val wifiOnly = kotlinx.coroutines.flow.MutableStateFlow(false)
     private var started = 0
@@ -226,7 +226,7 @@ class DownloadsTest {
     ) {
         FakeAbs(listOf(FakeAbs.bytes(2_000_000, 1))).use { slow ->
             slow.chunkDelayMs = 10
-            val client = AbsClient(OkHttpClient(), MemoryAbsAccounts())
+            val client = AbsClient(OkHttpClient(), MemoryAbsAccounts(), reachesHome = { true })
             client.signIn(slow.url, "root", "pw")
             val downloads = Downloads(client, DownloadStore(root), network, wifiOnly, ::itemAt, {}, { 1_000L })
             downloads.add(BOOK)
@@ -258,7 +258,7 @@ class DownloadsTest {
 
     @Test fun `an address typed without a scheme is tried with https, then plain http`() = runBlocking(Dispatchers.IO) {
         // This test server answers a TLS hello with silence, where Audiobookshelf says 400 at once.
-        val quick = AbsClient(OkHttpClient.Builder().readTimeout(1, TimeUnit.SECONDS).build(), accounts)
+        val quick = AbsClient(OkHttpClient.Builder().readTimeout(1, TimeUnit.SECONDS).build(), accounts) { true }
         quick.signIn(abs.url.removePrefix("http://"), "root", "pw")
         assertEquals(abs.url, accounts.account.value?.url)
     }

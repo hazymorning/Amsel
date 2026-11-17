@@ -73,7 +73,7 @@ class AbsClient(
      * Whether plain http reaches the household's network from where the phone is now
      * ([io.github.hazymorning.amsel.data.Session.reachesHome]); https needs no such check.
      */
-    private val reachesHome: suspend () -> Boolean = { true },
+    private val reachesHome: suspend () -> Boolean,
 ) {
     private val refreshing = Mutex()
 

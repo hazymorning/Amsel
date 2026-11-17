@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -67,7 +66,7 @@ class HomeRepository(
     private val serverIds: Flow<String?>,
     scope: CoroutineScope,
     /** The speaker music plays on: Played here loads again for each new one. */
-    speakers: Flow<String?> = emptyFlow(),
+    speakers: Flow<String?>,
 ) : HomeSource {
     private val _layout = MutableStateFlow<HomeLayout?>(null)
     private val snapshot = AtomicFile(file)

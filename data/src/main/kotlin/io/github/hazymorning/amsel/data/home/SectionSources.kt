@@ -72,7 +72,7 @@ class SectionSources(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
     /** The speaker music plays on, by player id, which is its queue's id too. */
-    private val speaker: () -> String? = { null },
+    private val speaker: () -> String?,
 ) : SectionLoader {
     override suspend fun load(
         option: SectionOption,
