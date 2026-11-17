@@ -25,6 +25,8 @@ permissions:
 
 jobs:
   release:
+    # By hand too, only main's version is released: a working branch already carries its new VERSION.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
