@@ -173,6 +173,15 @@ interface LibraryDao {
         }
     }
 
+    @Query("SELECT * FROM items WHERE uri IN (:uris)")
+    suspend fun rowsIn(uris: List<String>): List<LibraryItemEntity>
+
+    /** The rows the index holds for [uris], by uri: any number of uris, a few hundred a query. */
+    suspend fun rowsOf(uris: Collection<String>): Map<String, LibraryItemEntity> = uris.distinct()
+        .chunked(URIS_PER_QUERY)
+        .flatMap { rowsIn(it) }
+        .associateBy { it.uri }
+
     @Query("SELECT uri, albumCovers FROM items WHERE uri IN (:uris) AND albumCovers IS NOT NULL")
     suspend fun heldCovers(uris: List<String>): List<HeldCovers>
 

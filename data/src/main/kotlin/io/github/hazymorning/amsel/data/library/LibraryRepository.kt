@@ -124,6 +124,9 @@ class LibraryRepository(
 
     suspend fun get(uri: String): LibraryItemEntity? = dao.get(uri)
 
+    /** The rows the index holds for [uris], by uri, in one lookup rather than one each. */
+    suspend fun rows(uris: Collection<String>): Map<String, LibraryItemEntity> = dao.rowsOf(uris)
+
     /** Every item in the index, again after each change to it, for Search's forgiving matches. */
     val everything: Flow<List<LibraryItemEntity>> = dao.observeAll()
 
