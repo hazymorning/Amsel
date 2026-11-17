@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,8 +40,6 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.rememberRetry
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 
 /**
  * A podcast: its cover and title as an album's, then its episodes, newest first. More come as the
@@ -165,10 +164,9 @@ fun PodcastRoute(navigator: Navigator, key: String, modifier: Modifier = Modifie
     }
     val state by vm.state.collectAsStateWithLifecycle()
     // This page's episodes alone: each step of a download elsewhere would draw the whole page again.
+    val all = graph.downloading.states.collectAsStateWithLifecycle()
     val keys = remember(state.episodes) { state.episodes.mapTo(HashSet()) { it.key } }
-    val states = graph.downloading.states
-    val downloads by remember(keys) { states.map { all -> all.filterKeys(keys::contains) }.distinctUntilChanged() }
-        .collectAsStateWithLifecycle(states.value.filterKeys(keys::contains))
+    val downloads by remember(keys) { derivedStateOf { all.value.filterKeys(keys::contains) } }
     PodcastScreen(
         state = state,
         onBack = { navigator.back() },
