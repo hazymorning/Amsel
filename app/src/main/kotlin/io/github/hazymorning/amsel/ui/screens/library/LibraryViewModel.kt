@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -73,8 +74,10 @@ class LibraryViewModel(
     private val kinds: Flow<List<LibraryKind>> = if (only != null) {
         flowOf(listOf(only))
     } else {
+        // Read once for the selection, the state and warm(), not once for each: it asks the index.
         combine(arranged, held, downloads.map { it.isNotEmpty() }.distinctUntilChanged(), ::libraryKinds)
             .distinctUntilChanged()
+            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
 
     // A chosen kind the library no longer holds, or the person no longer shows, gives way to the first chip.
