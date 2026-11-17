@@ -1,6 +1,7 @@
 package io.github.hazymorning.amsel.app
 
 import io.github.hazymorning.amsel.data.Prefs
+import io.github.hazymorning.amsel.ui.navigation.BarPlace
 import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,7 +42,7 @@ class Tips(
         val day = today()
         when {
             stored == null || stored.tipRestDay == day || left.restDay == day -> null
-            else -> Tip.entries.firstOrNull { it.id !in stored.tipsSeen && it.id !in left.ids }
+            else -> Tip.entries.firstOrNull { it.id !in stored.tipsSeen && it.id !in left.ids && it.applies(stored) }
         }
     }.stateIn(scope, SharingStarted.Eagerly, null)
 
@@ -55,3 +56,7 @@ class Tips(
 
     private data class Left(val ids: Set<String> = emptySet(), val restDay: Long? = null)
 }
+
+/** Settings' tip tells of the pull down, which opens them only while they have no place in the bar. */
+private fun Tip.applies(prefs: Prefs): Boolean =
+    this != Tip.Settings || BarPlace.Settings !in BarPlace.of(prefs.barPlaces)

@@ -23,6 +23,11 @@ import org.junit.Test
 class SettingsShots : ScreenshotTest() {
     @Test fun settings() = snap("settings", ShotVariant.entries) { Settings() }
 
+    /** Settings as a place of their own in the bar: the big title, no way back. */
+    @Test fun settingsPlace() = snap("settings_place", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        Settings(place = true)
+    }
+
     /** The page's end as the app shows it: the licence, and the blackbird on the dock's edge. */
     @Test fun foot() = snap(
         "settings_foot",
@@ -45,6 +50,7 @@ class SettingsShots : ScreenshotTest() {
     @Test fun bar() = snap("settings_bar", ShotVariant.entries) {
         val places = BarPlace.arrangement(null)
             .with(BarPlace.Search, on = false)
+            .with(BarPlace.Settings, on = false)
             .with(BarPlace.Albums, on = true)
             .with(BarPlace.Podcasts, on = true)
         AppShell(
@@ -185,14 +191,14 @@ class SettingsShots : ScreenshotTest() {
 }
 
 @Composable
-private fun Settings(account: AbsAccount? = null) = SettingsScreen(
+private fun Settings(account: AbsAccount? = null, place: Boolean = false) = SettingsScreen(
     SettingsUiState(
         userName = "Anna",
         serverName = "Home",
         serverAddress = "192.168.1.20",
         appVersion = "0.1.0",
     ),
-    onBack = {},
+    onBack = if (place) null else ({}),
     onOpenWebUi = {},
     onSignOut = {},
     downloads = DownloadSettings(account),

@@ -2,6 +2,8 @@ package io.github.hazymorning.amsel.ui.screens.settings
 
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.DpRect
@@ -41,6 +43,11 @@ class SettingsRowsTest {
         val button = bounds("Sign out")
         assertTrue("beside", button.left > name.right && button.top < name.bottom)
         compose.onNodeWithText("Sign out").performClick()
+        // It asks first: nothing is forgotten until the sheet's Sign out.
+        assertEquals(0, signedOut)
+        compose.onNodeWithText("Sign out?").assertExists()
+        compose.onAllNodesWithText("Sign out").onLast().performClick()
+        compose.waitForIdle()
         assertEquals(1, signedOut)
     }
 
@@ -52,6 +59,11 @@ class SettingsRowsTest {
         assertTrue("under", button.top > name.bottom)
         assertEquals("from the row's start", name.left.value, button.left.value, 1f)
         compose.onNodeWithText("Sign out").performClick()
+        // It asks first: nothing is forgotten until the sheet's Sign out.
+        assertEquals(0, signedOut)
+        compose.onNodeWithText("Sign out?").assertExists()
+        compose.onAllNodesWithText("Sign out").onLast().performClick()
+        compose.waitForIdle()
         assertEquals(1, signedOut)
     }
 }

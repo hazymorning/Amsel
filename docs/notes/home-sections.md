@@ -60,19 +60,23 @@ most"), never "Section 1". The layout never appears in the title.
 
 ## Defaults (a new user)
 
-1. Continue listening · Big (hidden while empty): upright cards in their cover's hue, the title
-   (or the title and its author), what is left and how far; a tap resumes, a long press opens its
-   actions. A Home stored before it
-   existed gets it once at the top when the library first holds audiobooks or podcasts.
-2. Pinned · Grid (hidden while empty; the first pin shows it)
-3. Recently played · Row ("Your albums" for a brand-new library, as today)
-4. Smart playlists · Row
-5. New in your library · Row
+1. Search · its field, with no heading
+2. Continue listening · Big, with no heading (hidden while empty): upright cards in their cover's
+   hue, the title (or the title and its author), what is left and how far; a tap resumes, a long
+   press opens its actions. A Home stored before it existed gets it once at the top when the
+   library first holds audiobooks or podcasts.
+3. Pinned · Grid (hidden while empty; the first pin shows it)
+4. Recently played · Row ("Your albums" for a brand-new library, as today)
+5. Your playlists · List
+6. New in your library · Row
+7. Artists you play most · Small
+8. Smart playlists · Row
+9. Radio, every station · Small
 
 ## Behaviour
 
-- Sections refresh by themselves after a play, a sync or a reconnect; a pull down at Home's top opens
-  Settings, not a refresh.
+- Sections refresh by themselves after a play, a sync or a reconnect; while Settings have no place in
+  the bar, a pull down at Home's top opens them, not a refresh.
 - Each section paints from its last snapshot on disk, then refreshes (no skeletons after the first run).
 - A section whose source returns nothing is hidden outside edit mode, and shows one quiet line in
   edit mode ("Nothing here yet").
