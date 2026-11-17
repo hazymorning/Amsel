@@ -54,10 +54,10 @@ interface PlaybackGraph {
      * Now Playing's heart for what plays: liked or not, and null where Now Playing leaves it out
      * (a guest, a book or an episode, nothing playing). The notification and the car show it too.
      */
-    val heart: StateFlow<Boolean?> get() = NoHeart
+    val heart: StateFlow<Boolean?>
 
     /** A tap on that heart. */
-    fun toggleHeart() {}
+    fun toggleHeart()
 
     /** The volume limit the person set, 0 for none: speakers' keys stop at it (see [RemotePlayer]). */
     fun volumeLimit(): Int = 0
@@ -129,7 +129,6 @@ interface PlaybackGraph {
         val instance: PlaybackGraph by lazy { provider() }
         private val NoSpeaker = MutableStateFlow<SpeakerSnapshot?>(null)
         private val Quiet = MutableStateFlow(false)
-        private val NoHeart = MutableStateFlow<Boolean?>(null)
     }
 }
 

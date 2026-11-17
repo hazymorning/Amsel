@@ -5,8 +5,7 @@ import io.github.hazymorning.amsel.api.Images
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaAuth
 import io.github.hazymorning.amsel.api.MaClient
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
@@ -319,10 +318,8 @@ class Session(
             if (wasConnected) {
                 try {
                     api.logout(3.seconds)
-                } catch (e: MaConnectionException) {
+                } catch (e: MaException) {
                     // Signed out here all the same; the server keeps the token until it expires.
-                } catch (e: MaCommandException) {
-                    // As above.
                 }
             }
         } finally {
@@ -413,9 +410,7 @@ class Session(
             synchronized(lock) { client.start(session.address, fresh, session.serverId) }
             // Not revoked, the old token lapses by itself within the 30 days it had left.
             api.revokeToken(session.token)
-        } catch (e: MaConnectionException) {
-            return
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             return
         }
     }

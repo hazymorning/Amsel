@@ -9,6 +9,8 @@ import java.net.ProxySelector
 import java.net.SocketAddress
 import java.net.URI
 import kotlinx.coroutines.runBlocking
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.Assert.assertEquals
@@ -77,5 +79,18 @@ class LocalCleartextTest {
     private companion object {
         const val REFUSED = "Plain http only reaches the local network"
         const val NOT_HERE = "Plain http is not allowed on this network"
+    }
+
+    @Test fun `plain http calls made one by one share a connection`() {
+        MockWebServer().use { server ->
+            server.start()
+            repeat(2) { server.enqueue(MockResponse.Builder().body("ok").build()) }
+            val client = OkHttpClient()
+            repeat(2) {
+                client.forUrl(server.url("/")).newCall(Request.Builder().url(server.url("/")).build()).execute()
+                    .use { it.body.string() }
+            }
+            assertEquals(listOf(0, 0), List(2) { server.takeRequest().connectionIndex })
+        }
     }
 }

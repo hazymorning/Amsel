@@ -4,8 +4,7 @@ import io.github.hazymorning.amsel.AppGraph
 import io.github.hazymorning.amsel.api.ItemPage
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.albumTracks
@@ -66,20 +65,20 @@ interface PageSource {
     val progress: Flow<ProgressUpdate>
 
     /** What the page of [key] showed last time, for its first paint; null when this phone holds none. */
-    suspend fun shown(key: String): ShownPage? = null
+    suspend fun shown(key: String): ShownPage?
 
     /** Keeps what the page of [key] now shows, for the next visit's first paint. */
-    suspend fun keep(key: String, page: ShownPage) = Unit
+    suspend fun keep(key: String, page: ShownPage)
 
     /** The index's album covers of each of the artists [keys] that has no picture; none it does not hold. */
-    suspend fun albumCovers(keys: List<String>): Map<String, List<String>> = emptyMap()
+    suspend fun albumCovers(keys: List<String>): Map<String, List<String>>
 }
 
 /** The real [PageSource]: the server, and the library index and the pages last shown for the first paint. */
 class ServerPageSource(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
-    private val memory: PageMemory? = null,
+    private val memory: PageMemory,
 ) : PageSource {
     override fun row(key: String): Flow<LibraryItemEntity?> = flow { emitAll(library().observeRow(key)) }
 
@@ -126,11 +125,9 @@ class ServerPageSource(
 
     override val progress: Flow<ProgressUpdate> = flow { emitAll(library().progress) }
 
-    override suspend fun shown(key: String): ShownPage? = memory?.read(key)
+    override suspend fun shown(key: String): ShownPage? = memory.read(key)
 
-    override suspend fun keep(key: String, page: ShownPage) {
-        memory?.write(key, page)
-    }
+    override suspend fun keep(key: String, page: ShownPage) = memory.write(key, page)
 
     override suspend fun albumCovers(keys: List<String>): Map<String, List<String>> = library().albumCovers(keys)
 
@@ -160,10 +157,7 @@ internal class Load {
 
     suspend fun <T> attempt(call: suspend () -> T): T? = try {
         call()
-    } catch (e: MaConnectionException) {
-        failure = failure ?: e
-        null
-    } catch (e: MaCommandException) {
+    } catch (e: MaException) {
         failure = failure ?: e
         null
     }

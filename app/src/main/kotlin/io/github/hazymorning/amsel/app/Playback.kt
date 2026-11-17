@@ -7,8 +7,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.RepeatMode
 import io.github.hazymorning.amsel.api.isEndlessMix
@@ -54,7 +53,7 @@ class Playback(
     private val local: LocalPlayback,
     private val scope: CoroutineScope,
     /** What helps around a play: a speaker that cannot be reached or is all the way down. */
-    private val hints: () -> Hints? = { null },
+    private val hints: () -> Hints,
 ) {
     private var connection: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
@@ -72,9 +71,7 @@ class Playback(
                     data.session.api.setVolume(id, level)
                     delay(VOLUME_EVERY_MS)
                     continue
-                } catch (e: MaConnectionException) {
-                    e
-                } catch (e: MaCommandException) {
+                } catch (e: MaException) {
                     e
                 }
                 playing.optimistic.clear(id)
@@ -165,7 +162,7 @@ class Playback(
         val target = graph.target.value
         val speaker = playing.speaker.value
         val replay = { play(uris, startItem, shuffle, option, title, startPositionMs) }
-        if (speaker.id == target.playerId && hints()?.unreachable(speaker, replay) == true) return
+        if (speaker.id == target.playerId && hints().unreachable(speaker, replay)) return
         val downloaded = uris.singleOrNull()?.takeIf { option == QueueOption.Replace && target.isPhone }
             ?.takeIf { data.downloads.manifest(it) != null }
         if (downloaded != null) return playDownload(downloaded, startPositionMs)
@@ -185,7 +182,7 @@ class Playback(
                 startPositionMs,
             ),
         )
-        hints()?.started()
+        hints().started()
     }
 
     /** Ends what This phone plays from its own files, if anything: the server's stream takes its place. */
@@ -204,9 +201,8 @@ class Playback(
             scope.launch {
                 try {
                     data.session.api.pause(phoneId)
-                } catch (e: MaConnectionException) {
+                } catch (e: MaException) {
                     // Held silent already; the server learns of it when it can.
-                } catch (e: MaCommandException) {
                 }
             }
         }
@@ -222,7 +218,7 @@ class Playback(
         val now = playing.nowPlaying.value
         if (now?.key == uri && now.isPlaying) return true
         if (parkedHere(uri)) control(PlayerControl.PlayPause) else play(listOf(uri), title = title)
-        title?.let { hints()?.spokenStarted(it) }
+        title?.let { hints().spokenStarted(it) }
         return false
     }
 
@@ -235,7 +231,7 @@ class Playback(
         } else {
             play(listOf(uri), title = title)
         }
-        if (!pauses) title?.let { hints()?.spokenStarted(it) }
+        if (!pauses) title?.let { hints().spokenStarted(it) }
     }
 
     /**
@@ -277,9 +273,7 @@ class Playback(
                 return@launch
             } catch (e: NoSuchElementException) {
                 return@launch messages.show(PlaybackR.string.browse_not_found)
-            } catch (e: MaConnectionException) {
-                e
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 e
             } catch (e: PhoneNotReadyException) {
                 e

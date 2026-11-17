@@ -31,4 +31,21 @@ class ConnectsTest {
     @Test fun stayingConnectedDoesNotReload() = runTest {
         assertEquals(listOf(anna), flowOf(anna, anna, SessionState.Waiting("Home")).connects().toList())
     }
+
+    @Test fun aSessionEndsWhenSignedOutOrRefusedNotAtTheStart() = runTest {
+        val states = flowOf(
+            // A start with nothing to restore, or a token the phone could not open: nothing ended.
+            SessionState.Restoring,
+            SessionState.NeedsSetup,
+            SessionState.Waiting(null),
+            anna,
+            // Signed out.
+            SessionState.NeedsSetup,
+            SessionState.Waiting(null),
+            SessionState.Offline("Home"),
+            // The token refused on a reconnect.
+            SessionState.NeedsSetup,
+        )
+        assertEquals(2, states.ends().toList().size)
+    }
 }

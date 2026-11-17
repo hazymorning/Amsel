@@ -10,7 +10,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -161,7 +163,10 @@ fun PodcastRoute(navigator: Navigator, key: String, modifier: Modifier = Modifie
         PodcastViewModel(key, graph.pageSource(), graph.mapper, graph.playing.playingUri, graph.messages)
     }
     val state by vm.state.collectAsStateWithLifecycle()
-    val downloads by graph.downloading.states.collectAsStateWithLifecycle()
+    // This page's episodes alone: each step of a download elsewhere would draw the whole page again.
+    val all = graph.downloading.states.collectAsStateWithLifecycle()
+    val keys = remember(state.episodes) { state.episodes.mapTo(HashSet()) { it.key } }
+    val downloads by remember(keys) { derivedStateOf { all.value.filterKeys(keys::contains) } }
     PodcastScreen(
         state = state,
         onBack = { navigator.back() },

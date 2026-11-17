@@ -121,12 +121,15 @@ data class HomeSection(
  * The person's Home on one server: its sentences in order, as many as they like, and the items
  * they pinned (uris, newest first). Every edit is a pure function that returns the new layout.
  * [listeningOffered] is false on a Home made before Continue listening existed, until it is offered.
+ * [stationsWidened] is false on a Home stored before every station became the default, until its
+ * stations as they came are read once as every station.
  */
 @Serializable
 data class HomeLayout(
     val sections: List<HomeSection> = DEFAULT_SECTIONS,
     val pinned: List<String> = emptyList(),
     val listeningOffered: Boolean = true,
+    val stationsWidened: Boolean = true,
 ) {
     fun isPinned(uri: String): Boolean = uri in pinned
 
@@ -281,14 +284,19 @@ data class HomeLayout(
             } ?: return HomeLayout()
             val pinned = (root["pinned"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
             val offered = (root["listeningOffered"] as? JsonPrimitive)?.booleanOrNull ?: false
-            return HomeLayout(sections, pinned.orEmpty(), offered).sanitized()
+            val widened = (root["stationsWidened"] as? JsonPrimitive)?.booleanOrNull ?: false
+            return HomeLayout(sections, pinned.orEmpty(), offered, widened).sanitized()
         }
     }
 
-    /** Unique ids and unique pins; the earlier default's favourite stations as every station. */
+    /**
+     * Unique ids and unique pins; once, the earlier default's favourite stations as every station.
+     * Favourite stations chosen since stay: the Home that chose them was stored widened.
+     */
     private fun sanitized(): HomeLayout = HomeLayout(
         sections = sections.distinctBy { it.id }.map {
-            if (it == FAVOURITE_STATIONS_AS_THEY_CAME) it.copy(option = SectionOption.AllStations) else it
+            val earlier = !stationsWidened && it == FAVOURITE_STATIONS_AS_THEY_CAME
+            if (earlier) it.copy(option = SectionOption.AllStations) else it
         },
         pinned = pinned.distinct(),
         listeningOffered = listeningOffered,

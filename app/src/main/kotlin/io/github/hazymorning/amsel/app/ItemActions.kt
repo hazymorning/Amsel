@@ -3,8 +3,7 @@ package io.github.hazymorning.amsel.app
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.endlessMixUri
 import io.github.hazymorning.amsel.api.setPlayed
@@ -225,9 +224,7 @@ class ItemActions(
                 val error = try {
                     api.setPlayed(item, name, played)
                     return@launch
-                } catch (e: MaConnectionException) {
-                    e
-                } catch (e: MaCommandException) {
+                } catch (e: MaException) {
                     e
                 }
                 messages.show(failureText(error), retry = { setPlayed(media, played) })
@@ -251,9 +248,7 @@ class ItemActions(
         scope.launch {
             try {
                 change()
-            } catch (e: MaCommandException) {
-                messages.show(failureText(e), retry = { send(change) })
-            } catch (e: MaConnectionException) {
+            } catch (e: MaException) {
                 messages.show(failureText(e), retry = { send(change) })
             }
         }

@@ -151,7 +151,8 @@ class Discovery(private val context: Context, private val http: OkHttpClient) {
                     override fun onResponse(call: Call, response: Response) = response.use {
                         cont.resume(
                             try {
-                                if (it.isSuccessful) it.body.string() else null
+                                // Read in part: anything on the network can announce itself and answer.
+                                if (it.isSuccessful) it.peekBody(MAX_INFO_BYTES).string() else null
                             } catch (e: IOException) {
                                 null
                             },
@@ -169,5 +170,8 @@ class Discovery(private val context: Context, private val http: OkHttpClient) {
 
     private companion object {
         const val SERVICE_TYPE = "_mass._tcp"
+
+        /** Far more than a server's info takes; past it, nothing is Music Assistant. */
+        const val MAX_INFO_BYTES = 64L * 1024
     }
 }

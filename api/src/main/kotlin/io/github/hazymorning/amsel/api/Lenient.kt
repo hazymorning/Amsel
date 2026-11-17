@@ -14,11 +14,14 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 
 /*
  * A provider can fill a field the models declare as int with a float, a string or a number far
@@ -124,7 +127,16 @@ internal object CreditSerializer : KSerializer<Credit> {
         else -> throw SerializationException("Not a credit: $element")
     }
 
-    override fun serialize(encoder: Encoder, value: Credit) = encoder.encodeString(value.name)
+    // As the server sends it, so a page kept on the phone reads back with its author's link.
+    override fun serialize(encoder: Encoder, value: Credit) {
+        val json = encoder as? JsonEncoder ?: return encoder.encodeString(value.name)
+        json.encodeJsonElement(
+            buildJsonObject {
+                put("name", value.name)
+                value.uri?.let { put("uri", it) }
+            },
+        )
+    }
 }
 
 internal object CreditList : SkipBad<Credit>(CreditSerializer)

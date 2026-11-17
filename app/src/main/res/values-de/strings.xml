@@ -71,5 +71,6 @@
     <string name="update_out">Amsel %1$s ist da</string>
     <string name="update_downloading">Amsel %1$s wird geladen</string>
     <string name="update_not_downloaded">Amsel %1$s konnte nicht geladen werden</string>
+    <string name="update_not_ours">Amsel %1$s wurde nicht installiert: Es ist nicht wie Amsel signiert</string>
     <string name="error_no_installer">Der Installer von Android ließ sich nicht öffnen</string>
 </resources>

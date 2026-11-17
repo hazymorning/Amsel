@@ -66,25 +66,27 @@ fun ChapterRow(
 /**
  * Every chapter as a [ChapterRow], their numbers in one column [leadWidth] wide ([numberLeadWidth]);
  * [current] is the index of the chapter the person is in ([playing] while it plays), with what is
- * [left] of it; those before it are heard.
+ * [left] of it; those before it are heard. Both are read in the rows, so the list is not built anew
+ * each second while a book plays, and only the current row reads what is left.
  */
 fun LazyListScope.chapterRows(
     chapters: List<ChapterUi>,
-    current: Int,
+    current: () -> Int,
     playing: Boolean,
-    left: Int?,
+    left: () -> Int?,
     leadWidth: Dp,
     onClick: (ChapterUi) -> Unit,
 ) {
     itemsIndexed(chapters, key = { i, _ -> "chapter_$i" }, contentType = { _, _ -> "chapter" }) { i, chapter ->
+        val at = current()
         ChapterRow(
             chapter,
-            current = i == current,
-            playing = i == current && playing,
+            current = i == at,
+            playing = i == at && playing,
             onClick = { onClick(chapter) },
             leadWidth = leadWidth,
-            left = left.takeIf { i == current },
-            heard = i < current,
+            left = if (i == at) left() else null,
+            heard = i < at,
         )
     }
 }

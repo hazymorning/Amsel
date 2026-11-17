@@ -46,7 +46,7 @@ class MainThreadTest {
     }
 
     @Test fun `signing in, downloading and progress read nothing on the calling thread`() = runBlocking(main) {
-        val client = AbsClient(OkHttpClient.Builder().eventListener(listener).build(), MemoryAbsAccounts())
+        val client = AbsClient(OkHttpClient.Builder().eventListener(listener).build(), MemoryAbsAccounts()) { true }
         val item = MediaItem(
             "book1",
             "library",

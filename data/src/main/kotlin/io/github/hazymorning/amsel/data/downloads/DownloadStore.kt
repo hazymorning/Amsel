@@ -23,7 +23,6 @@ data class DownloadManifest(
     val durationSec: Double = 0.0,
     val files: List<DownloadFile> = emptyList(),
     val chapters: List<DownloadChapter> = emptyList(),
-    val hasCover: Boolean = false,
     /** Every file is in place; until then the download goes on, also after a restart. */
     val complete: Boolean = false,
     val addedAt: Long = 0,

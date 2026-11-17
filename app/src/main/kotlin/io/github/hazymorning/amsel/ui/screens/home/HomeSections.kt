@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,13 +68,19 @@ internal fun Sections(
     // What the list shows between the bar and the dock, so a carried pin scrolls it at those edges.
     var listBox by remember { mutableStateOf(Rect.Zero) }
     val density = LocalDensity.current
-    val shown = with(density) { insets.calculateTopPadding().toPx() to insets.calculateBottomPadding().toPx() }
-    val home = ScrollRoom(list, vertical = true) {
-        listBox.copy(top = listBox.top + shown.first, bottom = listBox.bottom - shown.second)
+    val shown by rememberUpdatedState(
+        with(density) { insets.calculateTopPadding().toPx() to insets.calculateBottomPadding().toPx() },
+    )
+    // One for the list's life: a new one at each recomposition would keep every section from skipping.
+    val home = remember(list) {
+        ScrollRoom(list, vertical = true) {
+            listBox.copy(top = listBox.top + shown.first, bottom = listBox.bottom - shown.second)
+        }
     }
-    val byId = state.visible.associateBy { it.id }
+    val byId = remember(state.visible) { state.visible.associateBy { it.id } }
+    val ids = remember(byId) { byId.keys.toList() }
     // The order while a drag swaps sections; the stored order replaces it once the drop is saved.
-    var order by remember(byId.keys.toList()) { mutableStateOf(byId.keys.toList()) }
+    var order by remember(ids) { mutableStateOf(ids) }
     val reorder = rememberReorderable(
         list,
         movable = { it in byId },

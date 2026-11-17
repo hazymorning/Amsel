@@ -1,16 +1,17 @@
-# Nest lining
-
-## New
-
-- **Settings in the bottom bar:** a place of their own at the end of the bar. Hidden there, a pull down on Home opens them instead, as the bar's page says.
-- **A fuller Home to start with:** Search and Continue listening at the top without headings, then recently played, your playlists as a list, new albums, the artists you play most, smart playlists and radio. Reset Home brings it to an existing Home.
+# Preening
 
 ## Better
 
-- **Settings:** a glyph before every row, and each row says what it holds now: the sleep timer's ways, whether the server answers, storage used by downloads, and a dot when an update waits. Signing out asks first.
-- **Switches** click under your finger, everywhere.
+- **Safer:** whatever answers at your server's address can no longer sign you out. An update installs only when it is Amsel's own, signed with Amsel's key.
+- **Signing out forgets more:** recent searches, bookmarks and cached covers go with the session.
+- **Lighter:** search asks the server at once; Home, See all, the Library and the book and podcast pages do less work while music plays or downloads run.
 
 ## Fixed
 
-- With nothing playing, TalkBack can now open the speaker choice from the mini player.
-- Long names and notes on the arrange pages wrap instead of being cut off.
+- A start that could not open the stored sign-in deleted your downloads.
+- A downloaded book briefly played from its beginning, and a pause or stop then could lose your place.
+- The sleep timer could miss its pause after one failed volume step.
+- Favourite stations chosen on Home turned back into every station.
+- A bookmark in another book could miss its place.
+- A song added to the open playlist did not show.
+- The letter scrubber works again after switching kinds.

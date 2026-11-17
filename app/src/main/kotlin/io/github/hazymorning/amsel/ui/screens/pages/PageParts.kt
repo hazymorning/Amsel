@@ -70,7 +70,7 @@ import io.github.hazymorning.amsel.ui.theme.isNight
 import io.github.hazymorning.amsel.ui.theme.rememberCoverColors
 import io.github.hazymorning.amsel.ui.theme.secondLine
 
-internal enum class PageSlot { Art, Title, Actions, Header, Track, Shelf, Tile, AlbumRow, Message }
+internal enum class PageSlot { Art, Title, Actions, Header, Track, Shelf, AlbumRow, Message }
 
 /** Index of the title item in every page's list; the bar shows the title once it has scrolled away. */
 private const val TITLE_INDEX = 1

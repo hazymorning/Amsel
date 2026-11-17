@@ -71,6 +71,9 @@ class PlaylistViewModel(
                 when (edit) {
                     is PlaylistEdit.Removed -> removed(edit.position)
 
+                    // What was added shows once the playlist is read again; its rows stay meanwhile.
+                    is PlaylistEdit.Added -> load()
+
                     // The rows no longer show what the server holds: they load again, and a
                     // failed load says so instead of keeping the trimmed list.
                     is PlaylistEdit.Failed -> {

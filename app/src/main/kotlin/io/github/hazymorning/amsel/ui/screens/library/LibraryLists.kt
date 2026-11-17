@@ -97,17 +97,17 @@ internal fun RowList(
         ) {
             header(header)
             items(state.items, key = { it.key }, contentType = { "row" }) { item ->
-                // Playlists and artists never carry the ring: what plays and its album, book or podcast do.
                 MediaRow(
                     item,
                     onClick = { onOpen(item) },
                     onMore = { onMore(item) },
                     itemActions,
+                    playing = item.key in state.playing,
                     subtitle = if (twoLines) item.secondLine() else null,
                 )
             }
         }
-        if (scrubber) LetterScrubber(state.letters, listState, headerItems = 1)
+        if (scrubber) LetterScrubber(state.letters, listState)
     }
 }
 
@@ -143,7 +143,7 @@ internal fun CoverGrid(
                 )
             }
         }
-        if (scrubber) LetterScrubber(state.letters, gridState, headerItems = 1)
+        if (scrubber) LetterScrubber(state.letters, gridState)
     }
 }
 
@@ -160,14 +160,14 @@ internal fun KindEmptyState(
     modifier: Modifier,
     itemActions: Modifier,
 ) {
-    val (icon, message) = when (kind) {
-        LibraryKind.Playlists -> R.drawable.ic_playlist to R.string.library_empty_playlists
-        LibraryKind.Albums -> R.drawable.ic_album to R.string.library_empty_albums
-        LibraryKind.Artists -> R.drawable.ic_artist to R.string.library_empty_artists
-        LibraryKind.Audiobooks -> R.drawable.ic_audiobook to R.string.library_empty_audiobooks
-        LibraryKind.Podcasts -> R.drawable.ic_podcast to R.string.library_empty_podcasts
-        LibraryKind.Radio -> R.drawable.ic_radio to R.string.library_empty_radio
-        LibraryKind.Downloads -> R.drawable.ic_download to R.string.library_empty_downloads
+    val message = when (kind) {
+        LibraryKind.Playlists -> R.string.library_empty_playlists
+        LibraryKind.Albums -> R.string.library_empty_albums
+        LibraryKind.Artists -> R.string.library_empty_artists
+        LibraryKind.Audiobooks -> R.string.library_empty_audiobooks
+        LibraryKind.Podcasts -> R.string.library_empty_podcasts
+        LibraryKind.Radio -> R.string.library_empty_radio
+        LibraryKind.Downloads -> R.string.library_empty_downloads
     }
     val action = if (kind == LibraryKind.Playlists ||
         kind == LibraryKind.Downloads
@@ -180,7 +180,7 @@ internal fun KindEmptyState(
         Column(Modifier.verticalScroll(rememberScrollState()).fillMaxWidth().height(maxHeight).padding(insets)) {
             header.Content(sortable = false)
             EmptyState(
-                icon,
+                kind.icon,
                 stringResource(message),
                 Modifier.fillMaxWidth().weight(1f),
                 actionLabel = action,

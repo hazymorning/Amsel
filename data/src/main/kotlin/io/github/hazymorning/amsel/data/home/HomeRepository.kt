@@ -1,8 +1,7 @@
 package io.github.hazymorning.amsel.data.home
 
 import android.util.AtomicFile
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MaJson
 import java.io.File
 import java.io.IOException
@@ -21,7 +20,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -68,7 +66,7 @@ class HomeRepository(
     private val serverIds: Flow<String?>,
     scope: CoroutineScope,
     /** The speaker music plays on: Played here loads again for each new one. */
-    speakers: Flow<String?> = emptyFlow(),
+    speakers: Flow<String?>,
 ) : HomeSource {
     private val _layout = MutableStateFlow<HomeLayout?>(null)
     private val snapshot = AtomicFile(file)
@@ -273,10 +271,8 @@ class HomeRepository(
         val from = previous.takeUnless { option == SectionOption.RandomAlbums }
         val (loaded, failure) = try {
             sources.load(option, SNAPSHOT_ITEMS, layout.pinned, from) to null
-        } catch (e: MaConnectionException) {
+        } catch (e: MaException) {
             // A first load that fails shows the section as empty rather than loading for ever.
-            (previous ?: SectionItems()) to e
-        } catch (e: MaCommandException) {
             (previous ?: SectionItems()) to e
         }
         _items.update { (it ?: emptyMap()) + (option to loaded) }

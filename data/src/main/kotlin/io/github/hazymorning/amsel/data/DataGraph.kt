@@ -11,9 +11,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import io.github.hazymorning.amsel.api.ItemUri
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MaEvent
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.PlayProgress
 import io.github.hazymorning.amsel.api.ServerInfo
@@ -38,9 +37,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -48,6 +50,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
@@ -72,7 +75,7 @@ class DataGraph(
     /** The networks the phone is on; the app's, as its http client follows [PhoneNetwork.plainHttpAllowed] too. */
     network: PhoneNetwork,
     /** Starts the service that runs [Downloads.work]; the app's, as the service is not this module's. */
-    startDownloads: () -> Unit = {},
+    startDownloads: () -> Unit,
 ) {
     private val app = context.applicationContext
     val prefs = AppPrefs(app, scope)
@@ -121,6 +124,11 @@ class DataGraph(
     private val indexRefresh = Debounced()
     private val librarySync = Debounced()
     private val extrasReload = Debounced()
+    private val _ended = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Each time a session has ended and the server's data is gone: what the app keeps of it goes too. */
+    val ended: SharedFlow<Unit> = _ended.asSharedFlow()
+
     private val _permissions = MutableStateFlow(EVERYTHING)
 
     /** What the user may change; everything until the server says otherwise, so nothing flickers. */
@@ -157,7 +165,12 @@ class DataGraph(
         }
         // A session that ends, signed out or its token refused, takes its server's data with it:
         // the next one may be another server or another person.
-        scope.launch { session.state.filter { it == SessionState.NeedsSetup }.collect { clear() } }
+        scope.launch {
+            session.state.ends().collect {
+                clear()
+                _ended.emit(Unit)
+            }
+        }
         // Events are not replayed after a reconnect: reload what they would have told us.
         scope.launch {
             session.state.connects().collect { ready ->
@@ -205,9 +218,11 @@ class DataGraph(
         }
         // A book or episode just finished or marked leaves Continue listening before Home reloads.
         scope.launch { library.progress.collect { if (it.fullyPlayed) home.finished(it.uri) } }
+        // The speakers on their own: they change in memory at once, while the library writes to its
+        // index, which a provider's sync floods with events; behind it a pause would wait its turn.
+        scope.launch { session.client.events.collect { speakers.onEvent(it) } }
         scope.launch {
             session.client.events.collect { event ->
-                speakers.onEvent(event)
                 val indexChanged = library.onEvent(event)
                 val ready = session.state.value as? SessionState.Ready
                 if (event.name == "music_sync_completed" && ready != null) resyncLibrarySoon(ready.server)
@@ -240,9 +255,7 @@ class DataGraph(
         _speakersFailure.value = try {
             speakers.refresh()
             null
-        } catch (e: MaConnectionException) {
-            e
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             e
         }
     }
@@ -342,3 +355,16 @@ internal fun refreshesHome(event: MaEvent, userId: String?): Boolean {
  */
 internal fun Flow<SessionState>.connects(): Flow<SessionState.Ready> =
     map { it as? SessionState.Ready }.distinctUntilChanged().filterNotNull()
+
+/**
+ * Each time a session ends: Setup after any state but the start's own. Setup straight from the
+ * start ended nothing (nothing stored yet, or a token the phone could not open), so it forgets
+ * nothing, least of all the downloads.
+ */
+internal fun Flow<SessionState>.ends(): Flow<Unit> = flow {
+    var before: SessionState = SessionState.Restoring
+    collect { now ->
+        if (now == SessionState.NeedsSetup && before != SessionState.Restoring && before != now) emit(Unit)
+        before = now
+    }
+}

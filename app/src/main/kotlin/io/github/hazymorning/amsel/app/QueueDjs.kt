@@ -2,7 +2,7 @@ package io.github.hazymorning.amsel.app
 
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.QueueDj
 import io.github.hazymorning.amsel.api.orNullOnFailure
 import io.github.hazymorning.amsel.data.Extras
@@ -67,9 +67,7 @@ class QueueDjs(
                 val error = try {
                     extras.setDj(queueId, hostId)
                     null
-                } catch (e: MaConnectionException) {
-                    e
-                } catch (e: MaCommandException) {
+                } catch (e: MaException) {
                     e
                 }
                 asked.update { if (it[queueId] === pick) it - queueId else it }

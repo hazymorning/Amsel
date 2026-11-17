@@ -20,6 +20,8 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -113,15 +115,20 @@ class SearchViewModel(
         }
     }
 
-    private suspend fun answer(q: String): SearchEvent {
-        // The first search after coming back waits for the index.
-        val ready = index.filterNotNull().first()
-        val near = withContext(background) { ready.near(Fuzzy.words(q), NEAR_MATCHES) }
-        return try {
+    private suspend fun answer(q: String): SearchEvent = coroutineScope {
+        // The server is asked at once; the library answers beside it, the first search after coming
+        // back once its index is read.
+        val library = async {
+            val ready = index.filterNotNull().first()
+            ready to withContext(background) { ready.near(Fuzzy.words(q), NEAR_MATCHES) }
+        }
+        try {
             val raw = search(q)
+            val (ready, near) = library.await()
             SearchEvent.Found(searchResults(q, raw, mapper, ready.covers).withNear(near))
         } catch (e: MaConnectionException) {
             // The library answers alone while the server cannot.
+            val near = library.await().second
             if (near.isNotEmpty()) {
                 SearchEvent.Found(
                     SearchResultsUi(q).withNear(near),
@@ -130,6 +137,7 @@ class SearchViewModel(
                 SearchEvent.Failed(q, failureText(e))
             }
         } catch (e: MaCommandException) {
+            library.cancel()
             SearchEvent.Failed(q, R.string.search_failed)
         }
     }
