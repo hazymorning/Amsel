@@ -75,7 +75,7 @@ class DataGraph(
     /** The networks the phone is on; the app's, as its http client follows [PhoneNetwork.plainHttpAllowed] too. */
     network: PhoneNetwork,
     /** Starts the service that runs [Downloads.work]; the app's, as the service is not this module's. */
-    startDownloads: () -> Unit = {},
+    startDownloads: () -> Unit,
 ) {
     private val app = context.applicationContext
     val prefs = AppPrefs(app, scope)
