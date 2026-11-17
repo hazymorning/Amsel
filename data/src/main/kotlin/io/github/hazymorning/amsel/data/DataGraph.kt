@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
@@ -156,7 +157,7 @@ class DataGraph(
         }
         // A session that ends, signed out or its token refused, takes its server's data with it:
         // the next one may be another server or another person.
-        scope.launch { session.state.filter { it == SessionState.NeedsSetup }.collect { clear() } }
+        scope.launch { session.state.ends().collect { clear() } }
         // Events are not replayed after a reconnect: reload what they would have told us.
         scope.launch {
             session.state.connects().collect { ready ->
@@ -339,3 +340,16 @@ internal fun refreshesHome(event: MaEvent, userId: String?): Boolean {
  */
 internal fun Flow<SessionState>.connects(): Flow<SessionState.Ready> =
     map { it as? SessionState.Ready }.distinctUntilChanged().filterNotNull()
+
+/**
+ * Each time a session ends: Setup after any state but the start's own. Setup straight from the
+ * start ended nothing (nothing stored yet, or a token the phone could not open), so it forgets
+ * nothing, least of all the downloads.
+ */
+internal fun Flow<SessionState>.ends(): Flow<Unit> = flow {
+    var before: SessionState = SessionState.Restoring
+    collect { now ->
+        if (now == SessionState.NeedsSetup && before != SessionState.Restoring && before != now) emit(Unit)
+        before = now
+    }
+}
