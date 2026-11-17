@@ -62,6 +62,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.OkHttpClient
 
@@ -88,7 +89,18 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     val data: DataGraph by lazy {
-        DataGraph(app, http, scope, vault, network, startDownloads = { DownloadService.start(app) }).also { it.start() }
+        DataGraph(app, http, scope, vault, network, startDownloads = { DownloadService.start(app) }).also {
+            it.start()
+            scope.launch { it.ended.collect { forgetSession() } }
+        }
+    }
+
+    /** What one person searched, marked and saw goes with their session: the next may be another. */
+    private suspend fun forgetSession() {
+        recentSearches.clear()
+        bookmarks.clear()
+        imageLoader.memoryCache?.clear()
+        withContext(Dispatchers.IO) { imageLoader.diskCache?.clear() }
     }
 
     /** Downloads playing on this phone, built on first use. */

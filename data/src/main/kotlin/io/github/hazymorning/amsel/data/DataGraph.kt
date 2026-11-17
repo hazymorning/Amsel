@@ -37,9 +37,12 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -121,6 +124,11 @@ class DataGraph(
     private val indexRefresh = Debounced()
     private val librarySync = Debounced()
     private val extrasReload = Debounced()
+    private val _ended = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Each time a session has ended and the server's data is gone: what the app keeps of it goes too. */
+    val ended: SharedFlow<Unit> = _ended.asSharedFlow()
+
     private val _permissions = MutableStateFlow(EVERYTHING)
 
     /** What the user may change; everything until the server says otherwise, so nothing flickers. */
@@ -157,7 +165,12 @@ class DataGraph(
         }
         // A session that ends, signed out or its token refused, takes its server's data with it:
         // the next one may be another server or another person.
-        scope.launch { session.state.ends().collect { clear() } }
+        scope.launch {
+            session.state.ends().collect {
+                clear()
+                _ended.emit(Unit)
+            }
+        }
         // Events are not replayed after a reconnect: reload what they would have told us.
         scope.launch {
             session.state.connects().collect { ready ->

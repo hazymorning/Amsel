@@ -80,6 +80,8 @@ class Bookmarks(
 
     fun remove(id: Long) = store.change { all -> all.filterNot { it.id == id } }
 
+    fun clear() = store.change { emptyList() }
+
     fun setNote(id: Long, note: String) = store.change { all ->
         all.map { if (it.id == id) it.copy(note = note.trim()) else it }
     }
