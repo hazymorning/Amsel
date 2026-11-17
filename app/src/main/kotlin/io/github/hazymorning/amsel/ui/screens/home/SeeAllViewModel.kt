@@ -4,8 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.data.home.HomeItem
 import io.github.hazymorning.amsel.data.home.HomeSource
 import io.github.hazymorning.amsel.data.home.SectionItems
@@ -67,9 +66,7 @@ class SeeAllViewModel(
         asking = viewModelScope.launch {
             val loaded = try {
                 load(option)
-            } catch (e: MaConnectionException) {
-                return@launch failed(e)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 return@launch failed(e)
             }
             // A whole library maps off the main thread.

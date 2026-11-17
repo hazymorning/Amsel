@@ -87,12 +87,15 @@ private fun LetterScrubber(
 ) {
     val jump by rememberUpdatedState(onJump)
     val stop by rememberUpdatedState(onHold)
+    // Another kind brings its own list: what is remembered below reads the one shown now.
+    val position by rememberUpdatedState(progress)
+    val first by rememberUpdatedState(firstVisible)
     val current by remember(letters) {
-        derivedStateOf { letters.indexOfLast { it.index <= firstVisible() }.coerceAtLeast(0) }
+        derivedStateOf { letters.indexOfLast { it.index <= first() }.coerceAtLeast(0) }
     }
     var held by remember { mutableStateOf<Int?>(null) }
     var heldFraction by remember { mutableFloatStateOf(0f) }
-    val moving by remember { derivedStateOf { scrolling() } }
+    val moving = scrolling()
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(moving, held) {
         if (moving || held != null) {
@@ -138,7 +141,7 @@ private fun LetterScrubber(
                 },
         )
         // Read while placing, so a moving list repositions the thumb without recomposing.
-        fun thumbY(): Int = ((if (held != null) heldFraction else progress().coerceIn(0f, 1f)) * travel).roundToInt()
+        fun thumbY(): Int = ((if (held != null) heldFraction else position().coerceIn(0f, 1f)) * travel).roundToInt()
         Box(
             Modifier
                 .align(Alignment.TopEnd)
@@ -162,7 +165,7 @@ private fun LetterScrubber(
                             val down = awaitFirstDown()
                             down.consume()
                             stop()
-                            heldFraction = progress().coerceIn(0f, 1f)
+                            heldFraction = position().coerceIn(0f, 1f)
                             held = current
                             // The gesture restarts when the letters change, so the hold ends with it either way.
                             try {
@@ -202,14 +205,9 @@ private fun LetterScrubber(
     }
 }
 
-/** The scrubber for a list whose first [headerItems] items come before the letters' items. */
+/** The scrubber for the library's list, whose header is its first item. */
 @Composable
-internal fun BoxScope.LetterScrubber(
-    letters: List<LetterJump>,
-    state: LazyListState,
-    headerItems: Int,
-    modifier: Modifier = Modifier,
-) {
+internal fun BoxScope.LetterScrubber(letters: List<LetterJump>, state: LazyListState, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     LetterScrubber(
         letters,
@@ -219,21 +217,16 @@ internal fun BoxScope.LetterScrubber(
             val last = (info.totalItemsCount - info.visibleItemsInfo.size).coerceAtLeast(1)
             state.firstVisibleItemIndex.toFloat() / last
         },
-        firstVisible = { state.firstVisibleItemIndex - headerItems },
-        onJump = { scope.launch { state.scrollToItem(it.index + headerItems) } },
+        firstVisible = { state.firstVisibleItemIndex - HEADER_ITEMS },
+        onJump = { scope.launch { state.scrollToItem(it.index + HEADER_ITEMS) } },
         onHold = { scope.launch { state.stopScroll() } },
         modifier = modifier.align(Alignment.TopEnd),
     )
 }
 
-/** The scrubber for a grid whose first [headerItems] items come before the letters' items. */
+/** The scrubber for the library's grid, whose header is its first item. */
 @Composable
-internal fun BoxScope.LetterScrubber(
-    letters: List<LetterJump>,
-    state: LazyGridState,
-    headerItems: Int,
-    modifier: Modifier = Modifier,
-) {
+internal fun BoxScope.LetterScrubber(letters: List<LetterJump>, state: LazyGridState, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     LetterScrubber(
         letters,
@@ -243,8 +236,8 @@ internal fun BoxScope.LetterScrubber(
             val last = (info.totalItemsCount - info.visibleItemsInfo.size).coerceAtLeast(1)
             state.firstVisibleItemIndex.toFloat() / last
         },
-        firstVisible = { state.firstVisibleItemIndex - headerItems },
-        onJump = { scope.launch { state.scrollToItem(it.index + headerItems) } },
+        firstVisible = { state.firstVisibleItemIndex - HEADER_ITEMS },
+        onJump = { scope.launch { state.scrollToItem(it.index + HEADER_ITEMS) } },
         onHold = { scope.launch { state.stopScroll() } },
         modifier = modifier.align(Alignment.TopEnd),
     )
@@ -279,3 +272,6 @@ internal fun indexLetter(name: String): String {
     val base = Normalizer.normalize(first.toString(), Normalizer.Form.NFD).first()
     return if (base.isLetter()) base.uppercaseChar().toString() else "#"
 }
+
+/** The library's header stands before the letters' items, as its list's first item. */
+private const val HEADER_ITEMS = 1

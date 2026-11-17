@@ -26,6 +26,7 @@ import java.io.IOException
 import kotlin.math.roundToLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -78,6 +79,12 @@ class LocalPlayback(
 
     /** The cover of what [now] holds, looked up once. */
     private var cover: Uri? = null
+
+    /** Finds the place to start what was just loaded; until it has, that item's place is not known. Main thread. */
+    private var resuming: Job? = null
+
+    /** Whether what was just loaded starts once at its place: a pause meanwhile says no. Main thread. */
+    private var startWhenResumed = false
     private val _now = MutableStateFlow<LocalPlaying?>(null)
 
     /** What plays from the phone's downloads; null when nothing is loaded. */
@@ -117,22 +124,31 @@ class LocalPlayback(
                 saves.save(send = true)
                 saves.stop()
             }
+            resuming?.cancel()
             cover = art
+            // Not from its start while its place is looked up, as the last item's play would have it.
+            exo.playWhenReady = false
             exo.setMediaSource(source)
             exo.prepare()
             publish(manifest)
-            scope.launch(Dispatchers.Main.immediate) {
-                val at = startMs ?: resumeAt(manifest)
-                if (_now.value?.manifest?.uri == uri) exo.seekTo(at)
-                exo.play()
+            startWhenResumed = true
+            resuming = scope.launch(Dispatchers.Main.immediate) {
+                exo.seekTo(startMs ?: resumeAt(manifest))
+                resuming = null
+                if (startWhenResumed) exo.play()
             }
+        } else if (resuming != null && startMs == null) {
+            startWhenResumed = true
         } else {
+            resuming?.cancel()
+            resuming = null
             startMs?.let(exo::seekTo)
             exo.play()
         }
     }
 
     fun pause() {
+        startWhenResumed = false
         exo?.pause()
     }
 
@@ -148,6 +164,8 @@ class LocalPlayback(
     }
 
     private fun release() {
+        resuming?.cancel()
+        resuming = null
         val exo = exo ?: return
         saves.stop()
         _now.value = null
@@ -244,6 +262,7 @@ class LocalPlayback(
 
     /** Where the person is in what is loaded. Main thread. */
     private fun place(): DownloadPlace? {
+        if (resuming != null) return null
         val exo = exo ?: return null
         val manifest = _now.value?.manifest ?: return null
         val finished = exo.playbackState == Player.STATE_ENDED
@@ -262,6 +281,16 @@ class LocalPlayback(
         }
 
         override fun isCommandAvailable(command: Int): Boolean = availableCommands.contains(command)
+
+        // From the notification, a headset or a car: while the place is looked up, they say whether it starts there.
+        override fun play() {
+            if (resuming != null) startWhenResumed = true else super.play()
+        }
+
+        override fun pause() {
+            startWhenResumed = false
+            super.pause()
+        }
 
         override fun seekToNext() {
             Chapters.nextStart(starts, currentPosition)?.let(::seekTo)

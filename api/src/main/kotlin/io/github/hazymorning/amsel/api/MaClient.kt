@@ -1,5 +1,6 @@
 package io.github.hazymorning.amsel.api
 
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
@@ -131,10 +132,13 @@ public class MaClient(
         var failures = 0
         var strangers = 0
         while (true) {
-            val s = MaSocket(http, address) { _events.tryEmit(it) }
+            // Events count once the socket has named this server; anything said before is a stranger's.
+            val ours = AtomicBoolean(false)
+            val s = MaSocket(http, address) { if (ours.get()) _events.tryEmit(it) }
             try {
                 val info = s.open()
                 if (info.serverId == serverId) {
+                    ours.set(true)
                     strangers = 0
                     if (!Schema.isSupported(info.schemaVersion)) return publish(ConnectionState.Unsupported)
                     val user = authenticate(s, token)
@@ -182,7 +186,8 @@ public class MaClient(
     }
 }
 
+/** Signs [socket] in with [token]; a user this app cannot read is no user, never a failed connection. */
 internal suspend fun authenticate(socket: MaSocket, token: String): MaUser? {
     val result = socket.call("auth", buildJsonObject { put("token", token) }) as? JsonObject
-    return result?.get("user")?.let { MaJson.decodeFromJsonElement(MaUser.serializer(), it) }
+    return result?.get("user")?.let { decodeLeniently(MaUser.serializer(), it) }
 }

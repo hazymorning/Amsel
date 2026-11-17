@@ -117,4 +117,20 @@ class MaSocketTest {
             }
         }
     }
+
+    @Test fun `a refusal before any server info is no word from the server`() = runBlocking {
+        val refusal = buildJsonObject {
+            put("message_id", "connection")
+            put("error_code", MaCommandException.ERROR_AUTHENTICATION_REQUIRED)
+            put("details", "Authentication required")
+        }
+        FakeMaServer(first = listOf(refusal)) { _, _ -> emptyList() }.use { fake ->
+            try {
+                MaSocket(http, fake.address).open()
+                fail("expected an error")
+            } catch (e: MaConnectionException) {
+                // Not a MaCommandException: nothing a client would take for a refused token.
+            }
+        }
+    }
 }

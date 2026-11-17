@@ -67,6 +67,7 @@ fun SetupRoute(modifier: Modifier = Modifier) {
                 onCode = viewModel::onHomeAssistantCode,
                 onFailed = viewModel::onHomeAssistantFailed,
                 onClose = viewModel::onHomeAssistantClose,
+                plainHttp = graph::plainHttpAllowed,
             )
         } else {
             BackHandler(enabled = state.step != SetupStep.Welcome, onBack = viewModel::back)

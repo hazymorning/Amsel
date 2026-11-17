@@ -116,7 +116,9 @@ fun AudiobookScreen(
         if (state.chaptersLoading) {
             trackRowBlocks(RowLead.Glyph, withSubtitle = false)
         } else {
-            chapterRows(state.chapters, current, state.playback?.isPlaying == true, left, numbers, onPlayChapter)
+            chapterRows(state.chapters, {
+                current
+            }, state.playback?.isPlaying == true, { left }, numbers, onPlayChapter)
         }
     }
 }

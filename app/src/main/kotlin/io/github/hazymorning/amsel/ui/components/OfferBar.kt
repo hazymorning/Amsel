@@ -129,7 +129,7 @@ fun OfferHost(
                     )
                 },
                 line = shown.line?.let { line -> stringResource(line, shown.lineArg.orEmpty()) },
-                speaker = (shown.on ?: speaker).takeIf { shown.line == null },
+                speaker = speaker.takeIf { shown.line == null },
                 onSpeaker = onSpeaker,
             )
         }

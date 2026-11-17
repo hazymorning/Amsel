@@ -234,24 +234,23 @@ class SleepTimer(
     private suspend fun fadeThere(speakerId: String, endsAt: Long, fadeMs: Long, onServer: Boolean) {
         val api = data.session.api
         val players = data.speakers.players.value
-        val from = players[speakerId]?.volume?.takeIf { fadeMs > 0 }
+        val from = players[speakerId]?.takeIf { it.hasVolume && fadeMs > 0 }?.volume
         val members = (listOfNotNull(players[speakerId]) + players.membersOf(speakerId)).mapNotNull { player ->
             player.volumeLevel?.let { player.playerId to it }
         }
         try {
-            orNullOnFailure {
-                if (from != null) {
-                    while (true) {
-                        val left = (endsAt - System.currentTimeMillis()).coerceAtLeast(0)
-                        api.setVolume(speakerId, (from * left / fadeMs).toInt())
-                        if (left == 0L) break
-                        delay(FADE_STEP_MS)
-                    }
+            if (from != null) {
+                while (true) {
+                    val left = (endsAt - System.currentTimeMillis()).coerceAtLeast(0)
+                    // A step the speaker misses ends neither the fade nor the timer.
+                    orNullOnFailure { api.setVolume(speakerId, (from * left / fadeMs).toInt()) }
+                    if (left == 0L) break
+                    delay(FADE_STEP_MS)
                 }
-                delay((endsAt - System.currentTimeMillis()).coerceAtLeast(0))
-                if (!onServer) api.pause(speakerId)
-                delay(RESTORE_AFTER_MS)
             }
+            delay((endsAt - System.currentTimeMillis()).coerceAtLeast(0))
+            if (!onServer) orNullOnFailure { api.pause(speakerId) }
+            delay(RESTORE_AFTER_MS)
         } finally {
             if (from != null) {
                 withContext(NonCancellable) {

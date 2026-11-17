@@ -1,7 +1,6 @@
 package io.github.hazymorning.amsel.data.downloads
 
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaType
 import java.io.IOException
@@ -103,9 +102,7 @@ class Downloads(
         val manifest = _entries.value[uri] ?: run {
             val item = try {
                 itemAt(uri)
-            } catch (e: MaConnectionException) {
-                null
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 null
             } ?: return Added.NotFound
             val stub = stubFor(uri, item) ?: return Added.NotFromAudiobookshelf
@@ -194,7 +191,7 @@ class Downloads(
         val stub = store.manifest(uri) ?: return
         val manifest = if (stub.files.isEmpty()) job.plan(stub).also(store::save) else stub
         _entries.update { if (uri in it) it + (uri to manifest) else it }
-        val cover = job.cover(manifest)
+        job.cover(manifest)
         val total = manifest.bytes
         var before = 0L
         var shown = -1L
@@ -208,7 +205,7 @@ class Downloads(
             }
             before += file.size
         }
-        val complete = manifest.copy(hasCover = cover, complete = true)
+        val complete = manifest.copy(complete = true)
         store.save(complete)
         _entries.update { if (uri in it) it + (uri to complete) else it }
         _done.update { it + (uri to complete) }

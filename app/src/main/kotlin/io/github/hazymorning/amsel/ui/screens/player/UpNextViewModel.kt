@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.PlayerQueue
 import io.github.hazymorning.amsel.api.QueueItem
 import io.github.hazymorning.amsel.app.Messages
@@ -132,9 +133,7 @@ class UpNextViewModel(
             sending.withLock {
                 val page = try {
                     api.queueItems(queueId, from, if (earlier) now.start - from else MaApi.PAGE)
-                } catch (e: MaConnectionException) {
-                    return@withLock messages.show(failureText(e), retry = retry)
-                } catch (e: MaCommandException) {
+                } catch (e: MaException) {
                     return@withLock messages.show(failureText(e), retry = retry)
                 }
                 // A reload meanwhile shows another stretch, which this page does not join.
@@ -241,9 +240,7 @@ class UpNextViewModel(
             val current = queue?.currentItem?.queueItemId
             shown.value = UpNextUiState(items.map { mapper.queueItem(it, current) }, start = from)
                 .following(queue, tapped.value)
-        } catch (e: MaConnectionException) {
-            loadFailed(e)
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             loadFailed(e)
         }
     }

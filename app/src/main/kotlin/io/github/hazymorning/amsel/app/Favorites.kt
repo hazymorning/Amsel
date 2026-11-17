@@ -3,9 +3,8 @@ package io.github.hazymorning.amsel.app
 import io.github.hazymorning.amsel.api.FavoriteUpdate
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MaEvent
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.itemByUri
 import io.github.hazymorning.amsel.api.orNullOnFailure
@@ -92,9 +91,7 @@ class Favorites(
             val failure = try {
                 api.setFavorite(item, favorite)
                 return@launch
-            } catch (e: MaCommandException) {
-                e
-            } catch (e: MaConnectionException) {
+            } catch (e: MaException) {
                 e
             }
             changes.incrementAndGet()

@@ -67,13 +67,18 @@ class HomeLayoutTest {
     @Test fun theEarlierDefaultsFavouriteStationsReadAsEveryStation() {
         val earlier = HomeLayout(
             HomeLayout.DEFAULT_SECTIONS.map { if (it.id == "s7") it.copy(option = FavoriteStations) else it },
+            stationsWidened = false,
         )
-        assertEquals(AllStations, HomeLayout.decode(earlier.encode()).sections.last().option)
+        val widened = HomeLayout.decode(earlier.encode())
+        assertEquals(AllStations, widened.sections.last().option)
         // In another size or under the person's own name, favourites stay favourites.
         val resized = earlier.setLayout("s7", Row)
         assertEquals(FavoriteStations, HomeLayout.decode(resized.encode()).sections.last().option)
         val named = earlier.setTitle("s7", "Sender")
         assertEquals(FavoriteStations, HomeLayout.decode(named.encode()).sections.last().option)
+        // Chosen since, they stay what the person chose.
+        val chosen = widened.setOption("s7", FavoriteStations)
+        assertEquals(FavoriteStations, HomeLayout.decode(chosen.encode()).sections.last().option)
     }
 
     @Test fun aResetBringsBackANewPersonsSectionsAndKeepsThePins() {

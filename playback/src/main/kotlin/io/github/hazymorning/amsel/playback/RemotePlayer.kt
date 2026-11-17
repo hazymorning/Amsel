@@ -12,8 +12,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.SettableFuture
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.RepeatMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -345,9 +344,7 @@ class RemotePlayer(
                 if (confirm != null) {
                     withTimeoutOrNull(timeoutMs) { snapshots.first { it != null && confirm(it) } }
                 }
-            } catch (e: MaConnectionException) {
-                onCommandFailed(CommandFailure(playerId, e) { send(null, timeoutMs, command) })
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 onCommandFailed(CommandFailure(playerId, e) { send(null, timeoutMs, command) })
             } catch (e: PhoneNotReadyException) {
                 onCommandFailed(CommandFailure(playerId, e) { send(null, timeoutMs, command) })

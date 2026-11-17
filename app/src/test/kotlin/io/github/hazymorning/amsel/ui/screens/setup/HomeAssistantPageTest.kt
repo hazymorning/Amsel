@@ -32,7 +32,9 @@ class HomeAssistantPageTest {
     @Test fun theEndOfTheStepDestroysThePage() {
         // The page waits behind a spinner that never stops here: frames run only when asked.
         compose.mainClock.autoAdvance = false
-        compose.setContent { if (signingIn) HomeAssistantSignIn(URL, onCode = {}, onFailed = {}, onClose = {}) }
+        compose.setContent {
+            if (signingIn) HomeAssistantSignIn(URL, onCode = {}, onFailed = {}, onClose = {}, plainHttp = { true })
+        }
         val page = compose.activity.window.decorView.find()!!
 
         signingIn = false

@@ -1,7 +1,6 @@
 package io.github.hazymorning.amsel.ui.screens.pages
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -69,44 +69,43 @@ fun ArtistScreen(
     } else {
         val artist = state.artist
         val listState = rememberLazyListState()
-        BoxWithConstraints(modifier.fillMaxSize()) {
-            val columns = tileColumns(maxWidth)
-            val rows = remember(state.albums, columns) { state.albums.chunked(columns) }
-            val similarTitle = stringResource(R.string.pages_similar_artists)
-            val shelfAbove = when {
-                rows.isNotEmpty() || state.contentLoading -> Space.TileRows
-                state.popular.isNotEmpty() || state.popularPending -> rowInkBottom(RowLead.Cover, true)
-                else -> Space.HeaderToList
+        // The page is as wide as the window, as its cover and title are ([pageCover]).
+        val columns = tileColumns(LocalWindowInfo.current.containerDpSize.width)
+        val rows = remember(state.albums, columns) { state.albums.chunked(columns) }
+        val similarTitle = stringResource(R.string.pages_similar_artists)
+        val shelfAbove = when {
+            rows.isNotEmpty() || state.contentLoading -> Space.TileRows
+            state.popular.isNotEmpty() || state.popularPending -> rowInkBottom(RowLead.Cover, true)
+            else -> Space.HeaderToList
+        }
+        // A tile's caption ends on its ink; an album row keeps its own room under it.
+        val bottom = if (state.similar.isEmpty()) Space.ListEnd - Space.TileRows else Space.ListEnd
+        PageScaffold(artist?.title, listState, onBack, modifier.fillMaxSize(), bottom = bottom, art = artist?.art) {
+            item(key = "art", contentType = PageSlot.Art) {
+                PageArt(artist?.art, MediaKind.Artist, artist?.title)
             }
-            // A tile's caption ends on its ink; an album row keeps its own room under it.
-            val bottom = if (state.similar.isEmpty()) Space.ListEnd - Space.TileRows else Space.ListEnd
-            PageScaffold(artist?.title, listState, onBack, bottom = bottom, art = artist?.art) {
-                item(key = "art", contentType = PageSlot.Art) {
-                    PageArt(artist?.art, MediaKind.Artist, artist?.title)
-                }
-                item(key = "title", contentType = PageSlot.Title) { PageTitle(artist?.title) }
-                item(key = "actions", contentType = PageSlot.Actions) {
-                    PageActions(
-                        playing = false,
-                        onPlay = onPlay,
-                        start = shuffleGlyph(onShuffle),
-                        end = artist?.let { moreGlyph(it.title) { onMore(it) } },
-                    )
-                }
-                if (state.contentLoading) {
-                    popularBlocks()
-                    albumBlocks(columns)
-                } else if (state.popularPending) {
-                    // Popular songs answer last: their place is held so the albums never move.
-                    popularHeader()
-                    trackRowBlocks(RowLead.Cover, withSubtitle = true, count = POPULAR_TRACKS)
-                    albumGrid(rows, columns, afterSongs = true, onOpen, onMore)
-                } else {
-                    popular(state, onPlayTrack, onMoreTrack)
-                    albumGrid(rows, columns, afterSongs = state.popular.isNotEmpty(), onOpen, onMore)
-                }
-                pageShelf(similarTitle, state.similar, shelfAbove, onOpen, onMore, twoLines = false)
+            item(key = "title", contentType = PageSlot.Title) { PageTitle(artist?.title) }
+            item(key = "actions", contentType = PageSlot.Actions) {
+                PageActions(
+                    playing = false,
+                    onPlay = onPlay,
+                    start = shuffleGlyph(onShuffle),
+                    end = artist?.let { moreGlyph(it.title) { onMore(it) } },
+                )
             }
+            if (state.contentLoading) {
+                popularBlocks()
+                albumBlocks(columns)
+            } else if (state.popularPending) {
+                // Popular songs answer last: their place is held so the albums never move.
+                popularHeader()
+                trackRowBlocks(RowLead.Cover, withSubtitle = true, count = POPULAR_TRACKS)
+                albumGrid(rows, columns, afterSongs = true, onOpen, onMore)
+            } else {
+                popular(state, onPlayTrack, onMoreTrack)
+                albumGrid(rows, columns, afterSongs = state.popular.isNotEmpty(), onOpen, onMore)
+            }
+            pageShelf(similarTitle, state.similar, shelfAbove, onOpen, onMore, twoLines = false)
         }
     }
 }

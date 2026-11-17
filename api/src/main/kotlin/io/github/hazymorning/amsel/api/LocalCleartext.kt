@@ -90,7 +90,8 @@ private class LocalCleartextSockets(private val cleartext: () -> Boolean, permit
     }
 }
 
-private class DirectCleartext(private val proxies: ProxySelector) : ProxySelector() {
+/** Equal for the same [proxies], so the clients [forUrl] makes share their plain-http connections. */
+private data class DirectCleartext(private val proxies: ProxySelector) : ProxySelector() {
     override fun select(uri: URI): List<Proxy> =
         if (uri.scheme == "http") listOf(Proxy.NO_PROXY) else proxies.select(uri)
 

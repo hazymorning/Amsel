@@ -11,6 +11,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import io.github.hazymorning.amsel.data.downloads.DownloadState
@@ -35,19 +36,41 @@ class DownloadService : Service() {
     private var work: Job? = null
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private val stop by lazy {
+        PendingIntent.getService(
+            this,
+            0,
+            Intent(this, DownloadService::class.java).setAction(STOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+    }
+
+    private val open by lazy {
+        packageManager.getLaunchIntentForPackage(packageName)?.let {
+            PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        channel()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val downloads = PlaybackGraph.instance.downloads
         if (downloads == null) {
             // Asked to start in front, it must show itself before it may stop.
-            startForeground(notification(emptyMap()))
+            startForeground(notification(shownOf(emptyMap())))
             stopSelf()
             return START_NOT_STICKY
         }
         if (intent?.action == STOP) {
-            downloads.states.value.filterValues { it !is DownloadState.Done }.keys.forEach(downloads::remove)
+            val going = downloads.states.value.filterValues { it !is DownloadState.Done }.keys
+            // Removing deletes what came down so far: files, not the main thread's work.
+            scope.launch(Dispatchers.IO) { going.forEach(downloads::remove) }
         }
         try {
-            startForeground(notification(downloads.states.value))
+            startForeground(notification(shownOf(downloads.states.value)))
         } catch (e: IllegalStateException) {
             // Android 15 refuses once the day's six hours are spent: what waits goes on tomorrow.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
@@ -60,8 +83,9 @@ class DownloadService : Service() {
         }
         if (work?.isActive != true) {
             work = scope.launch {
+                // Built only when what it says changes, not for every 512 KB that comes down.
                 val shown = launch {
-                    downloads.states.map(::notification).distinctUntilChanged { a, b -> a.same(b) }.collect(::show)
+                    downloads.states.map(::shownOf).distinctUntilChanged().collect { show(notification(it)) }
                 }
                 // Its files are written on IO, as everything Audiobookshelf answers is read there.
                 withContext(Dispatchers.IO) { downloads.work() }
@@ -92,43 +116,35 @@ class DownloadService : Service() {
     private fun show(notification: Notification) =
         getSystemService(NotificationManager::class.java).notify(ID, notification)
 
-    private fun notification(states: Map<String, DownloadState>): Notification {
-        channel()
+    /** What the notification says, which changes far more seldom than the bytes that come down. */
+    private data class Shown(val left: Int, @StringRes val text: Int?, val progress: Int?)
+
+    private fun shownOf(states: Map<String, DownloadState>): Shown {
         val left = states.values.count { it is DownloadState.Waiting || it is DownloadState.Running }
         val running = states.values.filterIsInstance<DownloadState.Running>().firstOrNull()
         val waiting = states.values.filterIsInstance<DownloadState.Waiting>().firstOrNull()
         val text = when {
             running != null -> null
-            waiting?.offline == true -> getString(R.string.download_waiting_network)
-            waiting?.forWifi == true -> getString(R.string.download_waiting_wifi)
+            waiting?.offline == true -> R.string.download_waiting_network
+            waiting?.forWifi == true -> R.string.download_waiting_wifi
             else -> null
         }
-        val stop = PendingIntent.getService(
-            this,
-            0,
-            Intent(this, DownloadService::class.java).setAction(STOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-        return NotificationCompat.Builder(this, CHANNEL)
-            .setSmallIcon(androidx.media3.session.R.drawable.media3_notification_small_icon)
-            .setContentTitle(resources.getQuantityString(R.plurals.download_title, left.coerceAtLeast(1), left))
-            .setContentText(text)
-            .setProgress(
-                PROGRESS_MAX,
-                ((running?.fraction ?: 0f) * PROGRESS_MAX).toInt(),
-                running == null && text == null,
-            )
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setSilent(true)
-            .setContentIntent(
-                packageManager.getLaunchIntentForPackage(packageName)?.let {
-                    PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_IMMUTABLE)
-                },
-            )
-            .addAction(0, getString(R.string.download_stop), stop)
-            .build()
+        // A step of the bar worth showing: a tenth of a percent would redraw it hundreds of times.
+        val progress = running?.let { (it.fraction * PROGRESS_MAX).toInt() / STEP * STEP }
+        return Shown(left, text, progress)
     }
+
+    private fun notification(shown: Shown): Notification = NotificationCompat.Builder(this, CHANNEL)
+        .setSmallIcon(androidx.media3.session.R.drawable.media3_notification_small_icon)
+        .setContentTitle(resources.getQuantityString(R.plurals.download_title, shown.left.coerceAtLeast(1), shown.left))
+        .setContentText(shown.text?.let(::getString))
+        .setProgress(PROGRESS_MAX, shown.progress ?: 0, shown.progress == null && shown.text == null)
+        .setOngoing(true)
+        .setOnlyAlertOnce(true)
+        .setSilent(true)
+        .setContentIntent(open)
+        .addAction(0, getString(R.string.download_stop), stop)
+        .build()
 
     private fun channel() {
         val manager = getSystemService(NotificationManager::class.java)
@@ -143,6 +159,7 @@ class DownloadService : Service() {
         private const val CHANNEL = "downloads"
         private const val STOP = "stop"
         private const val PROGRESS_MAX = 1000
+        private const val STEP = 10
 
         /**
          * Starts the service, which then runs every download in line. From the background Android
@@ -161,14 +178,3 @@ class DownloadService : Service() {
         }
     }
 }
-
-/** Two notifications that look alike: redrawing one for every chunk would only flicker. */
-private fun Notification.same(other: Notification): Boolean =
-    extras.getCharSequence(Notification.EXTRA_TITLE) == other.extras.getCharSequence(Notification.EXTRA_TITLE) &&
-        extras.getCharSequence(Notification.EXTRA_TEXT) == other.extras.getCharSequence(Notification.EXTRA_TEXT) &&
-        extras.getInt(Notification.EXTRA_PROGRESS) / STEP == other.extras.getInt(Notification.EXTRA_PROGRESS) / STEP &&
-        extras.getBoolean(Notification.EXTRA_PROGRESS_INDETERMINATE) ==
-        other.extras.getBoolean(Notification.EXTRA_PROGRESS_INDETERMINATE)
-
-/** A step of the bar worth showing: a tenth of a percent would redraw the notification hundreds of times. */
-private const val STEP = 10

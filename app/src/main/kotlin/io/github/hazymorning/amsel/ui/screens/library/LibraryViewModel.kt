@@ -7,8 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.LibrarySort
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.app.Messages
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -74,8 +74,10 @@ class LibraryViewModel(
     private val kinds: Flow<List<LibraryKind>> = if (only != null) {
         flowOf(listOf(only))
     } else {
+        // Read once for the selection, the state and warm(), not once for each: it asks the index.
         combine(arranged, held, downloads.map { it.isNotEmpty() }.distinctUntilChanged(), ::libraryKinds)
             .distinctUntilChanged()
+            .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
 
     // A chosen kind the library no longer holds, or the person no longer shows, gives way to the first chip.
@@ -200,9 +202,7 @@ class LibraryViewModel(
         syncs[kind] = viewModelScope.launch {
             try {
                 resync(type)
-            } catch (e: MaConnectionException) {
-                failed(kind, pulled)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 failed(kind, pulled)
             } finally {
                 refreshing.compareAndSet(kind, null)

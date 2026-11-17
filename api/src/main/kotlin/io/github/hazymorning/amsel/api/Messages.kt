@@ -35,9 +35,15 @@ internal fun <T> decodeLeniently(serializer: KSerializer<T>, element: JsonElemen
     null
 }
 
+/**
+ * A request to the server that failed: the server refused it ([MaCommandException]) or it never got
+ * there ([MaConnectionException]). Callers that treat both alike catch this.
+ */
+public sealed class MaException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
 /** An error the server returned for a command (`error_code` + `details`). */
 public class MaCommandException(public val command: String, public val code: Int, public val details: String) :
-    Exception("$command failed ($code): $details") {
+    MaException("$command failed ($code): $details") {
     /** True when the server rejected the token: sign in again. */
     public val isAuthError: Boolean
         get() = code == ERROR_AUTHENTICATION_REQUIRED || code == ERROR_INVALID_TOKEN
@@ -75,7 +81,7 @@ public class MaCommandException(public val command: String, public val code: Int
 }
 
 /** The connection dropped or never came up. */
-public class MaConnectionException(message: String, cause: Throwable? = null) : Exception(message, cause)
+public class MaConnectionException(message: String, cause: Throwable? = null) : MaException(message, cause)
 
 /** [call]'s answer, or null when the server cannot be reached or refuses it; cancellation passes. */
 public inline fun <T> orNullOnFailure(call: () -> T): T? = try {

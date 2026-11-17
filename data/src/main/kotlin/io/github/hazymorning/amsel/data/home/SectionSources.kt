@@ -14,6 +14,9 @@ import io.github.hazymorning.amsel.api.recentlyPlayed
 import io.github.hazymorning.amsel.api.started
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.data.library.LibraryRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -72,7 +75,7 @@ class SectionSources(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
     /** The speaker music plays on, by player id, which is its queue's id too. */
-    private val speaker: () -> String? = { null },
+    private val speaker: () -> String?,
 ) : SectionLoader {
     override suspend fun load(
         option: SectionOption,
@@ -139,23 +142,31 @@ class SectionSources(
      */
     private suspend fun continueListening(limit: Int, previous: SectionItems?): List<HomeItem> {
         val before = previous?.items.orEmpty().associateBy { it.uri }
-        return api.started(limit).map { (listed, fresh) ->
+        val started = api.started(limit)
+        val rows = library().rows(started.filter { it.fresh == null }.map { it.listed.uri })
+        return started.map { (listed, fresh) ->
             fresh?.let { library().rememberProgress(it) }
-            fresh?.toHomeItem() ?: library().get(listed.uri)?.toHomeItem() ?: before[listed.uri] ?: listed.toHomeItem()
+            fresh?.toHomeItem() ?: rows[listed.uri]?.toHomeItem() ?: before[listed.uri] ?: listed.toHomeItem()
         }.filterNot { it.fullyPlayed }
     }
 
     /** Server items, each taking the index's row when it has one: recently played items carry no artists. */
-    private suspend fun server(items: List<MediaItem>) =
-        SectionItems(items.map { library().get(it.uri)?.toHomeItem() ?: it.toHomeItem() })
+    private suspend fun server(items: List<MediaItem>): SectionItems {
+        val rows = library().rows(items.map { it.uri })
+        return SectionItems(items.map { rows[it.uri]?.toHomeItem() ?: it.toHomeItem() })
+    }
 
-    private suspend fun pins(uris: List<String>, previous: SectionItems?): List<HomeItem> {
+    /** Each pin as the index has it; those it has not are asked of the server together. */
+    private suspend fun pins(uris: List<String>, previous: SectionItems?): List<HomeItem> = coroutineScope {
         val before = previous?.items.orEmpty().associateBy { it.uri }
-        return uris.mapNotNull { uri ->
-            library().get(uri)?.toHomeItem()
-                ?: orNullOnFailure { api.itemByUri(uri) }?.toHomeItem()
-                ?: before[uri]
-        }
+        val rows = library().rows(uris)
+        uris.map { uri ->
+            async {
+                rows[uri]?.toHomeItem()
+                    ?: orNullOnFailure { api.itemByUri(uri) }?.toHomeItem()
+                    ?: before[uri]
+            }
+        }.awaitAll().filterNotNull()
     }
 }
 

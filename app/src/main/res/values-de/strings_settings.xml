@@ -64,8 +64,8 @@
     <string name="bar_hint">In die Leiste passen bis zu fünf Plätze. Mit dem Schalter blendest du einen ein oder aus, mit dem Griff verschiebst du ihn. Die Startseite bleibt immer.</string>
     <string name="settings_dock">Mini-Player</string>
     <plurals name="settings_home_sections">
-        <item quantity="one">%d Bereich</item>
-        <item quantity="other">%d Bereiche</item>
+        <item quantity="one">%d Abschnitt</item>
+        <item quantity="other">%d Abschnitte</item>
     </plurals>
     <string name="library_kinds_hint">Wähle, was die Bibliothek zeigt: Mit dem Schalter blendest du etwas ein oder aus, mit dem Griff verschiebst du es. Eins bleibt immer.</string>
     <string name="library_kind_last_stays">An, das letzte bleibt</string>
@@ -86,7 +86,7 @@
     <string name="hints_all">Vorschläge zeigen</string>
     <string name="hints_all_detail">Ein kleiner Hinweis mit einem Knopf, der von selbst wieder verschwindet</string>
     <string name="hints_when">Wann</string>
-    <string name="hints_liked">Du likest ein Lied</string>
+    <string name="hints_liked">Dir gefällt ein Titel</string>
     <string name="hints_liked_offer">Es auch in eine Playlist legen</string>
     <string name="hints_headphones">Kopfhörer werden verbunden</string>
     <string name="hints_away">Du bist unterwegs, ohne WLAN</string>

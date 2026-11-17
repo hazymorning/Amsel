@@ -132,26 +132,29 @@ internal fun settingsState(
     user: MaUser?,
     chosenTheme: ThemeMode?,
     appVersion: String,
-): SettingsUiState = SettingsUiState(
-    userName = user?.shownName.orEmpty(),
-    serverName = serverNameOf(session),
-    serverAddress = address?.let(::hostOf).orEmpty(),
-    connection = when (session) {
-        is SessionState.Ready -> Connection.Connected
-        is SessionState.Offline -> Connection.Offline
-        else -> Connection.Connecting
-    },
-    theme = chosenTheme ?: ThemeMode.of(prefs?.theme),
-    appVersion = appVersion,
-    sleepFadeSec = (prefs ?: Prefs()).sleepFadeSec,
-    sleepShake = (prefs ?: Prefs()).sleepShake,
-    sleepOnPlay = (prefs ?: Prefs()).sleepOnPlay,
-    followPlaying = (prefs ?: Prefs()).followPlaying,
-    followSkipped = (prefs ?: Prefs()).followSkipped,
-    volumeLimit = (prefs ?: Prefs()).volumeLimit,
-    lookForUpdates = (prefs ?: Prefs()).lookForUpdates,
-    downloadOnWifi = (prefs ?: Prefs()).downloadOnWifi,
-)
+): SettingsUiState {
+    val stored = prefs ?: Prefs()
+    return SettingsUiState(
+        userName = user?.shownName.orEmpty(),
+        serverName = serverNameOf(session),
+        serverAddress = address?.let(::hostOf).orEmpty(),
+        connection = when (session) {
+            is SessionState.Ready -> Connection.Connected
+            is SessionState.Offline -> Connection.Offline
+            else -> Connection.Connecting
+        },
+        theme = chosenTheme ?: ThemeMode.of(prefs?.theme),
+        appVersion = appVersion,
+        sleepFadeSec = stored.sleepFadeSec,
+        sleepShake = stored.sleepShake,
+        sleepOnPlay = stored.sleepOnPlay,
+        followPlaying = stored.followPlaying,
+        followSkipped = stored.followSkipped,
+        volumeLimit = stored.volumeLimit,
+        lookForUpdates = stored.lookForUpdates,
+        downloadOnWifi = stored.downloadOnWifi,
+    )
+}
 
 /** Whether Music Assistant answers: connected, still connecting, or out of reach. */
 enum class Connection { Connected, Connecting, Offline }

@@ -75,9 +75,8 @@ data class Prefs(
     val hintPasses: Map<String, Int> = emptyMap(),
     /** The speaker last picked other than This phone, to go back to at home. */
     val homeSpeakerId: String? = null,
-    /** The playlist a song was last added to, and its name. */
+    /** The playlist a song was last added to. */
     val lastPlaylistKey: String? = null,
-    val lastPlaylistName: String? = null,
     /** When the sleep timer was last offered (ms since the epoch): once a night. */
     val sleepOfferedAt: Long? = null,
     /** The places the bar shows, in its order, by their ids; null for the bar as it comes. */
@@ -124,7 +123,6 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
             }.toMap(),
             homeSpeakerId = p[HOME_SPEAKER],
             lastPlaylistKey = p[LAST_PLAYLIST],
-            lastPlaylistName = p[LAST_PLAYLIST_NAME],
             sleepOfferedAt = p[SLEEP_OFFERED_AT],
             barPlaces = p[BAR_PLACES]?.split(',')?.filter { it.isNotBlank() },
             dockControls = p[DOCK_CONTROLS]?.split(',')?.filter { it.isNotBlank() },
@@ -292,11 +290,8 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         store.edit { it[HOME_SPEAKER] = id }
     }
 
-    suspend fun setLastPlaylist(key: String, name: String) {
-        store.edit {
-            it[LAST_PLAYLIST] = key
-            it[LAST_PLAYLIST_NAME] = name
-        }
+    suspend fun setLastPlaylist(key: String) {
+        store.edit { it[LAST_PLAYLIST] = key }
     }
 
     suspend fun setSleepOffered(atMs: Long) {
@@ -347,7 +342,6 @@ class AppPrefs(context: Context, scope: CoroutineScope) {
         val HINT_PASSES = stringPreferencesKey("hint_passes")
         val HOME_SPEAKER = stringPreferencesKey("home_speaker_id")
         val LAST_PLAYLIST = stringPreferencesKey("last_playlist")
-        val LAST_PLAYLIST_NAME = stringPreferencesKey("last_playlist_name")
         val SLEEP_OFFERED_AT = longPreferencesKey("sleep_offered_at")
     }
 }
