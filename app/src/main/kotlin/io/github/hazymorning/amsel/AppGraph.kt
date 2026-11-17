@@ -79,6 +79,9 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
 
     private val network: PhoneNetwork by lazy { AndroidPhoneNetwork(app) }
 
+    /** The app's rule for plain http, for what goes past its own client (Home Assistant's sign-in page). */
+    fun plainHttpAllowed(): Boolean = network.plainHttpAllowed()
+
     val http: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .pingInterval(20, TimeUnit.SECONDS)

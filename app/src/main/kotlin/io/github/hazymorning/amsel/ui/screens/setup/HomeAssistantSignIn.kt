@@ -40,12 +40,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.net.toUri
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.HA_RETURN_URL
-import io.github.hazymorning.amsel.api.isLocal
+import io.github.hazymorning.amsel.api.isLanHost
 import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.WaitingState
-import java.net.InetAddress
-import java.net.UnknownHostException
 
 enum class HomeAssistantPage { Opening, Shown, Unreachable }
 
@@ -62,6 +60,8 @@ fun HomeAssistantSignIn(
     onCode: (String) -> Unit,
     onFailed: () -> Unit,
     onClose: () -> Unit,
+    /** Whether plain http may leave the phone now: not on mobile data without a VPN. */
+    plainHttp: () -> Boolean,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onClose)
@@ -69,6 +69,7 @@ fun HomeAssistantSignIn(
     val retained = retain(url) { RetainedPage(context, url) }
     var page by retained.page
     val code by rememberUpdatedState(onCode)
+    val plainAllowed by rememberUpdatedState(plainHttp)
     val failed by rememberUpdatedState(onFailed)
     val paper = MaterialTheme.colorScheme.surface.toArgb()
     HomeAssistantFrame(
@@ -97,12 +98,14 @@ fun HomeAssistantSignIn(
                             return true
                         }
 
-                        // Off the main thread, where a lookup may block: plain http stays on local addresses.
+                        // Plain http only to a home address by its form, as the app's own client allows it: DNS
+                        // on a hostile network names anything a private address.
                         override fun shouldInterceptRequest(
                             view: WebView,
                             request: WebResourceRequest,
                         ): WebResourceResponse? {
-                            if (request.url.scheme != "http" || localHost(request.url.host)) return null
+                            val home = request.url.host?.let(::isLanHost) == true && plainAllowed()
+                            if (request.url.scheme != "http" || home) return null
                             if (request.isForMainFrame) view.post { page = HomeAssistantPage.Unreachable }
                             return WebResourceResponse("text/plain", "utf-8", 403, "Forbidden", null, null)
                         }
@@ -216,13 +219,6 @@ fun HomeAssistantFrame(
             }
         }
     }
-}
-
-/** Whether every address [host] names is local, so plain http may go there; unknown hosts are not. */
-private fun localHost(host: String?): Boolean = try {
-    host != null && InetAddress.getAllByName(host).all { it.isLocal() }
-} catch (e: UnknownHostException) {
-    false
 }
 
 fun homeAssistantCode(url: String): String? =
