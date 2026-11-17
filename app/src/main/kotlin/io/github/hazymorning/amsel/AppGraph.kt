@@ -10,8 +10,7 @@ import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.Schema
 import io.github.hazymorning.amsel.api.itemByUri
@@ -208,9 +207,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             itemAt = { uri ->
                 try {
                     data.session.api.itemByUri(uri)?.let(mapper::media)
-                } catch (e: MaConnectionException) {
-                    null
-                } catch (e: MaCommandException) {
+                } catch (e: MaException) {
                     null
                 }
             },

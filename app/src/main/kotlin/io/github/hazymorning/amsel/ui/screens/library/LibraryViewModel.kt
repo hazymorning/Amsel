@@ -7,8 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.LibrarySort
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.app.Messages
@@ -200,9 +199,7 @@ class LibraryViewModel(
         syncs[kind] = viewModelScope.launch {
             try {
                 resync(type)
-            } catch (e: MaConnectionException) {
-                failed(kind, pulled)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 failed(kind, pulled)
             } finally {
                 refreshing.compareAndSet(kind, null)

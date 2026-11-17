@@ -5,8 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.app.Messages
 import io.github.hazymorning.amsel.data.SessionState
@@ -166,9 +165,7 @@ class HomeViewModel(
                 home.edit(change)
             } catch (e: IOException) {
                 messages.show(R.string.home_edit_failed, retry = { edit(change) })
-            } catch (e: MaConnectionException) {
-                messages.show(failureText(e), retry = ::reloadFailed)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 messages.show(failureText(e), retry = ::reloadFailed)
             }
         }
@@ -179,9 +176,7 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 home.reloadFailed()
-            } catch (e: MaConnectionException) {
-                messages.show(failureText(e), retry = ::reloadFailed)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 messages.show(failureText(e), retry = ::reloadFailed)
             }
         }

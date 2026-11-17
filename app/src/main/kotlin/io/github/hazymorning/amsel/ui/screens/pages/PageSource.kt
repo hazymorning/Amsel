@@ -4,8 +4,7 @@ import io.github.hazymorning.amsel.AppGraph
 import io.github.hazymorning.amsel.api.ItemPage
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.albumTracks
@@ -160,10 +159,7 @@ internal class Load {
 
     suspend fun <T> attempt(call: suspend () -> T): T? = try {
         call()
-    } catch (e: MaConnectionException) {
-        failure = failure ?: e
-        null
-    } catch (e: MaCommandException) {
+    } catch (e: MaException) {
         failure = failure ?: e
         null
     }

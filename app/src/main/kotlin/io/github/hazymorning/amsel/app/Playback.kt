@@ -7,8 +7,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.RepeatMode
 import io.github.hazymorning.amsel.api.isEndlessMix
@@ -72,9 +71,7 @@ class Playback(
                     data.session.api.setVolume(id, level)
                     delay(VOLUME_EVERY_MS)
                     continue
-                } catch (e: MaConnectionException) {
-                    e
-                } catch (e: MaCommandException) {
+                } catch (e: MaException) {
                     e
                 }
                 playing.optimistic.clear(id)
@@ -204,9 +201,8 @@ class Playback(
             scope.launch {
                 try {
                     data.session.api.pause(phoneId)
-                } catch (e: MaConnectionException) {
+                } catch (e: MaException) {
                     // Held silent already; the server learns of it when it can.
-                } catch (e: MaCommandException) {
                 }
             }
         }
@@ -277,9 +273,7 @@ class Playback(
                 return@launch
             } catch (e: NoSuchElementException) {
                 return@launch messages.show(PlaybackR.string.browse_not_found)
-            } catch (e: MaConnectionException) {
-                e
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 e
             } catch (e: PhoneNotReadyException) {
                 e

@@ -1,7 +1,6 @@
 package io.github.hazymorning.amsel.data.downloads
 
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaType
 import java.io.IOException
@@ -103,9 +102,7 @@ class Downloads(
         val manifest = _entries.value[uri] ?: run {
             val item = try {
                 itemAt(uri)
-            } catch (e: MaConnectionException) {
-                null
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 null
             } ?: return Added.NotFound
             val stub = stubFor(uri, item) ?: return Added.NotFromAudiobookshelf

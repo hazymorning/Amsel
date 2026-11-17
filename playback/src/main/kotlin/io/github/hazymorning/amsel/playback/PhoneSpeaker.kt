@@ -10,8 +10,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.WakeLockManager
 import androidx.media3.common.util.WifiLockManager
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.ServerInfo
 import io.github.hazymorning.amsel.data.DataGraph
 import io.music_assistant.sendspin.api.LocalPlayerConfig
@@ -297,9 +296,7 @@ class PhoneSpeaker(
         val error = try {
             data.session.api.command(id)
             return
-        } catch (e: MaConnectionException) {
-            e
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             e
         }
         _failures.tryEmit(CommandFailure(id, error) { scope.launch { tell(id, command) } })

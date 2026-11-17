@@ -4,7 +4,7 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.addToPlaylist
 import io.github.hazymorning.amsel.api.removeFromPlaylist
 import io.github.hazymorning.amsel.data.library.LibraryRepository
@@ -69,9 +69,7 @@ class PlaylistEditor(
             val error = try {
                 api.addToPlaylist(id, listOf(uri))
                 return@launch added(playlist, open)
-            } catch (e: MaCommandException) {
-                e
-            } catch (e: MaConnectionException) {
+            } catch (e: MaException) {
                 e
             }
             messages.show(failureText(error), retry = { add(uri, playlist, open) })
@@ -92,9 +90,7 @@ class PlaylistEditor(
                 val error = try {
                     api.removeFromPlaylist(playlistId, listOf(position))
                     null
-                } catch (e: MaCommandException) {
-                    e
-                } catch (e: MaConnectionException) {
+                } catch (e: MaException) {
                     e
                 }
                 if (error != null) {

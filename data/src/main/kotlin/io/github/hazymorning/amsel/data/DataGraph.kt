@@ -11,9 +11,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import io.github.hazymorning.amsel.api.ItemUri
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MaEvent
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.PlayProgress
 import io.github.hazymorning.amsel.api.ServerInfo
@@ -240,9 +239,7 @@ class DataGraph(
         _speakersFailure.value = try {
             speakers.refresh()
             null
-        } catch (e: MaConnectionException) {
-            e
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             e
         }
     }

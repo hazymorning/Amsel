@@ -1,8 +1,7 @@
 package io.github.hazymorning.amsel.app
 
 import androidx.compose.runtime.Immutable
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.api.membersOf
 import io.github.hazymorning.amsel.data.DataGraph
@@ -60,9 +59,7 @@ class SpeakerVolumes(private val data: DataGraph, private val messages: Messages
         val error = try {
             data.session.api.setOwnVolume(playerId, level)
             return
-        } catch (e: MaConnectionException) {
-            e
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             e
         }
         val name = data.speakers.players.value[playerId]?.shownName.orEmpty()

@@ -1,8 +1,7 @@
 package io.github.hazymorning.amsel.playback
 
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.NothingToMixException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.endlessMixSeed
@@ -118,9 +117,7 @@ class PlayDispatcher(
                     }
                 }
                 null
-            } catch (e: MaConnectionException) {
-                e
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 e
             } catch (e: PhoneNotReadyException) {
                 e
