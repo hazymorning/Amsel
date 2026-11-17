@@ -4,9 +4,8 @@ import io.github.hazymorning.amsel.api.FavoriteUpdate
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.LibrarySort
 import io.github.hazymorning.amsel.api.MaApi
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MaEvent
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.PlayProgress
@@ -125,6 +124,9 @@ class LibraryRepository(
 
     suspend fun get(uri: String): LibraryItemEntity? = dao.get(uri)
 
+    /** The rows the index holds for [uris], by uri, in one lookup rather than one each. */
+    suspend fun rows(uris: Collection<String>): Map<String, LibraryItemEntity> = dao.rowsOf(uris)
+
     /** Every item in the index, again after each change to it, for Search's forgiving matches. */
     val everything: Flow<List<LibraryItemEntity>> = dao.observeAll()
 
@@ -164,9 +166,7 @@ class LibraryRepository(
                     try {
                         sync.await()
                         null
-                    } catch (e: MaConnectionException) {
-                        e
-                    } catch (e: MaCommandException) {
+                    } catch (e: MaException) {
                         e
                     }
                 }
@@ -196,10 +196,7 @@ class LibraryRepository(
             dao.setSyncState(SyncStateEntity(type.api, server.serverId, server.schemaVersion))
             _failures.update { it - type }
             _replaced.tryEmit(type)
-        } catch (e: MaConnectionException) {
-            _failures.update { it + (type to e) }
-            throw e
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             _failures.update { it + (type to e) }
             throw e
         } finally {

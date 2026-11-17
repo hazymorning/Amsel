@@ -1,8 +1,7 @@
 package io.github.hazymorning.amsel.app
 
 import androidx.compose.runtime.Immutable
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.api.syncGroups
 import io.github.hazymorning.amsel.data.DataGraph
@@ -99,9 +98,7 @@ class SpeakerGroups internal constructor(
             val error = try {
                 settle(leaderId, wish, add, leaving, joining)
                 null
-            } catch (e: MaConnectionException) {
-                e
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 e
             }
             asked.update { if (it[leaderId] === wish) it - leaderId else it }

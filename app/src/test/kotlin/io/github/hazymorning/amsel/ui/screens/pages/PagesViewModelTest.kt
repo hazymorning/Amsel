@@ -160,6 +160,20 @@ class PagesViewModelTest {
         assertEquals(listOf(1, 2, 3, 4, 5), state.value.positions)
     }
 
+    @Test fun `a song added from another sheet shows on the open playlist page`() = runTest {
+        val source = FakeSource().apply {
+            item = one("music_playlists_get")
+            tracks = list("music_playlists_playlist_tracks").take(4)
+        }
+        val edits = MutableSharedFlow<PlaylistEdit>()
+        val state =
+            watch(PlaylistViewModel("library://playlist/9", source, mapper, playing, edits, messages, worker()).state)
+        assertEquals(4, state.value.tracks.size)
+        source.tracks = list("music_playlists_playlist_tracks")
+        edits.emit(PlaylistEdit.Added("library://playlist/9"))
+        assertEquals(5, state.value.tracks.size)
+    }
+
     @Test fun `a refused removal whose reload fails shows the page's error, not the trimmed list`() = runTest {
         val source = FakeSource().apply {
             item = one("music_playlists_get")

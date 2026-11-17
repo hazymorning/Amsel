@@ -5,8 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.app.Messages
 import io.github.hazymorning.amsel.data.SessionState
@@ -166,9 +165,7 @@ class HomeViewModel(
                 home.edit(change)
             } catch (e: IOException) {
                 messages.show(R.string.home_edit_failed, retry = { edit(change) })
-            } catch (e: MaConnectionException) {
-                messages.show(failureText(e), retry = ::reloadFailed)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 messages.show(failureText(e), retry = ::reloadFailed)
             }
         }
@@ -179,9 +176,7 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 home.reloadFailed()
-            } catch (e: MaConnectionException) {
-                messages.show(failureText(e), retry = ::reloadFailed)
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 messages.show(failureText(e), retry = ::reloadFailed)
             }
         }
@@ -201,10 +196,19 @@ internal data class HomeInputs(
     val speakers: HomeSpeakers = HomeSpeakers(),
 )
 
-/** Every speaker as Play on lists them, This phone first, and the one music plays on. */
+/**
+ * Every speaker and the one music plays on, by what names them alone: a song or a volume step on
+ * any speaker changes nothing on Home, so it does not build Home again.
+ */
 @Immutable
 data class HomeSpeakers(val all: List<SpeakerUi> = emptyList(), val inUse: SpeakerUi? = null) {
     fun named(id: String): SpeakerUi? = inUse?.takeIf { it.id == id } ?: all.firstOrNull { it.id == id }
+
+    companion object {
+        fun of(all: List<SpeakerUi>, inUse: SpeakerUi?) = HomeSpeakers(all.map { it.nameOnly() }, inUse?.nameOnly())
+
+        private fun SpeakerUi.nameOnly() = SpeakerUi(id, name, isPhone)
+    }
 }
 
 /**

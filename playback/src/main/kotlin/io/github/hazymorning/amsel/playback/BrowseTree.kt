@@ -21,8 +21,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.SettableFuture
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -200,9 +199,7 @@ class BrowseTree(
     private suspend fun readError(read: suspend () -> Unit): SessionError? = try {
         read()
         null
-    } catch (e: MaConnectionException) {
-        sessionError(e, text(failureText(e)))
-    } catch (e: MaCommandException) {
+    } catch (e: MaException) {
         sessionError(e, text(failureText(e)))
     } catch (e: PhoneNotReadyException) {
         sessionError(e, text(failureText(e)))

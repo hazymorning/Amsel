@@ -48,7 +48,6 @@
     <string name="player_not_playing">Not playing</string>
     <string name="player_playing">Playing</string>
     <string name="player_paused">Paused · %1$s</string>
-    <!-- On Home's speaker cards, where the cover shows what it rests on -->
     <!-- Play on asks before music that plays would stop: speaker, what it plays, the person's music -->
     <string name="player_ask_busy">%1$s is playing “%2$s”. Play “%3$s” there instead?</string>
     <string name="player_ask_busy_unknown">%1$s is already playing. Play “%2$s” there instead?</string>

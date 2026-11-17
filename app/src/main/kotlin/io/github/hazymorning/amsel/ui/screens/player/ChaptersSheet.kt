@@ -67,7 +67,9 @@ fun ChaptersSheetContent(state: NowPlayingUi, onPick: (ChapterUi) -> Unit, modif
             )
         } else {
             val numbers = numberLeadWidth(state.chapters.lastOrNull()?.number ?: 0)
-            LazyColumn(state = list) { chapterRows(state.chapters, current, state.isPlaying, left, numbers, onPick) }
+            LazyColumn(state = list) {
+                chapterRows(state.chapters, { current }, state.isPlaying, { left }, numbers, onPick)
+            }
         }
     }
 }

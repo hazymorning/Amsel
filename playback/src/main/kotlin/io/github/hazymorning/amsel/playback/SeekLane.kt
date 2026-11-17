@@ -1,7 +1,6 @@
 package io.github.hazymorning.amsel.playback
 
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.data.Holding
 import io.github.hazymorning.amsel.data.Place
 import io.github.hazymorning.amsel.data.Seeks
@@ -239,9 +238,7 @@ internal class SeekLane(
         val error = try {
             seekOnServer(seek.seconds)
             null
-        } catch (e: MaConnectionException) {
-            e
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             e
         } catch (e: PhoneNotReadyException) {
             e
@@ -269,9 +266,7 @@ internal class SeekLane(
     private suspend fun pauseLanded() {
         try {
             pauseOnServer()
-        } catch (e: MaConnectionException) {
-            onFailed(e) { scope.launch { pauseLanded() } }
-        } catch (e: MaCommandException) {
+        } catch (e: MaException) {
             onFailed(e) { scope.launch { pauseLanded() } }
         }
     }

@@ -45,20 +45,20 @@ internal class DownloadJob(private val abs: AbsClient, private val store: Downlo
 
     /** The cover, when the server has one; a book plays without it. */
     // Both read their answer, so off the main thread (see AbsClient.call).
-    suspend fun cover(manifest: DownloadManifest): Boolean = withContext(Dispatchers.IO) { coverHere(manifest) }
+    suspend fun cover(manifest: DownloadManifest) = withContext(Dispatchers.IO) { coverHere(manifest) }
 
-    private suspend fun coverHere(manifest: DownloadManifest): Boolean {
+    private suspend fun coverHere(manifest: DownloadManifest) {
         val target = store.cover(manifest.uri)
-        if (target.isFile) return true
-        return try {
+        if (target.isFile) return
+        try {
             abs.cover(manifest.absItemId).use { response ->
-                if (!response.isSuccessful) return false
+                if (!response.isSuccessful) return
                 val part = File(target.path + PART)
                 copy(response.body.byteStream(), part, append = false) { }
                 part.renameTo(target)
             }
         } catch (e: IOException) {
-            false
+            // A book without its cover still plays; the next download of it tries again.
         }
     }
 

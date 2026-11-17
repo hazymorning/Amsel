@@ -5,7 +5,6 @@ import androidx.annotation.StringRes
 import io.github.hazymorning.amsel.data.HINTS_ALL
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +28,6 @@ class Offer(
     /** Under the title; null names the speaker it plays on, and a tap there picks another. */
     @StringRes val line: Int? = null,
     val lineArg: String? = null,
-    /** The speaker it plays on, where that is not the one in use yet. */
-    val on: SpeakerUi? = null,
     /** A button word with a number in it ("30 min"), in place of [button]'s plain word. */
     val buttonArg: Int? = null,
     /**

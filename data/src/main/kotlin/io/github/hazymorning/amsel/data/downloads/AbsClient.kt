@@ -73,7 +73,7 @@ class AbsClient(
      * Whether plain http reaches the household's network from where the phone is now
      * ([io.github.hazymorning.amsel.data.Session.reachesHome]); https needs no such check.
      */
-    private val reachesHome: suspend () -> Boolean = { true },
+    private val reachesHome: suspend () -> Boolean,
 ) {
     private val refreshing = Mutex()
 
@@ -225,8 +225,6 @@ class AbsClient(
         if (!base.isHttps && !reachesHome()) throw AbsException(AbsException.Reason.AwayFromHome)
         return try {
             runInterruptible(Dispatchers.IO) { http.forUrl(base).newCall(request).execute() }
-        } catch (e: AbsException) {
-            throw e
         } catch (e: IOException) {
             throw AbsException(
                 if (e.isCertificateError()) AbsException.Reason.Certificate else AbsException.Reason.Unreachable,

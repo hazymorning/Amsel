@@ -7,8 +7,10 @@ import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaClient
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.fixture
+import io.github.hazymorning.amsel.data.PageMemory
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.TrackUi
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -73,7 +75,9 @@ class PageSourceTest {
         try {
             client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
-            val source = ServerPageSource(MaApi(client), { error("The library index is not needed here") })
+            // No server id: the memory keeps nothing.
+            val memory = PageMemory(File(checkNotNull(System.getProperty("java.io.tmpdir")))) { null }
+            val source = ServerPageSource(MaApi(client), { error("The library index is not needed here") }, memory)
             val key = "filesystem_local--x://album/Aurora Tone/First Light (2021)"
             assertEquals("library://album/4", source.item(key)?.uri)
             assertEquals(3, source.albumTracks(key).size)

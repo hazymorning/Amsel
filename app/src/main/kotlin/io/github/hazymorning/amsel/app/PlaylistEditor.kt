@@ -4,7 +4,7 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.addToPlaylist
 import io.github.hazymorning.amsel.api.removeFromPlaylist
 import io.github.hazymorning.amsel.data.library.LibraryRepository
@@ -31,6 +31,9 @@ sealed interface PlaylistEdit {
 
     /** A removal did not happen: the page reads the playlist again. */
     data class Failed(override val playlistKey: String) : PlaylistEdit
+
+    /** Songs went into it: an open page reads it again, as no event says so. */
+    data class Added(override val playlistKey: String) : PlaylistEdit
 }
 
 /** The ⋮ sheet's changes to playlists: adding to one, and removing a track from one. */
@@ -49,8 +52,8 @@ class PlaylistEditor(
         MutableSharedFlow<PlaylistEdit>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     /**
-     * Removals from a playlist, so its open page drops the row at once and the positions after it
-     * move up, as the server's do (no event announces a playlist's new contents).
+     * Changes to a playlist for its open page: a removal drops the row at once and the positions
+     * after it move up, as the server's do; an addition reads it again. No event announces either.
      */
     val edits: SharedFlow<PlaylistEdit> = _edits.asSharedFlow()
 
@@ -68,10 +71,9 @@ class PlaylistEditor(
         scope.launch {
             val error = try {
                 api.addToPlaylist(id, listOf(uri))
+                _edits.emit(PlaylistEdit.Added(playlist.key))
                 return@launch added(playlist, open)
-            } catch (e: MaCommandException) {
-                e
-            } catch (e: MaConnectionException) {
+            } catch (e: MaException) {
                 e
             }
             messages.show(failureText(error), retry = { add(uri, playlist, open) })
@@ -92,9 +94,7 @@ class PlaylistEditor(
                 val error = try {
                     api.removeFromPlaylist(playlistId, listOf(position))
                     null
-                } catch (e: MaCommandException) {
-                    e
-                } catch (e: MaConnectionException) {
+                } catch (e: MaException) {
                     e
                 }
                 if (error != null) {

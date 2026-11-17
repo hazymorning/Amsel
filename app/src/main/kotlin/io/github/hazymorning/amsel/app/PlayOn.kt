@@ -2,8 +2,7 @@ package io.github.hazymorning.amsel.app
 
 import android.os.SystemClock
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.api.MaConnectionException
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.membersOf
@@ -133,9 +132,7 @@ class PlayOn(
                 return@launch if (music == null) move() else playing.whileMoving(music, move)
             } catch (e: PhoneNotReadyException) {
                 e
-            } catch (e: MaConnectionException) {
-                e
-            } catch (e: MaCommandException) {
+            } catch (e: MaException) {
                 e
             } catch (e: IOException) {
                 e

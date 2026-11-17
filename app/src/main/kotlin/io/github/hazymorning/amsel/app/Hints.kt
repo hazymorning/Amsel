@@ -53,6 +53,21 @@ class Hints(
     private val sleepTimer: SleepTimer,
     private val scope: CoroutineScope,
 ) {
+    /** When Wi-Fi beneath any VPN came up ([SystemClock.elapsedRealtime]); [LONG_AGO] if it was up before; null without. */
+    @Volatile private var wifiSince: Long? = null
+
+    private val wifis = ConcurrentHashMap.newKeySet<Network>()
+
+    private val headphones = buildSet {
+        add(AudioDeviceInfo.TYPE_WIRED_HEADPHONES)
+        add(AudioDeviceInfo.TYPE_WIRED_HEADSET)
+        add(AudioDeviceInfo.TYPE_USB_HEADSET)
+        add(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(AudioDeviceInfo.TYPE_BLE_HEADSET)
+    }
+
+    // After the fields its listeners read: built off the main thread, the Main coroutines below may
+    // run before the constructor has ended.
     init {
         // The speaker to go back to at home: the last one picked other than This phone.
         scope.launch {
@@ -73,11 +88,6 @@ class Hints(
             listenForWifi()
         }
     }
-
-    /** When Wi-Fi beneath any VPN came up ([SystemClock.elapsedRealtime]); [LONG_AGO] if it was up before; null without. */
-    @Volatile private var wifiSince: Long? = null
-
-    private val wifis = ConcurrentHashMap.newKeySet<Network>()
 
     /** [song] was just liked here: it can go into a playlist too, the last one used at one tap. */
     fun liked(song: MediaUi, choose: () -> Unit) {
@@ -120,7 +130,7 @@ class Hints(
 
     /** A song went into [playlist]: said with its cover, and a way there where [open] leads. */
     fun addedTo(playlist: MediaUi, open: (() -> Unit)?) {
-        scope.launch { data.prefs.setLastPlaylist(playlist.key, playlist.title) }
+        scope.launch { data.prefs.setLastPlaylist(playlist.key) }
         if (open == null) return messages.show(R.string.added_to_playlist, playlist.title)
         offers.offer(
             Offer(
@@ -366,14 +376,6 @@ class Hints(
         val audio = context.getSystemService(AudioManager::class.java) ?: return
         val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         audio.setStreamVolume(AudioManager.STREAM_MUSIC, max * LOUDER / 100, AudioManager.FLAG_SHOW_UI)
-    }
-
-    private val headphones = buildSet {
-        add(AudioDeviceInfo.TYPE_WIRED_HEADPHONES)
-        add(AudioDeviceInfo.TYPE_WIRED_HEADSET)
-        add(AudioDeviceInfo.TYPE_USB_HEADSET)
-        add(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(AudioDeviceInfo.TYPE_BLE_HEADSET)
     }
 
     companion object {

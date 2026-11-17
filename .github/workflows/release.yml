@@ -25,6 +25,8 @@ permissions:
 
 jobs:
   release:
+    # By hand too, only main's version is released: a working branch already carries its new VERSION.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -89,7 +91,14 @@ jobs:
           if git fetch -q --depth 1 "$remote" signing 2>/dev/null && git show FETCH_HEAD:amsel-release.jks.enc > "$enc" 2>/dev/null; then
             echo "Using the release key from the signing branch."
           else
-            # Only ever once: an existing signing branch refuses this push, so a key is never replaced.
+            # Only ever once, before the first release: with releases out, a key that cannot be read
+            # is lost, not new, and a new one would end the updates of every installed copy.
+            released=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName --jq 'length')
+            if [ "$released" != "0" ]; then
+              echo "::error::The signing branch or its key could not be read. Restore it; a new key breaks every update."
+              exit 1
+            fi
+            # An existing signing branch refuses this push, so a key is never replaced.
             echo "No release key yet: creating it, encrypted with the secret."
             keytool -genkeypair -keystore "$jks" -storetype PKCS12 -alias amsel -keyalg RSA -keysize 4096 \
               -validity 36500 -storepass:env AMSEL_STOREPASS -keypass:env AMSEL_STOREPASS \

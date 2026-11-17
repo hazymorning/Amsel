@@ -33,7 +33,6 @@ internal data class AbsMedia(
     val tracks: List<AbsTrack> = emptyList(),
     val chapters: List<AbsChapter> = emptyList(),
     val episodes: List<AbsEpisode> = emptyList(),
-    val coverPath: String? = null,
 )
 
 @Serializable
@@ -51,7 +50,7 @@ internal data class AbsTrack(
 }
 
 @Serializable
-internal data class AbsFileMeta(val filename: String? = null, val ext: String? = null, val size: Long = 0)
+internal data class AbsFileMeta(val ext: String? = null, val size: Long = 0)
 
 @Serializable
 internal data class AbsChapter(val start: Double, val end: Double, val title: String = "")

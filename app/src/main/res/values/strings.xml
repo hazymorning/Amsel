@@ -76,5 +76,6 @@
     <string name="update_out">Amsel %1$s is out</string>
     <string name="update_downloading">Amsel %1$s is downloading</string>
     <string name="update_not_downloaded">Amsel %1$s could not be downloaded</string>
+    <string name="update_not_ours">Amsel %1$s was not installed: it is not signed as Amsel is</string>
     <string name="error_no_installer">Android’s installer could not be opened</string>
 </resources>
