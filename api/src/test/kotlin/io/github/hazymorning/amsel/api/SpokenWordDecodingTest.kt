@@ -109,6 +109,9 @@ class SpokenWordDecodingTest {
         assertEquals(12L, item.position)
         assertNull(item.year)
         assertEquals(listOf("Ada", "Ben"), item.authors.map { it.name })
+        // Kept and read back, an author keeps its link.
+        val kept = MaJson.decodeFromString(MediaItem.serializer(), MaJson.encodeToString(MediaItem.serializer(), item))
+        assertEquals(item.authors, kept.authors)
     }
 
     @Test fun `a chapter list merged after an edit keeps only the current chapters`() {
