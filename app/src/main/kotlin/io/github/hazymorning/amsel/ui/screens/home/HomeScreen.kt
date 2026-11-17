@@ -37,8 +37,8 @@ import io.github.hazymorning.amsel.ui.rememberRetry
 import kotlinx.coroutines.flow.combine
 
 /**
- * Home: up to six sections, each a sentence the person sets, "Show [what] as [how]". Long-press a
- * section's title, or Edit Home at the end, to change them in place; Done or Back leaves.
+ * Home: the person's sections, as many as they add, each a sentence they set, "Show [what] as
+ * [how]". A long press on a heading or a free spot edits them in place; Done or Back leaves.
  */
 @Composable
 fun HomeScreen(
