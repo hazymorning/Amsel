@@ -38,8 +38,8 @@ class BarScreenTest {
         val before = compose.onNodeWithText("Search").getUnclippedBoundsInRoot()
         compose.onNodeWithText("Search").assertIsOn().performClick().assertIsOff()
         // It left the bar but kept its row: nothing jumped.
-        assertEquals(BarPlace.entries, places.order)
-        assertEquals(listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Library), places.visible)
+        assertEquals(BarPlace.arrangement(null).order, places.order)
+        assertEquals(listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Library, BarPlace.Settings), places.visible)
         assertEquals(before, compose.onNodeWithText("Search").getUnclippedBoundsInRoot())
         compose.onNodeWithText("Search").performClick()
         assertEquals(BarPlace.Default, places.visible)
@@ -57,16 +57,25 @@ class BarScreenTest {
         val actions = compose.onNodeWithText("Search").fetchSemanticsNode().config[SemanticsActions.CustomActions]
         actions.first { it.label == "Move up" }.action()
         assertEquals(
-            listOf(BarPlace.Home, BarPlace.Search, BarPlace.Speaker, BarPlace.Library) + BarPlace.entries.drop(4),
+            listOf(BarPlace.Home, BarPlace.Search, BarPlace.Speaker) + BarPlace.arrangement(null).order.drop(3),
             places.order,
         )
     }
 
-    @Test fun theBarTakesFiveAtMost() {
+    @Test fun settingsOutOfTheBarSayWhereTheyAre() {
         var places by mutableStateOf(BarPlace.arrangement(null))
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
+        val pull = "Hidden: pull Home down to open Settings"
+        compose.onNodeWithText(pull).assertDoesNotExist()
+        compose.onNodeWithText("Settings").performScrollTo().performClick().assertIsOff()
+        compose.onNodeWithText(pull).assertExists()
+    }
+
+    @Test fun theBarTakesFiveAtMost() {
+        var places by mutableStateOf(BarPlace.arrangement(null).with(BarPlace.Settings, on = false))
+        compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         compose.onNodeWithText("Albums").performScrollTo().performClick().assertIsOn()
-        assertEquals(BarPlace.Default + BarPlace.Albums, places.visible)
+        assertEquals(BarPlace.Default - BarPlace.Settings + BarPlace.Albums, places.visible)
         // Five shown: one more waits, and TalkBack hears why.
         compose.onNodeWithText("Radio").performScrollTo().performClick().assertIsOff()
             .assert(

@@ -20,7 +20,6 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.sheetEnd
-import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsIntro
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignInForm
@@ -37,12 +36,18 @@ data class DownloadSettings(
     val last: AbsAccount? = null,
 )
 
-/** The Downloads row's second line: who is signed in to Audiobookshelf where, or that no one is. */
+/**
+ * The Downloads row's second line: who is signed in to Audiobookshelf where, and how much is on the
+ * phone; or that no one is.
+ */
 @Composable
-internal fun downloadsLine(account: AbsAccount?): String = if (account == null) {
+internal fun downloadsLine(account: AbsAccount?, usedBytes: Long? = null): String = if (account == null) {
     stringResource(R.string.abs_not_connected)
 } else {
-    listOf(account.username, hostOf(account.url)).filter { it.isNotBlank() }.joinToString(DOT_SEPARATOR)
+    val used = usedBytes?.takeIf { it > 0 }?.let {
+        stringResource(R.string.downloads_used, Formatter.formatShortFileSize(LocalContext.current, it))
+    }
+    listOfNotNull(account.username, hostOf(account.url), used).filter { it.isNotBlank() }.dotted()
 }
 
 /**

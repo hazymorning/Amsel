@@ -1,8 +1,10 @@
 package io.github.hazymorning.amsel.ui.screens.library
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MediaType
+import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import kotlinx.serialization.Serializable
 
@@ -74,3 +76,15 @@ fun LibraryKind.isHeld(held: Set<MediaType>, downloads: Boolean): Boolean = when
  */
 fun libraryKinds(arranged: List<LibraryKind>, held: Set<MediaType>, downloads: Boolean = false): List<LibraryKind> =
     arranged.filter { it.isHeld(held, downloads) }.ifEmpty { arranged }
+
+@get:StringRes
+val LibraryKind.label: Int
+    get() = when (this) {
+        LibraryKind.Playlists -> PlaybackR.string.playlists
+        LibraryKind.Albums -> PlaybackR.string.albums
+        LibraryKind.Artists -> PlaybackR.string.artists
+        LibraryKind.Audiobooks -> PlaybackR.string.audiobooks
+        LibraryKind.Podcasts -> PlaybackR.string.podcasts
+        LibraryKind.Radio -> R.string.radio
+        LibraryKind.Downloads -> R.string.downloads
+    }

@@ -26,6 +26,7 @@ artist_selected     user                   fill
 radio_selected      radio                  fill
 audiobook_selected  book-open              fill
 podcast_selected    microphone             fill
+settings_selected   gear-six               fill
 
 # Transport: filled, as on every media control.
 play                play                   fill
@@ -45,6 +46,10 @@ close               x
 check               check
 more                dots-three             bold
 settings            gear-six
+palette             palette
+updates             arrow-circle-up
+browser             browser
+sign_out            sign-out               mirrored
 open_external       arrow-square-out       mirrored
 edit                pencil-simple
 title               text-t

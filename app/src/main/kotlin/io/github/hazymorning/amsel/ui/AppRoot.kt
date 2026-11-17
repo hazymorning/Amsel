@@ -294,6 +294,7 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         is Route.SimilarSongs -> SimilarSongsRoute(navigator, route.key, route.title)
         is Route.SeeAll -> SeeAllRoute(navigator, route.option, title = route.title)
         Route.Settings -> SettingsRoute(navigator)
+        Route.SettingsPlace -> SettingsRoute(navigator, asPlace = true)
         Route.Bar -> BarRoute(navigator)
         Route.Dock -> DockRoute(navigator)
         Route.Hints -> HintsRoute(navigator)

@@ -1,8 +1,8 @@
 package io.github.hazymorning.amsel.ui.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -106,9 +105,9 @@ internal fun PlayerCard(
 
 /**
  * Nothing plays: an empty cover and the speaker's name over "Not playing". A tap anywhere on the
- * card opens the speaker choice, the one thing to do here; TalkBack reads the words, and chooses
- * with the speaker's button where the person keeps one in the mini player ([speakerButton]), or with
- * the band's after Home. Play and the rest wait for something to play.
+ * card opens the speaker choice, the one thing to do here, and TalkBack offers the card as that
+ * button; the speaker's own button stays where the person keeps one in the mini player
+ * ([speakerButton]). Play and the rest wait for something to play.
  */
 @Composable
 private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit, speakerButton: Boolean) {
@@ -119,7 +118,13 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit, speakerButton: Bo
     Row(
         Modifier
             .fillMaxWidth()
-            .pointerInput(onSpeaker) { detectTapGestures { onSpeaker() } }
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                onClickLabel = stringResource(R.string.dock_speaker),
+                role = Role.Button,
+                onClick = onSpeaker,
+            )
             .padding(start = Inset, top = Inset, end = end, bottom = Inset)
             .heightIn(min = Sizes.DockArt),
         verticalAlignment = Alignment.CenterVertically,

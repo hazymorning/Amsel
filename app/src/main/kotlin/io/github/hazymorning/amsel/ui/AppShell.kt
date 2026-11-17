@@ -135,6 +135,10 @@ fun AppShell(
     }
     val dockHeight = remember { mutableIntStateOf(0) }
     val stack = tabs.stack(tab)
+    // A place taken out of the bar from its own pages keeps them; back at its top, which nothing opens
+    // any more, the person is Home. Search may stand outside the bar, as Home's field opens it.
+    val stranded = tab != Tab.Home && tab != Tab.Search && bar.none { it.tab == tab }
+    LaunchedEffect(stranded, stack.size) { if (stranded && stack.size == 1) tab = Tab.Home }
     // Nothing left to show: the layer folds away rather than leaving its scrim behind.
     val nothingPlays = nowPlaying == null
     LaunchedEffect(nothingPlays) { if (nothingPlays) layer.close() }
