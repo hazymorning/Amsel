@@ -107,7 +107,7 @@ internal fun RowList(
                 )
             }
         }
-        if (scrubber) LetterScrubber(state.letters, listState, headerItems = 1)
+        if (scrubber) LetterScrubber(state.letters, listState)
     }
 }
 
@@ -143,7 +143,7 @@ internal fun CoverGrid(
                 )
             }
         }
-        if (scrubber) LetterScrubber(state.letters, gridState, headerItems = 1)
+        if (scrubber) LetterScrubber(state.letters, gridState)
     }
 }
 
