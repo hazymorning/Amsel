@@ -55,12 +55,8 @@ edit                pencil-simple
 title               text-t
 title_off           text-t-slash
 add                 plus
-minus               minus
-chevron             caret-right            mirrored
 sleep               moon
 dropdown            caret-down             stroke:29
-move_up             arrow-up
-move_down           arrow-down
 
 # Items and their actions.
 album               vinyl-record
@@ -92,8 +88,6 @@ dj                  microphone-stage
 # Speakers and volume.
 speaker             room                   custom
 queue               queue                  custom
-group               link-simple
-ungroup             link-break
 phone               device-mobile
 volume              speaker-high
 
