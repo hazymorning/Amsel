@@ -53,7 +53,7 @@ class Playback(
     private val local: LocalPlayback,
     private val scope: CoroutineScope,
     /** What helps around a play: a speaker that cannot be reached or is all the way down. */
-    private val hints: () -> Hints? = { null },
+    private val hints: () -> Hints,
 ) {
     private var connection: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
@@ -162,7 +162,7 @@ class Playback(
         val target = graph.target.value
         val speaker = playing.speaker.value
         val replay = { play(uris, startItem, shuffle, option, title, startPositionMs) }
-        if (speaker.id == target.playerId && hints()?.unreachable(speaker, replay) == true) return
+        if (speaker.id == target.playerId && hints().unreachable(speaker, replay)) return
         val downloaded = uris.singleOrNull()?.takeIf { option == QueueOption.Replace && target.isPhone }
             ?.takeIf { data.downloads.manifest(it) != null }
         if (downloaded != null) return playDownload(downloaded, startPositionMs)
@@ -182,7 +182,7 @@ class Playback(
                 startPositionMs,
             ),
         )
-        hints()?.started()
+        hints().started()
     }
 
     /** Ends what This phone plays from its own files, if anything: the server's stream takes its place. */
@@ -218,7 +218,7 @@ class Playback(
         val now = playing.nowPlaying.value
         if (now?.key == uri && now.isPlaying) return true
         if (parkedHere(uri)) control(PlayerControl.PlayPause) else play(listOf(uri), title = title)
-        title?.let { hints()?.spokenStarted(it) }
+        title?.let { hints().spokenStarted(it) }
         return false
     }
 
@@ -231,7 +231,7 @@ class Playback(
         } else {
             play(listOf(uri), title = title)
         }
-        if (!pauses) title?.let { hints()?.spokenStarted(it) }
+        if (!pauses) title?.let { hints().spokenStarted(it) }
     }
 
     /**
