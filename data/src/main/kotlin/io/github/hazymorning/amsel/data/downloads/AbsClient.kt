@@ -225,8 +225,6 @@ class AbsClient(
         if (!base.isHttps && !reachesHome()) throw AbsException(AbsException.Reason.AwayFromHome)
         return try {
             runInterruptible(Dispatchers.IO) { http.forUrl(base).newCall(request).execute() }
-        } catch (e: AbsException) {
-            throw e
         } catch (e: IOException) {
             throw AbsException(
                 if (e.isCertificateError()) AbsException.Reason.Certificate else AbsException.Reason.Unreachable,

@@ -191,7 +191,7 @@ class Downloads(
         val stub = store.manifest(uri) ?: return
         val manifest = if (stub.files.isEmpty()) job.plan(stub).also(store::save) else stub
         _entries.update { if (uri in it) it + (uri to manifest) else it }
-        val cover = job.cover(manifest)
+        job.cover(manifest)
         val total = manifest.bytes
         var before = 0L
         var shown = -1L
@@ -205,7 +205,7 @@ class Downloads(
             }
             before += file.size
         }
-        val complete = manifest.copy(hasCover = cover, complete = true)
+        val complete = manifest.copy(complete = true)
         store.save(complete)
         _entries.update { if (uri in it) it + (uri to complete) else it }
         _done.update { it + (uri to complete) }

@@ -19,6 +19,7 @@ import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -88,7 +89,8 @@ class DownloadsTest {
         assertEquals(listOf(0.0, 100.0), manifest.files.map { it.startSec })
         assertEquals(listOf("Eins", "Zwei"), manifest.chapters.map { it.title })
         assertEquals(200.0, manifest.durationSec, 0.0)
-        assertTrue(manifest.complete && manifest.hasCover)
+        assertTrue(manifest.complete)
+        assertNotNull(downloads.cover(BOOK))
         manifest.files.forEachIndexed { i, file ->
             assertArrayEquals(abs.files[i], downloads.file(BOOK, file).readBytes())
         }
