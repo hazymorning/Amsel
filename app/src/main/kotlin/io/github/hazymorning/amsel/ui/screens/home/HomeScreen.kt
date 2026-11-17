@@ -162,7 +162,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boo
             graph.mapper,
             graph.messages,
             graph.spokenWord,
-            combine(graph.playing.speakers, graph.playing.speaker) { all, inUse -> HomeSpeakers(all, inUse) },
+            combine(graph.playing.speakers, graph.playing.speaker, HomeSpeakers::of),
             editOnly = editOnly,
         )
     }
