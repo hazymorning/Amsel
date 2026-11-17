@@ -34,7 +34,8 @@ run here generates it on the runner (PKCS12, RSA 4096, alias `amsel`; keytool ac
 so the keystore's own password is the SHA-256 hex of the secret), encrypts it with that password
 (AES-256-CBC, PBKDF2 with 600,000 iterations) and pushes the encrypted file to the `signing`
 branch. Every later release decrypts the same key from there, signs, and deletes the decrypted
-copy; an existing `signing` branch refuses a second key. The password is the one thing to keep
+copy; an existing `signing` branch refuses a second key, and once a release is out a run that
+cannot read the key stops rather than make a new one. Releases come from `main` only, by hand too. The password is the one thing to keep
 safe; never delete the `signing` branch. Losing either means users must uninstall to get later
 updates, as 2026.11.31 asked once: the key of the private repository's releases could not move,
 its password being lost.
