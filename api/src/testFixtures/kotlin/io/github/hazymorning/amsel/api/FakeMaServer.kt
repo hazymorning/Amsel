@@ -69,11 +69,12 @@ public fun withFakeApi(
 }
 
 /**
- * A Music Assistant stand-in on MockWebServer. Sends [serverInfo] on connect and answers each
- * command with [handler]'s frames (the message_id is filled in).
+ * A Music Assistant stand-in on MockWebServer. Sends [first] and then [serverInfo] on connect, and
+ * answers each command with [handler]'s frames (the message_id is filled in).
  */
 public class FakeMaServer(
     private val serverInfo: JsonElement = fixture("2.10", "server_info")["response"]!!,
+    private val first: List<JsonObject> = emptyList(),
     private val handler: (command: String, args: JsonObject?) -> List<JsonObject>,
 ) : AutoCloseable {
     public val server: MockWebServer = MockWebServer()
@@ -103,6 +104,7 @@ public class FakeMaServer(
     private fun listener() = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             sockets += webSocket
+            first.forEach { webSocket.send(it.toString()) }
             webSocket.send(serverInfo.toString())
         }
 

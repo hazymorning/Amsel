@@ -1,17 +1,22 @@
 package io.github.hazymorning.amsel.api
 
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -28,9 +33,10 @@ class MaClientTest {
     private fun withClient(
         answering: JsonObject,
         sameNetwork: Boolean,
+        first: List<JsonObject> = emptyList(),
         block: suspend (MaClient, FakeMaServer) -> Unit,
     ) = runBlocking {
-        val fake = FakeMaServer(answering) { command, _ ->
+        val fake = FakeMaServer(answering, first) { command, _ ->
             if (command == "auth") listOf(FakeMaServer.recorded("2.11", "auth")) else emptyList()
         }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -73,4 +79,39 @@ class MaClientTest {
             while (fake.server.requestCount < 2) delay(50)
             assertEquals(ConnectionState.Offline, client.state.value)
         }
+
+    @Test fun `a refusal before the server names itself never signs out`() =
+        withClient(ours, sameNetwork = true, first = listOf(refusal)) { client, fake ->
+            client.start(fake.address, "token", ourId)
+            // Whatever answers there first refuses: each try ends, and nothing is given up or sent.
+            while (fake.server.requestCount < 2) delay(50)
+            assertEquals(ConnectionState.Offline, client.state.value)
+            assertTrue(fake.received.toString(), fake.received.isEmpty())
+        }
+
+    @Test fun `events are heard once the server has named itself, not before`() =
+        withClient(ours, sameNetwork = false, first = listOf(event("before"))) { client, fake ->
+            val heard = CopyOnWriteArrayList<MaEvent>()
+            coroutineScope {
+                val listening = launch(Dispatchers.IO) { client.events.collect { heard += it } }
+                client.start(fake.address, "token", ourId)
+                client.state.first { it is ConnectionState.Connected }
+                fake.push(event("after"))
+                while (heard.isEmpty()) delay(20)
+                listening.cancel()
+            }
+            assertEquals(listOf("after"), heard.map { it.objectId })
+        }
+
+    private val refusal = buildJsonObject {
+        put("message_id", "connection")
+        put("error_code", MaCommandException.ERROR_INVALID_TOKEN)
+        put("details", "Invalid token")
+    }
+
+    private fun event(objectId: String) = buildJsonObject {
+        put("event", "player_updated")
+        put("object_id", objectId)
+        put("data", buildJsonObject {})
+    }
 }

@@ -107,8 +107,15 @@ internal class MaSocket(
                 is Incoming.Event -> onEvent(msg.event)
 
                 // Sent right after server_info when the server has no users yet ("Setup required").
+                // Before it, nothing has said who answers: a refusal then ends this try, never a session.
                 is Incoming.Error -> if (msg.messageId == CONNECTION) {
-                    end(MaCommandException(CONNECTION, msg.code, msg.details))
+                    end(
+                        if (serverInfo.isCompleted) {
+                            MaCommandException(CONNECTION, msg.code, msg.details)
+                        } else {
+                            MaConnectionException("Refused before saying which server it is (${msg.code})")
+                        },
+                    )
                 } else {
                     pending[msg.messageId]?.let {
                         it.result.completeExceptionally(MaCommandException(it.command, msg.code, msg.details))
