@@ -10,12 +10,7 @@ import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.positionAt
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 
 /** A place in a book or an episode, kept on this phone. [chapter] is its 1-based number, if it has chapters. */
@@ -66,7 +61,7 @@ class Bookmarks(
         messages.showUndo(R.string.bookmark_saved, where) { remove(bookmark.id) }
     }
 
-    /** Plays from [bookmark]: a seek when its item is the speaker's, else the item, then the seek. */
+    /** Plays from [bookmark]: a seek when its item is the speaker's, else the item from there. */
     fun play(bookmark: Bookmark) {
         val now = playing.nowPlaying.value
         if (now?.key == bookmark.itemKey) {
@@ -74,15 +69,7 @@ class Bookmarks(
             if (!now.isPlaying) playback.control(PlayerControl.PlayPause)
             return
         }
-        playback.play(listOf(bookmark.itemKey), title = bookmark.itemTitle)
-        scope.launch {
-            val started = withTimeoutOrNull(START_WAIT_MS) {
-                playing.nowPlaying.first { it?.key == bookmark.itemKey && it.durationMs > 0 }
-            }
-            if (started != null) {
-                withContext(Dispatchers.Main) { playback.control(PlayerControl.Seek(bookmark.positionMs)) }
-            }
-        }
+        playback.play(listOf(bookmark.itemKey), title = bookmark.itemTitle, startPositionMs = bookmark.positionMs)
     }
 
     /** Deletes [bookmark] and offers to bring it back. */
@@ -99,6 +86,5 @@ class Bookmarks(
 
     private companion object {
         const val MS = 1000L
-        const val START_WAIT_MS = 20_000L
     }
 }
