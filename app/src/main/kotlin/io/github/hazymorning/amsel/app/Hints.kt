@@ -120,7 +120,7 @@ class Hints(
 
     /** A song went into [playlist]: said with its cover, and a way there where [open] leads. */
     fun addedTo(playlist: MediaUi, open: (() -> Unit)?) {
-        scope.launch { data.prefs.setLastPlaylist(playlist.key, playlist.title) }
+        scope.launch { data.prefs.setLastPlaylist(playlist.key) }
         if (open == null) return messages.show(R.string.added_to_playlist, playlist.title)
         offers.offer(
             Offer(
