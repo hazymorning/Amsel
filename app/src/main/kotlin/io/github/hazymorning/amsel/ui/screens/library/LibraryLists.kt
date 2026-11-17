@@ -97,12 +97,12 @@ internal fun RowList(
         ) {
             header(header)
             items(state.items, key = { it.key }, contentType = { "row" }) { item ->
-                // Playlists and artists never carry the ring: what plays and its album, book or podcast do.
                 MediaRow(
                     item,
                     onClick = { onOpen(item) },
                     onMore = { onMore(item) },
                     itemActions,
+                    playing = item.key in state.playing,
                     subtitle = if (twoLines) item.secondLine() else null,
                 )
             }
