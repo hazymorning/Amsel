@@ -37,16 +37,15 @@ import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.components.FieldNote
 import io.github.hazymorning.amsel.ui.components.LabelledField
-import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
-import io.github.hazymorning.amsel.ui.components.Spinner
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.rememberLocalNetworkGate
+import io.github.hazymorning.amsel.ui.screens.setup.SetupButton
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
@@ -98,6 +97,7 @@ internal fun AbsSignInForm(
     val fill = MaterialTheme.colorScheme.surfaceContainerHigh
     // An address on the home network needs that permission first on Android 17.
     val send = rememberLocalNetworkGate {
+        // The keyboard's Done can ask again while it signs in, as the button cannot.
         if (!busy) {
             busy = true
             error = null
@@ -174,17 +174,8 @@ internal fun AbsSignInForm(
         val other = error?.takeIf { it.addressError == null && it != AbsException.Reason.WrongLogin }
         if (other != null) FieldNote(stringResource(R.string.abs_error_server), error = true)
         Spacer(Modifier.height(Space.Group))
-        PrimaryButton(
-            button,
-            onClick = { if (!busy) send() },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = ready || busy,
-            content = if (busy) {
-                { Spinner() }
-            } else {
-                null
-            },
-        )
+        // As Setup's: a spinner in place of its word while it signs in, which TalkBack says.
+        SetupButton(button, send, enabled = ready, busy = busy, busyLabel = stringResource(R.string.setup_signing_in))
     }
 }
 
