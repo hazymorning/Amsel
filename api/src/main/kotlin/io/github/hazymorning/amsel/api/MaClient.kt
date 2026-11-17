@@ -186,7 +186,8 @@ public class MaClient(
     }
 }
 
+/** Signs [socket] in with [token]; a user this app cannot read is no user, never a failed connection. */
 internal suspend fun authenticate(socket: MaSocket, token: String): MaUser? {
     val result = socket.call("auth", buildJsonObject { put("token", token) }) as? JsonObject
-    return result?.get("user")?.let { MaJson.decodeFromJsonElement(MaUser.serializer(), it) }
+    return result?.get("user")?.let { decodeLeniently(MaUser.serializer(), it) }
 }

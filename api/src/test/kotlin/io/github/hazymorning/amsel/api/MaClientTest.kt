@@ -114,4 +114,21 @@ class MaClientTest {
         put("object_id", objectId)
         put("data", buildJsonObject {})
     }
+
+    @Test fun `a user it cannot read still connects`() = runBlocking {
+        // A later server changes its user object: the app connects, knowing less about who it is.
+        val oddUser = FakeMaServer.result(buildJsonObject { put("user", buildJsonObject { put("user_id", "u1") }) })
+        val fake = FakeMaServer(ours) { command, _ -> if (command == "auth") listOf(oddUser) else emptyList() }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val client = MaClient(OkHttpClient(), scope) { false }
+        try {
+            client.start(fake.address, "token", ourId)
+            val connected = withTimeout(10_000) { client.state.first { it is ConnectionState.Connected } }
+            assertEquals(null, (connected as ConnectionState.Connected).user)
+        } finally {
+            client.stop()
+            scope.cancel()
+            fake.close()
+        }
+    }
 }
