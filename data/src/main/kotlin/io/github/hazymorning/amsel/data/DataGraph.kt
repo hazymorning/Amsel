@@ -218,9 +218,11 @@ class DataGraph(
         }
         // A book or episode just finished or marked leaves Continue listening before Home reloads.
         scope.launch { library.progress.collect { if (it.fullyPlayed) home.finished(it.uri) } }
+        // The speakers on their own: they change in memory at once, while the library writes to its
+        // index, which a provider's sync floods with events; behind it a pause would wait its turn.
+        scope.launch { session.client.events.collect { speakers.onEvent(it) } }
         scope.launch {
             session.client.events.collect { event ->
-                speakers.onEvent(event)
                 val indexChanged = library.onEvent(event)
                 val ready = session.state.value as? SessionState.Ready
                 if (event.name == "music_sync_completed" && ready != null) resyncLibrarySoon(ready.server)
