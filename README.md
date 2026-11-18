@@ -6,10 +6,15 @@
 <br>
 <br>
 
-A music player for Music Assistant with:
+Amsel is a music player for Music Assistant, made for Android.
 
-- A calm, adaptable UI
-- A focus on speaker management
-- Features that came from using it every day
+A music system shared by a whole household only really works if everyone in it is happy to use it, not just the person who set it up. Amsel is made with that in mind, for those who prefer a calm, adjustable app that doesn't get in the way of the music.
 
-<br><sub>Amsel is the German word for blackbird. The blackbird is a plain-looking bird and is known mostly for its song.</sub>
+**A few things guide how it's built:**
+
+- A quiet design with minimal branding
+- Interface and behaviour that can be adjusted
+- Speakers and rooms as a central part of the app
+- Features that came out of everyday use at home
+
+<br><sub>Amsel is German for blackbird, a rather plain-looking bird known mostly for its song.</sub>
