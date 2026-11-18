@@ -8,7 +8,7 @@
 
 Amsel is a music player for Music Assistant, made for Android. It comes in light and dark, and in English and German.
 
-A music system shared by a whole household only really works if everyone in it is happy to use it, not just the person who set it up. Amsel is made with that in mind, for those who prefer a calm, adjustable app that doesn't get in the way of the music.
+A music system shared by a household really only works if everyone is comfortable using it, not just the person who set it up. Amsel tries to keep that in mind by being easy to understand and nice to use. People also have different ideas about where things should go, so much of it can be adjusted.
 
 <br>
 
