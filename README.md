@@ -27,4 +27,4 @@ A music system shared by a whole household only really works if everyone in it i
 - Speakers and rooms as a central part of the app
 - Features that came out of everyday use at home
 
-<br><sub>The app is developed with the help of AI tools. It exists because an adjustable player with a calm design was needed, not because building a music player sounded like fun. Amsel is German for blackbird, a rather plain-looking bird known mostly for its song.</sub>
+<br><sub>The app is developed with the help of AI tools. It exists because the last missing piece of a music setup at home was a player for quite a specific taste and wish list, not because building one sounded like fun. Amsel is German for blackbird, a rather plain-looking bird known mostly for its song.</sub>
