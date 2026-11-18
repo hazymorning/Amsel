@@ -16,7 +16,8 @@ Plan: `docs/PLAN.md`. Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.
   agents at once), **Gezwitscher** (drafts and working notes).
 - Commit messages: short imperative subject; a body only when it adds information.
 - Docs stay short and factual. The README is the owner's: the header (`docs/design/readme`, drawn
-  by `scripts/design/readme-header.py`), what Amsel is, and the blackbird's line small at its foot.
+  by `scripts/design/readme-header.py`), what Amsel is, four screens in GitHub's light or dark
+  theme (laid out by `scripts/design/readme-screens.py`), and the blackbird's line small at its foot.
 - Every release has a short name of its own with some character, from a bird's life, the heading of
   `release/NOTES.md`, a calendar version, and is titled "Nesting luck • 2026.11.0"; its notes have
   100 to 150 words under New, Better and Fixed (`docs/RELEASING.md`).
