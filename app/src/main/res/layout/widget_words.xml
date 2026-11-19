@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The speaker and what plays, in the phone's own sans-serif, which WidgetText measures: sizes and
-     lines as WidgetLine has them. Each line's start padding is what puts its first ink on the frame
-     (WidgetWordsViews). The level stands after the name in a view of its own; the time under all. -->
+     lines as WidgetLine has them. The view stands the words' lead outside its box at the start, and
+     each line's start padding puts its first ink on the box's edge (WidgetWordsViews). The level
+     stands after the name in a view of its own; the time under all. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_words"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingTop="3dp">
+    android:layout_marginStart="@dimen/widget_words_lead_out"
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/widget_speaker_row"

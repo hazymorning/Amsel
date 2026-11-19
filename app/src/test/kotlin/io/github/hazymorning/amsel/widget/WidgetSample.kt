@@ -4,8 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.SizeF
+import android.view.View
+import android.view.ViewGroup
 import android.widget.RemoteViews
 import coil3.SingletonImageLoader
+import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.RepeatMode
 import kotlinx.coroutines.runBlocking
 
@@ -64,6 +67,9 @@ object WidgetSample {
     val bar = SizeF(356f, 96f)
     val player = SizeF(356f, 204f)
 
+    /** One row on a phone with five rows: a strip a little lower than the others. */
+    val strip = SizeF(356f, 72f)
+
     /** Two cells by three. */
     val tallCard = SizeF(172f, 312f)
 
@@ -94,4 +100,12 @@ object WidgetSample {
         val blanks = listOf(side).filter { it > 0 }.associateWith { WidgetArt.blank(it, density) }
         return views.build(1, setup, look, listOf(fit), WidgetPictures(blanks = blanks), clearInk = false, taps = false)
     }
+}
+
+/** The buttons a drawn widget shows, in the order they stand: rows from the top, each from its start. */
+fun View.cells(): List<View> = when {
+    visibility != View.VISIBLE -> emptyList()
+    id == R.id.widget_cell -> listOf(this)
+    this is ViewGroup -> (0 until childCount).flatMap { getChildAt(it).cells() }
+    else -> emptyList()
 }

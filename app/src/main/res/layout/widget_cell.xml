@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A button: a touch target sharing its row's width, and in it the cell it shows or, bare, its
+     pressed shade, half a gap in at the sides (widget_cell_*, widget_bare_*), so the layout keeps
+     the cells and their gaps even at any size the launcher gives. In a row lower than a target, the
+     target reaches past the frame above and below and the cell stays in it (WidgetCellsViews). Its
+     glyph, or its item's cover, in the middle. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_cell"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1">
+
+    <!-- Not one view with the target: the target's padding keeps the cell in the frame. -->
+    <FrameLayout
+        android:id="@+id/widget_cell_shape"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bare_light"
+        android:duplicateParentState="true"
+        tools:ignore="UselessParent">
+
+        <ImageView
+            android:id="@+id/widget_glyph"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <ImageView
+            android:id="@+id/widget_face"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+    </FrameLayout>
+</FrameLayout>

@@ -9,10 +9,10 @@
     <string name="podcasts">Podcasts</string>
     <string name="continue_listening">Weiterhören</string>
     <string name="browse_music">Musik</string>
-    <string name="browse_sign_in">Wenn es sicher ist, auf dem Handy anmelden</string>
+    <string name="browse_sign_in">Melde dich auf dem Handy an, sobald es sicher ist</string>
     <string name="browse_open_app">Amsel öffnen</string>
     <string name="browse_not_found">Das wurde in Music\u00A0Assistant nicht gefunden</string>
-    <string name="error_too_old">Dieser Music\u00A0Assistant ist zu\u00A0alt. Bitte zuerst aktualisieren.</string>
+    <string name="error_too_old">Diese Version von Music\u00A0Assistant ist zu\u00A0alt. Bitte zuerst aktualisieren.</string>
 
     <!-- The notification's buttons for a book or an episode -->
     <plurals name="back_seconds">
@@ -36,8 +36,8 @@
     <string name="error_generic">Etwas ist schiefgelaufen</string>
     <string name="session_like">Gefällt mir</string>
     <string name="session_unlike">Gefällt mir nicht mehr</string>
-    <string name="session_previous">Vorheriges</string>
-    <string name="session_next">Nächstes</string>
+    <string name="session_previous">Zurück</string>
+    <string name="session_next">Weiter</string>
     <string name="download_channel">Downloads</string>
     <plurals name="download_title">
         <item quantity="one">Ein Hörbuch oder eine Folge wird heruntergeladen</item>

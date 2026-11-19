@@ -37,12 +37,19 @@ class WidgetViews(private val context: Context) {
     fun label(slot: WidgetSlot, look: WidgetLook): String = slots.label(slot, look)
 
     /** How a widget [width] by [height] dp lays out [setup], every button of it, as its page counts them. */
-    fun fit(width: Float, height: Float, setup: WidgetSetup): WidgetFit =
-        widgetFit(width, height, setup.slots.size, text.type)
+    fun fit(width: Float, height: Float, setup: WidgetSetup): WidgetFit = fit(width, height, setup, setup.slots.size)
 
-    /** How it lays out what [look] shows: a button with nothing to act on there gives way; its time shows. */
-    fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetLook): WidgetFit =
-        widgetFit(width, height, setup.slots.count { it.button.availableIn(look) }, text.type, look.hasTime)
+    /**
+     * How it lays out what [look] shows: a button with nothing to act on there gives way, and signed
+     * out none stands, as what plays asks to sign in; its time shows.
+     */
+    fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetLook): WidgetFit {
+        val buttons = if (look.signedIn) setup.slots.count { it.button.availableIn(look) } else 0
+        return fit(width, height, setup, buttons, look.hasTime)
+    }
+
+    private fun fit(width: Float, height: Float, setup: WidgetSetup, buttons: Int, time: Boolean = false) =
+        widgetFit(width, height, buttons, text.type, time, setup.showsWords, bare = setup.cells == WidgetCells.None)
 
     /**
      * Widget [id] at each of [fits]: from Android 12 the launcher shows the one for its size; before,

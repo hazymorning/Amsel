@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One row: the buttons as cells filling the frame; without buttons, what plays. -->
+<!-- Buttons alone: rows of cells (widget_pad_row), added and placed in the frame's middle from
+     WidgetDrawing. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -25,25 +26,9 @@
         android:importantForAccessibility="no"
         android:visibility="gone" />
 
-    <FrameLayout
-        android:id="@+id/widget_body"
+    <LinearLayout
+        android:id="@+id/widget_pad"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/widget_padding">
-
-        <include
-            layout="@layout/widget_buttons"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="@dimen/widget_cell_inset_out"
-            android:layout_marginEnd="@dimen/widget_cell_inset_out" />
-
-        <include
-            layout="@layout/widget_words"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="@dimen/widget_words_lead_out"
-            android:visibility="gone" />
-    </FrameLayout>
+        android:orientation="vertical" />
 </FrameLayout>

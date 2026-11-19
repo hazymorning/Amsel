@@ -15,11 +15,25 @@ at whatever size the launcher finally draws.
 | Form | Size | Holds |
 | --- | --- | --- |
 | Tile | under two cells both ways | the whole tile is one button: its cell in the frame; a Play … button is its item's cover; with no button, the cover of what plays |
-| Row | one row, under four cells wide | the buttons in the frame's middle, as high as under words; with none, the speaker over the title |
-| Card | two rows and more | the speaker, the title, the line under it and the time, over a row of buttons |
-| Poster | two cells wide, tall enough for the cover across | the cover across the frame, the speaker and the title under it, the buttons at the foot |
-| Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end |
-| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, over a row of buttons |
+| Pad | one row under four cells wide, or what plays left out | the buttons alone, in as few rows as hold them, in the frame's middle |
+| Line | one row, no buttons | the speaker over the title |
+| Card | two rows and more | the speaker, the title, the line under it and the time, above or below a row of buttons |
+| Poster | two cells wide, tall enough for the cover across | the cover across the frame, the speaker and the title under it, a row of buttons at the foot or the top |
+| Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end or the start |
+| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, above or below a row of buttons |
+
+What plays (the cover and the words) is a part of the widget as its buttons are: before them, as it
+comes, after them, or left out. The two parts stand at the widget's two ends, the room between
+them; a part with nothing in it leaves the other alone. Left out, the buttons fill the widget (Pad):
+in as few rows as hold them, each as full as the next, their cells as wide as the row allows and
+about as high, at least 56; a last row with fewer keeps the others' cell width, in its middle. Four
+buttons in a square stand two by two.
+
+The layouts hold the frame and the places; the cells and the words are added at draw time
+(`RemoteViews.addView`): a row before what plays and one after it, of which one is used, and the
+words in the layout of their size. So the order is the person's without a layout for each order,
+and no layout carries eight fixed buttons. The picker's preview and a widget's first moment show
+fixed layouts of the transport (`widget_preview_*`).
 
 ## Frame and cells
 
@@ -29,22 +43,31 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
 (Jetpack Glance canonical layouts, `ToolBarLayout`: 12 dp padding, equal-width cells, 24 dp icons,
 48 dp targets) show the way that cannot drift:
 
-- **One frame:** 12 dp on all four sides of every form, set in the layouts (`widget_padding`).
-- **Cells:** each button is a cell with the corner of the widget less the frame (28 − 12 = 16). Cells
+- **One frame:** 16 dp on all four sides of every form, Android's own room inside a widget
+  (`system_app_widget_internal_padding`); 12 dp put the words too near the corner.
+- **Cells:** each button is a cell with the corner of the widget less the frame (28 − 16 = 12). Cells
   share their row's width equally, 4 dp apart. A cell's shape stands 2 dp inside its touch target on
   either side, so the targets meet and reach 2 dp into the frame: three targets of 48 dp fit two
-  cells of a usual phone (172 dp), each cell 46.7 dp wide. In one row they are 56 dp high in its
+  cells of a usual phone (172 dp), each cell 44 dp wide. In one row they are 56 dp high in its
   middle, as under words, not a capsule the height of the widget.
+- **Bare buttons** draw nothing at a row's ends, so their targets reach sideways to 4 dp from the
+  widget's edge (`WidgetSizes.REACH`): a square 156 dp wide holds three of them where two cells
+  stand, and every glyph still keeps the frame.
+- **Targets stay 48 dp high:** in a row lower than a cell and its frame (a strip 72 dp high), the
+  targets reach into the frame above and below as far, and the cells drawn in them keep the frame.
 - **Shading:** the person chooses which cells show (Button backgrounds): play and pause alone, as it
   comes (Google's expressive toolbar fills its main button alone); every one; or none. A button
   without its cell shows the cell's shade while pressed. Its place stays the same either way, so the
   glyphs stand as evenly as the cells (`WidgetInsetsTest`).
 - **Words:** their first letter's ink (its side bearing, the font's metrics read on the phone) and
-  the speaker's glyph stand on the frame; in a row or a bar their ink, not their box, stands in the
-  middle, beside a player's cover in the cover's middle. They give way in order as the height or the
-  text size asks: the time, the title's second line, the line under the title, the speaker's line;
-  the level after the speaker's name whole or not at all. Where every line has room, as on a card two
-  by two and a half or a player three rows high, they are a fifth larger (`widget_words_large`).
+  the speaker's glyph stand on the frame; after the buttons, their last baseline stands on it at
+  the foot; in a row or a bar their ink, not their box, stands in the middle, beside a player's
+  cover in the cover's middle. They give way in order as the height or the text size asks: the time,
+  the title's second line, the line under the title; then the speaker and the title grow an eighth
+  smaller, 4 dp apart (`widget_words_small`), before the speaker's line goes, so a strip lower than
+  usual keeps both; the level after the speaker's name whole or not at all. Where every line has
+  room, as on a card two by two and a half or a player three rows high, they are a fifth larger
+  (`widget_words_large`).
 - **Time:** while a song plays, where it stands of its length; while a book or an episode plays,
   what is left at its speed. A `Chronometer` ticks it on the launcher's side, so Amsel draws nothing
   for it; at rest it stands as plain words, as a stopped `Chronometer` works its time out again
@@ -84,12 +107,12 @@ Amsel's weights, the one font a widget can count on.
 | Previous | the song before; 15 s back in a book or an episode | skip previous |
 | Favourite | the song's heart, as Now Playing's | the heart, filled when it is one |
 | Shuffle, Repeat | as Now Playing's; repeat goes off, all, one | quieter while off; repeat one's own glyph |
-| Quieter, Louder | 5 from the level the widget shows (2 below 10), set as a level; Louder stops at the volume limit and says so | speaker low, high |
+| Quieter, Louder | the server's own step, as its volume up and down take it: its Volume step setting, else 1 near silence and near full, 2, and 3 in the middle; Louder stops at the volume limit and says so | speaker low, high |
 | Speakers | opens Play on (`amsel://speakers`) | the speaker |
 | Continue listening | the book or episode heard last (`Catalog.inProgress(1)`) | a book |
 | Play … | one album, playlist, artist, station, book or podcast, picked once | its cover |
 
-None to eight, in the person's order; the widget's page says how many fit at its size. As they
+None to eight, in the person's order; the widget's page says how many fit at its size and which. As they
 come: Button, play and pause; Buttons and Now playing, the transport, then the heart and shuffle
 where the widget is wide. With Quieter or Louder among them, the level stands after the speaker's
 name.
@@ -105,10 +128,15 @@ plays.
 A widget is placed without a page (`configuration_optional`); a long press on it, the launcher's
 way to change a widget (`reconfigurable`), opens its page, as does placing it before Android 12.
 The page shows the widget at its size on the home screen, over the wallpaper's own colour, and
-under it the look (Cover, Plain, Clear), the speaker, and the buttons: each to change, take away
-or move by its handle, a held press or TalkBack's actions, as on Amsel's arrange pages; one more
-while there are fewer than four. A button the size cannot hold says so in its row. Play … picks
-with Search, its recent searches first. Done saves; leaving leaves the widget as it was.
+under it three rows, each opening its choices with a line on what each does: the speaker, the
+background (blurred cover, plain, clear) and which buttons have a background (play alone, all,
+none, which fits more). Then the widget's parts in their order: what plays, with its switch, at
+either end, and the buttons, each to change or take away; every part moves by its handle, a held
+press or TalkBack's actions, as on Amsel's arrange pages, and what plays lands at the nearer end.
+Where the size cannot hold every button a sentence says that the first so many show and to drag the
+most needed up, and each hidden one says when it shows. One more while there are fewer than eight;
+the last part stays. Play … picks with Search, its recent searches first. Done saves; leaving
+leaves the widget as it was.
 
 ## Taps, also while Amsel is closed
 
@@ -125,8 +153,10 @@ with Search, its recent searches first. Done saves; leaving leaves the widget as
 - Quieter, Louder, shuffle, repeat and the heart act on the speaker the widget shows, from what it
   shows (`StateTaps`): a tap that starts Amsel comes before Amsel knows its speaker, and the volume
   went to the phone's own. Each shows at once, on the widgets and in Amsel (`OptimisticTransport`,
-  `Favorites`); two taps in a row step on from the first before the speaker reports it; a level is
-  set, not stepped on the server, so the speaker ends where the widget says.
+  `Favorites`); the server takes the step by its own setting, as its volume up and down do, and the
+  widget shows at once where it lands by the setting last read (`config/core/get_value`, asked in
+  the background, so a tap never waits for it); two taps in a row step on from the first before the
+  speaker reports it.
 - No `PendingIntent.getForegroundService`: a service started so must show a notification within
   seconds, which a pause or a skip past the end never does.
 - Play and pause change at once and the speaker confirms; a command that fails puts its sentence
@@ -168,12 +198,14 @@ ones, stale widgets, too much image memory. Home Assistant actions stay out
 
 `:app`, package `widget`: the providers (`AmselWidget`, `AmselButtonWidget`, `AmselButtonsWidget`),
 `Widgets` (following, drawing and taps, in `AppGraph`), `WidgetRender` (sizes and pictures),
-`WidgetFit` (forms and counts), `WidgetViews`, `WidgetDrawing` and `WidgetWordsViews` (the views),
+`WidgetFit` (forms and counts), `WidgetViews`, `WidgetDrawing`, `WidgetCellsViews` and
+`WidgetWordsViews` (the views),
 `WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover corners, the
 cover's colour), `WidgetTaps`, `SessionHands` and `SpeakerHands` (taps), `WidgetActions`,
 `StateTaps` and `WidgetCommands` (volume, shuffle, repeat, heart), `WidgetPreviews`, `WidgetStore`,
-and the page (`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupButtons`, `WidgetSetupSheets`,
+and the page (`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupParts`, `WidgetSetupSheets`,
 `WidgetSetupViewModel`, `WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`.
 Tests: `WidgetFitTest`, `WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`,
 `WidgetArtTest`, `WidgetLookTest`, `StateTapsTest`, and `WidgetShots` (every form, the cells, wide
-and tall widgets, the looks, the states, the page; light, dark, 200 % and German).
+and tall widgets, what plays after the buttons or left out, a low strip, the looks, the states, the
+page and its sheets; light, dark, 200 % and German).

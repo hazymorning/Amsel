@@ -108,10 +108,10 @@ class WidgetsTest {
         val nowPlaying = place(AmselWidget::class.java, 172f, 204f)
         widgets().redraw(intArrayOf(button, buttons, nowPlaying))
         assertEquals("Play", home.getViewFor(button).contentDescription)
-        assertEquals(true, shown(buttons, R.id.widget_slot_3))
+        assertEquals(3, home.getViewFor(buttons).cells().size)
         assertEquals(false, shown(buttons, R.id.widget_words))
         assertEquals(true, shown(nowPlaying, R.id.widget_words))
-        assertEquals(true, shown(nowPlaying, R.id.widget_slot_3))
+        assertEquals(3, home.getViewFor(nowPlaying).cells().size)
     }
 
     @Test fun aWidgetTakesTheFormOfItsNewSize() = runTest {

@@ -99,6 +99,21 @@ public class MaApi(internal val client: MaClient) {
         )
     }
 
+    /**
+     * The step the server's volume up and down take, as set in its Players settings: 1 to 10, or
+     * null for its own ladder (1, 2 or 3 by level). Needs the right to read the server's settings.
+     */
+    public suspend fun volumeStep(): Int? {
+        val answer = client.call(
+            "config/core/get_value",
+            buildJsonObject {
+                put("domain", "players")
+                put("key", "volume_step")
+            },
+        )
+        return (answer as? JsonPrimitive)?.content?.toDoubleOrNull()?.toInt()?.takeIf { it > 0 }
+    }
+
     public suspend fun volumeUp(playerId: String): Unit = playerCmd("group_volume_up", playerId)
 
     public suspend fun volumeDown(playerId: String): Unit = playerCmd("group_volume_down", playerId)
