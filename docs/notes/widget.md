@@ -65,7 +65,8 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
   cover in the cover's middle. They give way in order as the height or the text size asks: the time,
   the title's second line, the line under the title; then the speaker and the title grow an eighth
   smaller, 4 dp apart (`widget_words_small`), before the speaker's line goes, so a strip lower than
-  usual keeps both; the level after the speaker's name whole or not at all. Where every line has
+  usual keeps both: from 62 dp, as the two small lines stand in its middle by their ink and their box
+  may take its lead above and below the frame; the level after the speaker's name whole or not at all. Where every line has
   room, as on a card two by two and a half or a player three rows high, they are a fifth larger
   (`widget_words_large`).
 - **Time:** while a song plays, where it stands of its length; while a book or an episode plays,

@@ -69,9 +69,18 @@ internal class WidgetDrawing(
             after -> WordsAlign.Bottom
             else -> WordsAlign.Top
         }
-        // Words meet the frame by their ink, so their box reaches past it; a cover meets it itself.
-        val top = if (align == WordsAlign.Top && !poster) PADDING - LEAD else PADDING
-        val bottom = if (align == WordsAlign.Bottom) PADDING - LEAD else PADDING
+        // Words meet the frame by their ink, so their box reaches past it: by their lead on the side
+        // they align to, by half of it above and below in the middle; a cover meets it itself.
+        val top = when {
+            align == WordsAlign.Top && !poster -> PADDING - LEAD
+            align == WordsAlign.Middle -> PADDING - LEAD / 2
+            else -> PADDING
+        }
+        val bottom = when (align) {
+            WordsAlign.Bottom -> PADDING - LEAD
+            WordsAlign.Middle -> PADDING - LEAD / 2
+            else -> PADDING
+        }
         setViewPadding(R.id.widget_body, px(PADDING), px(top), px(PADDING), px(bottom))
         val gap = if (shown.isEmpty()) 0 else px(WORDS_TO_CELLS)
         setViewPadding(R.id.widget_part, 0, if (after) gap else 0, 0, if (after) 0 else gap)

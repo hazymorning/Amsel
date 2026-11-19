@@ -25,4 +25,14 @@ Amsel is a music player for Music Assistant, made for Android. It comes in light
 - Easy speaker management (and grouping)
 - User-friendly UI that doesn’t feel cramped
 
+<br>
+
+**Widgets for the home screen:**
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/design/readme/widgets-dark.webp">
+  <img src="docs/design/readme/widgets-light.webp" alt="Six home screen widgets: two players, a square, two strips and a row of buttons, each with play in its cover's colour">
+</picture>
+
+<br>
 <br><sub>The app is developed with the help of AI tools. It exists because the last missing piece of a music setup at home was a player for quite a specific taste and wish list, not because building one sounded like fun. Amsel is German for blackbird, a rather plain-looking bird known mostly for its song.</sub>
