@@ -150,6 +150,7 @@ class WidgetShots : ScreenshotTest() {
             onSpeaker = {},
             onSlot = {},
             onRemove = {},
+            onReorder = {},
             onDone = {},
             onBack = {},
         )

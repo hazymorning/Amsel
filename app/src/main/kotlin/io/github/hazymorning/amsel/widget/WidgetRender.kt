@@ -66,7 +66,7 @@ internal class WidgetRender(private val context: Context, private val images: Im
         clearInk: Boolean? = null,
     ): RemoteViews {
         val faces = faces(setup)
-        val fits = sizes.map { views.fit(it.width, it.height, setup, look, faces.keys) }
+        val fits = sizes.map { views.fit(it.width, it.height, setup) }
         val pictures = pictures(setup, look, fits, faces)
         val ink = setup.style == WidgetStyle.Clear && (clearInk ?: wallpaperWantsInk(context))
         return views.build(id, setup, look, fits, pictures, ink, taps)

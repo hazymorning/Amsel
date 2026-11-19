@@ -69,7 +69,7 @@ internal fun PageHint(text: String, modifier: Modifier = Modifier) {
 }
 
 /** A row's corners in its block: the block's own corners round fully, those between rows a little. */
-private fun blockShape(first: Boolean, last: Boolean): Shape {
+internal fun blockShape(first: Boolean, last: Boolean): Shape {
     val top = if (first) Radius.Large else BetweenCorner
     val bottom = if (last) Radius.Large else BetweenCorner
     return SmoothShape(top, top, bottom, bottom)
@@ -84,6 +84,6 @@ internal val RowInset = Space.S4
 /** Where a row's words start inside its block, and so its group's name over it. */
 internal val RowWords = BlockEdge + RowInset
 
-private val LabelToBlock = Space.LabelToContent
-private val BetweenRows = 2.dp
+internal val LabelToBlock = Space.LabelToContent
+internal val BetweenRows = 2.dp
 private val BetweenCorner = 4.dp

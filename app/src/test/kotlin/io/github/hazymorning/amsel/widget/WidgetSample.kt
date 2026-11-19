@@ -72,7 +72,7 @@ object WidgetSample {
     /** [setup] showing [look] at [size] without covers (an empty one where a cover stands), for what the views say. */
     fun plain(context: Context, setup: WidgetSetup, look: WidgetLook, size: SizeF = card): RemoteViews {
         val views = WidgetViews(context)
-        val fit = views.fit(size.width, size.height, setup, look, emptySet())
+        val fit = views.fit(size.width, size.height, setup)
         val side = views.px(fit.art)
         val density = context.resources.displayMetrics.density
         val blanks = listOf(side).filter { it > 0 }.associateWith { WidgetArt.blank(it, density) }

@@ -5,7 +5,7 @@ import android.widget.RemoteViews
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 
-/** A widget's words: the speaker, the title and the line under it, each line's first ink on the inset. */
+/** A widget's words: the speaker, the title and the line under it, each line's first ink on the frame. */
 internal class WidgetWordsViews(
     private val context: Context,
     private val text: WidgetText,
@@ -15,11 +15,12 @@ internal class WidgetWordsViews(
     private val px: (Float) -> Int,
 ) {
     /**
-     * [words] of what plays, their first ink [start] dp into the words' view, which is padded [top]
-     * and [end] dp and holds [width] dp of words: each line moves in by as much as its own first
-     * letter's side bearing.
+     * [words] of what plays in [width] dp, their first ink on the widget's frame: the words' view
+     * stands [LEAD] dp outside it (the layouts' widget_words_lead_out), and each line moves back in by
+     * as much as its own first letter or glyph leaves. A [centred] view's ink, not its box, stands in
+     * the middle of the row; otherwise its capitals meet the frame at the top.
      */
-    fun draw(views: RemoteViews, words: WidgetWords, start: Float, top: Float, end: Float, width: Float) = with(views) {
+    fun draw(views: RemoteViews, words: WidgetWords, centred: Boolean, width: Float) = with(views) {
         shows(R.id.widget_words, words != WidgetWords.None)
         if (words == WidgetWords.None) return@with
         val playing = look.signedIn && look.title != null
@@ -58,13 +59,19 @@ internal class WidgetWordsViews(
         val speakerStart = if (glyph) glyphStart else nameStart
         val titleStart = text.sideBearing(title, WidgetLine.Title)
         val subtitleStart = subtitle?.let { text.sideBearing(it, WidgetLine.Subtitle) } ?: 0f
-        val lead = maxOf(0f, if (words.speaker) speakerStart else 0f, titleStart, subtitleStart)
-        setViewPadding(R.id.widget_words, px(start - lead), px(top), px(end), 0)
-        setViewPadding(R.id.widget_speaker_row, px(lead - speakerStart), 0, 0, 0)
+        val inkTop = text.wordsTop(words)
+        if (centred) {
+            // Half of the difference of a box's top and bottom padding moves what it holds.
+            val shift = text.wordsBox(words) / 2 - (inkTop + text.wordsBaseline(words)) / 2
+            setViewPadding(R.id.widget_words, 0, px(2 * shift), 0, px(-2 * shift))
+        } else {
+            setViewPadding(R.id.widget_words, 0, px(LEAD - inkTop), 0, 0)
+        }
+        setViewPadding(R.id.widget_speaker_row, px(LEAD - speakerStart), 0, 0, 0)
         setViewPadding(R.id.widget_speaker, px(afterGlyph), 0, 0, 0)
         val titleTop = if (words.speaker) WidgetSizes.SPEAKER_TO_TITLE else 0f
-        setViewPadding(R.id.widget_title, px(lead - titleStart), px(titleTop), 0, 0)
-        setViewPadding(R.id.widget_subtitle, px(lead - subtitleStart), px(WidgetSizes.TITLE_TO_SUBTITLE), 0, 0)
+        setViewPadding(R.id.widget_title, px(LEAD - titleStart), px(titleTop), 0, 0)
+        setViewPadding(R.id.widget_subtitle, px(LEAD - subtitleStart), px(WidgetSizes.TITLE_TO_SUBTITLE), 0, 0)
     }
 
     /** The speaker's level after its name, where Quieter or Louder is among the buttons. */
@@ -77,5 +84,8 @@ internal class WidgetWordsViews(
     private companion object {
         /** From the speaker's glyph's ink to its name's, in the name's size. */
         const val GLYPH_GAP = 0.45f
+
+        /** How far the words' view stands outside the frame, top and start (res/values/widget.xml). */
+        const val LEAD = 6f
     }
 }
