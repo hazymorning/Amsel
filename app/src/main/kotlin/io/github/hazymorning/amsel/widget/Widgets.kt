@@ -117,7 +117,9 @@ class Widgets(
     /** A clear widget's words take ink or paper by the wallpaper: they are drawn again when it changes. */
     private val wallpaperChanged = WallpaperManager.OnColorsChangedListener { _, which ->
         val clear = setups.value.values.any { it.style == WidgetStyle.Clear }
-        if (clear && which and WallpaperManager.FLAG_SYSTEM != 0) scope.launch { _looks.value?.let { draw(it) } }
+        if (clear && which and WallpaperManager.FLAG_SYSTEM != 0) {
+            scope.launch { drawing.withLock { _looks.value?.let { drawLocked(it) } } }
+        }
     }
 
     private fun listenToWallpaper(on: Boolean) {
@@ -153,8 +155,12 @@ class Widgets(
     /** Widgets [ids] need drawing (Amsel started, or a widget changed size): as they showed, at rest, if Amsel follows no music yet. */
     suspend fun redraw(ids: IntArray) {
         loadSetups()
-        val looks = _looks.value ?: store.looks().mapValues { (_, look) -> look.copy(playing = false, failure = null) }
-        drawing.withLock { for (id in ids) drawOne(id, looks) }
+        // Read under the lock: a look read before it could be older than one drawn meanwhile, and cover it.
+        drawing.withLock {
+            val looks = _looks.value
+                ?: store.looks().mapValues { (_, look) -> look.copy(playing = false, failure = null) }
+            for (id in ids) drawOne(id, looks)
+        }
         if (live()) follow()
     }
 
@@ -233,7 +239,9 @@ class Widgets(
         setups.value = ids().associateWith { setup(it) }
     }
 
-    private suspend fun draw(looks: Map<String, WidgetLook>): Unit = drawing.withLock {
+    private suspend fun draw(looks: Map<String, WidgetLook>): Unit = drawing.withLock { drawLocked(looks) }
+
+    private suspend fun drawLocked(looks: Map<String, WidgetLook>) {
         _looks.value = looks
         for (id in ids()) drawOne(id, looks)
         if (looks[AMSELS]?.signedIn == false) {

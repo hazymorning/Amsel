@@ -3,7 +3,8 @@ name: Release
 # A release starts when release/VERSION changes on main, or by hand (Actions → Release → Run
 # workflow), which publishes the version in release/VERSION if it is not released yet. This
 # workflow builds, signs and publishes it here, titled "Name • 2026.11.0": the name is the first
-# line of release/NOTES.md, and the release carries the rest of it.
+# line of release/NOTES.md, and the release carries the rest of it. Then it fills the Gradle cache
+# the next pull request's CI starts from.
 #
 # One repository secret, set by the owner: AMSEL_SIGNING_PASSWORD. The release key never leaves
 # GitHub: the first release run generates it here, encrypts it with the password (AES-256, PBKDF2
@@ -141,3 +142,26 @@ jobs:
           # the notes, nothing added; the APK is the one file.
           tail -n +2 release/NOTES.md > notes.md
           gh release create "$VERSION" dist/* --target "$GITHUB_SHA" --title "$TITLE" --notes-file notes.md --latest
+
+  # A pull request can read main's caches and no others, and CI runs only on pull requests. So once a
+  # release is out, CI's checks run here on its tree only to fill the Gradle cache the next pull
+  # request starts from: the dependencies, Robolectric's Android and the build's outputs. They passed
+  # on the pull request already; a failure here fails nothing.
+  caches:
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+      - name: CI's checks, for the cache
+        continue-on-error: true
+        run: scripts/check.sh lint tests budgets apk

@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.roborazzi)
     id("amsel.budgets")
+    id("amsel.robolectric")
 }
 
 android {
@@ -96,6 +97,10 @@ android {
             test.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
             // -Plook=de-w360dp: every shot in German on a narrow phone, into build/look (ScreenshotTest).
             providers.gradleProperty("look").orNull?.let { test.systemProperty("amsel.look", it) }
+            // Tests read these files straight from the tree, so a cached result stands only while they stay.
+            for (read in listOf("../docs/design/readme", "../playback/src/main/res")) {
+                test.inputs.dir(read).withPathSensitivity(PathSensitivity.RELATIVE)
+            }
         }
     }
 

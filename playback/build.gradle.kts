@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    id("amsel.robolectric")
 }
 
 android {

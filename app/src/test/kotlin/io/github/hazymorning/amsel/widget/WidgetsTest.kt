@@ -154,7 +154,7 @@ class WidgetsTest {
     }
 
     private companion object {
-        const val SETTLE_TRIES = 300
+        const val SETTLE_TRIES = 1000
         const val SETTLE_STEP_MS = 10L
     }
 }

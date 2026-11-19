@@ -5,6 +5,10 @@ name: CI
 # branch without a pull request runs nothing (start a run by hand from the Actions tab). A change
 # that touches only words and the release machinery (the README, docs, the licence, the notes, the
 # release and cleanup workflows) builds nothing, so it does not run.
+#
+# Each job runs one part of scripts/check.sh, which runs all of them before a pull request is
+# opened, so a run here is green the first time. A newer push does not cancel a run: every run
+# finishes, passed or failed.
 on:
   pull_request:
     paths-ignore:
@@ -18,12 +22,11 @@ on:
       - '.github/workflows/cleanup.yml'
   workflow_dispatch:
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   # The checks run side by side, each on a runner of its own: the slowest sets the time, not the sum.
+  # Their Gradle cache is main's, filled after each release (release.yml): the dependencies,
+  # Robolectric's Android and the build's outputs, so a run downloads next to nothing and builds
+  # and tests again only what its change touched.
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -39,7 +42,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: scripts/release/check-name.sh
       - name: Lint
-        run: ./gradlew ktlintCheck lintDebug
+        run: scripts/check.sh lint
 
   tests:
     runs-on: ubuntu-latest
@@ -52,7 +55,7 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
       - name: Unit and screenshot tests
-        run: ./gradlew testDebugUnitTest test :sendspin:testAndroidHostTest verifyRoborazziDebug
+        run: scripts/check.sh tests
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: failure()
         with:
@@ -72,7 +75,7 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
       - name: Budgets (permissions, dependencies, APK size)
-        run: ./gradlew :app:checkBudgets
+        run: scripts/check.sh budgets
 
   apk:
     runs-on: ubuntu-latest
@@ -85,7 +88,7 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
       - name: Debug APK
-        run: ./gradlew :app:assembleDebug
+        run: scripts/check.sh apk
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: amsel-debug-apk
@@ -98,6 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The servers scripts/check.sh runs by default.
         server: ['2.10.9', '2.11.0b7']
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -106,21 +110,5 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
-      - name: Music Assistant ${{ matrix.server }} with a test library
-        run: |
-          URL=$(scripts/test-server/start.sh ${{ matrix.server }} | tail -1)
-          TOKEN=$(python3 scripts/test-server/setup.py --url "$URL")
-          echo "MA_URL=$URL" >> "$GITHUB_ENV"
-          echo "::add-mask::$TOKEN"
-          echo "MA_TOKEN=$TOKEN" >> "$GITHUB_ENV"
-      - name: Fake speakers
-        run: |
-          nohup python3 scripts/test-server/fake_player.py --name Kitchen > kitchen.log 2>&1 &
-          nohup python3 scripts/test-server/fake_player.py --name "Living Room" --id amsel-fake-living-room > living.log 2>&1 &
-      - name: Live tests (client, seeks on a speaker, then the whole app's first-run journey)
-        run: |
-          ./gradlew :api:test --tests '*LiveServerTest*'
-          ./gradlew :playback:testDebugUnitTest --tests '*LiveSeekTest*'
-          ./gradlew :app:testDebugUnitTest --tests '*FirstRunJourneyTest*'
-      - if: always()
-        run: scripts/test-server/stop.sh ${{ matrix.server }}
+      - name: Live tests on Music Assistant ${{ matrix.server }} (client, seeks on a speaker, first-run journey)
+        run: scripts/check.sh live:${{ matrix.server }}

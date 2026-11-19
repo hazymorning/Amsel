@@ -1,6 +1,8 @@
 # Releasing
 
-1. Make sure CI is green.
+1. Run `scripts/check.sh` before the pull request: CI's checks as CI runs them, the live tests
+   against both Music Assistant servers in Docker too. CI then passes the first time; a failed run
+   mails the owner.
 2. Write `release/NOTES.md`: a heading with the release's name, short (two or three words), from a
    bird's life, its own and with some character ("Nesting luck"), then 100 to 150 words in plain
    language under the headings `## New`, `## Better` and `## Fixed` (only those with something in
@@ -14,6 +16,10 @@
    written and the APK as its one file. A name an earlier release already has stops it, and fails
    the pull request's CI before that (`scripts/release/check-name.sh`). Actions → Release → Run
    workflow publishes the version in `release/VERSION` if it is not released yet.
+5. Once the release is out, its `caches` job runs CI's checks on main once more, only to fill the
+   Gradle cache that pull requests start from (they can read main's caches and no others): a pull
+   request then downloads next to nothing and builds and tests again only what it changed. A
+   failure there fails nothing.
 
 Amsel's source is public here, under the GNU General Public License, version 3 (`LICENSE`); the
 app's update check and Obtainium read the releases.
