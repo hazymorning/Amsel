@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two rows and more, or one row without buttons: what plays, a poster's cover over it, and a row
+     of button cells before or after it. The frame, the gaps and where what plays stands are set from
+     WidgetDrawing; the cells and the words are added there. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_cover"
+    android:clipToOutline="true"
+    tools:targetApi="31">
+
+    <ImageView
+        android:id="@+id/widget_cover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <!-- An ImageView, not a View: a launcher inflates only the classes widgets may use. -->
+    <ImageView
+        android:id="@+id/widget_veil"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/widget_body"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="@dimen/widget_padding">
+
+        <!-- A row of cells as wide as the widget: its padding keeps them in the frame. -->
+        <LinearLayout
+            android:id="@+id/widget_cells_start"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/widget_cell_height"
+            android:layout_marginStart="@dimen/widget_padding_out"
+            android:layout_marginEnd="@dimen/widget_padding_out"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="gone" />
+
+        <!-- Takes what the cells leave, so words that do not fit are cut here, never the cells. -->
+        <LinearLayout
+            android:id="@+id/widget_part"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- A poster's cover, across the frame and as high as wide. -->
+            <FrameLayout
+                android:id="@+id/widget_art_box"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="@dimen/widget_art_to_words_lead"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/widget_art"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/widget_art_night"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitCenter"
+                    android:tint="@color/widget_night_tone"
+                    android:tintMode="src_in"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/widget_art_blank"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:importantForAccessibility="no"
+                    android:scaleType="fitCenter"
+                    android:tint="@color/widget_cell_light"
+                    android:tintMode="src_in" />
+
+                <ImageView
+                    android:id="@+id/widget_art_glyph"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_track"
+                    android:tint="@color/widget_quiet_light"
+                    android:tintMode="src_in" />
+
+                <ImageView
+                    android:id="@+id/widget_art_glyph_large"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_track_light"
+                    android:tint="@color/widget_quiet_light"
+                    android:tintMode="src_in"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/widget_words_box"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/widget_cells_end"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/widget_cell_height"
+            android:layout_marginStart="@dimen/widget_padding_out"
+            android:layout_marginEnd="@dimen/widget_padding_out"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="gone" />
+    </LinearLayout>
+</FrameLayout>

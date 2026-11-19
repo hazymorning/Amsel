@@ -80,12 +80,25 @@ class WidgetSetupViewModel(
 
     fun cells(cells: WidgetCells) = change { it.copy(cells = cells) }
 
+    /** What plays shows, or is left out; a widget without buttons keeps it. */
+    fun showWords(on: Boolean) = change { if (!on && it.slots.isEmpty()) it else it.copy(showsWords = on) }
+
+    /** What plays moves before the buttons or after them. */
+    fun moveWords(place: WidgetWordsPlace) = change { it.copy(words = place) }
+
     /** Button [index] does [button]; one past the last adds it. */
     fun choose(index: Int, button: WidgetButton) = put(index, WidgetSlot(button))
 
     fun pick(index: Int, item: WidgetItem) = put(index, WidgetSlot(WidgetButton.PlayItem, item))
 
-    fun remove(index: Int) = change { it.copy(slots = it.slots.filterIndexed { i, _ -> i != index }) }
+    /** Takes button [index] away, unless it is all the widget shows. */
+    fun remove(index: Int) = change { setup ->
+        if (!setup.showsWords && setup.slots.size == 1) {
+            setup
+        } else {
+            setup.copy(slots = setup.slots.filterIndexed { i, _ -> i != index })
+        }
+    }
 
     /** The buttons in a new [order], given as their places in the old one. */
     fun reorder(order: List<Int>) = change { setup ->

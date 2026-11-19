@@ -22,6 +22,18 @@ import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.theme.Space
 
+/** Which of the widget page's choices is open on a sheet. */
+sealed interface WidgetSheet : java.io.Serializable {
+    data object Speaker : WidgetSheet
+
+    data object Style : WidgetSheet
+
+    data object Cells : WidgetSheet
+
+    /** What button [slot] does; one past the last adds one. */
+    data class Button(val slot: Int) : WidgetSheet
+}
+
 /** The names of the buttons, from the start. */
 private val SlotNames = listOf(
     R.string.widget_slot_1,
@@ -85,20 +97,73 @@ internal fun SpeakerChoices(current: String?, speakers: List<WidgetSpeaker>, onC
     }
 }
 
-/** Which buttons stand on a shaded cell: play and pause alone, every one, or none. */
+/** The widget's ground: the blurred cover of what plays, the phone's colours, or the wallpaper. */
 @Composable
-internal fun CellsChoices(current: WidgetCells, onChoose: (WidgetCells) -> Unit) {
+internal fun StyleChoices(current: WidgetStyle, onChoose: (WidgetStyle) -> Unit) = DescribedChoices(
+    stringResource(R.string.widget_style),
+    WidgetStyle.entries,
+    current,
+    label = { stringResource(it.label) },
+    note = {
+        stringResource(
+            when (it) {
+                WidgetStyle.Cover -> R.string.widget_look_cover_note
+                WidgetStyle.Plain -> R.string.widget_look_plain_note
+                WidgetStyle.Clear -> R.string.widget_look_clear_note
+            },
+        )
+    },
+    onChoose = onChoose,
+)
+
+/** Which buttons stand on a shaded cell: play and pause alone, every one, or none, which fits more. */
+@Composable
+internal fun CellsChoices(current: WidgetCells, onChoose: (WidgetCells) -> Unit) = DescribedChoices(
+    stringResource(R.string.widget_cells),
+    WidgetCells.entries,
+    current,
+    label = { stringResource(it.label) },
+    note = {
+        stringResource(
+            when (it) {
+                WidgetCells.Play -> R.string.widget_cells_play_note
+                WidgetCells.All -> R.string.widget_cells_all_note
+                WidgetCells.None -> R.string.widget_cells_none_note
+            },
+        )
+    },
+    onChoose = onChoose,
+)
+
+/** A choice of [values] under [title], each with a line on what it does, the [current] one ticked. */
+@Composable
+private fun <T> DescribedChoices(
+    title: String,
+    values: List<T>,
+    current: T,
+    label: @Composable (T) -> String,
+    note: @Composable (T) -> String,
+    onChoose: (T) -> Unit,
+) {
     Column(
         Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = sheetEnd(RowLead.None, twoLines = false)),
+            .padding(bottom = sheetEnd(RowLead.None, twoLines = true)),
     ) {
-        SheetHeader(stringResource(R.string.widget_cells))
+        SheetHeader(title)
         Spacer(Modifier.height(Space.HeaderToRows))
         Column(Modifier.selectableGroup()) {
-            WidgetCells.entries.forEach { cells ->
-                ChoiceRow(stringResource(cells.label), selected = current == cells, onClick = { onChoose(cells) })
+            values.forEach { value ->
+                ListRow(
+                    title = label(value),
+                    subtitle = note(value),
+                    selected = current == value,
+                    role = Role.RadioButton,
+                    titleLines = 2,
+                    subtitleLines = 2,
+                    onClick = { onChoose(value) },
+                )
             }
         }
     }

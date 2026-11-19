@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -37,13 +36,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.graph
-import io.github.hazymorning.amsel.ui.components.ChoiceChipRow
 import io.github.hazymorning.amsel.ui.components.GroupLabel
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
+import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.moved
 import io.github.hazymorning.amsel.ui.components.rememberReorderable
-import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
+import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.screens.settings.LabelToBlock
 import io.github.hazymorning.amsel.ui.screens.settings.RowWords
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsBlock
@@ -70,9 +71,7 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var sheet by rememberSaveable { mutableStateOf<Int?>(null) }
-    var choosingSpeaker by rememberSaveable { mutableStateOf(false) }
-    var choosingCells by rememberSaveable { mutableStateOf(false) }
+    var sheet by rememberSaveable { mutableStateOf<WidgetSheet?>(null) }
     var picking by rememberSaveable { mutableStateOf<Int?>(null) }
     val pickingSlot = picking
     if (pickingSlot != null) {
@@ -89,127 +88,106 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
     WidgetSetupScreen(
         state,
         wallpaper,
-        onStyle = viewModel::style,
-        onSpeaker = { choosingSpeaker = true },
-        onCells = { choosingCells = true },
-        onSlot = { sheet = it },
+        onSheet = { sheet = it },
         onRemove = viewModel::remove,
         onReorder = viewModel::reorder,
+        onShowWords = viewModel::showWords,
+        onMoveWords = viewModel::moveWords,
         onDone = { viewModel.done(onDone) },
         onBack = onBack,
     )
-    val open = sheet
-    if (open != null) {
-        AmselSheet(onDismiss = { sheet = null }) {
-            ButtonChoices(
-                slot = open,
-                current = state.setup.slots.getOrNull(open),
+    val open = sheet ?: return
+    AmselSheet(onDismiss = { sheet = null }) {
+        when (open) {
+            WidgetSheet.Speaker -> SpeakerChoices(state.setup.speaker, state.speakers) { id ->
+                close { viewModel.speaker(id) }
+            }
+
+            WidgetSheet.Style -> StyleChoices(state.setup.style) { style -> close { viewModel.style(style) } }
+
+            WidgetSheet.Cells -> CellsChoices(state.setup.cells) { cells -> close { viewModel.cells(cells) } }
+
+            is WidgetSheet.Button -> ButtonChoices(
+                slot = open.slot,
+                current = state.setup.slots.getOrNull(open.slot),
                 volumeLimit = state.volumeLimit,
                 onChoose = { button ->
                     close {
-                        if (button == WidgetButton.PlayItem) picking = open else viewModel.choose(open, button)
+                        when (button) {
+                            WidgetButton.PlayItem -> picking = open.slot
+                            else -> viewModel.choose(open.slot, button)
+                        }
                     }
                 },
             )
-        }
-    }
-    if (choosingSpeaker) {
-        AmselSheet(onDismiss = { choosingSpeaker = false }) {
-            SpeakerChoices(state.setup.speaker, state.speakers) { id -> close { viewModel.speaker(id) } }
-        }
-    }
-    if (choosingCells) {
-        AmselSheet(onDismiss = { choosingCells = false }) {
-            CellsChoices(state.setup.cells) { cells -> close { viewModel.cells(cells) } }
         }
     }
 }
 
 /**
  * The widget as it will look, at its size on the home screen, over the wallpaper's own colour; under
- * it how it looks, which speaker it keeps to, and its buttons, which can be none, in an order the
- * person moves them into.
+ * it which speaker it keeps to and how it looks, then its parts in their order: what plays, and the
+ * buttons, which can be none.
  */
 @Composable
 fun WidgetSetupScreen(
     state: WidgetSetupUi,
     wallpaper: Color?,
-    onStyle: (WidgetStyle) -> Unit,
-    onSpeaker: () -> Unit,
-    onCells: () -> Unit,
-    onSlot: (Int) -> Unit,
+    onSheet: (WidgetSheet) -> Unit,
     onRemove: (Int) -> Unit,
     onReorder: (List<Int>) -> Unit,
+    onShowWords: (Boolean) -> Unit,
+    onMoveWords: (WidgetWordsPlace) -> Unit,
     onDone: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val haptics = LocalHapticFeedback.current
     val slots = state.setup.slots
-    // The order while a drag swaps rows, as places in the saved one; the saved order replaces it on drop.
-    var order by remember(slots) { mutableStateOf(slots.indices.toList()) }
+    // The order while a drag swaps rows; the saved one replaces it on drop.
+    val at = state.setup.words
+    var parts by remember(slots, at) { mutableStateOf(widgetParts(slots, at)) }
     val list = rememberLazyListState()
     val reorder = rememberReorderable(
         list,
-        movable = { key -> order.any { buttonKey(it) == key } },
+        // What plays stands at either end: the buttons move past each other, never past it.
+        movable = { key -> parts.any { it is WidgetPart.Button && it.key == key } },
         onSwap = { from, to ->
-            val a = order.indexOfFirst { buttonKey(it) == from }
-            val b = order.indexOfFirst { buttonKey(it) == to }
-            if (a >= 0 && b >= 0) order = order.toMutableList().apply { add(b, removeAt(a)) }
+            val a = parts.indexOfFirst { it.key == from }
+            val b = parts.indexOfFirst { it.key == to }
+            parts = parts.moved(a, b)
         },
-        onDrop = {
+        onDrop = { key ->
             haptics.performHapticFeedback(HapticFeedbackType.GestureEnd)
-            onReorder(order)
+            if (key == WidgetPart.Words.key) {
+                val place = wordsPlaceAt(parts.indexOf(WidgetPart.Words), parts.size)
+                parts = widgetParts(slots, place)
+                onMoveWords(place)
+            } else {
+                onReorder(parts.filterIsInstance<WidgetPart.Button>().map { it.place })
+            }
         },
     )
     MaterialScreen(modifier, bar = { PageTopBar(stringResource(R.string.widget_setup_title), onBack) }) { insets ->
         Column(Modifier.fillMaxSize().padding(insets)) {
             LazyColumn(Modifier.weight(1f), state = list) {
                 item(key = STAGE) { WidgetStage(state, wallpaper) }
-                item(key = LOOK) {
-                    ChoiceChipRow(
-                        WidgetStyle.entries,
-                        selected = state.setup.style,
-                        onSelect = onStyle,
-                        label = { stringResource(it.label) },
-                        role = Role.RadioButton,
-                        modifier = Modifier.padding(top = Space.Group, bottom = Space.Group),
-                    )
+                item(key = SETTINGS) {
+                    Column(Modifier.padding(top = Space.Group)) { WidgetSettings(state, onSheet) }
                 }
-                item(key = SPEAKER) {
-                    SettingsBlock {
-                        row { shape ->
-                            val name = state.speakers.firstOrNull { it.id == state.setup.speaker }?.name
-                                ?: stringResource(R.string.widget_speaker_amsel)
-                            ValueRow(stringResource(R.string.widget_speaker), name, shape, onSpeaker)
-                        }
-                        row { shape ->
-                            ValueRow(
-                                stringResource(R.string.widget_cells),
-                                stringResource(state.setup.cells.label),
-                                shape,
-                                onCells,
-                            )
-                        }
-                    }
-                }
-                item(key = BUTTONS) {
-                    val fits = pluralStringResource(R.plurals.widget_fits, state.fits, state.fits)
-                    GroupLabel(
-                        stringResource(R.string.widget_buttons) + DOT_SEPARATOR + fits,
-                        above = Space.S8,
-                        below = LabelToBlock,
-                        start = RowWords,
-                    )
-                }
-                buttonRows(
-                    slots,
-                    order,
-                    state.fits,
+                item(key = PARTS) { PartsLabel(state) }
+                partRows(
+                    state,
+                    parts,
                     reorder,
-                    onSlot = onSlot,
+                    onSlot = { onSheet(WidgetSheet.Button(it)) },
                     onRemove = onRemove,
-                    onMove = { from, to -> onReorder(order.toMutableList().apply { add(to, removeAt(from)) }) },
+                    onMove = { from, to ->
+                        val order = parts.filterIsInstance<WidgetPart.Button>().map { it.place }
+                        onReorder(order.moved(from, to))
+                    },
+                    onShowWords = onShowWords,
+                    onMoveWords = onMoveWords,
                 )
                 item(key = END) { Spacer(Modifier.height(Space.Group)) }
             }
@@ -220,6 +198,61 @@ fun WidgetSetupScreen(
             )
         }
     }
+}
+
+/** Which speaker the widget keeps to, its background, and which buttons stand on a cell. */
+@Composable
+private fun WidgetSettings(state: WidgetSetupUi, onSheet: (WidgetSheet) -> Unit) = SettingsBlock {
+    row { shape ->
+        val name = state.speakers.firstOrNull { it.id == state.setup.speaker }?.name
+            ?: stringResource(R.string.widget_speaker_amsel)
+        ValueRow(stringResource(R.string.widget_speaker), name, shape) { onSheet(WidgetSheet.Speaker) }
+    }
+    row { shape ->
+        ValueRow(stringResource(R.string.widget_style), stringResource(state.setup.style.label), shape) {
+            onSheet(WidgetSheet.Style)
+        }
+    }
+    row { shape ->
+        ValueRow(stringResource(R.string.widget_cells), stringResource(state.setup.cells.label), shape) {
+            onSheet(WidgetSheet.Cells)
+        }
+    }
+}
+
+/** The parts' name, and where the widget is too small for every button, which ones it shows. */
+@Composable
+private fun PartsLabel(state: WidgetSetupUi) {
+    val hidden = state.setup.slots.size - state.fits
+    Column {
+        GroupLabel(
+            stringResource(R.string.widget_parts),
+            above = Space.Group,
+            below = if (hidden > 0) Space.S2 else LabelToBlock,
+            start = RowWords,
+        )
+        if (hidden > 0) {
+            val hint = if (state.fits == 0) {
+                stringResource(R.string.widget_fits_none)
+            } else {
+                pluralStringResource(R.plurals.widget_fits, state.fits, state.fits)
+            }
+            WidgetHint(hint, Modifier.padding(start = RowWords, end = Keyline.Margin, bottom = LabelToBlock))
+        }
+    }
+}
+
+/** A few words under a label, set as a setting's detail, wrapping at any type size. */
+@Composable
+private fun WidgetHint(text: String, modifier: Modifier = Modifier) {
+    val style = MaterialTheme.typography.bodyMedium
+    Words(
+        text,
+        style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = Int.MAX_VALUE,
+        modifier = modifier.fillMaxWidth().textInk(style).inkStart(text, style),
+    )
 }
 
 /** The widget drawn from the same views the launcher shows, at its size there; nothing on it acts here. */
@@ -255,8 +288,7 @@ private fun WidgetStage(state: WidgetSetupUi, wallpaper: Color?) {
 
 private val StageRoom = 32.dp
 private const val STAGE = "stage"
-private const val LOOK = "look"
-private const val SPEAKER = "speaker"
-private const val BUTTONS = "buttons"
+private const val SETTINGS = "settings"
+private const val PARTS = "parts"
 private const val END = "end"
 private val StageShape = SmoothShape(Radius.Large, Radius.Large, Radius.Large, Radius.Large)

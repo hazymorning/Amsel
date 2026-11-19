@@ -211,7 +211,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
             source = { widgetSource() },
             live = playingOnce::isInitialized,
-            actions = WidgetCommands(app, data, playbackGraph.commands, playing.optimistic, favorites),
+            actions = WidgetCommands(app, data, playbackGraph.commands, playing.optimistic, favorites, scope),
         )
     }
 

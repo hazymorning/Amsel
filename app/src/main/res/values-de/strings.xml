@@ -11,7 +11,7 @@
     <string name="pause">Pausieren</string>
     <string name="resume">Weiterhören</string>
     <string name="offer_pick_speaker">Lautsprecher wählen</string>
-    <string name="shuffle">Zufällig</string>
+    <string name="shuffle">Zufallswiedergabe</string>
     <string name="next">Nächster Titel</string>
     <string name="previous">Vorheriger Titel</string>
     <string name="back">Zurück</string>
@@ -36,17 +36,17 @@
     <string name="kind_episode">Folge</string>
     <string name="this_phone">Dieses Handy</string>
     <string name="loading">Wird geladen</string>
-    <string name="add_music">In Music\u00A0Assistant hinzufügen</string>
+    <string name="add_music">Musik in Music\u00A0Assistant hinzufügen</string>
     <string name="move_up">Nach oben</string>
     <string name="move_down">Nach unten</string>
     <string name="remove">Entfernen</string>
-    <string name="no_editable_playlists">Noch keine eigene Playlist. In\u00A0Music\u00A0Assistant eine anlegen.</string>
+    <string name="no_editable_playlists">Du hast noch keine eigene Playlist. Leg in Music\u00A0Assistant eine an.</string>
     <string name="open_music_assistant">Music\u00A0Assistant öffnen</string>
 
     <!-- Messages: plain sentences, never a code; one sentence takes no full stop. -->
     <string name="error_move_failed">%1$s hat die Musik nicht übernommen</string>
-    <string name="error_select_failed">%1$s ließ sich nicht auswählen</string>
-    <string name="error_no_browser">Kein Browser zum Öffnen von Music\u00A0Assistant</string>
+    <string name="error_select_failed">%1$s konnte nicht ausgewählt werden</string>
+    <string name="error_no_browser">Kein Browser gefunden, um Music\u00A0Assistant zu öffnen</string>
     <string name="added_to_playlist">Zu %1$s hinzugefügt</string>
 
     <string name="hint_liked_into">Auch zu %1$s hinzufügen?</string>
@@ -56,21 +56,21 @@
     <string name="hint_unliked">%1$s ist kein Favorit mehr</string>
     <string name="hint_added">Hinzugefügt</string>
     <string name="hint_open">Öffnen</string>
-    <string name="hint_unreachable">Ist nicht erreichbar</string>
+    <string name="hint_unreachable">Nicht erreichbar</string>
     <string name="hint_play_here">Hier hören</string>
-    <string name="hint_silent">Ist stumm</string>
+    <string name="hint_silent">Stumm</string>
     <string name="hint_louder">Lauter</string>
     <string name="hint_sleep">Sleep-Timer stellen?</string>
     <string name="hint_sleep_minutes">%1$d Min.</string>
     <string name="hint_away">Läuft noch auf %1$s</string>
     <string name="hint_home">Auf %1$s weiterhören?</string>
     <string name="hint_headphones">Kopfhörer verbunden</string>
-    <string name="hint_ended">Alles gespielt. Mit Ähnlichem weitermachen?</string>
+    <string name="hint_ended">Alles abgespielt. Mit Ähnlichem weitermachen?</string>
     <string name="hint_go_on">Weiter</string>
     <string name="update">Aktualisieren</string>
     <string name="update_out">Amsel %1$s ist da</string>
-    <string name="update_downloading">Amsel %1$s wird geladen</string>
-    <string name="update_not_downloaded">Amsel %1$s konnte nicht geladen werden</string>
-    <string name="update_not_ours">Amsel %1$s wurde nicht installiert: Es ist nicht wie Amsel signiert</string>
-    <string name="error_no_installer">Der Installer von Android ließ sich nicht öffnen</string>
+    <string name="update_downloading">Amsel %1$s wird heruntergeladen</string>
+    <string name="update_not_downloaded">Amsel %1$s konnte nicht heruntergeladen werden</string>
+    <string name="update_not_ours">Amsel %1$s wurde nicht installiert: Die Signatur passt nicht zu Amsel</string>
+    <string name="error_no_installer">Der Android-Installer konnte nicht geöffnet werden</string>
 </resources>

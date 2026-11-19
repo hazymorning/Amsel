@@ -8,5 +8,5 @@
     <!-- Chapters: the number counts from 1 as the list shows it -->
     <string name="spoken_chapter">Kapitel %1$d</string>
     <string name="spoken_chapter_titled">Kapitel %1$d · %2$s</string>
-    <string name="spoken_chapter_left">noch %1$s</string>
+    <string name="spoken_chapter_left">Noch %1$s</string>
 </resources>

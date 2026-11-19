@@ -3,14 +3,19 @@ package io.github.hazymorning.amsel.widget
 import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
+import android.view.Gravity
 import android.widget.RemoteViews
+import androidx.annotation.LayoutRes
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.navigation.Opening
 
+/** A button of the setup: its place there, for its tap, and what it does. */
+internal typealias PlacedSlot = IndexedValue<WidgetSlot>
+
 /**
- * A widget's buttons: each in its place in a row of equal cells, or a tile's one, shaded as the
- * person wants, play and pause filled in the cover's colour where it has one, each glyph's ink in
- * the middle of its cell. Taps keep each button's place in the setup.
+ * A widget's buttons: each a cell of equal width in its row, or a tile's one, shaded as the person
+ * wants, play and pause filled in the cover's colour where it has one, each glyph's ink in the middle
+ * of its cell. Taps keep each button's place in the setup.
  */
 internal class WidgetCellsViews(
     private val context: Context,
@@ -30,49 +35,58 @@ internal class WidgetCellsViews(
         setup.style == WidgetStyle.Cover && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     }
 
-    /** The first [shown] of the buttons that have something to act on; the layout gives them equal widths and gaps. */
-    fun draw(views: RemoteViews, fit: WidgetFit, shown: Int) = with(views) {
-        val buttons = setup.slots.withIndex().filter { it.value.button.availableIn(look) }.take(shown)
-        shows(R.id.widget_row, buttons.isNotEmpty())
-        // In one row the cells are as high as under words, in the middle, not a tall capsule.
-        val oneRow = fit.form == WidgetForm.Row || fit.form == WidgetForm.Bar
-        val spare = if (oneRow) (fit.height - 2 * WidgetSizes.PADDING - WidgetSizes.CELL_HEIGHT) / 2 else 0f
-        setViewPadding(R.id.widget_row, 0, px(spare), 0, px(spare))
-        for (place in 0 until MAX_BUTTONS) {
-            val button = buttons.getOrNull(place)
-            shows(SlotIds.of(place).slot, button != null)
-            if (button != null) cell(this, place, button.index, button.value)
+    /** The buttons [fit] holds: the first of those with something to act on in what plays. */
+    fun shown(fit: WidgetFit): List<PlacedSlot> =
+        setup.slots.withIndex().filter { it.value.button.availableIn(look) }.take(fit.buttons)
+
+    /** [buttons] side by side in [row], as cells of [layout] [inset] px in from their targets above and below. */
+    fun row(views: RemoteViews, row: Int, buttons: List<PlacedSlot>, @LayoutRes layout: Int, inset: Int) {
+        views.removeAllViews(row)
+        for ((index, slot) in buttons) views.addView(row, cell(index, slot, layout, inset))
+    }
+
+    /** [buttons] in rows of [columns] in [pad]; a last row with fewer keeps the cells' width, in its middle. */
+    fun pad(views: RemoteViews, pad: Int, buttons: List<PlacedSlot>, columns: Int, inset: Int) {
+        views.removeAllViews(pad)
+        for (chunk in buttons.chunked(columns)) {
+            val row = RemoteViews(context.packageName, R.layout.widget_pad_row)
+            if (chunk.size < columns) {
+                row.setFloat(R.id.widget_pad_row, "setWeightSum", columns.toFloat())
+                row.setInt(R.id.widget_pad_row, "setGravity", Gravity.CENTER_HORIZONTAL)
+            }
+            for ((index, slot) in chunk) {
+                row.addView(R.id.widget_pad_row, cell(index, slot, R.layout.widget_cell, inset))
+            }
+            views.addView(pad, row)
         }
     }
 
-    /** The button at [place] in the row, [index] in the setup. */
-    private fun cell(views: RemoteViews, place: Int, index: Int, slot: WidgetSlot) = with(views) {
-        val ids = SlotIds.of(place)
-        val face = pictures.faces[slot.item?.art]?.takeIf { slot.button == WidgetButton.PlayItem }
-        shows(ids.face, face != null)
-        shows(ids.glyph, face == null)
-        if (face != null) {
-            setInt(ids.slot, "setBackgroundResource", if (setup.cells == WidgetCells.All) tone.cell else tone.bare)
-            cellArgb(ids.slot, null)
-            setImageViewBitmap(ids.face, face)
-            setViewPadding(ids.slot, 0, 0, 0, 0)
-        } else {
-            dress(this, slot.button, ids.slot, ids.glyph, shadeAll = setup.cells == WidgetCells.All)
+    /**
+     * Button [index] of the setup as a cell of [layout], [inset] px in from its target above and
+     * below; a Play … button shows its item's cover.
+     */
+    private fun cell(index: Int, slot: WidgetSlot, @LayoutRes layout: Int, inset: Int) =
+        RemoteViews(context.packageName, layout).apply {
+            val face = pictures.faces[slot.item?.art]?.takeIf { slot.button == WidgetButton.PlayItem }
+            shows(R.id.widget_face, face != null)
+            shows(R.id.widget_glyph, face == null)
+            if (face != null) {
+                val shade = if (setup.cells == WidgetCells.All) tone.cell else tone.bare
+                setInt(R.id.widget_cell_shape, "setBackgroundResource", shade)
+                setImageViewBitmap(R.id.widget_face, face)
+            } else {
+                val all = setup.cells == WidgetCells.All
+                dress(this, slot.button, R.id.widget_cell_shape, R.id.widget_glyph, shadeAll = all)
+            }
+            setViewPadding(R.id.widget_cell, 0, inset, 0, inset)
+            setContentDescription(R.id.widget_cell, slots.label(slot, look))
+            if (taps) setOnClickPendingIntent(R.id.widget_cell, press(index, slot))
         }
-        setContentDescription(ids.slot, slots.label(slot, look))
-        if (taps) setOnClickPendingIntent(ids.slot, press(index, slot))
-    }
 
     /** A tile's cell, shaded unless the person wants none; the speaker's glyph where there is no button. */
-    fun tileCell(views: RemoteViews, slot: WidgetSlot?) = with(views) {
-        dress(
-            this,
-            slot?.button,
-            R.id.widget_tile_cell,
-            R.id.widget_tile_glyph,
-            shadeAll =
-                setup.cells != WidgetCells.None,
-        )
+    fun tileCell(views: RemoteViews, slot: WidgetSlot?) {
+        val shaded = setup.cells != WidgetCells.None
+        dress(views, slot?.button, R.id.widget_tile_cell, R.id.widget_tile_glyph, shadeAll = shaded)
     }
 
     /** [button]'s cell and glyph in [cell] and [glyph]: play and pause filled, others shaded where [shadeAll]. */
