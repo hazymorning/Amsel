@@ -1,5 +1,6 @@
 package io.github.hazymorning.amsel.ui.screens.search
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -58,10 +59,12 @@ fun SearchScreen(
     recent: List<RecentItem> = emptyList(),
     onClearRecent: () -> Unit = {},
     focus: FocusRequester = remember { FocusRequester() },
+    /** A slim bar in place of the tab's title: the widget's page picks with Search. */
+    bar: (@Composable BoxScope.() -> Unit)? = null,
 ) {
-    MaterialScreen(modifier) { insets ->
+    MaterialScreen(modifier, bar = bar) { insets ->
         Column(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding())) {
-            TabHeader(stringResource(R.string.tab_search))
+            if (bar == null) TabHeader(stringResource(R.string.tab_search))
             QueryField(state.query, busy = state.searching, onQueryChange, focus)
             val results = state.results
             val rest = Modifier.fillMaxSize().padding(insets.withTop(0.dp))
