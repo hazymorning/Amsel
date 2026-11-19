@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_description">Was wo läuft, mit vier Tasten nach deiner Wahl</string>
+    <string name="widget_name_button">Taste</string>
+    <string name="widget_name_buttons">Tasten</string>
+    <string name="widget_name_now_playing">Läuft gerade</string>
+    <string name="widget_description_button">Eine Taste, so groß wie ein App-Symbol</string>
+    <string name="widget_description_buttons">Bis zu drei Tasten in einer Reihe</string>
+    <string name="widget_description">Was wo läuft, mit Tasten nach deiner Wahl</string>
     <string name="widget_setup_title">Widget</string>
-    <string name="widget_setup_hint">Tippe auf eine Taste, um sie zu ändern.</string>
-    <string name="widget_setup_buttons">Die vier Tasten, von links</string>
     <string name="widget_setup_done">Fertig</string>
+    <string name="widget_look_cover">Cover</string>
+    <string name="widget_look_plain">Schlicht</string>
+    <string name="widget_look_clear">Durchsichtig</string>
+    <string name="widget_speaker">Lautsprecher</string>
+    <string name="widget_speaker_amsel">Wo Amsel spielt</string>
+    <string name="widget_buttons">Tasten</string>
+    <string name="widget_add_button">Taste hinzufügen</string>
+    <string name="widget_remove_button">%1$s entfernen</string>
+    <string name="widget_larger">Zeigt sich bei einem größeren Widget</string>
     <string name="widget_slot_1">Erste Taste</string>
     <string name="widget_slot_2">Zweite Taste</string>
     <string name="widget_slot_3">Dritte Taste</string>
     <string name="widget_slot_4">Vierte Taste</string>
-    <string name="widget_change_slot">%1$s: %2$s. Ändern</string>
     <string name="widget_quieter">Leiser</string>
     <string name="widget_louder">Lauter</string>
     <string name="widget_speakers">Lautsprecher</string>

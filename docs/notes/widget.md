@@ -1,33 +1,55 @@
-# Widget: what plays, and four buttons of one's own (owner's wish, 2026-11-19)
+# Widget: what plays, and the buttons each person sets (owner's wish, 2026-11-19)
 
-One widget for the home screen, half the screen wide and about square: 2 × 2 cells
-(`targetCellWidth`, `targetCellHeight`), larger when dragged. It shows the speaker in use and what
-plays there over its cover, and four buttons that each person sets. No new permission and no new
-library: plain `RemoteViews`. Glance would add itself and WorkManager and draws `RemoteViews` all
-the same.
+One widget, three ways onto the home screen by the size it starts at: **Button** (1 × 1, as large
+as an app's icon), **Buttons** (2 × 1) and **Now playing** (2 × 2). Each can be resized to any size
+and takes the form that size holds. No new permission and no new library: plain `RemoteViews`;
+Glance would add itself and WorkManager and draws `RemoteViews` all the same.
 
-## Look
+## Forms
 
-- The cover of what plays fills the widget in its own colours, softly blurred: Amsel blurs a small
-  copy (96 px) and the launcher scales it up. The words take ink or paper, whichever reads better on
-  that cover, over a light veil of the same. At night (the system's dark theme) the cover lies dimmed
-  and the words are paper, so a white cover never glares.
-- From the top, 16 in: the speaker's glyph and name, as the dock names it; the title, bold, two lines
-  at most; the artist, the author or the podcast. The four buttons share the widget's width at its
-  foot, a quarter each (about 44 dp at 2 × 2 on a usual phone, 48 and more at three cells) and 52
-  high. Play and pause wears Amsel's play disc; the others are bare glyphs; a Play … button is its
-  item's own cover, 28 dp, with the cover corners. With Quieter or Louder among them, the level
-  stands after the speaker's name in the quieter tone, as a view of its own: a long name pushes it
-  out before it is cut itself.
-- Nothing played yet: Surface 1, the speaker's name over "Not playing", as on the dock. Signed out:
-  "Amsel" over "Sign in to Amsel", no buttons, and a tap opens it.
-- The corners are the launcher's (`system_app_widget_background_radius`, on the view with
-  `@android:id/background` and `clipToOutline`, Android 12 and up); below, the widget is square, as
-  widgets were then. The words are in the phone's font: a launcher inflates a widget in a restricted
-  context, where `TextView` skips an app's font resources, so Commissioner cannot be used;
-  `textFontWeight` carries Amsel's weights. A launcher inflates only the classes widgets may use, so
-  the veil is an `ImageView`, not a `View`.
-- A tap anywhere but a button opens Now Playing (`amsel://now-playing`; Home when nothing plays).
+The launcher reports a widget's sizes (`OPTION_APPWIDGET_SIZES`, its portrait and landscape before
+Android 12); Amsel lays out each one exactly (`WidgetFit`) and hands them over together, so the
+launcher shows the right one at once, and draws again when a widget is resized.
+
+| Form | Size | Holds |
+| --- | --- | --- |
+| Tile | under two cells both ways | the whole cell is one button: its glyph on a round ground of 44 dp in the middle; a Play … button is its item's cover; with no button, the cover of what plays |
+| Row | one row, under four cells wide | the buttons in the middle of its height; with none, the speaker over the title |
+| Card | two rows and more | the speaker, the title and the line under it over the buttons |
+| Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end |
+| Player | two rows and more, four cells wide | the cover at the start, the words over the buttons beside it |
+
+## Room, measured to the ink
+
+Every distance is to the ink, not to a view's box: a glyph's drawing (`IconInk`), the disc, a cover,
+a word's first letter (its side bearing) and capitals (its font's metrics, read on the phone).
+
+- A card and a player keep 16 dp on all four sides: the speaker's glyph at the top, the first word
+  and the first button at the start, the last button at the end, the tallest button at the foot.
+- A row keeps at its ends the room above and below its tallest button, less only where that room
+  would cost a button, never under 12. A bar keeps around its cover what its height gives, 8 to 16,
+  and the same at its end.
+- Buttons are 48 dp targets, each ink in the middle of its own, spread from the first ink to the
+  last; a single one stands in a row's middle. Those a size cannot hold give way whole, from the
+  end. Where a target would reach past the widget, its ink moves inside it instead.
+- The words give way in order as the height or the text size asks: the line under the title, the
+  title's second line, the speaker's line. The level after the speaker's name shows whole or not
+  at all.
+- `WidgetInsetsTest` draws every form and measures its ink from each edge; `WidgetFitTest` lays out
+  every width and height and checks the same.
+
+## Looks
+
+- **Cover:** the cover of what plays, blurred small and scaled up, under a veil of paper or of
+  black, whichever lets the words read; at night the cover lies dimmed. Nothing playing: Surface 1.
+- **Plain:** the system's colours (Material You) from Android 12, as Clock and Weather; Amsel's
+  paper before.
+- **Clear:** no ground; the words and glyphs in ink or paper as Android advises for the wallpaper
+  (`WallpaperColors.HINT_SUPPORTS_DARK_TEXT`), drawn again when the wallpaper changes.
+
+Covers shown sharp keep Amsel's cover corners (rule 7) and at night the night's range, as in the
+app. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
+Amsel's weights, the one font a widget can count on.
 
 ## Buttons
 
@@ -41,98 +63,67 @@ the same.
 | Continue listening | the book or episode heard last (`Catalog.inProgress(1)`) | a book |
 | Play … | one album, playlist, artist, station, book or podcast, picked once | its cover |
 
-As it comes: Previous, Play and pause, Next, Speakers. Each button acts on the speaker in use, as
-Amsel's own buttons do.
+None to four, in the person's order. As they come: Button, play and pause; Buttons and Now playing,
+the transport. With Quieter or Louder among them, the level stands after the speaker's name.
 
-## Setting the buttons
+## The speaker
 
-Placing the widget opens its page (`WidgetSetupActivity`, the widget's `configure`, in Amsel's
-theme): the widget as it will look, drawn from the same views at the size the launcher gives it,
-with what plays now, and under it the four buttons as rows, left to right. A tap on a row, or on its
-button in the picture, opens a sheet of the choices, the current one ticked. Play … opens Search
-under a slim bar to pick from, its recent searches first; whatever is tapped or held is the pick.
-The defaults are set already, so Done alone places the widget. Later the launcher's own way to change a widget (a long press;
-`widgetFeatures="reconfigurable"`) opens the same page. Each widget keeps its own buttons, stored by
-its id; removing the widget forgets them.
+As it comes, a widget shows and acts on the speaker Amsel plays on. Its page can keep it to one
+speaker ("Kitchen") whichever Amsel is on; This phone is not offered, as it plays only where Amsel
+plays.
+
+## Its page
+
+A widget is placed without a page (`configuration_optional`); a long press on it, the launcher's
+way to change a widget (`reconfigurable`), opens its page, as does placing it before Android 12.
+The page shows the widget at its size on the home screen, over the wallpaper's own colour, and
+under it the look (Cover, Plain, Clear), the speaker, and the buttons, each to change or take
+away, one more while there are fewer than four. A button the size cannot hold says so in its row.
+Play … picks with Search, its recent searches first. Done saves; leaving leaves the widget as it was.
 
 ## Taps, also while Amsel is closed
 
 - Every button but Speakers sends one broadcast to Amsel's own receiver (`WidgetTaps`, an explicit,
   immutable `PendingIntent`, which carries whether play or pause showed). A widget tap lets the
-  receiving app come to the front for 10 s: the launcher sends it with background starts allowed
-  (`RemoteViews`), the broadcast passes that to the receiving process
-  (`BroadcastQueueImpl.dispatchReceivers`), and `ActiveServices` accepts it for a foreground
-  service. It is the window a media key gives: when sound starts, Media3 brings the playback service
-  to the front with its notification, so This phone plays too.
-- Play presses the media button, as a headset does: the service starts in front at once and the
-  speaker carries on with what it holds, the stand-in ("Amsel", loading) showing until it reports.
-- Pause, the skips and the volume go to the one Media3 session through a controller
-  (`SessionHands`), which starts the service when it is not running and lets go once the command is
-  on its way; it waits up to 5 s for the speaker to report, as Amsel was closed. So the widget keeps
-  Amsel's rules: a book's skips, the volume limit, failures said plainly. This phone's Quieter and
-  Louder move the phone's own media volume, with the system's slider showing.
-- Continue listening asks the server for the book or episode heard last; it and Play … reach the
-  session's speaker as a car's play does (`setMediaItem`, then `play`), and their title shows while
-  the speaker starts them.
+  receiving app come to the front for 10 s (`BroadcastQueueImpl.dispatchReceivers`, then
+  `ActiveServices`): the window a media key gives.
+- On the speaker Amsel plays on, play presses the media button, as a headset does: the service
+  starts in front at once and the speaker carries on with what it holds. The other buttons go to the
+  one Media3 session through a controller (`SessionHands`) that waits up to 5 s for the speaker to
+  report. This phone's Quieter and Louder move the phone's own media volume.
+- On a speaker of the widget's own, every button goes through a player for that speaker alone
+  (`SpeakerHands`, the same `RemotePlayer` as the session's), let go after the command.
 - No `PendingIntent.getForegroundService`: a service started so must show a notification within
-  seconds, which a pause or a skip past the end never does. Media3 guards only play
-  (`MediaButtonReceiver` drops every other key from Android 8). The docs' warning against
-  `startForegroundService` in `AppWidgetProvider.onReceive` concerns the system's update broadcasts,
-  which carry no tap.
-- Play and pause change at once (Amsel's optimistic state), and the speaker confirms. A command that
-  fails puts its sentence where the artist stands until the next change.
+  seconds, which a pause or a skip past the end never does.
+- Play and pause change at once and the speaker confirms; a command that fails puts its sentence
+  where the artist stands until the next change.
 
 ## Staying current
 
-Amsel draws the widget anew whenever the speaker in use, what plays there, play and pause or the
-level change, while it is connected: in front, or while music goes through it, as today. When the
-connection closes, the widget rests as last heard, with the play glyph. No polling and no periodic
-update (`updatePeriodMillis` 0): what the web UI or another phone starts shows once Amsel connects
-again, which any button does. The last state and its blurred cover are kept on the phone, so a
-restart draws the widget without the server.
+Amsel draws the widgets anew whenever what they show changes, while it is connected: in front, or
+while music goes through it. When the connection closes they rest as last heard. No polling and no
+periodic update (`updatePeriodMillis` 0). Each widget's setup and what they showed last on each
+speaker are kept on the phone (`files/widget`); their covers come from Amsel's own cover cache.
 
-## Next: one widget in three sizes (owner's feedback, 2026-11-19)
+## Survey (November 2026)
 
-The first widget works, but offers too little: four buttons always, and on a narrow launcher its
-play disc was cut at the sides. Decided after a survey of other players and Google's widget quality
-guidance (below):
-
-- **One widget, three ways in.** The widget picker lists it by its starting size: Button (1 × 1),
-  Buttons (2 × 1), Now playing (2 × 2). Each can be resized and changes its form with its size
-  (responsive `RemoteViews` on Android 12 and up, chosen from the reported size below): one cell,
-  one button; one row, buttons, and from four cells wide the cover at the start with what plays;
-  two rows, what plays over its buttons; from four cells wide a player, the cover at the start.
-- **None to four buttons, in the person's order.** Each takes 48 dp; what does not fit at a size
-  drops whole, from the end, never cut (Google's toolbar rule). The play disc fits its room.
-- **One look of three:** Cover (as now), Plain in the system's colours on Android 12 and up
-  (Material You, as Clock and Weather; Amsel's paper below), or Clear: no background, words and
-  glyphs in the tone Android advises for the wallpaper (`WallpaperColors.HINT_SUPPORTS_DARK_TEXT`).
-- **The speaker:** as in Amsel, or one of its own ("Kitchen"), the first thing Sonos and Home
-  Assistant ask.
-- **No padding, corner or font settings:** a launcher sets widgets edge to edge in their cells and
-  Google asks apps not to pad around them; the inner room follows the size, the corner stays the
-  launcher's, the words the phone's font.
-- Android's own ways stay (light and dark, the system's corner, the launch animation, change by a
-  long press) and gain the system's colours, a preview made from the real widget (Android 15) and
-  the lock screen (Android 16 QPR2, where every widget may stand).
-- **Home Assistant actions: not in Amsel** (`docs/PARKING-LOT.md`). Possible without a token (an
-  automation with a webhook trigger, `POST /api/webhook/<id>`), but every button would need setting
-  up in Home Assistant, whose own app already has action and media widgets to stand beside Amsel's.
-
-Survey (November 2026: Spotify, YouTube Music, Apple Music, Plexamp, Symfonium, Poweramp, Sonos,
-Pocket Casts, Audiobookshelf, Absorb, Lissen, Samsung Music, Auxio, Retro Music, Namida, Home
-Assistant). The best are one resizable widget that adds content as it grows (Auxio, Pocket Casts,
-Plexamp). Settings, where there are any, are the speaker, the background (opacity, dynamic colour)
-and the buttons; corners, padding, fonts and presets are Poweramp's and Namida's extras. Seen to
-fail: controls clipped at slim sizes, empty space at large ones, stale or blank widgets, too much
-image memory (Android 17 refuses it).
+Spotify, YouTube Music, Apple Music, Plexamp, Symfonium, Poweramp, Sonos, Pocket Casts,
+Audiobookshelf, Absorb, Lissen, Samsung Music, Auxio, Retro Music, Namida, Home Assistant. The best
+are one resizable widget that adds content as it grows (Auxio, Pocket Casts, Plexamp). Settings,
+where there are any, are the speaker, the background and the buttons; corners, padding and fonts are
+Poweramp's and Namida's extras. Seen to fail: controls clipped at slim sizes, empty space at large
+ones, stale widgets, too much image memory. Home Assistant actions stay out
+(`docs/PARKING-LOT.md`).
 
 ## Code
 
-`:app`, package `widget`: `AmselWidget` (the provider), `WidgetTaps` and `SessionHands` (taps),
-`WidgetViews` and `WidgetArt` (the views, the blurred cover and the buttons' covers), `Widgets` (drawing
-and taps, in `AppGraph`), `WidgetStore` (each widget's buttons and the last look, in `files/widget`),
-the setup page (`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupViewModel`, `WidgetPicker`);
-`res/layout/widget.xml`, `res/xml/widget_info.xml`, `res/values*/widget.xml`, `strings_widget.xml`.
-Tests: `WidgetLookTest`, `WidgetStoreTest`, `WidgetArtTest`, `WidgetViewsTest` (TalkBack's words),
-and `WidgetShots` (the widgets on a home screen and the page, light, dark, 200 % and German).
+`:app`, package `widget`: the providers (`AmselWidget`, `AmselButtonWidget`, `AmselButtonsWidget`),
+`Widgets` (following, drawing and taps, in `AppGraph`), `WidgetRender` (sizes and pictures),
+`WidgetFit` and `WidgetPlace` (the geometry), `WidgetViews`, `WidgetDrawing` and `WidgetWordsViews`
+(the views), `WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover
+corners), `WidgetTaps`, `SessionHands` and `SpeakerHands` (taps), `WidgetStore`, and the page
+(`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupSheets`, `WidgetSetupViewModel`,
+`WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`. Tests: `WidgetFitTest`,
+`WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`, `WidgetArtTest`,
+`WidgetLookTest`, and `WidgetShots` (every form, the looks, the states, the page; light, dark, 200 %
+and German).

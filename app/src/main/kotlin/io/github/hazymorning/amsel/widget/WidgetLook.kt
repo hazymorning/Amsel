@@ -6,11 +6,13 @@ import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import kotlinx.serialization.Serializable
 
-/** What every widget shows: the speaker in use and what plays there. Kept on the phone between runs. */
+/** What a widget shows: a speaker and what plays there. Kept on the phone between runs. */
 @Immutable
 @Serializable
 data class WidgetLook(
     val signedIn: Boolean = true,
+    /** The speaker's player id; null before Amsel knows one. */
+    val speakerId: String? = null,
     /** As the dock names it: "This phone" in the person's language, a group's "+2" after it. */
     val speaker: String = "",
     /** 0 to 100; null for This phone and a speaker whose volume is fixed. */
@@ -20,8 +22,10 @@ data class WidgetLook(
     /** Null while nothing plays there: "Not playing". */
     val title: String? = null,
     val subtitle: String? = null,
-    /** The cover's address on the server, at [COVER_PX]. */
+    /** The cover's address on the server, at [COVER_PX], for the blurred ground. */
     val art: String? = null,
+    /** The same cover at [ART_PX], for a bar's, a player's or a tile's cover. */
+    val artLarge: String? = null,
     val playing: Boolean = false,
     /** A book or an episode: the skips are 30 s forward and 15 s back, as on the dock. */
     val spoken: Boolean = false,
@@ -31,6 +35,9 @@ data class WidgetLook(
 
 /** The size the cover is asked for: it is blurred down to [WidgetArt.SIDE] anyway. */
 const val COVER_PX = 128
+
+/** A cover shown sharp: a player's, four cells by two, is about 140 dp, 420 px. */
+const val ART_PX = 512
 
 /**
  * What the widgets show for [speaker], named [name], and what plays there ([nowPlaying]). Unless the
@@ -42,12 +49,14 @@ fun widgetLook(speaker: SpeakerUi, name: String, nowPlaying: NowPlayingUi?, sess
     val label = if (speaker.others > 0) "$name +${speaker.others}" else name
     return WidgetLook(
         signedIn = signedIn,
+        speakerId = speaker.id,
         speaker = label,
         volume = (nowPlaying?.volume ?: speaker.volume).takeUnless { speaker.isPhone },
         phone = speaker.isPhone,
         title = nowPlaying?.title?.ifBlank { null },
         subtitle = nowPlaying?.let { np -> np.artist.ifBlank { np.album.orEmpty() }.ifBlank { null } },
         art = nowPlaying?.art?.sized(COVER_PX),
+        artLarge = nowPlaying?.art?.sized(ART_PX),
         playing = connected && nowPlaying?.isPlaying == true,
         spoken = nowPlaying?.spoken == true,
     )

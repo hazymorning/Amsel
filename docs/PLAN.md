@@ -138,7 +138,7 @@ v1 is music first, with audiobooks and podcasts where the library holds them: th
 | Speaker picker | A speaker button showing its name opens the "Play on" sheet: every speaker and what it is playing, "This phone" first. See Core flows. | Swiping between speakers, DSP, speaker settings |
 | Item actions | A visible menu on every page and Now Playing, with long-press on any row or tile as the shortcut: Play and Shuffle for an album, a playlist or an artist (owner, 2026.11.18), Play next, Add to queue, Favourite, Add to playlist, Go to artist or album; where the server has them, Endless mix, Similar songs and, in Now Playing, the DJ (owner, 2026.11.22). | Refresh metadata, edit, export |
 | Settings | Account, theme (system, light, dark), "Open web UI", about. | Everything else |
-| System | Notification and lock-screen controls, Bluetooth buttons, volume keys for the active player, Android Auto browsing, one home-screen widget with four buttons each person sets (`docs/notes/widget.md`, owner, 2026.11.50). | More widgets, Wear OS, Android TV |
+| System | Notification and lock-screen controls, Bluetooth buttons, volume keys for the active player, Android Auto browsing, one home-screen widget in three starting sizes, its form following its size, with none to four buttons, a look and a speaker each person sets (`docs/notes/widget.md`, owner, 2026.11.50 and 2026.11.51). | More widgets, Wear OS, Android TV |
 
 **After the beta, and only if they pass the feature test:** lyrics, sleep timer, grouping speakers, radio.
 

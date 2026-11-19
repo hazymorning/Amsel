@@ -1,7 +1,5 @@
 package io.github.hazymorning.amsel.widget
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import java.io.File
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -11,88 +9,76 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 /**
- * What the widgets keep on this phone: each one's buttons by its id, and what they showed last with
- * its blurred cover and the buttons' covers, so a restart draws them again without the server. Each
- * file is written whole through a temporary one, so a crash midway leaves the last good one.
+ * What the widgets keep on this phone: each one's setup by its id, and what they showed last on each
+ * speaker, so a restart draws them again without the server; their pictures come from Amsel's own
+ * cover cache. Each file is written whole through a temporary one, so a crash midway leaves the last
+ * good one.
  */
 class WidgetStore(private val dir: File) {
     private val json = Json { ignoreUnknownKeys = true }
     private val lock = Mutex()
 
-    /** Widget [id]'s buttons; the defaults until its page saved others. */
-    suspend fun slots(id: Int): List<WidgetSlot> = lock.withLock { readAll()[id] } ?: DefaultSlots
+    /** Widget [id]'s setup; null until its page saved one. */
+    suspend fun setup(id: Int): WidgetSetup? = lock.withLock { readAll()[id] }
 
-    suspend fun setSlots(id: Int, slots: List<WidgetSlot>): Unit = lock.withLock { writeAll(readAll() + (id to slots)) }
+    suspend fun setSetup(id: Int, setup: WidgetSetup): Unit = lock.withLock { writeAll(readAll() + (id to setup)) }
 
-    /** Widgets the launcher removed; their covers go once no widget names them. */
-    suspend fun forget(ids: Collection<Int>): Unit = lock.withLock {
-        val kept = readAll() - ids.toSet()
-        writeAll(kept)
-        val named = kept.values.flatten().mapNotNull { it.item?.art }.map(::thumbName).toSet()
-        withContext(Dispatchers.IO) { thumbs.listFiles()?.filter { it.name !in named }?.forEach { it.delete() } }
-    }
+    /** Widgets the launcher removed. */
+    suspend fun forget(ids: Collection<Int>): Unit = lock.withLock { writeAll(readAll() - ids.toSet()) }
 
-    suspend fun look(): WidgetLook? = lock.withLock {
+    /** What the widgets showed last, by speaker: [AMSELS] for the one Amsel plays on. */
+    suspend fun looks(): Map<String, WidgetLook> = lock.withLock {
         withContext(Dispatchers.IO) {
-            read(lookFile)?.let { text -> decode { json.decodeFromString(WidgetLook.serializer(), text) } }
-        }
-    }
-
-    /** What the widgets show now. */
-    suspend fun setLook(look: WidgetLook): Unit = lock.withLock {
-        withContext(Dispatchers.IO) {
-            write(lookFile) { it.writeText(json.encodeToString(WidgetLook.serializer(), look)) }
-        }
-    }
-
-    /** The blurred cover they show it over; null for none. */
-    suspend fun setCover(cover: Bitmap?): Unit = lock.withLock {
-        withContext(Dispatchers.IO) {
-            if (cover == null) {
-                coverFile.delete()
-            } else {
-                write(coverFile) { file ->
-                    file.outputStream().use { cover.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            read(looksFile)?.let { text -> decode { json.decodeFromString(LooksSerializer, text) } }
+                ?: read(lastLookFile)?.let { text ->
+                    decode { mapOf(AMSELS to json.decodeFromString(WidgetLook.serializer(), text)) }
                 }
-            }
+                ?: emptyMap()
+        }
+    }
+
+    suspend fun setLooks(looks: Map<String, WidgetLook>): Unit = lock.withLock {
+        withContext(Dispatchers.IO) {
+            write(looksFile) { it.writeText(json.encodeToString(LooksSerializer, looks)) }
+            forgetEarlier()
         }
     }
 
     /** Signing out: what the last person played is not left on the home screen. */
-    suspend fun forgetLook(): Unit = lock.withLock {
+    suspend fun forgetLooks(): Unit = lock.withLock {
         withContext(Dispatchers.IO) {
-            lookFile.delete()
-            coverFile.delete()
-        }
-    }
-
-    suspend fun cover(): Bitmap? = withContext(Dispatchers.IO) { decodeFile(coverFile) }
-
-    suspend fun thumb(art: String): Bitmap? = withContext(Dispatchers.IO) { decodeFile(File(thumbs, thumbName(art))) }
-
-    suspend fun setThumb(art: String, bitmap: Bitmap): Unit = withContext(Dispatchers.IO) {
-        thumbs.mkdirs()
-        write(File(thumbs, thumbName(art))) { file ->
-            file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            looksFile.delete()
+            forgetEarlier()
         }
     }
 
     private val setupsFile get() = File(dir, "setups.json")
-    private val lookFile get() = File(dir, "look.json")
-    private val coverFile get() = File(dir, "cover.png")
-    private val thumbs get() = File(dir, "thumbs")
+    private val looksFile get() = File(dir, "looks.json")
 
-    private suspend fun readAll(): Map<Int, List<WidgetSlot>> = withContext(Dispatchers.IO) {
-        val text = read(setupsFile) ?: return@withContext emptyMap()
-        decode { json.decodeFromString(ListSerializer(StoredWidget.serializer()), text) }.orEmpty()
-            .associate { stored -> stored.id to stored.slots() }
+    /** Amsel 2026.11.50 kept one look, its blurred cover and the buttons' covers here. */
+    private val lastLookFile get() = File(dir, "look.json")
+
+    private fun forgetEarlier() {
+        lastLookFile.delete()
+        File(dir, "cover.png").delete()
+        File(dir, "thumbs").deleteRecursively()
     }
 
-    private suspend fun writeAll(setups: Map<Int, List<WidgetSlot>>): Unit = withContext(Dispatchers.IO) {
-        val stored = setups.map { (id, slots) -> StoredWidget(id, slots.map { StoredSlot(it.button.id, it.item) }) }
+    private suspend fun readAll(): Map<Int, WidgetSetup> = withContext(Dispatchers.IO) {
+        val text = read(setupsFile) ?: return@withContext emptyMap()
+        decode { json.decodeFromString(ListSerializer(StoredWidget.serializer()), text) }.orEmpty()
+            .associate { stored -> stored.id to stored.setup() }
+    }
+
+    private suspend fun writeAll(setups: Map<Int, WidgetSetup>): Unit = withContext(Dispatchers.IO) {
+        val stored = setups.map { (id, setup) ->
+            StoredWidget(id, setup.slots.map { StoredSlot(it.button.id, it.item) }, setup.style.id, setup.speaker)
+        }
         write(setupsFile) { it.writeText(json.encodeToString(ListSerializer(StoredWidget.serializer()), stored)) }
     }
 
@@ -123,19 +109,30 @@ class WidgetStore(private val dir: File) {
         if (!written) temp.delete()
     }
 
-    private fun decodeFile(file: File): Bitmap? = if (file.exists()) BitmapFactory.decodeFile(file.path) else null
+    companion object {
+        /** The looks' key for the speaker Amsel plays on. */
+        const val AMSELS = ""
 
-    private fun thumbName(art: String) = "${art.hashCode().toUInt()}.png"
+        private val LooksSerializer = MapSerializer(String.serializer(), WidgetLook.serializer())
+    }
 }
 
 @Serializable
-private data class StoredWidget(val id: Int, val slots: List<StoredSlot>) {
-    /** Four, each known; one a later Amsel no longer offers takes the default's place. */
-    fun slots(): List<WidgetSlot> = DefaultSlots.mapIndexed { index, default ->
-        val stored = slots.getOrNull(index) ?: return@mapIndexed default
-        val button = WidgetButton.of(stored.button) ?: return@mapIndexed default
-        if (button == WidgetButton.PlayItem && stored.item == null) default else WidgetSlot(button, stored.item)
-    }
+private data class StoredWidget(
+    val id: Int,
+    val slots: List<StoredSlot>,
+    val style: String? = null,
+    val speaker: String? = null,
+) {
+    /** Each button known; one a later Amsel no longer offers is left out. */
+    fun setup(): WidgetSetup = WidgetSetup(
+        style = WidgetStyle.of(style),
+        speaker = speaker,
+        slots = slots.take(MAX_BUTTONS).mapNotNull { stored ->
+            val button = WidgetButton.of(stored.button) ?: return@mapNotNull null
+            if (button == WidgetButton.PlayItem && stored.item == null) null else WidgetSlot(button, stored.item)
+        },
+    )
 }
 
 @Serializable
