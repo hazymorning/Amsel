@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Two rows and more, four cells wide: the cover at the start, what plays over the buttons beside it. -->
+<!-- Two rows and more, four cells wide: the cover beside what plays, over a row of button cells. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -26,31 +26,42 @@
         android:visibility="gone" />
 
     <LinearLayout
+        android:id="@+id/widget_body"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:baselineAligned="false"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:paddingStart="@dimen/widget_padding"
+        android:paddingTop="@dimen/widget_padding_words"
+        android:paddingEnd="@dimen/widget_padding"
+        android:paddingBottom="@dimen/widget_padding">
 
-        <include layout="@layout/widget_art" />
-
-        <!-- The words from the top, the buttons on the foot; the fit leaves them room enough apart. -->
-        <FrameLayout
-            android:id="@+id/widget_body"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:paddingBottom="12dp">
+            android:baselineAligned="false"
+            android:orientation="horizontal">
 
+            <include
+                layout="@layout/widget_art"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/widget_words_lead_out_top" />
+
+            <!-- What the cover leaves; no weight, as the row itself is weighted. -->
             <include
                 layout="@layout/widget_words"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <include
-                layout="@layout/widget_buttons"
-                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom" />
-        </FrameLayout>
+                android:layout_marginStart="@dimen/widget_art_to_words_lead" />
+        </LinearLayout>
+
+        <include
+            layout="@layout/widget_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/widget_cell_height"
+            android:layout_marginStart="@dimen/widget_cell_inset_out"
+            android:layout_marginTop="@dimen/widget_words_to_cells"
+            android:layout_marginEnd="@dimen/widget_cell_inset_out" />
     </LinearLayout>
 </FrameLayout>

@@ -6,21 +6,18 @@
     <color name="widget_glyph_light">#FFE6E5DE</color>
     <color name="widget_disc_light">#FFE6E5DE</color>
     <color name="widget_on_disc_light">#FF131412</color>
-    <color name="widget_ground_light">#24E6E5DE</color>
     <color name="widget_press_light">#24E6E5DE</color>
     <color name="widget_words_dark">#FFE6E5DE</color>
     <color name="widget_quiet_dark">#B8E6E5DE</color>
     <color name="widget_glyph_dark">#FFE6E5DE</color>
     <color name="widget_disc_dark">#FFE6E5DE</color>
     <color name="widget_on_disc_dark">#FF131412</color>
-    <color name="widget_ground_dark">#24E6E5DE</color>
     <color name="widget_press_dark">#24E6E5DE</color>
     <color name="widget_words_plain">#FFE6E5DE</color>
     <color name="widget_quiet_plain">#B8E6E5DE</color>
     <color name="widget_glyph_plain">#FFE6E5DE</color>
     <color name="widget_disc_plain">#FFE6E5DE</color>
     <color name="widget_on_disc_plain">#FF131412</color>
-    <color name="widget_ground_plain">#24E6E5DE</color>
     <color name="widget_press_plain">#24E6E5DE</color>
     <color name="widget_background_plain">#FF1B1C19</color>
     <color name="widget_background_cover">#FF1B1C19</color>
@@ -32,4 +29,10 @@
     <color name="widget_veil_dark_top">#6B0A0A09</color>
     <color name="widget_veil_dark_middle">#800A0A09</color>
     <color name="widget_veil_dark_bottom">#9E0A0A09</color>
+    <color name="widget_cell_light">#2EE6E5DE</color>
+    <color name="widget_cell_dark">#2EE6E5DE</color>
+    <color name="widget_cell_plain">#2EE6E5DE</color>
+    <color name="widget_press_disc_light">#29131412</color>
+    <color name="widget_press_disc_dark">#29131412</color>
+    <color name="widget_press_disc_plain">#29131412</color>
 </resources>

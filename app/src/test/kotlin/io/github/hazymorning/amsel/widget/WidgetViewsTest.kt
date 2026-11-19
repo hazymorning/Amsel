@@ -61,14 +61,14 @@ class WidgetViewsTest {
         assertEquals(false, drawn(WidgetSample.music).shows(R.id.widget_level))
     }
 
-    @Test fun playAndPauseWearTheDisc() {
-        val widget = drawn(WidgetSample.music)
-        assertEquals(true, widget.shows(R.id.widget_disc_2))
-        assertEquals(false, widget.shows(R.id.widget_glyph_2))
-        assertEquals(false, widget.shows(R.id.widget_disc_1))
+    @Test fun playAndPauseShowWhatTheyDo() {
+        val playing = drawn(WidgetSample.music)
+        assertEquals(true, playing.shows(R.id.widget_glyph_2))
+        assertEquals("Pause", playing.said(R.id.widget_slot_2))
+        assertEquals("Play", drawn(WidgetSample.music.copy(playing = false)).said(R.id.widget_slot_2))
     }
 
-    /** A card of two cells holds three buttons: a fourth gives way whole, never cut. */
+    /** A card two cells wide holds three buttons: a fourth gives way whole, never cut. */
     @Test fun whatDoesNotFitGivesWayWhole() {
         val widget = drawn(WidgetSample.music, WidgetSample.ownButtons)
         assertEquals(true, widget.shows(R.id.widget_slot_3))
@@ -101,7 +101,7 @@ class WidgetViewsTest {
     }
 
     @Test fun eachSizeTakesItsForm() {
-        assertNotNull(drawn(WidgetSample.music, size = WidgetSample.tile).findViewById(R.id.widget_tile_button))
+        assertNotNull(drawn(WidgetSample.music, size = WidgetSample.tile).findViewById(R.id.widget_tile_cell))
         assertNotNull(drawn(WidgetSample.music, size = WidgetSample.bar).findViewById(R.id.widget_art))
         assertEquals(false, drawn(WidgetSample.music, size = WidgetSample.row).shows(R.id.widget_words))
     }

@@ -17,6 +17,9 @@ internal enum class WidgetLine(val size: Float, val weight: Int, val line: Float
     Subtitle(13f, 400, 16f),
 }
 
+/** A glyph's ink, in dp. */
+internal data class Ink(val width: Float, val height: Float)
+
 /** A glyph's ink in its square of [side] dp, and how far its middle stands off the square's. */
 internal data class GlyphPlace(val ink: Ink, val dx: Float, val dy: Float)
 
@@ -75,6 +78,13 @@ internal class WidgetText(private val context: Context) {
         val ink = inkOf(weighted(SPEAKER, glyph.dp))
         val glyphTop = (row - glyph) / 2 + glyph * ink.top / GRID
         return minOf(glyphTop, (row - name) / 2 + capTop(WidgetLine.Speaker))
+    }
+
+    /** The height of one-line words' box: the speaker's row over the title, or the title alone. */
+    fun wordsBox(words: WidgetWords): Float {
+        val title = height(WidgetLine.Title)
+        if (!words.speaker) return title
+        return maxOf(speakerGlyph, height(WidgetLine.Speaker)) + WidgetSizes.SPEAKER_TO_TITLE + title
     }
 
     /** From the words' top to their one line's baseline, the title's, in a row or a bar. */

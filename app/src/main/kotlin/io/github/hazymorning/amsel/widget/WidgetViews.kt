@@ -36,9 +36,9 @@ class WidgetViews(private val context: Context) {
     /** What TalkBack says for a button, and what the widget's page calls it. */
     fun label(slot: WidgetSlot, look: WidgetLook): String = slots.label(slot, look)
 
-    /** How a widget [width] by [height] dp lays out [setup] with [look], with the covers in [faces]. */
-    fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetLook, faces: Set<String>): WidgetFit =
-        widgetFit(width, height, inks(text, setup, look, faces), text.type)
+    /** How a widget [width] by [height] dp lays out [setup]. */
+    fun fit(width: Float, height: Float, setup: WidgetSetup): WidgetFit =
+        widgetFit(width, height, setup.slots.size, text.type)
 
     /**
      * Widget [id] at each of [fits]: from Android 12 the launcher shows the one for its size; before,
@@ -73,13 +73,3 @@ class WidgetViews(private val context: Context) {
     /** [dp] in pixels for a padding, which is never less than none, or a picture's side. */
     internal fun px(dp: Float): Int = (dp * density).roundToInt().coerceAtLeast(0)
 }
-
-/** The ink of each of [setup]'s buttons as it shows with [look], with the covers in [faces]. */
-internal fun inks(text: WidgetText, setup: WidgetSetup, look: WidgetLook, faces: Set<String>): List<Ink> =
-    setup.slots.map { slot ->
-        when {
-            slot.button == WidgetButton.PlayPause -> Ink(WidgetSizes.DISC, WidgetSizes.DISC)
-            slot.button == WidgetButton.PlayItem && slot.item?.art in faces -> Ink(WidgetSizes.FACE, WidgetSizes.FACE)
-            else -> text.glyph(slot.button.glyphFor(look), WidgetSizes.GLYPH).ink
-        }
-    }
