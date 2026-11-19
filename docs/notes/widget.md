@@ -17,23 +17,26 @@ at whatever size the launcher finally draws.
 | Tile | under two cells both ways | the whole tile is one button: its cell in the frame; a Play … button is its item's cover; with no button, the cover of what plays |
 | Pad | one row under four cells wide, or what plays left out | the buttons alone, in as few rows as hold them, in the frame's middle |
 | Line | one row, no buttons | the speaker over the title |
-| Card | two rows and more | the speaker, the title, the line under it and the time, above or below a row of buttons |
-| Poster | two cells wide, tall enough for the cover across | the cover across the frame, the speaker and the title under it, a row of buttons at the foot or the top |
+| Card | two rows and more | the speaker, the title, the line under it and the time, above or below rows of buttons |
+| Poster | two cells wide, tall enough for the cover across and the rows | the cover across the frame, the speaker and the title under it, rows of buttons at the foot or the top |
 | Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end or the start |
-| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, above or below a row of buttons |
+| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, above or below rows of buttons |
 
 What plays (the cover and the words) is a part of the widget as its buttons are: before them, as it
-comes, after them, or left out. The two parts stand at the widget's two ends, the room between
-them; a part with nothing in it leaves the other alone. Left out, the buttons fill the widget (Pad):
-in as few rows as hold them, each as full as the next, their cells as wide as the row allows and
-about as high, at least 56; a last row with fewer keeps the others' cell width, in its middle. Four
-buttons in a square stand two by two.
+comes, after them, or left out. The two parts stand at the widget's two ends, the room between them;
+a part with nothing in it leaves the other alone. Left out, the buttons fill the widget (Pad): in as
+few rows as hold them, each as full as the next, their cells as wide as the row allows and about as
+high, at least 56; a last row with fewer keeps the others' cell width, in its middle. Four buttons
+in a square stand two by two. Buttons one row cannot hold take more rows, each as full as the next
+and 4 dp apart, as long as what plays keeps its speaker, a title line and the line under it: two
+cells by three hold five, four by three eight. A tall two-cell widget shows its cover across only
+where its rows leave room for it.
 
 The layouts hold the frame and the places; the cells and the words are added at draw time
-(`RemoteViews.addView`): a row before what plays and one after it, of which one is used, and the
-words in the layout of their size. So the order is the person's without a layout for each order,
+(`RemoteViews.addView`): rows before what plays and rows after it, of which one place is used, and
+the words in the layout of their size. So the order is the person's without a layout for each order,
 and no layout carries eight fixed buttons. The picker's preview and a widget's first moment show
-fixed layouts of the transport (`widget_preview_*`).
+fixed layouts of the buttons as they come (`widget_preview_*`).
 
 ## Frame and cells
 

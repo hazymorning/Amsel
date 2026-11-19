@@ -48,20 +48,41 @@ internal class WidgetCellsViews(
         for ((index, slot) in buttons) views.addView(row, cell(index, slot, layout, inset))
     }
 
+    /**
+     * [buttons] beside what plays, in rows of [columns] in [rows], a gap apart; a last row with fewer
+     * keeps the cells' width, in its middle.
+     */
+    fun rows(views: RemoteViews, rows: Int, buttons: List<PlacedSlot>, columns: Int) {
+        views.removeAllViews(rows)
+        buttons.chunked(columns.coerceAtLeast(1)).forEachIndexed { i, chunk ->
+            if (i > 0) views.addView(rows, RemoteViews(context.packageName, R.layout.widget_cells_gap))
+            val row = RemoteViews(context.packageName, R.layout.widget_cells_row)
+            fewer(row, R.id.widget_cells_row, chunk.size, columns)
+            for ((index, slot) in chunk) {
+                row.addView(R.id.widget_cells_row, cell(index, slot, R.layout.widget_cell, inset = 0))
+            }
+            views.addView(rows, row)
+        }
+    }
+
     /** [buttons] in rows of [columns] in [pad]; a last row with fewer keeps the cells' width, in its middle. */
     fun pad(views: RemoteViews, pad: Int, buttons: List<PlacedSlot>, columns: Int, inset: Int) {
         views.removeAllViews(pad)
         for (chunk in buttons.chunked(columns)) {
             val row = RemoteViews(context.packageName, R.layout.widget_pad_row)
-            if (chunk.size < columns) {
-                row.setFloat(R.id.widget_pad_row, "setWeightSum", columns.toFloat())
-                row.setInt(R.id.widget_pad_row, "setGravity", Gravity.CENTER_HORIZONTAL)
-            }
+            fewer(row, R.id.widget_pad_row, chunk.size, columns)
             for ((index, slot) in chunk) {
                 row.addView(R.id.widget_pad_row, cell(index, slot, R.layout.widget_cell, inset))
             }
             views.addView(pad, row)
         }
+    }
+
+    /** A row of [count] cells where others hold [columns]: each as wide as theirs, in its middle. */
+    private fun fewer(row: RemoteViews, id: Int, count: Int, columns: Int) {
+        if (count >= columns) return
+        row.setFloat(id, "setWeightSum", columns.toFloat())
+        row.setInt(id, "setGravity", Gravity.CENTER_HORIZONTAL)
     }
 
     /**

@@ -15,16 +15,16 @@ enum class WidgetForm {
     /** One row without buttons: what plays. */
     Line,
 
-    /** Two rows and more: what plays above or below a row of buttons. */
+    /** Two rows and more: what plays above or below rows of buttons, as many as its height holds. */
     Card,
 
     /** One row, four cells wide: the cover and what plays, the buttons before or after them. */
     Bar,
 
-    /** Two rows and more, four cells wide: the cover beside what plays, above or below a row of buttons. */
+    /** Two rows and more, four cells wide: the cover beside what plays, above or below rows of buttons. */
     Player,
 
-    /** Two cells wide and tall enough: the cover across, what plays under it, a row of buttons. */
+    /** Two cells wide and tall enough: the cover across, what plays under it, rows of buttons. */
     Poster,
 }
 
@@ -77,7 +77,7 @@ data class WidgetFit(
     val art: Float = 0f,
     val words: WidgetWords = WidgetWords.None,
     val size: WordSize = WordSize.Regular,
-    /** A pad's buttons in each of its rows; the last row may hold fewer. */
+    /** The buttons in each of its rows, a pad's or those beside what plays; the last row may hold fewer. */
     val columns: Int = buttons,
     /** A pad's cells' height. */
     val cell: Float = WidgetSizes.CELL_HEIGHT,
@@ -157,7 +157,12 @@ fun widgetFit(
     val oneRow = height < s.TWO_CELLS
     val inner = width - 2 * s.PADDING
     val innerHeight = height - 2 * s.PADDING
-    val row = span(width, bare)
+    val across = cells(span(width, bare), buttons)
+    // Buttons one row cannot hold take more rows where the height leaves what plays its speaker, a
+    // title line and the line under it.
+    val rows = rows(innerHeight, FLOOR.needs(type), across, buttons)
+    val shown = minOf(buttons, across * rows)
+    val columns = if (rows == 0) 0 else ceil(shown.toFloat() / rows).toInt()
     val form = when {
         width < s.TWO_CELLS && oneRow -> WidgetForm.Tile
 
@@ -168,9 +173,9 @@ fun widgetFit(
 
         width >= s.WIDE -> WidgetForm.Player
 
-        // A cover as wide as the frame, the speaker and the title under it, the cells: all with room.
+        // A cover as wide as the frame, the speaker and the title under it, the rows: all with room.
         width >= s.TWO_CELLS && innerHeight >= inner + s.ART_TO_WORDS +
-            SPEAKER_AND_TITLE.needs(type) + under(cells(row, buttons)) -> WidgetForm.Poster
+            SPEAKER_AND_TITLE.needs(type) + under(rows) -> WidgetForm.Poster
 
         else -> WidgetForm.Card
     }
@@ -183,8 +188,8 @@ fun widgetFit(
         WidgetForm.Line -> said(WidgetFit(form, width, height, 0), innerHeight, type, alone = true, strip = true)
 
         WidgetForm.Card -> {
-            val shown = cells(row, buttons)
-            said(WidgetFit(form, width, height, shown), innerHeight - under(shown), type, shown == 0, time)
+            val fit = WidgetFit(form, width, height, shown, columns = columns)
+            said(fit, innerHeight - under(rows), type, shown == 0, time)
         }
 
         WidgetForm.Bar -> {
@@ -197,19 +202,37 @@ fun widgetFit(
         }
 
         WidgetForm.Poster -> {
-            val shown = cells(row, buttons)
-            val room = innerHeight - inner - s.ART_TO_WORDS - under(shown)
-            said(WidgetFit(form, width, height, shown, art = inner), room, type, alone = false, time = time)
+            val room = innerHeight - inner - s.ART_TO_WORDS - under(rows)
+            val fit = WidgetFit(form, width, height, shown, art = inner, columns = columns)
+            said(fit, room, type, alone = false, time = time)
         }
 
         WidgetForm.Player -> {
-            val shown = cells(row, buttons)
-            val top = innerHeight - under(shown)
-            val art = minOf(top, inner * s.ART_SHARE)
-            said(WidgetFit(form, width, height, shown, art), art, type, shown == 0, time)
+            val art = minOf(innerHeight - under(rows), inner * s.ART_SHARE)
+            said(WidgetFit(form, width, height, shown, art, columns = columns), art, type, shown == 0, time)
         }
     }
 }
+
+/**
+ * How many rows [buttons] take, [across] to a row, beside what plays in a frame [room] dp high:
+ * one, and one more while what plays keeps [floor] dp; none without buttons.
+ */
+private fun rows(room: Float, floor: Float, across: Int, buttons: Int): Int {
+    if (across == 0) return 0
+    val wanted = ceil(buttons.toFloat() / across).toInt()
+    var rows = 1
+    while (rows < wanted && room - under(rows + 1) >= floor - EPSILON) rows++
+    return rows
+}
+
+/** The rows of a [fit] with buttons under what plays, or above it, [WidgetFit.columns] to a row. */
+internal fun buttonRows(fit: WidgetFit): Int =
+    if (fit.columns == 0) 0 else ceil(fit.buttons.toFloat() / fit.columns).toInt()
+
+/** The height [rows] of cells take, [WidgetSizes.GAP] apart. */
+internal fun rowsHeight(rows: Int): Float =
+    if (rows == 0) 0f else rows * WidgetSizes.CELL_HEIGHT + (rows - 1) * WidgetSizes.GAP
 
 /** The width a row of targets spans: the frame and the half gaps its ends reach, or bare, nearly all. */
 internal fun span(width: Float, bare: Boolean): Float =
@@ -245,10 +268,13 @@ private fun pad(width: Float, height: Float, buttons: Int, bare: Boolean): Widge
     return WidgetFit(WidgetForm.Pad, width, height, shown, columns = columns, cell = cell)
 }
 
-/** The height a row of cells takes beside the words, with the gap between. */
-private fun under(cells: Int): Float = if (cells == 0) 0f else WidgetSizes.CELL_HEIGHT + WidgetSizes.WORDS_TO_CELLS
+/** The height [rows] of cells take beside the words, with the gap between. */
+private fun under(rows: Int): Float = if (rows == 0) 0f else rowsHeight(rows) + WidgetSizes.WORDS_TO_CELLS
 
 private val SPEAKER_AND_TITLE = WidgetWords(speaker = true, titleLines = 1, subtitle = false)
+
+/** What plays keeps at least this beside a second row of buttons: the speaker, a title line, the line under it. */
+private val FLOOR = WidgetWords(speaker = true, titleLines = 1, subtitle = true)
 private val TITLE = WidgetWords(speaker = false, titleLines = 1, subtitle = false)
 
 /**

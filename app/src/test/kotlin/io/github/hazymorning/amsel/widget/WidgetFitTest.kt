@@ -143,6 +143,22 @@ class WidgetFitTest {
         assertEquals(8, widgetFit(500f, 204f, buttons = 8).buttons)
     }
 
+    /** Tall enough to keep what plays its speaker, a title line and the line under it, buttons take more rows. */
+    @Test fun aTallWidgetTakesMoreRowsOfButtons() {
+        val tall = widgetFit(172f, 312f, 5)
+        assertEquals(WidgetForm.Card, tall.form)
+        assertEquals(5, tall.buttons)
+        assertEquals(3, tall.columns)
+        assertEquals(2, buttonRows(tall))
+        assertEquals(3, widgetFit(172f, 204f, 5).buttons)
+        val player = widgetFit(356f, 312f, 8)
+        assertEquals(8, player.buttons)
+        assertEquals(4, player.columns)
+        assertEquals(6, widgetFit(356f, 204f, 8).buttons)
+        // As many as one row holds keep the cover across.
+        assertEquals(WidgetForm.Poster, widgetFit(172f, 312f, 3).form)
+    }
+
     /** Where fewer fit than are set, play and pause stays, and the others give way from the start. */
     @Test fun playStaysAndTheOthersGiveWayFromTheStart() {
         val set = DefaultSlots.map { it.button }

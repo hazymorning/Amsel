@@ -265,6 +265,23 @@ class WidgetInsetsTest {
         }
     }
 
+    /** Tall enough, the buttons take two rows: the frame holds, the rows stand a gap apart, the cells alike. */
+    @Test fun rowsOfCellsKeepTheFrameAndGaps() {
+        val cell = WidgetSizes.CELL_HEIGHT
+        for (actual in around(WidgetSample.tallCard)) {
+            val name = "rows at $actual"
+            val drawn = draw(DefaultSlots, music, WidgetSample.tallCard, actual)
+            assertFrame(WidgetSizes.PADDING, drawn, name)
+            val foot = actual.height - WidgetSizes.PADDING
+            assertCells(drawn, foot - cell / 2, 2, "$name, second row")
+            assertCells(drawn, foot - cell - WidgetSizes.GAP - cell / 2, 3, "$name, first row")
+            assertEquals("$name, between the rows", 0, drawn.cells(foot - cell - WidgetSizes.GAP / 2).size)
+            val first = drawn.cells(foot - cell - WidgetSizes.GAP - cell / 2).first()
+            val second = drawn.cells(foot - cell / 2).first()
+            assertEquals("$name, widths", first.second - first.first, second.second - second.first, TOLERANCE)
+        }
+    }
+
     @Test fun aPosterKeepsItsFrameAndGaps() {
         for (actual in around(WidgetSample.tallCard)) {
             val name = "poster at $actual"

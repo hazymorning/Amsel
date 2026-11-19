@@ -73,6 +73,15 @@ class WidgetViewsTest {
         assertEquals("Pause", drawn(WidgetSample.music, size = WidgetSample.tile).contentDescription)
     }
 
+    /** Two cells by three hold every button as it comes, in two rows: three, then two. */
+    @Test fun aTallWidgetsButtonsTakeTwoRows() {
+        val cells = drawn(WidgetSample.music, size = WidgetSample.tallCard).cells()
+        assertEquals(5, cells.size)
+        assertEquals(cells[0].parent, cells[2].parent)
+        assertEquals(cells[3].parent, cells[4].parent)
+        assertEquals(false, cells[2].parent == cells[3].parent)
+    }
+
     /** Up next, and in a book or an episode its chapters, as Now Playing's last button. */
     @Test fun upNextNamesWhatItOpens() {
         val slots = listOf(WidgetSlot(WidgetButton.UpNext))
@@ -197,7 +206,8 @@ class WidgetViewsTest {
             WidgetSample.strip to WordSize.Small.scale,
         )
         for ((size, scale) in sizes) {
-            val widget = drawn(WidgetSample.music.copy(failure = "x"), size = size)
+            // As many buttons as one row holds, so a tall card gives its room to the words.
+            val widget = drawn(WidgetSample.music.copy(failure = "x"), DefaultSlots.takeLast(3), size)
             for ((id, line) in listOf(
                 R.id.widget_speaker to WidgetLine.Speaker,
                 R.id.widget_title to WidgetLine.Title,

@@ -48,6 +48,9 @@ class WidgetShots : ScreenshotTest() {
     /** Wide and tall: buttons as many as fit, the cover across a tall narrow one. */
     @Test fun roomy() = snap("widget_roomy", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Roomy() } }
 
+    /** Tall enough, the buttons take more rows: eight in two of four; five in three and two, before or after what plays. */
+    @Test fun rows() = snap("widget_rows", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Rows() } }
+
     /** Three rows high, four wide: the words a fifth larger beside the cover, every line with room. */
     @Test fun large() = snap("widget_large", listOf(ShotVariant.Light)) {
         HomeScreen {
@@ -149,6 +152,16 @@ class WidgetShots : ScreenshotTest() {
         Widget(darkened.copy(slots = upNext), WidgetSample.book, WidgetSample.card, column = 2, row = 1)
         Widget(darkened, WidgetSample.music, WidgetSample.bar, column = 0, row = 3)
         Widget(darkened.copy(slots = own), WidgetSample.music, WidgetSample.player, column = 0, row = 4)
+    }
+
+    @Composable
+    private fun Rows() {
+        val more = listOf(WidgetButton.Previous, WidgetButton.UpNext, WidgetButton.Repeat)
+        val eight = DefaultSlots + more.map(::WidgetSlot)
+        Widget(WidgetSetup(slots = eight), WidgetSample.music, WidgetSample.tallPlayer, column = 0, row = 0)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.tallCard, column = 0, row = 3)
+        val after = WidgetSetup(words = WidgetWordsPlace.After)
+        Widget(after, WidgetSample.music, WidgetSample.tallCard, column = 2, row = 3)
     }
 
     @Composable
