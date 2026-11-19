@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Two rows and more: the speaker and what plays over the buttons. -->
+<!-- Two rows and more: the speaker and what plays, over a row of button cells. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -25,15 +25,17 @@
         android:importantForAccessibility="no"
         android:visibility="gone" />
 
-    <!-- Its foot's room stands for the starting size until Amsel draws, which pads the buttons instead. -->
     <LinearLayout
         android:id="@+id/widget_body"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingBottom="12dp">
+        android:paddingStart="@dimen/widget_padding"
+        android:paddingTop="@dimen/widget_padding_words"
+        android:paddingEnd="@dimen/widget_padding"
+        android:paddingBottom="@dimen/widget_padding">
 
-        <!-- Takes what the buttons leave, so words that do not fit are cut here, never the buttons. -->
+        <!-- Takes what the cells leave, so words that do not fit are cut here, never the cells. -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -42,12 +44,16 @@
             <include
                 layout="@layout/widget_words"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/widget_words_lead_out" />
         </FrameLayout>
 
         <include
             layout="@layout/widget_buttons"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="@dimen/widget_cell_height"
+            android:layout_marginStart="@dimen/widget_cell_inset_out"
+            android:layout_marginTop="@dimen/widget_words_to_cells"
+            android:layout_marginEnd="@dimen/widget_cell_inset_out" />
     </LinearLayout>
 </FrameLayout>

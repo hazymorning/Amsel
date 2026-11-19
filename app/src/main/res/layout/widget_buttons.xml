@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Four 48 dp targets with a growing gap between each two, so the row spreads from its first ink to
-     its last; WidgetViews pads it and each target by the ink they hold. As it comes, the transport. -->
+<!-- The buttons: touch targets of equal width side by side, each showing its cell half a gap inside
+     it (widget_cell_*), so the layout itself keeps cells and gaps even at any size the launcher
+     gives. As it comes, the transport. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_row"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:baselineAligned="false"
-    android:gravity="center_vertical"
     android:orientation="horizontal">
 
     <FrameLayout
         android:id="@+id/widget_slot_1"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/widget_press_light">
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_cell_light">
 
         <ImageView
             android:id="@+id/widget_glyph_1"
@@ -23,21 +24,7 @@
             android:importantForAccessibility="no"
             android:src="@drawable/ic_skip_previous"
             android:tint="@color/widget_glyph_light"
-            android:tintMode="src_in"
-            android:visibility="visible" />
-
-        <ImageView
-            android:id="@+id/widget_disc_1"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:background="@drawable/widget_disc_light"
-            android:importantForAccessibility="no"
-            android:padding="11dp"
-            android:src="@drawable/ic_play"
-            android:tint="@color/widget_on_disc_light"
-            android:tintMode="src_in"
-            android:visibility="gone" />
+            android:tintMode="src_in" />
 
         <ImageView
             android:id="@+id/widget_face_1"
@@ -49,16 +36,11 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/widget_gap_1"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_weight="1" />
-
-    <FrameLayout
         android:id="@+id/widget_slot_2"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/widget_press_light">
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_cell_play_light">
 
         <ImageView
             android:id="@+id/widget_glyph_2"
@@ -67,22 +49,8 @@
             android:layout_gravity="center"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_play"
-            android:tint="@color/widget_glyph_light"
-            android:tintMode="src_in"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/widget_disc_2"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:background="@drawable/widget_disc_light"
-            android:importantForAccessibility="no"
-            android:padding="11dp"
-            android:src="@drawable/ic_play"
             android:tint="@color/widget_on_disc_light"
-            android:tintMode="src_in"
-            android:visibility="visible" />
+            android:tintMode="src_in" />
 
         <ImageView
             android:id="@+id/widget_face_2"
@@ -94,16 +62,11 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/widget_gap_2"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_weight="1" />
-
-    <FrameLayout
         android:id="@+id/widget_slot_3"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/widget_press_light">
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_cell_light">
 
         <ImageView
             android:id="@+id/widget_glyph_3"
@@ -113,21 +76,7 @@
             android:importantForAccessibility="no"
             android:src="@drawable/ic_skip_next"
             android:tint="@color/widget_glyph_light"
-            android:tintMode="src_in"
-            android:visibility="visible" />
-
-        <ImageView
-            android:id="@+id/widget_disc_3"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:background="@drawable/widget_disc_light"
-            android:importantForAccessibility="no"
-            android:padding="11dp"
-            android:src="@drawable/ic_play"
-            android:tint="@color/widget_on_disc_light"
-            android:tintMode="src_in"
-            android:visibility="gone" />
+            android:tintMode="src_in" />
 
         <ImageView
             android:id="@+id/widget_face_3"
@@ -139,17 +88,11 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/widget_gap_3"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_weight="1"
-        android:visibility="gone" />
-
-    <FrameLayout
         android:id="@+id/widget_slot_4"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/widget_press_light"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_cell_light"
         android:visibility="gone">
 
         <ImageView
@@ -160,21 +103,7 @@
             android:importantForAccessibility="no"
             android:src="@drawable/ic_speaker"
             android:tint="@color/widget_glyph_light"
-            android:tintMode="src_in"
-            android:visibility="visible" />
-
-        <ImageView
-            android:id="@+id/widget_disc_4"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:background="@drawable/widget_disc_light"
-            android:importantForAccessibility="no"
-            android:padding="11dp"
-            android:src="@drawable/ic_play"
-            android:tint="@color/widget_on_disc_light"
-            android:tintMode="src_in"
-            android:visibility="gone" />
+            android:tintMode="src_in" />
 
         <ImageView
             android:id="@+id/widget_face_4"

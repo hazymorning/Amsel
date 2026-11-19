@@ -65,8 +65,7 @@ class WidgetSetupViewModel(
 
     val state: StateFlow<WidgetSetupUi> =
         combine(setup.filterNotNull(), look, picture, speakers, volumeLimit) { setup, look, picture, rooms, limit ->
-            val faces = setup.slots.mapNotNull { it.item?.art }.toSet()
-            val fits = widgets.views.fit(size.width, size.height, setup, look, faces).buttons
+            val fits = widgets.views.fit(size.width, size.height, setup).buttons
             WidgetSetupUi(setup, look, picture, size, fits, rooms, limit)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), WidgetSetupUi(size = size))
 
@@ -85,6 +84,11 @@ class WidgetSetupViewModel(
     fun pick(index: Int, item: WidgetItem) = put(index, WidgetSlot(WidgetButton.PlayItem, item))
 
     fun remove(index: Int) = change { it.copy(slots = it.slots.filterIndexed { i, _ -> i != index }) }
+
+    /** The buttons in a new [order], given as their places in the old one. */
+    fun reorder(order: List<Int>) = change { setup ->
+        if (order.sorted() != setup.slots.indices.toList()) setup else setup.copy(slots = order.map(setup.slots::get))
+    }
 
     private fun put(index: Int, slot: WidgetSlot) = change { setup ->
         val slots = setup.slots.toMutableList()

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One row, four cells wide: the cover, what plays, the buttons at the end. -->
+<!-- One row, four cells wide: the cover, what plays, the button cells at the end. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -26,23 +26,31 @@
         android:visibility="gone" />
 
     <LinearLayout
+        android:id="@+id/widget_body"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:baselineAligned="false"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="@dimen/widget_padding">
 
-        <include layout="@layout/widget_art" />
+        <include
+            layout="@layout/widget_art"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
 
         <include
             layout="@layout/widget_words"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/widget_art_to_words_lead"
             android:layout_weight="1" />
 
         <include
-            layout="@layout/widget_buttons"
+            layout="@layout/widget_buttons_bar"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/widget_words_to_bar_cells"
+            android:layout_marginEnd="@dimen/widget_cell_inset_out" />
     </LinearLayout>
 </FrameLayout>

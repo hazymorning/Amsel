@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One cell, all of it the button: its glyph on a round ground in the middle, or a cover. -->
+<!-- One cell, all of it the button: its cell in the frame, as every other form's, or a cover. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -43,25 +43,26 @@
         android:tintMode="src_in"
         android:visibility="gone" />
 
-    <ImageView
-        android:id="@+id/widget_tile_button"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="center"
-        android:background="@drawable/widget_disc_light"
-        android:importantForAccessibility="no"
-        android:padding="12dp"
-        android:src="@drawable/ic_play"
-        android:tint="@color/widget_on_disc_light"
-        android:tintMode="src_in" />
+    <!-- The button's cell in the frame; pressed with the tile, which is all of it the button. -->
+    <FrameLayout
+        android:id="@+id/widget_tile_cell"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/widget_tile_side"
+        android:layout_marginTop="@dimen/widget_padding"
+        android:layout_marginEnd="@dimen/widget_tile_side"
+        android:layout_marginBottom="@dimen/widget_padding"
+        android:background="@drawable/widget_cell_play_light"
+        android:duplicateParentState="true">
 
-    <!-- Pressed with the tile, over the ground. -->
-    <ImageView
-        android:id="@+id/widget_tile_press"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_gravity="center"
-        android:duplicateParentState="true"
-        android:importantForAccessibility="no"
-        android:src="@drawable/widget_press_light" />
+        <ImageView
+            android:id="@+id/widget_tile_glyph"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_play"
+            android:tint="@color/widget_on_disc_light"
+            android:tintMode="src_in" />
+    </FrameLayout>
 </FrameLayout>

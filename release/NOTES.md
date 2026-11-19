@@ -1,14 +1,15 @@
-# Wingspan
+# Pecking order
 
 ## New
 
-- **Widgets in three sizes:** add Amsel to your home screen as one button the size of an app icon, as a row of buttons, or as what plays with its buttons. Resize any of them and it grows into a fuller form; at full width the cover stands beside the words.
-- **Your widget, your way:** hold a widget to choose its look (over the cover, plain in your phone's colours, or clear on the wallpaper), the speaker it plays on, and none to four buttons.
+- **Move your buttons:** on a widget's page, drag a button by its handle to where it belongs; TalkBack can move it too.
 
 ## Better
 
-- **Even room all round:** every widget keeps the same space at each of its edges, and a button that does not fit gives way whole instead of being cut.
+- **Widgets laid out evenly:** every widget keeps the same room on all four sides, and its buttons are cells of equal width with equal gaps between them, at whatever size your home screen gives it. Play and pause is the filled one.
+- **One button, one cell:** the widget the size of an app icon shows its button in the same cell as the larger ones.
+- **Room for words in large type:** the wide one-row widget gives a button way before it cuts what plays.
 
 ## Fixed
 
-- **Play on narrow widgets:** the play button is no longer cut at its sides.
+- **Spacing on real home screens:** a button no longer crowds the widget's edge, as the speaker button did at the end of a two-cell row.

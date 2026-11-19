@@ -814,3 +814,7 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-19 | A widget can keep to one speaker; This phone is not offered, as it plays only where Amsel plays | Q1 |
 | 2026-11-19 | A widget's covers keep Amsel's cover corners and the night's range, and come from Amsel's cover cache; the widget keeps only its setup and what it showed last | Rule 7; Q3; Q4 |
 | 2026-11-19 | The level after a widget's speaker shows whole or not at all, and a button its size cannot hold says so on the widget's page | Q1 |
+| 2026-11-19 | On a phone the widget's spacing came out uneven: glyphs of different widths left unequal gaps, and a row's ends gave up room for a third button. Buttons become cells as in Google's canonical toolbar layout: one frame of 12 on every side and equal cells 4 apart, all set in the layouts, so the spacing holds at any size the launcher draws; `WidgetInsetsTest` measures it at sizes off the planned one | Owner; E (Google's platform samples, Launcher3 and RemoteViews source) |
+| 2026-11-19 | A widget's button cell stands 2 dp inside its touch target, so targets meet and stay 48 dp or more while three cells fit two cells of a usual phone | Q1 (48 dp targets) |
+| 2026-11-19 | A one-cell widget shows its button in the same framed cell as the larger ones | Q3 (one shape) |
+| 2026-11-19 | A widget's buttons move into order on its page by their handle, a held press or TalkBack's actions, as on Amsel's arrange pages | Owner |
