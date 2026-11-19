@@ -1,6 +1,7 @@
 package io.github.hazymorning.amsel.widget
 
 import android.content.Context
+import android.text.format.DateUtils
 import android.widget.RemoteViews
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
@@ -30,6 +31,7 @@ internal class WidgetWordsViews(
             else -> look.title ?: context.getString(R.string.player_not_playing)
         }
         val subtitle = (look.failure ?: look.subtitle).takeIf { playing && words.subtitle }
+        val time = playing && words.time && look.hasTime
         val glyph = look.signedIn
         val (glyphStart, glyphEnd) = text.speakerSides()
         val nameStart = text.sideBearing(name, WidgetLine.Speaker)
@@ -48,6 +50,11 @@ internal class WidgetWordsViews(
         shows(R.id.widget_speaker_row, words.speaker)
         shows(R.id.widget_level, level != null)
         shows(R.id.widget_subtitle, subtitle != null)
+        shows(R.id.widget_time, time && look.clockMs != null)
+        shows(R.id.widget_time_still, time && look.clockMs == null)
+        if (time) time(this)
+        textColor(context, R.id.widget_time, tone.quiet)
+        textColor(context, R.id.widget_time_still, tone.quiet)
         textColor(context, R.id.widget_speaker, tone.words)
         textColor(context, R.id.widget_level, tone.quiet)
         textColor(context, R.id.widget_title, tone.words)
@@ -61,8 +68,11 @@ internal class WidgetWordsViews(
         val subtitleStart = subtitle?.let { text.sideBearing(it, WidgetLine.Subtitle) } ?: 0f
         val inkTop = text.wordsTop(words)
         if (centred) {
+            val lines = text.lines(title, WidgetLine.Title, width, words.titleLines)
+            val below = listOf(subtitle != null, time).count { it }
+            val (box, baseline) = text.wordsStack(words.speaker, lines, below)
             // Half of the difference of a box's top and bottom padding moves what it holds.
-            val shift = text.wordsBox(words) / 2 - (inkTop + text.wordsBaseline(words)) / 2
+            val shift = box / 2 - (inkTop + baseline) / 2
             setViewPadding(R.id.widget_words, 0, px(2 * shift), 0, px(-2 * shift))
         } else {
             setViewPadding(R.id.widget_words, 0, px(LEAD - inkTop), 0, 0)
@@ -72,6 +82,30 @@ internal class WidgetWordsViews(
         val titleTop = if (words.speaker) WidgetSizes.SPEAKER_TO_TITLE else 0f
         setViewPadding(R.id.widget_title, px(LEAD - titleStart), px(titleTop), 0, 0)
         setViewPadding(R.id.widget_subtitle, px(LEAD - subtitleStart), px(WidgetSizes.TITLE_TO_SUBTITLE), 0, 0)
+        val timeStart = text.sideBearing("0", WidgetLine.Subtitle)
+        for (view in listOf(R.id.widget_time, R.id.widget_time_still)) {
+            setViewPadding(view, px(LEAD - timeStart), px(WidgetSizes.TITLE_TO_SUBTITLE), 0, 0)
+        }
+    }
+
+    /**
+     * The time, ticking by itself while it plays: where a song stands of its length, or what a book
+     * or an episode has left at its speed. At rest it stands still where it stopped.
+     */
+    private fun time(views: RemoteViews) = with(views) {
+        val format = if (look.spoken) {
+            context.getString(R.string.widget_time_left, "%s")
+        } else {
+            "%s / " + DateUtils.formatElapsedTime(look.durationMs / SECOND_MS)
+        }
+        val clock = look.clockMs
+        if (clock == null) {
+            val rest = DateUtils.formatElapsedTime((look.restMs ?: 0) / SECOND_MS)
+            setTextViewText(R.id.widget_time_still, format.replace("%s", rest))
+            return@with
+        }
+        setChronometer(R.id.widget_time, clock, format, true)
+        setChronometerCountDown(R.id.widget_time, look.spoken)
     }
 
     /** The speaker's level after its name, where Quieter or Louder is among the buttons. */
@@ -82,6 +116,8 @@ internal class WidgetWordsViews(
     }
 
     private companion object {
+        const val SECOND_MS = 1000L
+
         /** From the speaker's glyph's ink to its name's, in the name's size. */
         const val GLYPH_GAP = 0.45f
 

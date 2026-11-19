@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.util.SizeF
 import android.widget.RemoteViews
 import coil3.SingletonImageLoader
+import io.github.hazymorning.amsel.api.RepeatMode
 import kotlinx.coroutines.runBlocking
 
 /** Widgets as they stand on a home screen: what plays, a book, nothing, signed out; at a usual phone's sizes. */
@@ -21,6 +22,13 @@ object WidgetSample {
         art = "sample:album/1",
         artLarge = "sample:album/1",
         playing = true,
+        key = "library://track/1",
+        favourite = true,
+        shuffle = false,
+        repeat = RepeatMode.Off,
+        durationMs = 222_000,
+        // Standing, so a picture of it shows the same time every time.
+        restMs = 83_000,
     )
 
     val book = WidgetLook(
@@ -33,6 +41,8 @@ object WidgetSample {
         artLarge = "sample:audiobook/1",
         playing = false,
         spoken = true,
+        durationMs = 10_800_000,
+        restMs = 7_984_000,
     )
 
     val idle = WidgetLook(speakerId = "bedroom", speaker = "Bedroom")
@@ -54,6 +64,12 @@ object WidgetSample {
     val bar = SizeF(356f, 96f)
     val player = SizeF(356f, 204f)
 
+    /** Two cells by three. */
+    val tallCard = SizeF(172f, 312f)
+
+    /** Four cells by three. */
+    val tallPlayer = SizeF(356f, 312f)
+
     fun cover(name: String): Bitmap =
         checkNotNull(javaClass.classLoader?.getResourceAsStream("covers/$name.jpg")?.use(BitmapFactory::decodeStream))
 
@@ -72,7 +88,7 @@ object WidgetSample {
     /** [setup] showing [look] at [size] without covers (an empty one where a cover stands), for what the views say. */
     fun plain(context: Context, setup: WidgetSetup, look: WidgetLook, size: SizeF = card): RemoteViews {
         val views = WidgetViews(context)
-        val fit = views.fit(size.width, size.height, setup)
+        val fit = views.fit(size.width, size.height, setup, look)
         val side = views.px(fit.art)
         val density = context.resources.displayMetrics.density
         val blanks = listOf(side).filter { it > 0 }.associateWith { WidgetArt.blank(it, density) }

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widget_words a fifth larger (WidgetSizes.LARGE), for a widget with room for it all. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_words"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="3dp">
+
+    <LinearLayout
+        android:id="@+id/widget_speaker_row"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp">
+
+        <ImageView
+            android:id="@+id/widget_speaker_glyph"
+            android:layout_width="15.6sp"
+            android:layout_height="15.6sp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_speaker_bold"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <TextView
+            android:id="@+id/widget_speaker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:includeFontPadding="false"
+            android:lineHeight="19.2sp"
+            android:maxLines="1"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:text="@string/app_name"
+            android:textColor="@color/widget_words_light"
+            android:textFontWeight="600"
+            android:textSize="15.6sp" />
+
+        <TextView
+            android:id="@+id/widget_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif"
+            android:includeFontPadding="false"
+            android:lineHeight="19.2sp"
+            android:maxLines="1"
+            android:visibility="gone"
+            android:textColor="@color/widget_quiet_light"
+            android:textFontWeight="600"
+            android:textSize="15.6sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:includeFontPadding="false"
+        android:lineHeight="24sp"
+        android:maxLines="1"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="0dp"
+        android:text="@string/player_not_playing"
+        android:textColor="@color/widget_words_light"
+        android:textFontWeight="700"
+        android:textSize="19.2sp" />
+
+    <TextView
+        android:id="@+id/widget_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:includeFontPadding="false"
+        android:lineHeight="19.2sp"
+        android:maxLines="1"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="0dp"
+        android:textColor="@color/widget_quiet_light"
+        android:textFontWeight="400"
+        android:textSize="15.6sp"
+        android:visibility="gone" />
+
+    <!-- Ticks by itself from the time Amsel sets while it plays: a widget draws again only when
+         something changes. At rest the time stands in widget_time_still: a stopped Chronometer works
+         its time out again whenever the launcher lays the widget out anew, and runs on. -->
+    <Chronometer
+        android:id="@+id/widget_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:fontFeatureSettings="tnum"
+        android:includeFontPadding="false"
+        android:lineHeight="19.2sp"
+        android:maxLines="1"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="0dp"
+        android:textColor="@color/widget_quiet_light"
+        android:textFontWeight="400"
+        android:textSize="15.6sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/widget_time_still"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:fontFeatureSettings="tnum"
+        android:includeFontPadding="false"
+        android:lineHeight="19.2sp"
+        android:maxLines="1"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="0dp"
+        android:textColor="@color/widget_quiet_light"
+        android:textFontWeight="400"
+        android:textSize="15.6sp"
+        android:visibility="gone" />
+</LinearLayout>

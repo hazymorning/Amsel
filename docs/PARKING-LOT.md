@@ -20,3 +20,4 @@ Post-beta candidates from the plan (lyrics) live here until they pass the test.
 | See all, paging or a choice of source for similar songs and artists | 2026-11-12 | The server sends 25 at most; no second screen for them |
 | A tap on the blackbird at the foot of Settings that makes it cock its head | 2026-11-12 | Not asked for; a picture needs no answer, and it would be a stop for TalkBack that says nothing |
 | Home Assistant actions on a widget's buttons (a webhook or a service call) | 2026-11-19 | Needs setting up in Home Assistant for each button, and its app already has action and media widgets that stand beside Amsel's |
+| A sideways swipe on a widget between its cover and its buttons | 2026-11-19 | Not possible: the home screen takes sideways swipes to page (developer guide, Launcher3); a widget sees taps and vertical swipes, and a StackView's flick shows a stack of cards. A tap to switch would hide what a tap on the widget does now, open Now Playing |

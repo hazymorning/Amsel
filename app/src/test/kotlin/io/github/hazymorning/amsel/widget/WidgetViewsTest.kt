@@ -8,6 +8,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.api.RepeatMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -112,21 +113,57 @@ class WidgetViewsTest {
         assertEquals("Pause", tile.contentDescription)
     }
 
-    /** WidgetText measures the words as the layout sets them. */
+    /** A book has no heart and no shuffle: the transport stands alone and evenly where they were. */
+    @Test fun buttonsWithNothingToActOnGiveWay() {
+        val shown = { look: WidgetLook ->
+            val widget = drawn(look, size = WidgetSample.player)
+            (1..MAX_BUTTONS).count { widget.findViewById<View>(slotId(it)).visibility == View.VISIBLE }
+        }
+        assertEquals(5, shown(WidgetSample.music))
+        assertEquals(3, shown(WidgetSample.book))
+    }
+
+    @Test fun shuffleAndRepeatSayWhetherTheyAreOn() {
+        val slots =
+            listOf(
+                WidgetSlot(WidgetButton.Shuffle),
+                WidgetSlot(WidgetButton.Repeat),
+                WidgetSlot(WidgetButton.Favourite),
+            )
+        val widget = drawn(WidgetSample.music.copy(shuffle = true, repeat = RepeatMode.One), slots)
+        assertEquals("Shuffle, on", widget.said(slotId(1)))
+        assertEquals("Repeat, One song", widget.said(slotId(2)))
+        assertEquals("Favourite, on", widget.said(slotId(3)))
+    }
+
+    /** TalkBack hears the widget as a whole before its buttons: what plays, and where. */
+    @Test fun theWidgetSaysWhatPlaysWhere() {
+        assertEquals(
+            "Lanterns, Marlene Vogt. Playing on Kitchen",
+            drawn(WidgetSample.music).said(android.R.id.background),
+        )
+    }
+
+    private fun slotId(n: Int) = SlotIds.of(n - 1).slot
+
+    /** What WidgetText measures is what the layouts set: as they come, and a fifth larger where all has room. */
     @Test fun theTypeIsTheLayouts() {
-        val widget = drawn(WidgetSample.music.copy(failure = "x"))
         val px = { sp: Float ->
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.resources.displayMetrics)
         }
-        for ((id, line) in listOf(
-            R.id.widget_speaker to WidgetLine.Speaker,
-            R.id.widget_title to WidgetLine.Title,
-            R.id.widget_subtitle to WidgetLine.Subtitle,
-        )) {
-            val view = widget.findViewById<TextView>(id)
-            assertEquals(px(line.size), view.textSize, 0.5f)
-            assertEquals(px(line.line), view.lineHeight.toFloat(), 1f)
-            assertEquals(line.weight, view.typeface.weight)
+        for ((size, scale) in listOf(WidgetSample.card to 1f, SizeF(172f, 260f) to WidgetSizes.LARGE)) {
+            val widget = drawn(WidgetSample.music.copy(failure = "x"), size = size)
+            for ((id, line) in listOf(
+                R.id.widget_speaker to WidgetLine.Speaker,
+                R.id.widget_title to WidgetLine.Title,
+                R.id.widget_subtitle to WidgetLine.Subtitle,
+                R.id.widget_time_still to WidgetLine.Subtitle,
+            )) {
+                val view = widget.findViewById<TextView>(id)
+                assertEquals("$size", px(line.size * scale), view.textSize, 0.5f)
+                assertEquals("$size", px(line.line * scale), view.lineHeight.toFloat(), 1f)
+                assertEquals("$size", line.weight, view.typeface.weight)
+            }
         }
     }
 }

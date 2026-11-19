@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.unit.dp
@@ -28,21 +30,25 @@ internal data class GlyphPlace(val ink: Ink, val dx: Float, val dy: Float)
  * lines up by its ink as Amsel's screens do. The words are in the phone's own sans-serif (the widget's
  * layouts name it), which this process measures as the launcher draws it, at the phone's text size.
  */
-internal class WidgetText(private val context: Context) {
+internal class WidgetText(private val context: Context, private val scale: Float = 1f) {
     private val metrics get() = context.resources.displayMetrics
+
+    /** The type as widget_words_large sets it, [factor] times as large. */
+    fun scaled(factor: Float) = WidgetText(context, factor)
 
     /** [sp] at the phone's text size, which grows large text less than small. */
     fun dp(sp: Float): Float = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, metrics) / metrics.density
 
     val type: WidgetType
         get() = WidgetType(dp(WidgetLine.Speaker.line), dp(WidgetLine.Title.line), dp(WidgetLine.Subtitle.line))
+            .scaled(scale)
 
     /** The speaker's glyph is as large as its name is set, as beside words in Amsel. */
-    val speakerGlyph: Float get() = dp(WidgetLine.Speaker.size)
+    val speakerGlyph: Float get() = dp(WidgetLine.Speaker.size * scale)
 
     private fun paint(line: WidgetLine) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Typeface.create(Typeface.SANS_SERIF, line.weight, false)
-        textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, line.size, metrics)
+        textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, line.size * scale, metrics)
     }
 
     /** One line's height without the room a second line adds. */
@@ -95,6 +101,34 @@ internal class WidgetText(private val context: Context) {
     }
 
     private fun paintMetrics(line: WidgetLine) = paint(line).fontMetricsInt
+
+    /**
+     * The words' box, as the layout stacks them, and their last line's baseline below its top: the
+     * speaker's row, [titleLines] of the title, and the line under it and the time where they show.
+     */
+    fun wordsStack(speaker: Boolean, titleLines: Int, below: Int): Pair<Float, Float> {
+        var y = if (speaker) maxOf(speakerGlyph, height(WidgetLine.Speaker)) + WidgetSizes.SPEAKER_TO_TITLE else 0f
+        val more = (titleLines - 1).coerceAtLeast(0) * dp(WidgetLine.Title.line * scale)
+        var baseline = y + more - paintMetrics(WidgetLine.Title).ascent / metrics.density
+        y += height(WidgetLine.Title) + more
+        repeat(below) {
+            y += WidgetSizes.TITLE_TO_SUBTITLE
+            baseline = y - paintMetrics(WidgetLine.Subtitle).ascent / metrics.density
+            y += height(WidgetLine.Subtitle)
+        }
+        return y to baseline
+    }
+
+    /** How many of at most [max] lines [text] takes set in [line] [width] dp wide. */
+    fun lines(text: String, line: WidgetLine, width: Float, max: Int): Int {
+        if (max <= 1 || width <= 0f) return 1
+        val layout = StaticLayout.Builder
+            .obtain(text, 0, text.length, TextPaint(paint(line)), (width * metrics.density).toInt())
+            .setIncludePad(false)
+            .setMaxLines(max)
+            .build()
+        return layout.lineCount.coerceIn(1, max)
+    }
 
     /** The cut of [glyph] Amsel draws [side] dp square, its line 1.5 dp at any size. */
     @DrawableRes

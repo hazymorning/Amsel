@@ -9,7 +9,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * A widget's taps on a speaker of its own, whichever Amsel is on: put to that speaker as Amsel's own
  * buttons put theirs to the one it plays on, through a player for it alone ([player]), let go after
- * the command. So a book's skips and the volume limit hold here too. Main thread only.
+ * the command. So a book's skips hold here too. Main thread only.
  */
 internal class SpeakerHands(
     private val wakeSession: () -> Unit,
@@ -35,10 +35,6 @@ internal class SpeakerHands(
 
     override suspend fun previous() = control(Player.COMMAND_SEEK_BACK, Player.COMMAND_SEEK_TO_PREVIOUS) {
         if (it.isCommandAvailable(Player.COMMAND_SEEK_BACK)) it.seekBack() else it.seekToPrevious()
-    }
-
-    override suspend fun volume(up: Boolean) = control(Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS) {
-        if (up) it.increaseDeviceVolume(0) else it.decreaseDeviceVolume(0)
     }
 
     override suspend fun play(item: WidgetItem) = control(Player.COMMAND_SET_MEDIA_ITEM) {

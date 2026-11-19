@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The speaker and what plays, in the phone's own sans-serif, which WidgetText measures: sizes and
      lines as WidgetLine has them. Each line's start padding is what puts its first ink on the frame
-     (WidgetWordsViews). The level stands after the name in a view of its own. -->
+     (WidgetWordsViews). The level stands after the name in a view of its own; the time under all. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_words"
     android:layout_width="match_parent"
@@ -81,6 +81,45 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:fontFamily="sans-serif"
+        android:includeFontPadding="false"
+        android:lineHeight="16sp"
+        android:maxLines="1"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="0dp"
+        android:textColor="@color/widget_quiet_light"
+        android:textFontWeight="400"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <!-- Ticks by itself from the time Amsel sets while it plays: a widget draws again only when
+         something changes. At rest the time stands in widget_time_still: a stopped Chronometer works
+         its time out again whenever the launcher lays the widget out anew, and runs on. -->
+    <Chronometer
+        android:id="@+id/widget_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:fontFeatureSettings="tnum"
+        android:includeFontPadding="false"
+        android:lineHeight="16sp"
+        android:maxLines="1"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="0dp"
+        android:textColor="@color/widget_quiet_light"
+        android:textFontWeight="400"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/widget_time_still"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif"
+        android:fontFeatureSettings="tnum"
         android:includeFontPadding="false"
         android:lineHeight="16sp"
         android:maxLines="1"

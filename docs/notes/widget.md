@@ -15,10 +15,11 @@ at whatever size the launcher finally draws.
 | Form | Size | Holds |
 | --- | --- | --- |
 | Tile | under two cells both ways | the whole tile is one button: its cell in the frame; a Play … button is its item's cover; with no button, the cover of what plays |
-| Row | one row, under four cells wide | the buttons as cells filling the frame; with none, the speaker over the title |
-| Card | two rows and more | the speaker, the title and the line under it, over a row of cells |
-| Bar | one row, four cells wide | the cover, the speaker over the title, the cells at the end |
-| Player | two rows and more, four cells wide | the cover beside what plays, over a row of cells |
+| Row | one row, under four cells wide | the buttons in the frame's middle, as high as under words; with none, the speaker over the title |
+| Card | two rows and more | the speaker, the title, the line under it and the time, over a row of buttons |
+| Poster | two cells wide, tall enough for the cover across | the cover across the frame, the speaker and the title under it, the buttons at the foot |
+| Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end |
+| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, over a row of buttons |
 
 ## Frame and cells
 
@@ -30,16 +31,29 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
 
 - **One frame:** 12 dp on all four sides of every form, set in the layouts (`widget_padding`).
 - **Cells:** each button is a cell with the corner of the widget less the frame (28 − 12 = 16). Cells
-  share their row's width equally, 4 dp apart; play and pause is the filled one. A cell's shape
-  stands 2 dp inside its touch target on either side, so the targets meet and reach 2 dp into the
-  frame: three targets of 48 dp fit two cells of a usual phone (172 dp), each cell 46.7 dp wide.
+  share their row's width equally, 4 dp apart. A cell's shape stands 2 dp inside its touch target on
+  either side, so the targets meet and reach 2 dp into the frame: three targets of 48 dp fit two
+  cells of a usual phone (172 dp), each cell 46.7 dp wide. In one row they are 56 dp high in its
+  middle, as under words, not a capsule the height of the widget.
+- **Shading:** the person chooses which cells show (Button backgrounds): play and pause alone, as it
+  comes (Google's expressive toolbar fills its main button alone); every one; or none. A button
+  without its cell shows the cell's shade while pressed. Its place stays the same either way, so the
+  glyphs stand as evenly as the cells (`WidgetInsetsTest`).
 - **Words:** their first letter's ink (its side bearing, the font's metrics read on the phone) and
   the speaker's glyph stand on the frame; in a row or a bar their ink, not their box, stands in the
-  middle. They give way in order as the height or the text size asks: the line under the title, the
-  title's second line, the speaker's line; the level after the speaker's name whole or not at all.
-- **Covers:** a bar's and a player's are as high as their place and as wide as high.
+  middle, beside a player's cover in the cover's middle. They give way in order as the height or the
+  text size asks: the time, the title's second line, the line under the title, the speaker's line;
+  the level after the speaker's name whole or not at all. Where every line has room, as on a card two
+  by two and a half or a player three rows high, they are a fifth larger (`widget_words_large`).
+- **Time:** while a song plays, where it stands of its length; while a book or an episode plays,
+  what is left at its speed. A `Chronometer` ticks it on the launcher's side, so Amsel draws nothing
+  for it; at rest it stands as plain words, as a stopped `Chronometer` works its time out again
+  whenever the launcher lays the widget out anew and runs on (AOSP `Chronometer`).
+- **Covers:** a bar's and a player's are as high as their place and as wide as high; a poster's as
+  wide as the frame.
 - Buttons that a size cannot hold give way whole, from the end; at a large text size a bar gives a
-  button way before its words.
+  button way before its words. A button with nothing to act on in what plays gives way too: the heart,
+  shuffle and repeat for a book, an episode or a station.
 - `WidgetInsetsTest` draws every form at the size it was laid out for and at sizes 8 to 16 dp smaller
   and larger, and measures the frame and the gaps in pixels; `WidgetFitTest` checks that no target
   is narrower than 48 dp at any width.
@@ -54,6 +68,9 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
   (`WallpaperColors.HINT_SUPPORTS_DARK_TEXT`), drawn again when the wallpaper changes.
 
 Cells are the tone's shade: ink or paper over the cover, the system's secondary container in Plain.
+Under the Cover look, from Android 12, play and pause take the cover's own colour where it has one
+(the hue most of its coloured pixels share, deep on a light ground, bright on a dark one), its glyph
+in ink or paper, whichever reads (`WidgetArt.accent`).
 Covers shown sharp keep Amsel's cover corners (rule 7) and at night the night's range, as in the
 app. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
 Amsel's weights, the one font a widget can count on.
@@ -65,13 +82,17 @@ Amsel's weights, the one font a widget can count on.
 | Play and pause | what the dock's play does | play or pause, on the disc |
 | Next | the next song; 30 s forward in a book or an episode | skip next |
 | Previous | the song before; 15 s back in a book or an episode | skip previous |
-| Quieter, Louder | the server's volume step; Louder stops at the volume limit | speaker low, high |
+| Favourite | the song's heart, as Now Playing's | the heart, filled when it is one |
+| Shuffle, Repeat | as Now Playing's; repeat goes off, all, one | quieter while off; repeat one's own glyph |
+| Quieter, Louder | 5 from the level the widget shows (2 below 10), set as a level; Louder stops at the volume limit and says so | speaker low, high |
 | Speakers | opens Play on (`amsel://speakers`) | the speaker |
 | Continue listening | the book or episode heard last (`Catalog.inProgress(1)`) | a book |
 | Play … | one album, playlist, artist, station, book or podcast, picked once | its cover |
 
-None to four, in the person's order. As they come: Button, play and pause; Buttons and Now playing,
-the transport. With Quieter or Louder among them, the level stands after the speaker's name.
+None to eight, in the person's order; the widget's page says how many fit at its size. As they
+come: Button, play and pause; Buttons and Now playing, the transport, then the heart and shuffle
+where the widget is wide. With Quieter or Louder among them, the level stands after the speaker's
+name.
 
 ## The speaker
 
@@ -101,10 +122,30 @@ with Search, its recent searches first. Done saves; leaving leaves the widget as
   report. This phone's Quieter and Louder move the phone's own media volume.
 - On a speaker of the widget's own, every button goes through a player for that speaker alone
   (`SpeakerHands`, the same `RemotePlayer` as the session's), let go after the command.
+- Quieter, Louder, shuffle, repeat and the heart act on the speaker the widget shows, from what it
+  shows (`StateTaps`): a tap that starts Amsel comes before Amsel knows its speaker, and the volume
+  went to the phone's own. Each shows at once, on the widgets and in Amsel (`OptimisticTransport`,
+  `Favorites`); two taps in a row step on from the first before the speaker reports it; a level is
+  set, not stepped on the server, so the speaker ends where the widget says.
 - No `PendingIntent.getForegroundService`: a service started so must show a notification within
   seconds, which a pause or a skip past the end never does.
 - Play and pause change at once and the speaker confirms; a command that fails puts its sentence
   where the artist stands until the next change.
+
+## Seen by TalkBack and in the picker
+
+The widget as a whole says what plays, by whom and where ("Lanterns, Marlene Vogt. Playing on
+Kitchen") before its buttons; shuffle, repeat and the heart say whether they are on. From Android 15
+the widget picker shows each kind with what plays now (`WidgetPreviews`, about once an hour, as
+Android allows).
+
+## Swiping
+
+A widget sees taps and vertical swipes only: the home screen takes a sideways swipe to page (the
+developer guide's widget overview; Launcher3 `Workspace.determineScrollingStart` pages on any drag
+within 30° of sideways). A `StackView` flicks up and down through cards, drawn as a stack with the
+next card behind; a `ViewFlipper` changes only on a tap or a timer. A sideways swipe between a cover
+and the buttons is not possible; parked with what is (`docs/PARKING-LOT.md`).
 
 ## Staying current
 
@@ -127,10 +168,12 @@ ones, stale widgets, too much image memory. Home Assistant actions stay out
 
 `:app`, package `widget`: the providers (`AmselWidget`, `AmselButtonWidget`, `AmselButtonsWidget`),
 `Widgets` (following, drawing and taps, in `AppGraph`), `WidgetRender` (sizes and pictures),
-`WidgetFit` (forms and counts), `WidgetViews`, `WidgetDrawing` and `WidgetWordsViews` (the views), `WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover
-corners), `WidgetTaps`, `SessionHands` and `SpeakerHands` (taps), `WidgetStore`, and the page
-(`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupButtons`, `WidgetSetupSheets`,
-`WidgetSetupViewModel`, `WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`. Tests: `WidgetFitTest`,
-`WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`, `WidgetArtTest`,
-`WidgetLookTest`, and `WidgetShots` (every form, the looks, the states, the page; light, dark, 200 %
-and German).
+`WidgetFit` (forms and counts), `WidgetViews`, `WidgetDrawing` and `WidgetWordsViews` (the views),
+`WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover corners, the
+cover's colour), `WidgetTaps`, `SessionHands` and `SpeakerHands` (taps), `WidgetActions`,
+`StateTaps` and `WidgetCommands` (volume, shuffle, repeat, heart), `WidgetPreviews`, `WidgetStore`,
+and the page (`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupButtons`, `WidgetSetupSheets`,
+`WidgetSetupViewModel`, `WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`.
+Tests: `WidgetFitTest`, `WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`,
+`WidgetArtTest`, `WidgetLookTest`, `StateTapsTest`, and `WidgetShots` (every form, the cells, wide
+and tall widgets, the looks, the states, the page; light, dark, 200 % and German).
