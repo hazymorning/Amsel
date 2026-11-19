@@ -1,6 +1,7 @@
 package io.github.hazymorning.amsel.ui.navigation
 
 import android.net.Uri
+import androidx.core.net.toUri
 
 /**
  * Where a link opens Amsel: amsel://search, amsel://now-playing or amsel://speakers. The launcher's
@@ -16,6 +17,9 @@ enum class Opening(private val host: String) {
     /** The speaker picker. */
     Speakers("speakers"),
     ;
+
+    /** The link itself, as a widget opens it. */
+    val link: Uri get() = "amsel://$host".toUri()
 
     companion object {
         fun of(uri: Uri?): Opening? {

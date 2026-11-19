@@ -32,6 +32,10 @@ Android Auto only lists apps from the Play Store unless you allow others once:
 
 ## Widgets and shortcuts
 
+Amsel has a widget of its own: hold an empty spot on the home screen, choose Widgets, then Amsel. It
+shows which speaker is in use and what plays there, with four buttons you choose as you place it;
+hold the widget to change them later. Its buttons work while Amsel is closed.
+
 Music widgets such as KWGT can choose Amsel as their player; their buttons work like Amsel's own,
 also while Amsel is closed. Hold Amsel's icon for Search, Now playing and Speakers. A widget's
 "open link" action reaches the same places: `amsel://search`, `amsel://now-playing` and

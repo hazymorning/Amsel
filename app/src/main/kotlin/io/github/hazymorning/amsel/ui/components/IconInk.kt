@@ -175,6 +175,9 @@ internal val IconInk: Map<Int, GlyphInk> by lazy {
         R.drawable.ic_volume to GlyphInk(16.0f, 24.0f, 248.0f, 232.0f, mirrored = false),
         R.drawable.ic_volume_bold to GlyphInk(12.0f, 20.0f, 252.0f, 236.0f, mirrored = false),
         R.drawable.ic_volume_light to GlyphInk(18.0f, 26.0f, 246.0f, 230.0f, mirrored = false),
+        R.drawable.ic_volume_low to GlyphInk(16.0f, 24.0f, 208.0f, 232.0f, mirrored = false),
+        R.drawable.ic_volume_low_bold to GlyphInk(12.0f, 20.0f, 212.0f, 236.0f, mirrored = false),
+        R.drawable.ic_volume_low_light to GlyphInk(18.0f, 26.0f, 206.0f, 230.0f, mirrored = false),
         R.drawable.ic_offline to GlyphInk(16.0f, 31.9f, 240.0f, 224.1f, mirrored = false),
         R.drawable.ic_offline_bold to GlyphInk(12.0f, 27.9f, 244.0f, 228.1f, mirrored = false),
         R.drawable.ic_offline_light to GlyphInk(18.0f, 34.4f, 238.0f, 222.0f, mirrored = false),
@@ -243,6 +246,7 @@ internal val IconCuts: Map<Int, Cuts> by lazy {
         R.drawable.ic_queue to Cuts(R.drawable.ic_queue_bold, R.drawable.ic_queue_light),
         R.drawable.ic_phone to Cuts(R.drawable.ic_phone_bold, R.drawable.ic_phone_light),
         R.drawable.ic_volume to Cuts(R.drawable.ic_volume_bold, R.drawable.ic_volume_light),
+        R.drawable.ic_volume_low to Cuts(R.drawable.ic_volume_low_bold, R.drawable.ic_volume_low_light),
         R.drawable.ic_offline to Cuts(R.drawable.ic_offline_bold, R.drawable.ic_offline_light),
         R.drawable.ic_tip to Cuts(R.drawable.ic_tip_bold, R.drawable.ic_tip_light),
     )

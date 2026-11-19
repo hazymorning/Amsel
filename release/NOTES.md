@@ -1,17 +1,9 @@
-# Preening
+# Windowsill
+
+## New
+
+- **A widget:** Amsel on your home screen, half the screen wide. It shows which speaker is in use and what plays there over the cover, softly blurred, with four buttons you choose as you place it: play and pause, next, previous, quieter, louder, the speakers, continue listening, or an album, playlist, station or book of your own. Hold the widget to change them later. The buttons work while Amsel is closed, and a tap beside them opens what plays.
 
 ## Better
 
-- **Safer:** whatever answers at your server's address can no longer sign you out. An update installs only when it is Amsel's own, signed with Amsel's key.
-- **Signing out forgets more:** recent searches, bookmarks and cached covers go with the session.
-- **Lighter:** search asks the server at once; Home, See all, the Library and the book and podcast pages do less work while music plays or downloads run.
-
-## Fixed
-
-- A start that could not open the stored sign-in deleted your downloads.
-- A downloaded book briefly played from its beginning, and a pause or stop then could lose your place.
-- The sleep timer could miss its pause after one failed volume step.
-- Favourite stations chosen on Home turned back into every station.
-- A bookmark in another book could miss its place.
-- A song added to the open playlist did not show.
-- The letter scrubber works again after switching kinds.
+- **Plays from the car show at once:** what you start in Android Auto, or from the widget, shows its title while the speaker gets going.

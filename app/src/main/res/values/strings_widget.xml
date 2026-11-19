@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">What plays where, with four buttons you choose</string>
+    <string name="widget_setup_title">Widget</string>
+    <string name="widget_setup_hint">Tap a button to change it.</string>
+    <string name="widget_setup_buttons">The four buttons, from the left</string>
+    <string name="widget_setup_done">Done</string>
+    <string name="widget_slot_1">First button</string>
+    <string name="widget_slot_2">Second button</string>
+    <string name="widget_slot_3">Third button</string>
+    <string name="widget_slot_4">Fourth button</string>
+    <string name="widget_change_slot">%1$s: %2$s. Change it</string>
+    <string name="widget_quieter">Quieter</string>
+    <string name="widget_louder">Louder</string>
+    <string name="widget_speakers">Speakers</string>
+    <string name="widget_play_something">Play something…</string>
+    <string name="widget_play_item">Play %1$s</string>
+    <string name="widget_next_note">30 s forward in a book</string>
+    <string name="widget_previous_note">15 s back in a book</string>
+    <string name="widget_louder_note">Stops at your limit of %1$s</string>
+    <string name="widget_speakers_note">Choose where the music plays</string>
+    <string name="widget_continue_note">The book or episode heard last</string>
+    <string name="widget_something_note">An album, a playlist, a station, a book</string>
+    <string name="widget_pick_title">Play something</string>
+    <string name="widget_sign_in">Sign in to Amsel</string>
+    <string name="widget_nothing_to_continue">No book or episode to continue</string>
+</resources>

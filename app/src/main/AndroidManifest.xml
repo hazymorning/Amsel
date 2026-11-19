@@ -59,6 +59,32 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <!-- The widget's page: the launcher opens it when the widget is placed, and to change it. -->
+        <activity
+            android:name=".widget.WidgetSetupActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Amsel">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <receiver
+            android:name=".widget.AmselWidget"
+            android:exported="false"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+        <!-- The widget's buttons; only its own pending intents reach it. -->
+        <receiver
+            android:name=".widget.WidgetTaps"
+            android:exported="false" />
         <!-- The car's artwork: not exported, the car is granted reading it when it connects. -->
         <provider
             android:name=".app.ArtworkProvider"

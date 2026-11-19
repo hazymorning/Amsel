@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Was wo läuft, mit vier Tasten nach deiner Wahl</string>
+    <string name="widget_setup_title">Widget</string>
+    <string name="widget_setup_hint">Tippe auf eine Taste, um sie zu ändern.</string>
+    <string name="widget_setup_buttons">Die vier Tasten, von links</string>
+    <string name="widget_setup_done">Fertig</string>
+    <string name="widget_slot_1">Erste Taste</string>
+    <string name="widget_slot_2">Zweite Taste</string>
+    <string name="widget_slot_3">Dritte Taste</string>
+    <string name="widget_slot_4">Vierte Taste</string>
+    <string name="widget_change_slot">%1$s: %2$s. Ändern</string>
+    <string name="widget_quieter">Leiser</string>
+    <string name="widget_louder">Lauter</string>
+    <string name="widget_speakers">Lautsprecher</string>
+    <string name="widget_play_something">Etwas abspielen …</string>
+    <string name="widget_play_item">„%1$s“ abspielen</string>
+    <string name="widget_next_note">bei Büchern 30 s vor</string>
+    <string name="widget_previous_note">bei Büchern 15 s zurück</string>
+    <string name="widget_louder_note">Hält bei deiner Grenze von %1$s an</string>
+    <string name="widget_speakers_note">Wählen, wo die Musik spielt</string>
+    <string name="widget_continue_note">Das Buch oder die Folge von zuletzt</string>
+    <string name="widget_something_note">Ein Album, eine Playlist, einen Sender, ein Buch</string>
+    <string name="widget_pick_title">Etwas abspielen</string>
+    <string name="widget_sign_in">Bei Amsel anmelden</string>
+    <string name="widget_nothing_to_continue">Kein Buch und keine Folge zum Weiterhören</string>
+</resources>
