@@ -113,7 +113,10 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
                 volumeLimit = state.volumeLimit,
                 onChoose = { button ->
                     close {
-                        if (button == WidgetButton.PlayItem) picking = open.slot else viewModel.choose(open.slot, button)
+                        when (button) {
+                            WidgetButton.PlayItem -> picking = open.slot
+                            else -> viewModel.choose(open.slot, button)
+                        }
                     }
                 },
             )
@@ -142,7 +145,8 @@ fun WidgetSetupScreen(
     val haptics = LocalHapticFeedback.current
     val slots = state.setup.slots
     // The order while a drag swaps rows; the saved one replaces it on drop.
-    var parts by remember(slots, state.wordsAt) { mutableStateOf(widgetParts(slots.size, state.wordsAt)) }
+    val at = state.setup.words
+    var parts by remember(slots, at) { mutableStateOf(widgetParts(slots, at)) }
     val list = rememberLazyListState()
     val reorder = rememberReorderable(
         list,
@@ -157,7 +161,7 @@ fun WidgetSetupScreen(
             haptics.performHapticFeedback(HapticFeedbackType.GestureEnd)
             if (key == WidgetPart.Words.key) {
                 val place = wordsPlaceAt(parts.indexOf(WidgetPart.Words), parts.size)
-                parts = widgetParts(slots.size, place)
+                parts = widgetParts(slots, place)
                 onMoveWords(place)
             } else {
                 onReorder(parts.filterIsInstance<WidgetPart.Button>().map { it.place })
@@ -194,18 +198,6 @@ fun WidgetSetupScreen(
             )
         }
     }
-}
-
-/** Which of the page's choices is open on a sheet. */
-sealed interface WidgetSheet : java.io.Serializable {
-    data object Speaker : WidgetSheet
-
-    data object Style : WidgetSheet
-
-    data object Cells : WidgetSheet
-
-    /** What button [slot] does; one past the last adds one. */
-    data class Button(val slot: Int) : WidgetSheet
 }
 
 /** Which speaker the widget keeps to, its background, and which buttons stand on a cell. */

@@ -12,8 +12,8 @@ interface WidgetActions {
     /** The level Louder stops at; 0 for none. */
     fun volumeLimit(): Int
 
-    /** The step the server's volume up and down take from [level], as its settings have it. */
-    suspend fun volumeStep(level: Int): Int
+    /** The step the server's volume up and down take from [level], as its settings last said; never waits for it. */
+    fun volumeStep(level: Int): Int
 
     /** The server's own step up or down, shown at once as [shown]. */
     suspend fun nudge(speakerId: String, up: Boolean, shown: Int)
@@ -33,7 +33,7 @@ interface WidgetActions {
         val None = object : WidgetActions {
             override fun volumeLimit() = 0
 
-            override suspend fun volumeStep(level: Int) = serverStep(level)
+            override fun volumeStep(level: Int) = serverStep(level)
 
             override suspend fun nudge(speakerId: String, up: Boolean, shown: Int) = Unit
 
@@ -84,9 +84,10 @@ internal class StateTaps(private val actions: WidgetActions, private val elapsed
     }
 
     /**
-     * The server takes the step, by its own settings and from the level it last set, so taps in a row
-     * add up; the widget shows where it will land at once. Louder stops at the person's limit: a step
-     * that would pass it sets the limit, one from the limit or above it does nothing and says so.
+     * The server takes the step, by its own setting and from the level it last set, so taps in a row
+     * add up; the widget shows at once where it lands by the setting last read. Louder stops at the
+     * person's limit: a step that would pass it sets the limit, one from the limit or above it does
+     * nothing and says so.
      */
     private suspend fun volume(shown: WidgetLook, up: Boolean): Refusal? {
         if (shown.phone) {

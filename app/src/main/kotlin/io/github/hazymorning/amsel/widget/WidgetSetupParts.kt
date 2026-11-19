@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.widget
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -42,7 +43,11 @@ import io.github.hazymorning.amsel.ui.screens.settings.blockShape
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Sizes
 
-/** A row of the widget's page for one of its parts: what plays, or the button at [place] in the saved order. */
+/**
+ * A row of the widget's page for one of its parts: what plays, or the button at [place] in the
+ * saved order. A button's key is what it does, and which of the same it is, so a row keeps its key
+ * when the order is saved anew.
+ */
 @Immutable
 internal sealed interface WidgetPart {
     val key: String
@@ -51,15 +56,18 @@ internal sealed interface WidgetPart {
         override val key = "words"
     }
 
-    data class Button(val place: Int) : WidgetPart {
-        override val key get() = "button-$place"
-    }
+    data class Button(val place: Int, override val key: String) : WidgetPart
 }
 
-/** [buttons] buttons in their saved order, what plays before them or after them as it stands [at]. */
-internal fun widgetParts(buttons: Int, at: WidgetWordsPlace): List<WidgetPart> {
-    val all = List(buttons) { WidgetPart.Button(it) }
-    return if (at == WidgetWordsPlace.After) all + WidgetPart.Words else listOf(WidgetPart.Words) + all
+/** [slots] in their saved order, what plays before them or after them as it stands [at]. */
+internal fun widgetParts(slots: List<WidgetSlot>, at: WidgetWordsPlace): List<WidgetPart> {
+    val seen = mutableMapOf<WidgetSlot, Int>()
+    val buttons = slots.mapIndexed { place, slot ->
+        val same = seen.getOrDefault(slot, 0)
+        seen[slot] = same + 1
+        WidgetPart.Button(place, "${slot.button.id} ${slot.item?.uri.orEmpty()} $same")
+    }
+    return if (at == WidgetWordsPlace.After) buttons + WidgetPart.Words else listOf(WidgetPart.Words) + buttons
 }
 
 /** Where what plays lands when let go at [index] of [parts]: at the nearer end. */
@@ -85,16 +93,16 @@ internal fun LazyListScope.partRows(
     val slots = state.setup.slots
     val adding = slots.size < MAX_BUTTONS
     val buttons = parts.filterIsInstance<WidgetPart.Button>()
-    val words = state.setup.words != WidgetWordsPlace.None
+    val words = state.setup.showsWords
     itemsIndexed(parts, key = { _, part -> part.key }) { index, part ->
         val shape = blockShape(first = index == 0, last = index == parts.lastIndex && !adding)
-        Column(lifted(reorder, part.key)) {
+        Liftable(reorder, part.key) {
             if (index > 0) Spacer(Modifier.height(BetweenRows))
             when (part) {
+                // Without buttons, what plays is all the widget shows, with nothing to move past.
                 WidgetPart.Words -> WordsRow(
                     shown = words,
-                    // Without buttons, what plays is all the widget shows.
-                    held = words && slots.isEmpty(),
+                    alone = slots.isEmpty(),
                     first = index == 0,
                     shape = shape,
                     reorder = reorder,
@@ -103,7 +111,7 @@ internal fun LazyListScope.partRows(
                 )
 
                 is WidgetPart.Button -> {
-                    val slot = slots.getOrNull(part.place) ?: return@Column
+                    val slot = slots.getOrNull(part.place) ?: return@Liftable
                     val at = buttons.indexOf(part)
                     ButtonRow(
                         slot,
@@ -139,18 +147,24 @@ internal fun LazyListScope.partRows(
 
 /** A row lifted under the finger while it is dragged, or gliding into place. */
 @Composable
-private fun LazyItemScope.lifted(reorder: Reorderable, key: String): Modifier =
-    if (reorder.draggingKey == key || reorder.settlingKey == key) {
+private fun LazyItemScope.Liftable(reorder: Reorderable, key: String, content: @Composable ColumnScope.() -> Unit) {
+    val lifted = reorder.draggingKey == key || reorder.settlingKey == key
+    val modifier = if (lifted) {
         Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offsetOf(key) }
     } else {
         Modifier.animateItem()
     }
+    Column(modifier, content = content)
+}
 
-/** What plays, its switch and its handle; TalkBack moves it to the other end. */
+/**
+ * What plays, its switch and its handle; TalkBack moves it to the other end. [alone], it is all the
+ * widget shows: it stays, and has nothing to move past.
+ */
 @Composable
 private fun WordsRow(
     shown: Boolean,
-    held: Boolean,
+    alone: Boolean,
     first: Boolean,
     shape: Shape,
     reorder: Reorderable,
@@ -158,17 +172,20 @@ private fun WordsRow(
     onMove: (WidgetWordsPlace) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
-    val moveTo = if (first) WidgetWordsPlace.After else WidgetWordsPlace.Before
-    val move = CustomAccessibilityAction(stringResource(if (first) R.string.move_down else R.string.move_up)) {
-        onMove(moveTo)
-        true
-    }
+    val held = shown && alone
+    val moves = listOfNotNull(
+        CustomAccessibilityAction(stringResource(if (first) R.string.move_down else R.string.move_up)) {
+            onMove(if (first) WidgetWordsPlace.After else WidgetWordsPlace.Before)
+            true
+        }.takeUnless { alone },
+    )
     val stays = stringResource(R.string.widget_words_stay)
     SettingRow(
         stringResource(R.string.widget_words),
         shape,
         modifier = Modifier
             .holdToMove(
+                enabled = !alone,
                 onStart = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     reorder.start(WidgetPart.Words.key)
@@ -177,11 +194,10 @@ private fun WordsRow(
                 onEnd = reorder::end,
             )
             .semantics {
-                customActions = listOf(move)
+                customActions = moves
                 toggleableState = ToggleableState(shown)
                 if (held) stateDescription = stays
             },
-        subtitle = if (held) stays else null,
         role = Role.Switch,
         glyph = R.drawable.ic_track,
         onClick = {
@@ -195,7 +211,7 @@ private fun WordsRow(
         trailing = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.alpha(if (held) DISABLED_ALPHA else 1f)) { SettingSwitch(shown) }
-                Handle(reorder, WidgetPart.Words.key)
+                if (!alone) Handle(reorder, WidgetPart.Words.key)
             }
         },
     )

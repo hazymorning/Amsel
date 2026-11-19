@@ -39,14 +39,14 @@ internal class WidgetCellsViews(
     fun shown(fit: WidgetFit): List<PlacedSlot> =
         setup.slots.withIndex().filter { it.value.button.availableIn(look) }.take(fit.buttons)
 
-    /** [buttons] side by side in [row], as cells of [layout]. */
-    fun row(views: RemoteViews, row: Int, buttons: List<PlacedSlot>, @LayoutRes layout: Int) {
+    /** [buttons] side by side in [row], as cells of [layout] [inset] px in from their targets above and below. */
+    fun row(views: RemoteViews, row: Int, buttons: List<PlacedSlot>, @LayoutRes layout: Int, inset: Int) {
         views.removeAllViews(row)
-        for ((index, slot) in buttons) views.addView(row, cell(index, slot, layout))
+        for ((index, slot) in buttons) views.addView(row, cell(index, slot, layout, inset))
     }
 
     /** [buttons] in rows of [columns] in [pad]; a last row with fewer keeps the cells' width, in its middle. */
-    fun pad(views: RemoteViews, pad: Int, buttons: List<PlacedSlot>, columns: Int) {
+    fun pad(views: RemoteViews, pad: Int, buttons: List<PlacedSlot>, columns: Int, inset: Int) {
         views.removeAllViews(pad)
         for (chunk in buttons.chunked(columns)) {
             val row = RemoteViews(context.packageName, R.layout.widget_pad_row)
@@ -54,29 +54,40 @@ internal class WidgetCellsViews(
                 row.setFloat(R.id.widget_pad_row, "setWeightSum", columns.toFloat())
                 row.setInt(R.id.widget_pad_row, "setGravity", Gravity.CENTER_HORIZONTAL)
             }
-            for ((index, slot) in chunk) row.addView(R.id.widget_pad_row, cell(index, slot, R.layout.widget_cell))
+            for ((index, slot) in chunk) {
+                row.addView(R.id.widget_pad_row, cell(index, slot, R.layout.widget_cell, inset))
+            }
             views.addView(pad, row)
         }
     }
 
-    /** Button [index] of the setup as a cell of [layout]; a Play … button shows its item's cover. */
-    private fun cell(index: Int, slot: WidgetSlot, @LayoutRes layout: Int) = RemoteViews(context.packageName, layout).apply {
-        val face = pictures.faces[slot.item?.art]?.takeIf { slot.button == WidgetButton.PlayItem }
-        shows(R.id.widget_face, face != null)
-        shows(R.id.widget_glyph, face == null)
-        if (face != null) {
-            setInt(R.id.widget_cell, "setBackgroundResource", if (setup.cells == WidgetCells.All) tone.cell else tone.bare)
-            setImageViewBitmap(R.id.widget_face, face)
-        } else {
-            dress(this, slot.button, R.id.widget_cell, R.id.widget_glyph, shadeAll = setup.cells == WidgetCells.All)
+    /**
+     * Button [index] of the setup as a cell of [layout], [inset] px in from its target above and
+     * below; a Play … button shows its item's cover.
+     */
+    private fun cell(index: Int, slot: WidgetSlot, @LayoutRes layout: Int, inset: Int) =
+        RemoteViews(context.packageName, layout).apply {
+            val face = pictures.faces[slot.item?.art]?.takeIf { slot.button == WidgetButton.PlayItem }
+            shows(R.id.widget_face, face != null)
+            shows(R.id.widget_glyph, face == null)
+            if (face != null) {
+                val shade = if (setup.cells == WidgetCells.All) tone.cell else tone.bare
+                setInt(R.id.widget_cell_shape, "setBackgroundResource", shade)
+                setImageViewBitmap(R.id.widget_face, face)
+            } else {
+                val all = setup.cells == WidgetCells.All
+                dress(this, slot.button, R.id.widget_cell_shape, R.id.widget_glyph, shadeAll = all)
+            }
+            setViewPadding(R.id.widget_cell, 0, inset, 0, inset)
+            setContentDescription(R.id.widget_cell, slots.label(slot, look))
+            if (taps) setOnClickPendingIntent(R.id.widget_cell, press(index, slot))
         }
-        setContentDescription(R.id.widget_cell, slots.label(slot, look))
-        if (taps) setOnClickPendingIntent(R.id.widget_cell, press(index, slot))
-    }
 
     /** A tile's cell, shaded unless the person wants none; the speaker's glyph where there is no button. */
-    fun tileCell(views: RemoteViews, slot: WidgetSlot?) =
-        dress(views, slot?.button, R.id.widget_tile_cell, R.id.widget_tile_glyph, shadeAll = setup.cells != WidgetCells.None)
+    fun tileCell(views: RemoteViews, slot: WidgetSlot?) {
+        val shaded = setup.cells != WidgetCells.None
+        dress(views, slot?.button, R.id.widget_tile_cell, R.id.widget_tile_glyph, shadeAll = shaded)
+    }
 
     /** [button]'s cell and glyph in [cell] and [glyph]: play and pause filled, others shaded where [shadeAll]. */
     private fun dress(views: RemoteViews, button: WidgetButton?, cell: Int, glyph: Int, shadeAll: Boolean) =

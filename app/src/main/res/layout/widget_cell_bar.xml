@@ -3,23 +3,30 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_cell"
     android:layout_width="@dimen/widget_bar_cell"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_bare_light">
+    android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/widget_glyph"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_gravity="center"
-        android:importantForAccessibility="no"
-        android:tint="@color/widget_glyph_light"
-        android:tintMode="src_in" />
+    <FrameLayout
+        android:id="@+id/widget_cell_shape"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bare_light"
+        android:duplicateParentState="true">
 
-    <ImageView
-        android:id="@+id/widget_face"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_gravity="center"
-        android:importantForAccessibility="no"
-        android:visibility="gone" />
+        <ImageView
+            android:id="@+id/widget_glyph"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <ImageView
+            android:id="@+id/widget_face"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+    </FrameLayout>
 </FrameLayout>

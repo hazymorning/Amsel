@@ -42,7 +42,7 @@ internal class WidgetWordsViews(
         val glyph = look.signedIn
         val (glyphStart, glyphEnd) = text.speakerSides()
         val nameStart = text.sideBearing(name, WidgetLine.Speaker)
-        val afterGlyph = if (glyph) text.dp(WidgetLine.Speaker.size * size.scale) * GLYPH_GAP - glyphEnd - nameStart else 0f
+        val afterGlyph = if (glyph) text.speakerGlyph * GLYPH_GAP - glyphEnd - nameStart else 0f
         val glyphRoom = if (glyph) text.speakerGlyph - glyphStart + afterGlyph else 0f
         // The level shows whole or not at all: a long name takes its room before it is cut itself.
         val level = level()?.takeIf {
@@ -78,7 +78,9 @@ internal class WidgetWordsViews(
                 WordsAlign.Top -> setViewPadding(R.id.widget_words, 0, px(LEAD - inkTop), 0, 0)
 
                 // The top too, for a poster's cover above them.
-                WordsAlign.Bottom -> setViewPadding(R.id.widget_words, 0, px(LEAD - inkTop), 0, px(LEAD - (box - baseline)))
+                WordsAlign.Bottom -> {
+                    setViewPadding(R.id.widget_words, 0, px(LEAD - inkTop), 0, px(LEAD - (box - baseline)))
+                }
 
                 // Half of the difference of a box's top and bottom padding moves what it holds.
                 WordsAlign.Middle -> {

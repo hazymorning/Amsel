@@ -49,7 +49,7 @@ class WidgetViews(private val context: Context) {
     }
 
     private fun fit(width: Float, height: Float, setup: WidgetSetup, buttons: Int, time: Boolean = false) =
-        widgetFit(width, height, buttons, text.type, time, setup.words, bare = setup.cells == WidgetCells.None)
+        widgetFit(width, height, buttons, text.type, time, setup.showsWords, bare = setup.cells == WidgetCells.None)
 
     /**
      * Widget [id] at each of [fits]: from Android 12 the launcher shows the one for its size; before,

@@ -35,12 +35,16 @@
         android:orientation="horizontal"
         android:padding="@dimen/widget_padding">
 
-        <!-- Targets 52 dp wide, which reach half a gap into the frame at the row's end. -->
+        <!-- Targets 52 dp wide, which reach half a gap into the frame at the row's end; the row
+             reaches as far as bare buttons into it above and below, so a low bar's targets keep
+             their height (WidgetDrawing.bar). -->
         <LinearLayout
             android:id="@+id/widget_cells_start"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_marginStart="@dimen/widget_cell_inset_out"
+            android:layout_marginTop="@dimen/widget_reach_out"
+            android:layout_marginBottom="@dimen/widget_reach_out"
             android:baselineAligned="false"
             android:orientation="horizontal"
             android:visibility="gone" />
@@ -62,7 +66,9 @@
             android:id="@+id/widget_cells_end"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/widget_reach_out"
             android:layout_marginEnd="@dimen/widget_cell_inset_out"
+            android:layout_marginBottom="@dimen/widget_reach_out"
             android:baselineAligned="false"
             android:orientation="horizontal"
             android:visibility="gone" />

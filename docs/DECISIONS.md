@@ -832,7 +832,8 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-19 | Words a fifth larger where every line has room; Google asks to rearrange before growing type, which the time, the Poster and the centring do first | Q3 |
 | 2026-11-19 | The widget picker shows what plays now from Android 15 (generated previews), about once an hour as Android allows | Q1 |
 | 2026-11-19 | A sideways swipe between views is parked: the home screen takes sideways swipes; a widget sees taps and vertical swipes only | Evidence (developer guide, Launcher3) |
-| 2026-11-19 | A widget's Quieter and Louder take the server's own step, as its volume up and down do: its Volume step setting, read now and then, else its ladder of 1, 2 and 3; the widget shows where it lands at once | Owner (1 % set, 2 % taken); rule 1 |
+| 2026-11-19 | A widget's Quieter and Louder take the server's own step, as its volume up and down do: its Volume step setting, read in the background so a tap never waits, else its ladder of 1, 2 and 3; the widget shows where it lands at once | Owner (1 % set, 2 % taken); rule 1 |
+| 2026-11-19 | A widget's targets stay 48 dp high in a row lower than a cell and its frame, reaching into the frame above and below; the cells drawn in them keep it | AGENTS (48 dp targets) |
 | 2026-11-19 | A widget's frame is 16 dp, Android's own room inside a widget, its cells' corners 12 | Owner (too near the edge) |
 | 2026-11-19 | What plays is a part of a widget as its buttons are: before them, after them, or left out; the two parts stand at the widget's ends; left out, the buttons fill it in as few rows as hold them, cells about square, in the middle | Owner |
 | 2026-11-19 | A widget's words grow an eighth smaller before the speaker's line goes, so a low strip keeps the speaker over the title | Owner |

@@ -20,7 +20,7 @@ class StateTapsTest {
 
         override fun volumeLimit() = limit
 
-        override suspend fun volumeStep(level: Int) = step ?: serverStep(level)
+        override fun volumeStep(level: Int) = step ?: serverStep(level)
 
         override suspend fun nudge(speakerId: String, up: Boolean, shown: Int) {
             volumes += speakerId to shown

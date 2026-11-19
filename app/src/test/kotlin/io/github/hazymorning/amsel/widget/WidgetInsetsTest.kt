@@ -87,8 +87,16 @@ class WidgetInsetsTest {
         actual: SizeF = planned,
         cells: WidgetCells = WidgetCells.All,
         words: WidgetWordsPlace = WidgetWordsPlace.Before,
+        showsWords: Boolean = true,
     ): Drawn {
-        val setup = WidgetSetup(style = WidgetStyle.Plain, slots = slots, cells = cells, words = words)
+        val setup = WidgetSetup(WidgetStyle.Plain, slots = slots, cells = cells, words = words, showsWords = showsWords)
+        val view = laidOut(setup, look, planned, actual)
+        val bitmap = createBitmap(view.width, view.height)
+        view.draw(Canvas(bitmap))
+        return Drawn(bitmap, context.getColor(R.color.widget_background_plain), density)
+    }
+
+    private fun laidOut(setup: WidgetSetup, look: WidgetLook, planned: SizeF, actual: SizeF = planned): View {
         val view = WidgetSample.plain(context, setup, look, planned).apply(context, FrameLayout(context))
         val width = (actual.width * density).roundToInt()
         val height = (actual.height * density).roundToInt()
@@ -97,9 +105,7 @@ class WidgetInsetsTest {
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
         )
         view.layout(0, 0, width, height)
-        val bitmap = createBitmap(width, height)
-        view.draw(Canvas(bitmap))
-        return Drawn(bitmap, context.getColor(R.color.widget_background_plain), density)
+        return view
     }
 
     private fun assertFrame(expected: Float, drawn: Drawn, name: String) {
@@ -193,12 +199,12 @@ class WidgetInsetsTest {
     /** Without what plays, the buttons' grid keeps the frame at the sides, the gaps between, in the middle. */
     @Test fun aPadKeepsItsFrameAndGaps() {
         val four = DefaultSlots.take(4)
-        val pad = widgetFit(WidgetSample.card.width, WidgetSample.card.height, 4, words = WidgetWordsPlace.None)
+        val pad = widgetFit(WidgetSample.card.width, WidgetSample.card.height, 4, words = false)
         // Each row's middle, half a row from the widget's.
         val half = (pad.cell + WidgetSizes.GAP) / 2
         for (actual in around(WidgetSample.card)) {
             val name = "pad at $actual"
-            val drawn = draw(four, music, WidgetSample.card, actual, words = WidgetWordsPlace.None)
+            val drawn = draw(four, music, WidgetSample.card, actual, showsWords = false)
             val (start, top, end, bottom) = drawn.frame()
             assertEquals("$name start", WidgetSizes.PADDING, start, TOLERANCE)
             assertEquals("$name end", WidgetSizes.PADDING, end, TOLERANCE)
@@ -206,6 +212,18 @@ class WidgetInsetsTest {
             assertTrue("$name: top $top", top >= WidgetSizes.PADDING - TOLERANCE)
             assertCells(drawn, actual.height / 2 - half, 2, name)
             assertCells(drawn, actual.height / 2 + half, 2, name)
+        }
+    }
+
+    /** Lower than a cell and its frame, a row's targets keep a touch target's height; its cells keep the frame. */
+    @Test fun aLowRowsTargetsKeepTheirHeight() {
+        for (size in listOf(WidgetSample.strip, SizeF(156f, 72f))) {
+            val setup = WidgetSetup(WidgetStyle.Plain, slots = DefaultSlots.take(3), cells = WidgetCells.All)
+            val targets = laidOut(setup, music, size).cells().map { it.height / density }
+            println("low row at $size: targets $targets")
+            assertTrue("$size: $targets", targets.isNotEmpty())
+            assertTrue("$size: $targets", targets.all { it >= WidgetSizes.CELL_MIN - TOLERANCE })
+            assertFrame(WidgetSizes.PADDING, draw(DefaultSlots.take(3), music, size), "low row at $size")
         }
     }
 

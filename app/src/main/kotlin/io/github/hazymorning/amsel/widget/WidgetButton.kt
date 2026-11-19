@@ -66,14 +66,10 @@ enum class WidgetCells(val id: String, @StringRes val label: Int) {
     }
 }
 
-/**
- * Where what plays stands: before the buttons (above them, or at the start of a bar), after them,
- * or nowhere, the buttons filling the widget.
- */
+/** Where what plays stands: before the buttons (above them, or at the start of a bar), or after them. */
 enum class WidgetWordsPlace(val id: String) {
     Before("before"),
     After("after"),
-    None("none"),
     ;
 
     companion object {
@@ -83,7 +79,8 @@ enum class WidgetWordsPlace(val id: String) {
 
 /**
  * One widget as its person set it: its look, its speaker (null: the one Amsel plays on), its
- * buttons, which of them stand on a cell, and where what plays stands.
+ * buttons, which of them stand on a cell, and where what plays stands, or that it is left out, the
+ * buttons filling the widget; left out, it keeps its place to come back to.
  */
 @Immutable
 data class WidgetSetup(
@@ -92,6 +89,7 @@ data class WidgetSetup(
     val slots: List<WidgetSlot> = DefaultSlots,
     val cells: WidgetCells = WidgetCells.Play,
     val words: WidgetWordsPlace = WidgetWordsPlace.Before,
+    val showsWords: Boolean = true,
 )
 
 /**

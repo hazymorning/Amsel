@@ -105,7 +105,7 @@ class WidgetShots : ScreenshotTest() {
     @Composable
     private fun Parts() {
         val after = WidgetSetup(words = WidgetWordsPlace.After)
-        val pad = WidgetSetup(slots = DefaultSlots.take(4), words = WidgetWordsPlace.None)
+        val pad = WidgetSetup(slots = DefaultSlots.take(4), showsWords = false)
         val small = SizeF(152f, 172f)
         Widget(after, WidgetSample.music, WidgetSample.card, column = 0, row = 0)
         Widget(pad, WidgetSample.music, WidgetSample.card, column = 2, row = 0)

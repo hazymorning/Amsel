@@ -37,7 +37,8 @@ internal class WidgetDrawing(
     private val ground = WidgetGround.of(setup.style, pictures.cover.takeIf { playing }, clearInk)
     private val tone = ground.tone
     private val density = context.resources.displayMetrics.density
-    private val cells = WidgetCellsViews(context, text, slots, id, setup, look, pictures, tone, ground.cover, taps, ::px)
+    private val cells =
+        WidgetCellsViews(context, text, slots, id, setup, look, pictures, tone, ground.cover, taps, ::px)
     private val words = WidgetWordsViews(context, text, look, setup.slots, tone, ::px)
 
     /** Bare buttons draw nothing at a row's ends, so their row reaches into the frame. */
@@ -98,7 +99,10 @@ internal class WidgetDrawing(
         val shown = cells.shown(fit)
         val after = after(shown)
         art(fit, cap = false)
-        val upright = px((fit.height - 2 * PADDING - CELL_HEIGHT) / 2)
+        val cell = minOf(fit.height - 2 * PADDING, CELL_HEIGHT)
+        val target = target(cell, fit.height)
+        // The rows reach to REACH from the edge above and below (widget_bar.xml); the targets stand in their middle.
+        val upright = px((fit.height - 2 * REACH - target) / 2)
         // The words keep the gap from the cells, less the half gap their targets reach.
         val gap = px(WORDS_TO_CELLS - GAP / 2)
         setViewPadding(R.id.widget_cells_start, 0, upright, gap, upright)
@@ -106,17 +110,18 @@ internal class WidgetDrawing(
         setViewPadding(R.id.widget_words_box, px(ART_TO_WORDS), 0, if (shown.isEmpty() || after) 0 else gap, 0)
         val cellsWidth = if (shown.isEmpty()) 0f else shown.size * BAR_CELL - GAP + WORDS_TO_CELLS
         words(fit, WordsAlign.Middle, fit.width - 2 * PADDING - fit.art - ART_TO_WORDS - cellsWidth)
-        cellsRow(shown, after, R.layout.widget_cell_bar, sides = false)
+        cellsRow(shown, after, R.layout.widget_cell_bar, sides = false, inset = px((target - cell) / 2))
     }
 
     /** Buttons alone, in rows in the frame's middle. */
     private fun pad(fit: WidgetFit) = grounded(R.layout.widget_pad).apply {
         val shown = cells.shown(fit)
         val rows = ceil(shown.size.toFloat() / fit.columns).toInt()
-        // Each row holds half a gap above and below its cells.
-        val upright = px((fit.height - rows * (fit.cell + GAP)) / 2)
+        val target = target(fit.cell, fit.height)
+        // Each row holds half a gap above and below its targets.
+        val upright = px((fit.height - rows * (target + GAP)) / 2)
         setViewPadding(R.id.widget_pad, px(side), upright, px(side), upright)
-        cells.pad(this, R.id.widget_pad, shown, fit.columns)
+        cells.pad(this, R.id.widget_pad, shown, fit.columns, inset = px((target - fit.cell) / 2))
     }
 
     /** [layout] on the widget's ground: its colour or the cover of what plays, and what a tap on it opens. */
@@ -148,15 +153,23 @@ internal class WidgetDrawing(
 
     /**
      * [shown] in the row before what plays where it comes [after] them, else in the one after it;
-     * the other row gone. A row as wide as the widget keeps them in the frame with its [sides].
+     * the other row gone. A row as wide as the widget keeps them in the frame with its [sides]; the
+     * cells stand [inset] px in from their targets above and below.
      */
-    private fun RemoteViews.cellsRow(shown: List<PlacedSlot>, after: Boolean, @LayoutRes layout: Int, sides: Boolean = true) {
-        val (row, other) = if (after) R.id.widget_cells_start to R.id.widget_cells_end else R.id.widget_cells_end to R.id.widget_cells_start
+    private fun RemoteViews.cellsRow(
+        shown: List<PlacedSlot>,
+        after: Boolean,
+        @LayoutRes layout: Int,
+        sides: Boolean = true,
+        inset: Int = 0,
+    ) {
+        val row = if (after) R.id.widget_cells_start else R.id.widget_cells_end
+        val other = if (after) R.id.widget_cells_end else R.id.widget_cells_start
         removeAllViews(other)
         shows(other, false)
         shows(row, shown.isNotEmpty())
         if (sides) setViewPadding(row, px(side), 0, px(side), 0)
-        cells.row(this, row, shown, layout)
+        cells.row(this, row, shown, layout, inset)
     }
 
     /**

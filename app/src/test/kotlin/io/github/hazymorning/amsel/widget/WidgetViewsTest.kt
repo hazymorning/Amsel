@@ -181,7 +181,7 @@ class WidgetViewsTest {
     /** Left out, what plays gives the buttons the widget: four in two rows of two. */
     @Test fun withoutWhatPlaysTheButtonsFillTheWidget() {
         val four = DefaultSlots.take(4)
-        val widget = drawn(WidgetSample.music, setup = WidgetSetup(slots = four, words = WidgetWordsPlace.None))
+        val widget = drawn(WidgetSample.music, setup = WidgetSetup(slots = four, showsWords = false))
         assertEquals(false, widget.shows(R.id.widget_words))
         val cells = widget.cells()
         assertEquals(4, cells.size)
@@ -198,7 +198,7 @@ class WidgetViewsTest {
 
     /** Signed out, a widget without what plays still asks to sign in. */
     @Test fun signedOutAWidgetOfButtonsAsksToSignIn() {
-        val widget = drawn(WidgetSample.signedOut, setup = WidgetSetup(words = WidgetWordsPlace.None))
+        val widget = drawn(WidgetSample.signedOut, setup = WidgetSetup(showsWords = false))
         assertEquals("Sign in to Amsel", widget.text(R.id.widget_title))
     }
 }

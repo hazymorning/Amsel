@@ -53,6 +53,8 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
 - **Bare buttons** draw nothing at a row's ends, so their targets reach sideways to 4 dp from the
   widget's edge (`WidgetSizes.REACH`): a square 156 dp wide holds three of them where two cells
   stand, and every glyph still keeps the frame.
+- **Targets stay 48 dp high:** in a row lower than a cell and its frame (a strip 72 dp high), the
+  targets reach into the frame above and below as far, and the cells drawn in them keep the frame.
 - **Shading:** the person chooses which cells show (Button backgrounds): play and pause alone, as it
   comes (Google's expressive toolbar fills its main button alone); every one; or none. A button
   without its cell shows the cell's shade while pressed. Its place stays the same either way, so the
@@ -151,9 +153,10 @@ leaves the widget as it was.
 - Quieter, Louder, shuffle, repeat and the heart act on the speaker the widget shows, from what it
   shows (`StateTaps`): a tap that starts Amsel comes before Amsel knows its speaker, and the volume
   went to the phone's own. Each shows at once, on the widgets and in Amsel (`OptimisticTransport`,
-  `Favorites`); the server takes the step by its own setting (`config/core/get_value`, read now and
-  then), as its volume up and down do, and the widget shows where it lands; two taps in a row step
-  on from the first before the speaker reports it.
+  `Favorites`); the server takes the step by its own setting, as its volume up and down do, and the
+  widget shows at once where it lands by the setting last read (`config/core/get_value`, asked in
+  the background, so a tap never waits for it); two taps in a row step on from the first before the
+  speaker reports it.
 - No `PendingIntent.getForegroundService`: a service started so must show a notification within
   seconds, which a pause or a skip past the end never does.
 - Play and pause change at once and the speaker confirms; a command that fails puts its sentence

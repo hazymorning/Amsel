@@ -141,7 +141,8 @@ object WidgetSizes {
 
 /**
  * The fit of a widget [width] by [height] dp for [buttons] buttons, set in [type]; with a time line
- * where there is [time], what plays [words], and [bare] buttons, which reach into the frame.
+ * where there is [time], what plays unless it is left out ([words]), and [bare] buttons, which reach
+ * into the frame.
  */
 fun widgetFit(
     width: Float,
@@ -149,7 +150,7 @@ fun widgetFit(
     buttons: Int,
     type: WidgetType = WidgetType(),
     time: Boolean = false,
-    words: WidgetWordsPlace = WidgetWordsPlace.Before,
+    words: Boolean = true,
     bare: Boolean = false,
 ): WidgetFit {
     val s = WidgetSizes
@@ -161,7 +162,7 @@ fun widgetFit(
         width < s.TWO_CELLS && oneRow -> WidgetForm.Tile
 
         // Beside buttons a row narrower than a bar has no room for words.
-        buttons > 0 && (words == WidgetWordsPlace.None || oneRow && width < s.WIDE) -> WidgetForm.Pad
+        buttons > 0 && (!words || (oneRow && width < s.WIDE)) -> WidgetForm.Pad
 
         oneRow -> if (width >= s.WIDE) WidgetForm.Bar else WidgetForm.Line
 
@@ -214,6 +215,14 @@ fun widgetFit(
 internal fun span(width: Float, bare: Boolean): Float =
     if (bare) width - 2 * WidgetSizes.REACH else width - 2 * WidgetSizes.PADDING + WidgetSizes.GAP
 
+/**
+ * The height of a row's targets for cells [cell] dp high in a widget [height] dp high: at least a
+ * touch target, reaching past the frame above and below in a lower one, as far as bare buttons do
+ * at the sides.
+ */
+internal fun target(cell: Float, height: Float): Float =
+    maxOf(cell, minOf(WidgetSizes.CELL_MIN, height - 2 * WidgetSizes.REACH))
+
 /** How many of [wanted] targets, each at least a touch target wide, stand side by side in [span] dp. */
 internal fun cells(span: Float, wanted: Int): Int =
     floor((span + EPSILON) / WidgetSizes.CELL_MIN).toInt().coerceIn(0, wanted)
@@ -232,7 +241,8 @@ private fun pad(width: Float, height: Float, buttons: Int, bare: Boolean): Widge
     val columns = ceil(shown.toFloat() / rows).toInt()
     val wide = row / columns - s.GAP
     val most = (height - 2 * s.PADDING - (rows - 1) * s.GAP) / rows
-    return WidgetFit(WidgetForm.Pad, width, height, shown, columns = columns, cell = minOf(most, maxOf(s.CELL_HEIGHT, wide)))
+    val cell = minOf(most, maxOf(s.CELL_HEIGHT, wide))
+    return WidgetFit(WidgetForm.Pad, width, height, shown, columns = columns, cell = cell)
 }
 
 /** The height a row of cells takes beside the words, with the gap between. */

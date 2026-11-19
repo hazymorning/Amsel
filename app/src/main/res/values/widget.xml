@@ -7,6 +7,9 @@
     <dimen name="widget_padding">16dp</dimen>
     <!-- A row of cells spans the widget's width; its padding keeps the cells in the frame. -->
     <dimen name="widget_padding_out">-16dp</dimen>
+    <!-- Bare buttons, and a low row's targets, reach into the frame to 4 dp from the edge
+         (WidgetSizes.REACH). -->
+    <dimen name="widget_reach_out">-12dp</dimen>
     <!-- Half the 4 dp gap between cells: a cell's shape stands this far inside its touch target on
          either side, and a row of targets reaches this far into the frame. -->
     <dimen name="widget_cell_inset">2dp</dimen>

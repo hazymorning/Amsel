@@ -35,8 +35,6 @@ data class WidgetSetupUi(
     val size: SizeF = WidgetKind.NowPlaying.start,
     /** How many of its buttons show at that size. */
     val fits: Int = 0,
-    /** Where what plays stands, also while it is left out: there it comes back. */
-    val wordsAt: WidgetWordsPlace = WidgetWordsPlace.Before,
     val speakers: List<WidgetSpeaker> = emptyList(),
     /** The volume limit, 0 for none: Louder stops there. */
     val volumeLimit: Int = 0,
@@ -53,9 +51,6 @@ class WidgetSetupViewModel(
     private val setup = MutableStateFlow<WidgetSetup?>(null)
     private val size = widgets.size(widgetId)
 
-    /** Where what plays came back, were it left out now. */
-    private val wordsAt = MutableStateFlow(WidgetWordsPlace.Before)
-
     private val look: Flow<WidgetLook> = setup.filterNotNull()
         .map { it.speaker }
         .distinctUntilChanged()
@@ -68,20 +63,14 @@ class WidgetSetupViewModel(
         }
         .onStart { emit(null) }
 
-    private val around = combine(speakers, volumeLimit, wordsAt, ::Triple)
-
     val state: StateFlow<WidgetSetupUi> =
-        combine(setup.filterNotNull(), look, picture, around) { setup, look, picture, (rooms, limit, wordsAt) ->
+        combine(setup.filterNotNull(), look, picture, speakers, volumeLimit) { setup, look, picture, rooms, limit ->
             val fits = widgets.views.fit(size.width, size.height, setup).buttons
-            WidgetSetupUi(setup, look, picture, size, fits, wordsAt, rooms, limit)
+            WidgetSetupUi(setup, look, picture, size, fits, rooms, limit)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), WidgetSetupUi(size = size))
 
     init {
-        viewModelScope.launch {
-            val saved = widgets.setup(widgetId)
-            if (saved.words != WidgetWordsPlace.None) wordsAt.value = saved.words
-            setup.value = saved
-        }
+        viewModelScope.launch { setup.value = widgets.setup(widgetId) }
     }
 
     fun style(style: WidgetStyle) = change { it.copy(style = style) }
@@ -91,17 +80,11 @@ class WidgetSetupViewModel(
 
     fun cells(cells: WidgetCells) = change { it.copy(cells = cells) }
 
-    /** What plays shows, where it stood, or is left out; a widget without buttons keeps it. */
-    fun showWords(on: Boolean) = change {
-        if (!on && it.slots.isEmpty()) it else it.copy(words = if (on) wordsAt.value else WidgetWordsPlace.None)
-    }
+    /** What plays shows, or is left out; a widget without buttons keeps it. */
+    fun showWords(on: Boolean) = change { if (!on && it.slots.isEmpty()) it else it.copy(showsWords = on) }
 
-    /** What plays moves before the buttons or after them; left out, it comes back there. */
-    fun moveWords(place: WidgetWordsPlace) {
-        if (place == WidgetWordsPlace.None) return
-        wordsAt.value = place
-        change { if (it.words == WidgetWordsPlace.None) it else it.copy(words = place) }
-    }
+    /** What plays moves before the buttons or after them. */
+    fun moveWords(place: WidgetWordsPlace) = change { it.copy(words = place) }
 
     /** Button [index] does [button]; one past the last adds it. */
     fun choose(index: Int, button: WidgetButton) = put(index, WidgetSlot(button))
@@ -110,7 +93,7 @@ class WidgetSetupViewModel(
 
     /** Takes button [index] away, unless it is all the widget shows. */
     fun remove(index: Int) = change { setup ->
-        if (setup.words == WidgetWordsPlace.None && setup.slots.size == 1) {
+        if (!setup.showsWords && setup.slots.size == 1) {
             setup
         } else {
             setup.copy(slots = setup.slots.filterIndexed { i, _ -> i != index })

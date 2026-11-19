@@ -3,12 +3,16 @@ package io.github.hazymorning.amsel.widget
 import android.content.Context
 import android.media.AudioManager
 import android.os.SystemClock
+import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.RepeatMode
 import io.github.hazymorning.amsel.app.Favorites
 import io.github.hazymorning.amsel.app.OptimisticTransport
 import io.github.hazymorning.amsel.data.DataGraph
 import io.github.hazymorning.amsel.playback.SpeakerCommands
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /**
  * The widgets' volume, shuffle, repeat and heart, as Amsel's own buttons do them: shown at once
@@ -20,27 +24,29 @@ internal class WidgetCommands(
     private val commands: SpeakerCommands,
     private val optimistic: OptimisticTransport,
     private val favorites: Favorites,
+    private val scope: CoroutineScope,
 ) : WidgetActions {
     override fun volumeLimit(): Int = data.prefs.prefs.value?.volumeLimit ?: 0
 
-    /** The server's setting, read now and then: it rarely changes, and a tap should not wait for it. */
-    private var step: Pair<Int?, Long>? = null
+    /** The server's setting (null: its ladder) and when it was read: it rarely changes. */
+    @Volatile private var step: Pair<Int?, Long>? = null
+    private var asking: Job? = null
 
-    override suspend fun volumeStep(level: Int): Int {
-        val now = SystemClock.elapsedRealtime()
-        val known = step?.takeIf { (_, at) -> now - at < STEP_KEPT_MS }
-        val configured = if (known != null) {
-            known.first
-        } else {
-            (
+    /** What the server said last, else its ladder; read again in the background while a tap goes on. */
+    override fun volumeStep(level: Int): Int {
+        val known = step
+        val stale = known == null || SystemClock.elapsedRealtime() - known.second >= STEP_KEPT_MS
+        if (stale && asking?.isActive != true) {
+            asking = scope.launch {
                 try {
-                    data.session.api.volumeStep()
+                    step = data.session.api.volumeStep() to SystemClock.elapsedRealtime()
                 } catch (e: MaException) {
-                    null
+                    // A refusal (no right to read settings) stands; no answer is asked again at the next tap.
+                    if (e is MaCommandException) step = null to SystemClock.elapsedRealtime()
                 }
-                ).also { step = it to now }
+            }
         }
-        return configured ?: serverStep(level)
+        return known?.first ?: serverStep(level)
     }
 
     override suspend fun nudge(speakerId: String, up: Boolean, shown: Int) =

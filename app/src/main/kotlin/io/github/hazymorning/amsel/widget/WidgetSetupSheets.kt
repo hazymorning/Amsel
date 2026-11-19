@@ -22,6 +22,18 @@ import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.theme.Space
 
+/** Which of the widget page's choices is open on a sheet. */
+sealed interface WidgetSheet : java.io.Serializable {
+    data object Speaker : WidgetSheet
+
+    data object Style : WidgetSheet
+
+    data object Cells : WidgetSheet
+
+    /** What button [slot] does; one past the last adds one. */
+    data class Button(val slot: Int) : WidgetSheet
+}
+
 /** The names of the buttons, from the start. */
 private val SlotNames = listOf(
     R.string.widget_slot_1,

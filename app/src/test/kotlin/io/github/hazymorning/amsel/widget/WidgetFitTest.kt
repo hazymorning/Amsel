@@ -108,25 +108,18 @@ class WidgetFitTest {
 
     /** Without what plays the buttons fill the widget: in as few rows as hold them, cells about square. */
     @Test fun withoutWhatPlaysTheButtonsMakeAPad() {
-        val four = widgetFit(172f, 204f, buttons = 4, words = WidgetWordsPlace.None)
+        val four = widgetFit(172f, 204f, buttons = 4, words = false)
         assertEquals(WidgetForm.Pad, four.form)
         assertEquals(4, four.buttons)
         assertEquals(2, four.columns)
         assertEquals((172f - 2 * PADDING + WidgetSizes.GAP) / 2 - WidgetSizes.GAP, four.cell, 0.01f)
-        val three = widgetFit(172f, 204f, buttons = 3, words = WidgetWordsPlace.None)
+        val three = widgetFit(172f, 204f, buttons = 3, words = false)
         assertEquals(3, three.columns)
         assertEquals(WidgetSizes.CELL_HEIGHT, three.cell, 0.01f)
-        val five = widgetFit(172f, 204f, buttons = 5, words = WidgetWordsPlace.None)
+        val five = widgetFit(172f, 204f, buttons = 5, words = false)
         assertEquals(5, five.buttons)
         assertEquals(3, five.columns)
-        assertEquals(8, widgetFit(356f, 204f, buttons = 8, words = WidgetWordsPlace.None).buttons)
-    }
-
-    /** Before or after the buttons, what plays has the same room. */
-    @Test fun afterTheButtonsTheWordsKeepTheirRoom() {
-        val before = widgetFit(172f, 204f, buttons = 3, time = true)
-        val after = widgetFit(172f, 204f, buttons = 3, time = true, words = WidgetWordsPlace.After)
-        assertEquals(before, after)
+        assertEquals(8, widgetFit(356f, 204f, buttons = 8, words = false).buttons)
     }
 
     /** Two cells wide and three high, the cover stands across, as on a small player; its words under it. */
