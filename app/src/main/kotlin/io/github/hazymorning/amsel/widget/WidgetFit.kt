@@ -206,7 +206,7 @@ fun widgetFit(
             val shown = cells(row, buttons)
             val top = innerHeight - under(shown)
             val art = minOf(top, inner * s.ART_SHARE)
-            said(WidgetFit(form, width, height, shown, art), top, type, shown == 0, time)
+            said(WidgetFit(form, width, height, shown, art), art, type, shown == 0, time)
         }
     }
 }
@@ -265,6 +265,10 @@ private fun said(
     time: Boolean = false,
     strip: Boolean = false,
 ): WidgetFit {
+    // Words in the middle stand there by their ink, from the first capital to the last baseline,
+    // which two small lines' height outruns by more than a lead: their box may take it, half above
+    // and half below the frame, before the speaker's line goes.
+    val centred = fit.form == WidgetForm.Line || fit.form == WidgetForm.Bar || fit.form == WidgetForm.Player
     fun fits(words: WidgetWords, size: WordSize) = words.needs(type, size) <= room + EPSILON
     val lines = listOfNotNull(
         WidgetWords(speaker = true, titleLines = 3, subtitle = true, time = true).takeIf { alone && time && !strip },
@@ -278,7 +282,10 @@ private fun said(
     if (large != null) return fit.copy(words = large, size = WordSize.Large)
     val regular = lines.firstOrNull { fits(it, WordSize.Regular) }
     if (regular != null) return fit.copy(words = regular, size = WordSize.Regular)
-    val (words, size) = listOf(SPEAKER_AND_TITLE to WordSize.Small, TITLE to WordSize.Regular, TITLE to WordSize.Small)
+    if (SPEAKER_AND_TITLE.needs(type, WordSize.Small) <= room + (if (centred) WidgetSizes.LEAD else 0f) + EPSILON) {
+        return fit.copy(words = SPEAKER_AND_TITLE, size = WordSize.Small)
+    }
+    val (words, size) = listOf(TITLE to WordSize.Regular, TITLE to WordSize.Small)
         .firstOrNull { (words, size) -> fits(words, size) } ?: (WidgetWords.None to WordSize.Regular)
     return fit.copy(words = words, size = size)
 }

@@ -65,6 +65,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_marginTop="@dimen/widget_words_lead_out_half"
+                android:layout_marginBottom="@dimen/widget_words_lead_out_half"
                 android:paddingStart="@dimen/widget_art_to_words"
                 android:paddingEnd="0dp" />
         </LinearLayout>

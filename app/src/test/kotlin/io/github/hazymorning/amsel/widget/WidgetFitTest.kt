@@ -91,12 +91,17 @@ class WidgetFitTest {
         assertEquals(WordSize.Large, widgetFit(356f, 320f, buttons = 5, time = true).size)
     }
 
-    /** A strip too low for the speaker's line over the title keeps both, an eighth smaller. */
+    /**
+     * A strip too low for the speaker's line over the title keeps both, an eighth smaller, standing in
+     * its middle by their ink; lower still, the title alone.
+     */
     @Test fun aStripKeepsTwoLinesInSmallerType() {
         val speakerAndTitle = WidgetWords(speaker = true, titleLines = 1, subtitle = false)
         assertEquals(speakerAndTitle to WordSize.Regular, widgetFit(356f, 96f, 3).let { it.words to it.size })
-        assertEquals(speakerAndTitle to WordSize.Small, widgetFit(356f, 72f, 3).let { it.words to it.size })
-        assertEquals(WidgetWords(speaker = false, titleLines = 1, subtitle = false), widgetFit(356f, 60f, 3).words)
+        assertEquals(speakerAndTitle to WordSize.Small, widgetFit(356f, 76f, 3).let { it.words to it.size })
+        assertEquals(speakerAndTitle to WordSize.Small, widgetFit(356f, 66f, 3).let { it.words to it.size })
+        assertEquals(speakerAndTitle to WordSize.Small, widgetFit(356f, 62f, 3).let { it.words to it.size })
+        assertEquals(WidgetWords(speaker = false, titleLines = 1, subtitle = false), widgetFit(356f, 58f, 3).words)
     }
 
     /** Bare buttons reach into the frame: a small square holds three where two cells stand. */
