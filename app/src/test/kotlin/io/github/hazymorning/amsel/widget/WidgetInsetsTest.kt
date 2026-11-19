@@ -193,8 +193,9 @@ class WidgetInsetsTest {
     /** Without what plays, the buttons' grid keeps the frame at the sides, the gaps between, in the middle. */
     @Test fun aPadKeepsItsFrameAndGaps() {
         val four = DefaultSlots.take(4)
+        val pad = widgetFit(WidgetSample.card.width, WidgetSample.card.height, 4, words = WidgetWordsPlace.None)
         // Each row's middle, half a row from the widget's.
-        val half = (widgetFit(WidgetSample.card.width, WidgetSample.card.height, 4, words = WidgetWordsPlace.None).cell + WidgetSizes.GAP) / 2
+        val half = (pad.cell + WidgetSizes.GAP) / 2
         for (actual in around(WidgetSample.card)) {
             val name = "pad at $actual"
             val drawn = draw(four, music, WidgetSample.card, actual, words = WidgetWordsPlace.None)
@@ -211,7 +212,8 @@ class WidgetInsetsTest {
     /** A strip lower than the others keeps its frame: the cover and the cells on it, the words smaller. */
     @Test fun aStripKeepsItsFrame() {
         for (actual in around(WidgetSample.strip)) {
-            assertFrame(WidgetSizes.PADDING, draw(DefaultSlots, WidgetSample.idle, WidgetSample.strip, actual), "strip at $actual")
+            val drawn = draw(DefaultSlots, WidgetSample.idle, WidgetSample.strip, actual)
+            assertFrame(WidgetSizes.PADDING, drawn, "strip at $actual")
         }
     }
 

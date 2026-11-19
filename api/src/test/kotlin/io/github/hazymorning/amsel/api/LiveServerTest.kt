@@ -49,7 +49,7 @@ class LiveServerTest {
         api.recentlyPlayed(13, queueId = kitchen.playerId)
     }
 
-    @Test fun `play an album on a speaker, move it, change the volume`() = live { api, _ ->
+    @Test fun `play an album on a speaker, move it, change the volume by a level and a step`() = live { api, _ ->
         val speakers = waitForSpeakers(api)
         val kitchen = speakers.first { it.shownName == "Kitchen" }
         val living = speakers.first { it.shownName == "Living Room" }
@@ -76,6 +76,10 @@ class LiveServerTest {
 
         api.setVolume(living.playerId, 25)
         waitFor { api.players().firstOrNull { it.playerId == living.playerId }?.takeIf { it.volumeLevel == 25 } }
+        // Louder takes the server's step: its setting, or its ladder's 2 between 10 and 30.
+        val louder = 25 + (api.volumeStep() ?: 2)
+        api.volumeUp(living.playerId)
+        waitFor { api.players().firstOrNull { it.playerId == living.playerId }?.takeIf { it.volumeLevel == louder } }
         api.pause(living.playerId)
     }
 
