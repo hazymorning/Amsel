@@ -91,10 +91,41 @@ update (`updatePeriodMillis` 0): what the web UI or another phone starts shows o
 again, which any button does. The last state and its blurred cover are kept on the phone, so a
 restart draws the widget without the server.
 
-## Not in this first widget
+## Next: one widget in three sizes (owner's feedback, 2026-11-19)
 
-A widget for one room, with a speaker of its own instead of the one in use; a progress line; layouts
-for other sizes.
+The first widget works, but offers too little: four buttons always, and on a narrow launcher its
+play disc was cut at the sides. Decided after a survey of other players and Google's widget quality
+guidance (below):
+
+- **One widget, three ways in.** The widget picker lists it by its starting size: Button (1 × 1),
+  Buttons (2 × 1), Now playing (2 × 2). Each can be resized and changes its form with its size
+  (responsive `RemoteViews` on Android 12 and up, chosen from the reported size below): one cell,
+  one button; one row, buttons, and from four cells wide the cover at the start with what plays;
+  two rows, what plays over its buttons; from four cells wide a player, the cover at the start.
+- **None to four buttons, in the person's order.** Each takes 48 dp; what does not fit at a size
+  drops whole, from the end, never cut (Google's toolbar rule). The play disc fits its room.
+- **One look of three:** Cover (as now), Plain in the system's colours on Android 12 and up
+  (Material You, as Clock and Weather; Amsel's paper below), or Clear: no background, words and
+  glyphs in the tone Android advises for the wallpaper (`WallpaperColors.HINT_SUPPORTS_DARK_TEXT`).
+- **The speaker:** as in Amsel, or one of its own ("Kitchen"), the first thing Sonos and Home
+  Assistant ask.
+- **No padding, corner or font settings:** a launcher sets widgets edge to edge in their cells and
+  Google asks apps not to pad around them; the inner room follows the size, the corner stays the
+  launcher's, the words the phone's font.
+- Android's own ways stay (light and dark, the system's corner, the launch animation, change by a
+  long press) and gain the system's colours, a preview made from the real widget (Android 15) and
+  the lock screen (Android 16 QPR2, where every widget may stand).
+- **Home Assistant actions: not in Amsel** (`docs/PARKING-LOT.md`). Possible without a token (an
+  automation with a webhook trigger, `POST /api/webhook/<id>`), but every button would need setting
+  up in Home Assistant, whose own app already has action and media widgets to stand beside Amsel's.
+
+Survey (November 2026: Spotify, YouTube Music, Apple Music, Plexamp, Symfonium, Poweramp, Sonos,
+Pocket Casts, Audiobookshelf, Absorb, Lissen, Samsung Music, Auxio, Retro Music, Namida, Home
+Assistant). The best are one resizable widget that adds content as it grows (Auxio, Pocket Casts,
+Plexamp). Settings, where there are any, are the speaker, the background (opacity, dynamic colour)
+and the buttons; corners, padding, fonts and presets are Poweramp's and Namida's extras. Seen to
+fail: controls clipped at slim sizes, empty space at large ones, stale or blank widgets, too much
+image memory (Android 17 refuses it).
 
 ## Code
 
