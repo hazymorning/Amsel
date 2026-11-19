@@ -27,6 +27,8 @@ Amsel is a music player for Music Assistant, made for Android. It comes in light
 
 <br>
 
+**Widgets for the home screen:**
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/design/readme/widgets-dark.webp">
   <img src="docs/design/readme/widgets-light.webp" alt="Six home screen widgets: two players, a square, two strips and a row of buttons, each with play in its cover's colour">
