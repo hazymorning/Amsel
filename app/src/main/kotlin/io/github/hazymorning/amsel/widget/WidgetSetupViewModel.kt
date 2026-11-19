@@ -78,6 +78,8 @@ class WidgetSetupViewModel(
     /** Null: where Amsel plays. */
     fun speaker(id: String?) = change { it.copy(speaker = id) }
 
+    fun cells(cells: WidgetCells) = change { it.copy(cells = cells) }
+
     /** Button [index] does [button]; one past the last adds it. */
     fun choose(index: Int, button: WidgetButton) = put(index, WidgetSlot(button))
 

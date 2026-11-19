@@ -24,4 +24,6 @@
     <dimen name="widget_art_to_words_lead">6dp</dimen>
     <!-- A cell's corner: the widget's own (28) less the frame (12), so the two curves run alike. -->
     <dimen name="widget_cell_radius">16dp</dimen>
+    <!-- Half the cover's own top margin: a view centred with a top margin moves down by all of it. -->
+    <dimen name="widget_words_on_art">3dp</dimen>
 </resources>

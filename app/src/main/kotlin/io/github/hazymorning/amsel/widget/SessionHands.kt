@@ -3,7 +3,6 @@ package io.github.hazymorning.amsel.widget
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
 import android.view.KeyEvent
 import androidx.core.content.ContextCompat
 import androidx.media3.common.MediaItem
@@ -32,22 +31,18 @@ interface WidgetHands {
 
     suspend fun previous()
 
-    suspend fun volume(up: Boolean)
-
     suspend fun play(item: WidgetItem)
 }
 
 /**
  * The widget's taps, put to the one playback session as Amsel's own buttons put theirs: through a
  * controller, which starts the service when it is not running and lets it go after the command.
- * So the widget keeps Amsel's rules: a book's skips, the volume limit, a failure said plainly.
+ * So the widget keeps Amsel's rules: a book's skips, a failure said plainly.
  * Main thread only.
  */
 internal class SessionHands(
     private val context: Context,
     private val wakeSession: () -> Unit,
-    /** The session holds This phone, whose volume is the phone's own. */
-    private val onPhone: () -> Boolean,
     /** The tap shows at once on the widgets and in Amsel, before the speaker answers. */
     private val showPlaying: (Boolean) -> Unit,
 ) : WidgetHands {
@@ -81,18 +76,6 @@ internal class SessionHands(
 
     override suspend fun previous() = control(Player.COMMAND_SEEK_BACK, Player.COMMAND_SEEK_TO_PREVIOUS) {
         if (it.isCommandAvailable(Player.COMMAND_SEEK_BACK)) it.seekBack() else it.seekToPrevious()
-    }
-
-    override suspend fun volume(up: Boolean) {
-        if (onPhone()) {
-            val audio = context.getSystemService(AudioManager::class.java) ?: return
-            val direction = if (up) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER
-            audio.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
-            return
-        }
-        control(Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS) {
-            if (up) it.increaseDeviceVolume(0) else it.decreaseDeviceVolume(0)
-        }
     }
 
     /** As a car's play: the session's speaker plays [item], and shows its title while it starts. */

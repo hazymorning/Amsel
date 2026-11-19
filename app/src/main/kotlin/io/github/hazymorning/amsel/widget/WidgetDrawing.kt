@@ -1,6 +1,5 @@
 package io.github.hazymorning.amsel.widget
 
-import android.app.PendingIntent
 import android.content.Context
 import android.widget.RemoteViews
 import io.github.hazymorning.amsel.R
@@ -27,15 +26,18 @@ internal class WidgetDrawing(
     private val ground = WidgetGround.of(setup.style, pictures.cover.takeIf { playing }, clearInk)
     private val tone = ground.tone
     private val density = context.resources.displayMetrics.density
+    private val buttons =
+        WidgetCellsViews(context, text, slots, id, setup, look, pictures, tone, ground.cover, taps, ::px)
 
     fun views(fit: WidgetFit): RemoteViews {
-        val views = RemoteViews(context.packageName, fit.form.layout)
+        val views = RemoteViews(context.packageName, fit.layout)
         when (fit.form) {
             WidgetForm.Tile -> views.tile(fit)
             WidgetForm.Row -> views.row(fit)
             WidgetForm.Card -> views.card(fit)
             WidgetForm.Bar -> views.bar(fit)
             WidgetForm.Player -> views.player(fit)
+            WidgetForm.Poster -> views.poster(fit)
         }
         return views
     }
@@ -50,6 +52,7 @@ internal class WidgetDrawing(
         }
         shows(R.id.widget_cover, cover != null)
         shows(R.id.widget_veil, cover != null)
+        setContentDescription(android.R.id.background, slots.summary(look))
         if (taps) {
             setOnClickPendingIntent(
                 android.R.id.background,
@@ -61,15 +64,25 @@ internal class WidgetDrawing(
     private fun RemoteViews.card(fit: WidgetFit) {
         ground()
         words(fit, centred = false, width = fit.width - 2 * WidgetSizes.PADDING)
-        cells(fit)
+        buttons.draw(this, fit, buttonsShown(fit))
     }
 
     private fun RemoteViews.player(fit: WidgetFit) {
         ground()
         art(fit, cap = true)
+        val cells = if (buttonsShown(fit) > 0) WidgetSizes.CELL_HEIGHT + WidgetSizes.WORDS_TO_CELLS else 0f
+        val top = fit.height - 2 * WidgetSizes.PADDING - cells
+        setViewPadding(R.id.widget_top, 0, 0, 0, px(top - fit.art))
         val column = fit.width - 2 * WidgetSizes.PADDING - fit.art - WidgetSizes.ART_TO_WORDS
-        words(fit, centred = false, width = column)
-        cells(fit)
+        words(fit, centred = true, width = column)
+        buttons.draw(this, fit, buttonsShown(fit))
+    }
+
+    private fun RemoteViews.poster(fit: WidgetFit) {
+        ground()
+        art(fit, cap = false)
+        words(fit, centred = false, width = fit.width - 2 * WidgetSizes.PADDING)
+        buttons.draw(this, fit, buttonsShown(fit))
     }
 
     private fun RemoteViews.bar(fit: WidgetFit) {
@@ -79,7 +92,7 @@ internal class WidgetDrawing(
         val cells = if (shown == 0) 0f else shown * WidgetSizes.BAR_CELL - WidgetSizes.GAP + WidgetSizes.WORDS_TO_CELLS
         val column = fit.width - 2 * WidgetSizes.PADDING - fit.art - WidgetSizes.ART_TO_WORDS - cells
         words(fit, centred = true, width = column)
-        cells(fit)
+        buttons.draw(this, fit, buttonsShown(fit))
     }
 
     private fun RemoteViews.row(fit: WidgetFit) {
@@ -89,13 +102,15 @@ internal class WidgetDrawing(
         } else {
             shows(R.id.widget_words, false)
         }
-        cells(fit)
+        buttons.draw(this, fit, buttonsShown(fit))
     }
 
     private fun buttonsShown(fit: WidgetFit): Int = if (look.signedIn) fit.buttons else 0
 
-    private fun RemoteViews.words(fit: WidgetFit, centred: Boolean, width: Float) =
-        WidgetWordsViews(context, text, look, setup.slots, tone, ::px).draw(this, fit.words, centred, width)
+    private fun RemoteViews.words(fit: WidgetFit, centred: Boolean, width: Float) {
+        val type = if (fit.large) text.scaled(WidgetSizes.LARGE) else text
+        WidgetWordsViews(context, type, look, setup.slots, tone, ::px).draw(this, fit.words, centred, width)
+    }
 
     /**
      * A bar's or a player's cover, as high as its place in the layout; empty while nothing plays. A
@@ -131,67 +146,7 @@ internal class WidgetDrawing(
             glyphColor(context, glyphView, tone.quiet)
             val size = if (large) LARGE_GLYPH else WidgetSizes.GLYPH
             setImageViewResource(glyphView, text.cut(R.drawable.ic_track, size))
-            centre(glyphView, text.glyph(R.drawable.ic_track, size), ART_GLYPH_ROOM)
-        }
-    }
-
-    /** The first [WidgetFit.buttons] buttons as cells; the layout gives them equal widths and gaps. */
-    private fun RemoteViews.cells(fit: WidgetFit) {
-        val shown = buttonsShown(fit)
-        shows(R.id.widget_row, shown > 0)
-        for (index in 0 until MAX_BUTTONS) {
-            val ids = SlotIds.of(index)
-            val slot = setup.slots.getOrNull(index)?.takeIf { index < shown }
-            shows(ids.slot, slot != null)
-            if (slot != null) cell(index, slot)
-        }
-    }
-
-    /** Button [index]: a cell in the tone's shade, play and pause filled; its glyph's ink in the middle. */
-    private fun RemoteViews.cell(index: Int, slot: WidgetSlot) {
-        val ids = SlotIds.of(index)
-        val play = slot.button == WidgetButton.PlayPause
-        setInt(ids.slot, "setBackgroundResource", if (play) tone.playCell else tone.cell)
-        val face = pictures.faces[slot.item?.art]?.takeIf { slot.button == WidgetButton.PlayItem }
-        shows(ids.face, face != null)
-        shows(ids.glyph, face == null)
-        if (face != null) {
-            setImageViewBitmap(ids.face, face)
-            setViewPadding(ids.slot, 0, 0, 0, 0)
-        } else {
-            val glyph = slot.button.glyphFor(look)
-            setImageViewResource(ids.glyph, glyph)
-            glyphColor(context, ids.glyph, if (play) tone.onDisc else tone.glyph)
-            // The play triangle keeps its own optical middle, as on the dock's disc.
-            val drawn = text.glyph(glyph, WidgetSizes.GLYPH).takeUnless { play }
-            centre(ids.slot, drawn, room = 0f)
-        }
-        setContentDescription(ids.slot, slots.label(slot, look))
-        if (taps) setOnClickPendingIntent(ids.slot, press(index, slot))
-    }
-
-    /**
-     * Moves what [view] holds so [drawn]'s ink, not its square, stands in the middle; [room] is the
-     * padding the view keeps on every side anyway. A padding moves its content by half its difference.
-     */
-    private fun RemoteViews.centre(view: Int, drawn: GlyphPlace?, room: Float) {
-        val dx = drawn?.dx ?: 0f
-        val dy = drawn?.dy ?: 0f
-        if (room > 0f) {
-            setViewPadding(view, px(room - dx), px(room - dy), px(room + dx), px(room + dy))
-        } else {
-            setViewPadding(
-                view,
-                px(maxOf(0f, -2 * dx)),
-                px(maxOf(0f, -2 * dy)),
-                px(maxOf(0f, 2 * dx)),
-                px(
-                    maxOf(
-                        0f,
-                        2 * dy,
-                    ),
-                ),
-            )
+            centre(glyphView, text.glyph(R.drawable.ic_track, size), ART_GLYPH_ROOM, ::px)
         }
     }
 
@@ -200,7 +155,8 @@ internal class WidgetDrawing(
      * is its item's cover, a tile without buttons the cover of what plays.
      */
     private fun RemoteViews.tile(fit: WidgetFit) {
-        val slot = setup.slots.firstOrNull()?.takeIf { buttonsShown(fit) > 0 }
+        val first = setup.slots.withIndex().firstOrNull { it.value.button.availableIn(look) }
+        val slot = first?.value?.takeIf { buttonsShown(fit) > 0 }
         val side = px(minOf(fit.width, fit.height))
         val face = when {
             slot?.button == WidgetButton.PlayItem -> pictures.tiles[side]
@@ -216,7 +172,7 @@ internal class WidgetDrawing(
             setImageViewBitmap(R.id.widget_face, face)
             night?.let { setImageViewBitmap(R.id.widget_face_night, it) }
         } else {
-            tileCell(slot)
+            buttons.tileCell(this, slot)
         }
         val says = when {
             !look.signedIn -> context.getString(R.string.widget_sign_in)
@@ -228,25 +184,9 @@ internal class WidgetDrawing(
         val press = when {
             !look.signedIn -> open(context, null)
             slot == null -> open(context, Opening.NowPlaying)
-            else -> press(0, slot)
+            else -> buttons.press(first.index, slot)
         }
         setOnClickPendingIntent(android.R.id.background, press)
-    }
-
-    /** A tile's cell: filled for play and pause; the speaker's glyph where there is no button. */
-    private fun RemoteViews.tileCell(slot: WidgetSlot?) {
-        val play = slot?.button == WidgetButton.PlayPause
-        val glyph = slot?.button?.glyphFor(look) ?: R.drawable.ic_speaker
-        setInt(R.id.widget_tile_cell, "setBackgroundResource", if (play) tone.playCell else tone.cell)
-        setImageViewResource(R.id.widget_tile_glyph, glyph)
-        glyphColor(context, R.id.widget_tile_glyph, if (play) tone.onDisc else tone.glyph)
-        centre(R.id.widget_tile_cell, text.glyph(glyph, WidgetSizes.GLYPH).takeUnless { play }, room = 0f)
-    }
-
-    private fun press(index: Int, slot: WidgetSlot): PendingIntent = when {
-        !look.signedIn -> open(context, null)
-        slot.button == WidgetButton.Speakers -> open(context, Opening.Speakers)
-        else -> WidgetTaps.pending(context, id, index, shownPlaying = look.playing)
     }
 
     private fun px(dp: Float): Int = (dp * density).roundToInt().coerceAtLeast(0)
@@ -261,11 +201,12 @@ internal class WidgetDrawing(
     }
 }
 
-private val WidgetForm.layout: Int
-    get() = when (this) {
+private val WidgetFit.layout: Int
+    get() = when (form) {
         WidgetForm.Tile -> R.layout.widget_tile
         WidgetForm.Row -> R.layout.widget_row
-        WidgetForm.Card -> R.layout.widget_card
+        WidgetForm.Card -> if (large) R.layout.widget_card_large else R.layout.widget_card
         WidgetForm.Bar -> R.layout.widget_bar
-        WidgetForm.Player -> R.layout.widget_player
+        WidgetForm.Player -> if (large) R.layout.widget_player_large else R.layout.widget_player
+        WidgetForm.Poster -> R.layout.widget_poster
     }

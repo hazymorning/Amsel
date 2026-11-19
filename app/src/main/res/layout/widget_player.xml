@@ -35,7 +35,12 @@
         android:paddingEnd="@dimen/widget_padding"
         android:paddingBottom="@dimen/widget_padding">
 
+        <!-- The words stand in the middle of the cover's height, by their ink (WidgetWordsViews). -->
+        <!-- Its bottom padding (WidgetDrawing.player) leaves it as high as the cover where the cover is
+             capped at half the width, so the cover stands on the frame and what it leaves lies above
+             the cells. -->
         <LinearLayout
+            android:id="@+id/widget_top"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -53,7 +58,9 @@
                 layout="@layout/widget_words"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/widget_art_to_words_lead" />
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/widget_art_to_words_lead"
+                android:layout_marginTop="@dimen/widget_words_on_art" />
         </LinearLayout>
 
         <include

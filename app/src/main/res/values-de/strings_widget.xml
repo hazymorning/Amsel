@@ -4,7 +4,7 @@
     <string name="widget_name_buttons">Tasten</string>
     <string name="widget_name_now_playing">Läuft gerade</string>
     <string name="widget_description_button">Eine Taste, so groß wie ein App-Symbol</string>
-    <string name="widget_description_buttons">Bis zu drei Tasten in einer Reihe</string>
+    <string name="widget_description_buttons">Tasten in einer Reihe, so viele wie Platz haben</string>
     <string name="widget_description">Was wo läuft, mit Tasten nach deiner Wahl</string>
     <string name="widget_setup_title">Widget</string>
     <string name="widget_setup_done">Fertig</string>
@@ -35,4 +35,23 @@
     <string name="widget_pick_title">Etwas abspielen</string>
     <string name="widget_sign_in">Bei Amsel anmelden</string>
     <string name="widget_nothing_to_continue">Kein Buch und keine Folge zum Weiterhören</string>
+    <string name="widget_slot_5">Fünfte Taste</string>
+    <string name="widget_slot_6">Sechste Taste</string>
+    <string name="widget_slot_7">Siebte Taste</string>
+    <string name="widget_slot_8">Achte Taste</string>
+    <string name="widget_cells">Flächen hinter den Tasten</string>
+    <string name="widget_cells_play">Nur Abspielen</string>
+    <string name="widget_cells_all">Alle Tasten</string>
+    <string name="widget_cells_none">Keine</string>
+    <plurals name="widget_fits">
+        <item quantity="one">bei dieser Größe passt eine</item>
+        <item quantity="other">bei dieser Größe passen %d</item>
+    </plurals>
+    <string name="widget_at_limit">Deine Grenze von %1$s ist erreicht</string>
+    <string name="widget_time_left">noch %1$s</string>
+    <string name="widget_state">%1$s, %2$s</string>
+    <string name="widget_on">an</string>
+    <string name="widget_off">aus</string>
+    <string name="widget_summary_playing">%1$s. Läuft auf %2$s</string>
+    <string name="widget_summary_paused">%1$s. Pausiert auf %2$s</string>
 </resources>

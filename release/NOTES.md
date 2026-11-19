@@ -1,15 +1,21 @@
-# Pecking order
+# Full plumage
 
 ## New
 
-- **Move your buttons:** on a widget's page, drag a button by its handle to where it belongs; TalkBack can move it too.
+- **Buttons your way:** choose which buttons sit on a shaded cell: play alone, every one, or none.
+- **Room for more:** a wide widget holds up to eight buttons; its page says how many fit.
+- **Heart, shuffle and repeat:** new buttons that show whether they are on.
+- **The time:** a song's place and length, or what a book has left, counts on by itself.
+- **Tall widgets show the cover,** like a small player.
 
 ## Better
 
-- **Widgets laid out evenly:** every widget keeps the same room on all four sides, and its buttons are cells of equal width with equal gaps between them, at whatever size your home screen gives it. Play and pause is the filled one.
-- **One button, one cell:** the widget the size of an app icon shows its button in the same cell as the larger ones.
-- **Room for words in large type:** the wide one-row widget gives a button way before it cuts what plays.
+- **Play in the cover's colour.**
+- **Words beside a cover stand in its middle,** and grow on large widgets.
+- **Buttons in one row** are no taller than elsewhere.
+- **The widget picker** shows what plays now, from Android 15.
+- **TalkBack** hears what plays where, and whether shuffle or the heart is on.
 
 ## Fixed
 
-- **Spacing on real home screens:** a button no longer crowds the widget's edge, as the speaker button did at the end of a two-cell row.
+- **Quieter and Louder:** each tap moves the shown speaker one step, shown at once; a tap that started Amsel no longer changed the phone's volume.
