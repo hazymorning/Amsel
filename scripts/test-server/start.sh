@@ -25,7 +25,12 @@ IMAGE="ghcr.io/music-assistant/server:$TAG"
 
 if [[ "${PULL:-0}" == "1" ]] || ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   echo "Pulling $IMAGE ..." >&2
-  docker pull -q "$IMAGE" >&2
+  # A registry that stumbles for a moment is asked again a little later.
+  for try in 1 2 3; do
+    docker pull -q "$IMAGE" >&2 && break
+    if ((try == 3)); then exit 1; fi
+    sleep $((try * 20))
+  done
 fi
 
 if [[ ! -d "$LIB" ]]; then

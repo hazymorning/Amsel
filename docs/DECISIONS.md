@@ -818,3 +818,7 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-19 | A widget's button cell stands 2 dp inside its touch target, so targets meet and stay 48 dp or more while three cells fit two cells of a usual phone | Q1 (48 dp targets) |
 | 2026-11-19 | A one-cell widget shows its button in the same framed cell as the larger ones | Q3 (one shape) |
 | 2026-11-19 | A widget's buttons move into order on its page by their handle, a held press or TalkBack's actions, as on Amsel's arrange pages | Owner |
+| 2026-11-19 | CI's jobs and a local run share `scripts/check.sh`; all of it runs before every pull request, the live servers in Docker too, so CI passes the first time and mails no failure | Owner (no more failure mails) |
+| 2026-11-19 | Robolectric's Android is a Gradle dependency (offline Robolectric, `amsel.robolectric`), so it sits in Gradle's cache; before, three jobs a run fetched its 213 MB from Maven Central, which refused CI with 429 on 2026-11-18 | Evidence; Q4 |
+| 2026-11-19 | After each release its `caches` job runs CI's checks on main only to fill the cache pull requests read, which they could not before: CI wrote no cache, being on pull requests only. CI itself still runs once per change, on its pull request | Owner (tests and releases faster); Q4 |
+| 2026-11-19 | A newer push no longer cancels a CI run: every run ends passed or failed | Owner (no more failure mails) |

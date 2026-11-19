@@ -91,8 +91,10 @@ Words in the UI: "speaker" not "player", "Play on" not "transfer", "Up next" not
 ./gradlew ktlintCheck
 ./gradlew :app:checkBudgets
 scripts/test-server/start.sh 2.11.0b7    # local Music Assistant in Docker
+scripts/check.sh                         # all CI runs, live servers too
 ```
 
 Done means: unit tests and the kept screenshots pass, changed screens are looked at in light, dark
 and 200% and pass `scripts/design/measure.py`, TalkBack labels and 48 dp targets are in place, no
-new warnings. A fix runs only the tests for what it touched; the full suite runs before a release.
+new warnings. A fix runs only the tests for what it touched; every pull request first passes
+`scripts/check.sh`, all CI runs.
