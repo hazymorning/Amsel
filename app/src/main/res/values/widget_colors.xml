@@ -41,6 +41,8 @@
     <color name="widget_veil_dark_top">#380A0A09</color>
     <color name="widget_veil_dark_middle">#4D0A0A09</color>
     <color name="widget_veil_dark_bottom">#750A0A09</color>
+    <!-- Paper reads on any cover under it: on a white one at 5.8 to 1, the quiet words at 3.9. -->
+    <color name="widget_veil_darkened">#A80A0A09</color>
     <color name="widget_cell_light">#1F191A17</color>
     <color name="widget_cell_dark">#2EF2F1EC</color>
     <color name="widget_cell_plain">#1F191A17</color>

@@ -22,8 +22,9 @@ import io.github.hazymorning.amsel.ui.theme.Shapes
 import kotlin.math.pow
 
 /**
- * The cover as the widget lays it down: blurred small, whether ink reads on it better than paper,
- * and its own colour for play and pause, if it has one ([WidgetArt.accent]).
+ * The cover as the widget lays it down: blurred small, or sharp under the Darkened look's veil;
+ * whether ink reads on it better than paper; and its own colour for play and pause, if it has one
+ * ([WidgetArt.accent]).
  */
 class WidgetCover(val bitmap: Bitmap, val light: Boolean, val accent: WidgetAccent? = null)
 
@@ -51,6 +52,17 @@ object WidgetArt {
         val blurred = Bitmap.createBitmap(pixels, SIDE, SIDE, Bitmap.Config.ARGB_8888)
         val light = inkReads(pixels, SIDE, SIDE)
         return WidgetCover(blurred, light, accent(sharp, light))
+    }
+
+    /**
+     * The cover itself for the Darkened look, square, which the widget crops to its own shape: the
+     * veil over it lets paper read whatever it shows, so play takes the cover's colour bright.
+     */
+    fun darkened(source: Bitmap): WidgetCover {
+        val square = centerSquare(source)
+        val sharp = IntArray(SIDE * SIDE)
+        square.scale(SIDE, SIDE).getPixels(sharp, 0, SIDE, 0, 0, SIDE, SIDE)
+        return WidgetCover(square, light = false, accent(sharp, light = false))
     }
 
     /**
@@ -91,12 +103,20 @@ object WidgetArt {
 
     /**
      * A cover [px] square in Amsel's cover corners for its size at [density], with the hairline every
-     * cover carries just inside its edge: a Play … button's face, a tile's, a bar's or a player's cover.
+     * cover carries just inside its edge: a tile's, a bar's, a player's or a poster's cover.
      */
-    fun shaped(source: Bitmap, px: Int, density: Float): Bitmap {
+    fun shaped(source: Bitmap, px: Int, density: Float): Bitmap =
+        outline(px, density)?.let { cut(source, px, density, it) } ?: createBitmap(px, px)
+
+    /**
+     * A cover [px] across, cut round, with the same hairline: a Play … button, which starts what it
+     * shows, is round wherever it stands; rule 7's one exception, as the owner asked.
+     */
+    fun round(source: Bitmap, px: Int, density: Float): Bitmap = cut(source, px, density, circle(px))
+
+    private fun cut(source: Bitmap, px: Int, density: Float, path: Path): Bitmap {
         val square = centerSquare(source)
         val out = createBitmap(px, px)
-        val path = outline(px, density) ?: return out
         val scale = px.toFloat() / square.width
         val shader = BitmapShader(square, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
             setLocalMatrix(Matrix().apply { setScale(scale, scale) })
@@ -112,13 +132,15 @@ object WidgetArt {
         return out
     }
 
-    /** The cover's shape [px] square, empty: white, for the widget to tint in its tone's shade. */
-    fun blank(px: Int, density: Float): Bitmap {
+    /** The cover's shape [px] square, or [round], empty: white, for the widget to tint in its tone's shade. */
+    fun blank(px: Int, density: Float, round: Boolean = false): Bitmap {
         val out = createBitmap(px, px)
-        val path = outline(px, density) ?: return out
+        val path = (if (round) circle(px) else outline(px, density)) ?: return out
         Canvas(out).drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE })
         return out
     }
+
+    private fun circle(px: Int) = Path().apply { addCircle(px / 2f, px / 2f, px / 2f, Path.Direction.CW) }
 
     private fun outline(px: Int, density: Float): Path? {
         val size = Size(px.toFloat(), px.toFloat())

@@ -14,7 +14,7 @@ import io.github.hazymorning.amsel.ui.components.weighted
 
 /** A widget's three kinds of words, as res/layout/widget_words.xml sets them: size and line in sp. */
 internal enum class WidgetLine(val size: Float, val weight: Int, val line: Float) {
-    Speaker(13f, 600, 16f),
+    Speaker(13f, 400, 16f),
     Title(16f, 700, 20f),
     Subtitle(13f, 400, 16f),
 }
@@ -77,6 +77,15 @@ internal class WidgetText(private val context: Context, val size: WordSize = Wor
         return bounds.left / metrics.density
     }
 
+    /** How far [text]'s last letter's ink stands in from its end. */
+    fun endBearing(text: String, line: WidgetLine): Float {
+        if (text.isEmpty()) return 0f
+        val start = text.offsetByCodePoints(text.length, -1)
+        val paint = paint(line)
+        val bounds = Rect().also { paint.getTextBounds(text, start, text.length, it) }
+        return (paint.measureText(text, start, text.length) - bounds.right) / metrics.density
+    }
+
     /** Where the words' ink starts below their top: the speaker's glyph, or its name's capitals. */
     fun wordsTop(words: WidgetWords): Float {
         if (!words.speaker) return capTop(WidgetLine.Title)
@@ -134,20 +143,30 @@ internal class WidgetText(private val context: Context, val size: WordSize = Wor
     }
 
     /** How far the speaker's glyph's ink stands in from its square's start and end. */
-    fun speakerSides(): Pair<Float, Float> {
+    fun speakerSides(): Pair<Float, Float> = sides(SPEAKER)
+
+    /** How far the level's glyph's ink stands in from its square's start and end. */
+    fun levelSides(): Pair<Float, Float> = sides(VOLUME)
+
+    private fun sides(@DrawableRes glyph: Int): Pair<Float, Float> {
         val side = speakerGlyph
-        val ink = inkOf(weighted(SPEAKER, side.dp))
+        val ink = inkOf(weighted(glyph, side.dp))
         return side * ink.left / GRID to side * (GRID - ink.right) / GRID
     }
 
     @get:DrawableRes
     val speakerCut: Int get() = weighted(SPEAKER, speakerGlyph.dp)
 
+    /** The level's glyph, as large as the speaker's. */
+    @get:DrawableRes
+    val levelCut: Int get() = weighted(VOLUME, speakerGlyph.dp)
+
     private fun Byte.isRightToLeft() =
         this == Character.DIRECTIONALITY_RIGHT_TO_LEFT || this == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
 
     private companion object {
         val SPEAKER = io.github.hazymorning.amsel.R.drawable.ic_speaker
+        val VOLUME = io.github.hazymorning.amsel.R.drawable.ic_volume
 
         /** Phosphor's grid. */
         const val GRID = 256f

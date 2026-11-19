@@ -35,6 +35,8 @@ data class WidgetSetupUi(
     val size: SizeF = WidgetKind.NowPlaying.start,
     /** How many of its buttons show at that size. */
     val fits: Int = 0,
+    /** Which of them, by their place: play and pause, and those nearest the end ([standing]). */
+    val standing: Set<Int> = emptySet(),
     val speakers: List<WidgetSpeaker> = emptyList(),
     /** The volume limit, 0 for none: Louder stops there. */
     val volumeLimit: Int = 0,
@@ -66,7 +68,8 @@ class WidgetSetupViewModel(
     val state: StateFlow<WidgetSetupUi> =
         combine(setup.filterNotNull(), look, picture, speakers, volumeLimit) { setup, look, picture, rooms, limit ->
             val fits = widgets.views.fit(size.width, size.height, setup).buttons
-            WidgetSetupUi(setup, look, picture, size, fits, rooms, limit)
+            val standing = standing(setup.slots.indices.toList(), fits) { setup.slots[it].button }.toSet()
+            WidgetSetupUi(setup, look, picture, size, fits, standing, rooms, limit)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), WidgetSetupUi(size = size))
 
     init {

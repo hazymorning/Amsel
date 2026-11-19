@@ -43,9 +43,9 @@
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- amsel://search, amsel://now-playing and amsel://speakers (Opening): for the launcher's
-                 shortcuts, and for a widget such as KWGT, which opens them as links. They only
-                 open a screen. -->
+            <!-- amsel://search, amsel://now-playing, amsel://up-next and amsel://speakers (Opening):
+                 for the launcher's shortcuts and Amsel's widgets, and for a widget such as KWGT,
+                 which opens them as links. They only open a screen. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -53,6 +53,7 @@
                 <data android:scheme="amsel" />
                 <data android:host="search" />
                 <data android:host="now-playing" />
+                <data android:host="up-next" />
                 <data android:host="speakers" />
             </intent-filter>
             <meta-data

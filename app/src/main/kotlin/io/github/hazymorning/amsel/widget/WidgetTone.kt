@@ -9,12 +9,19 @@ import androidx.annotation.DrawableRes
 import androidx.core.graphics.ColorUtils
 import io.github.hazymorning.amsel.R
 
-/** How a widget dresses: over the cover of what plays, plain in the system's colours, or clear on the wallpaper. */
+/**
+ * How a widget dresses: over the cover of what plays, blurred or sharp and darkened; plain in the
+ * system's colours; or clear on the wallpaper.
+ */
 enum class WidgetStyle(val id: String) {
     Cover("cover"),
+    Darkened("darkened"),
     Plain("plain"),
     Clear("clear"),
     ;
+
+    /** Over the cover of what plays, which gives play and pause its colour. */
+    val covered: Boolean get() = this == Cover || this == Darkened
 
     companion object {
         fun of(id: String?): WidgetStyle = entries.firstOrNull { it.id == id } ?: Cover
@@ -90,18 +97,30 @@ internal enum class Tone(
     ),
 }
 
-/** What lies under a widget's words: its ground, and the cover under a veil where it shows one. */
-internal class WidgetGround(val tone: Tone, @DrawableRes val background: Int, val cover: WidgetCover?) {
-    @get:DrawableRes
-    val veil: Int get() = if (tone == Tone.Dark) R.drawable.widget_veil_dark else R.drawable.widget_veil_light
-
+/** What lies under a widget's words: its ground, and the cover under a [veil] where it shows one. */
+internal class WidgetGround(
+    val tone: Tone,
+    @DrawableRes val background: Int,
+    val cover: WidgetCover?,
+    @DrawableRes val veil: Int = R.drawable.widget_veil_light,
+) {
     companion object {
-        /** [style]'s ground with [cover] (Cover only), on a wallpaper that wants ink ([clearInk], Clear only). */
+        /**
+         * [style]'s ground with [cover] (under a cover's looks), on a wallpaper that wants ink
+         * ([clearInk], Clear only). Darkened, the words are paper whatever the cover, as on a dark one.
+         */
         fun of(style: WidgetStyle, cover: WidgetCover?, clearInk: Boolean): WidgetGround = when (style) {
-            WidgetStyle.Cover -> WidgetGround(
-                if (cover == null || cover.light) Tone.Light else Tone.Dark,
+            WidgetStyle.Cover -> if (cover == null || cover.light) {
+                WidgetGround(Tone.Light, R.drawable.widget_background_cover, cover)
+            } else {
+                WidgetGround(Tone.Dark, R.drawable.widget_background_cover, cover, R.drawable.widget_veil_dark)
+            }
+
+            WidgetStyle.Darkened -> WidgetGround(
+                if (cover == null) Tone.Light else Tone.Dark,
                 R.drawable.widget_background_cover,
                 cover,
+                R.drawable.widget_veil_darkened,
             )
 
             WidgetStyle.Plain -> WidgetGround(Tone.Plain, R.drawable.widget_background_plain, null)

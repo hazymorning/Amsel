@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.ui.screens.search
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -61,17 +62,24 @@ fun SearchScreen(
     focus: FocusRequester = remember { FocusRequester() },
     /** A slim bar in place of the tab's title: the widget's page picks with Search. */
     bar: (@Composable BoxScope.() -> Unit)? = null,
+    /**
+     * What shows while the field is empty, in place of what was found lately, with the screen's room;
+     * the field then waits for a tap before the keyboard comes up.
+     */
+    browse: (@Composable (PaddingValues) -> Unit)? = null,
 ) {
     MaterialScreen(modifier, bar = bar) { insets ->
         Column(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding())) {
             if (bar == null) TabHeader(stringResource(R.string.tab_search))
-            QueryField(state.query, busy = state.searching, onQueryChange, focus)
+            QueryField(state.query, busy = state.searching, onQueryChange, focus, typeAtOnce = browse == null)
             val results = state.results
             val rest = Modifier.fillMaxSize().padding(insets.withTop(0.dp))
             val actions = remember(onPlayTrack, onOpen, onTrackMore, onMore) {
                 ResultActions(onPlayTrack, onOpen, onTrackMore, onMore)
             }
             when {
+                state.query.isBlank() && browse != null -> browse(insets.withTop(0.dp))
+
                 state.query.isBlank() -> if (recent.isNotEmpty()) {
                     RecentList(recent, state.playingKey, actions, onClearRecent, insets)
                 }
@@ -100,9 +108,15 @@ fun SearchScreen(
 
 /** Takes focus when Search opens with an empty field: tapping the tab means you want to type. */
 @Composable
-private fun QueryField(query: String, busy: Boolean, onQueryChange: (String) -> Unit, focus: FocusRequester) {
+private fun QueryField(
+    query: String,
+    busy: Boolean,
+    onQueryChange: (String) -> Unit,
+    focus: FocusRequester,
+    typeAtOnce: Boolean,
+) {
     val keyboard = LocalSoftwareKeyboardController.current
-    LaunchedEffect(Unit) { if (query.isEmpty()) focus.requestFocus() }
+    LaunchedEffect(Unit) { if (typeAtOnce && query.isEmpty()) focus.requestFocus() }
     SearchField(
         value = query,
         onValueChange = onQueryChange,
