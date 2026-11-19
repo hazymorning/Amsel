@@ -23,9 +23,12 @@ enum class WidgetButton(val id: String, @StringRes val label: Int, @DrawableRes 
     Quieter("quieter", R.string.widget_quieter, R.drawable.ic_volume_low),
     Louder("louder", R.string.widget_louder, R.drawable.ic_volume),
     Speakers("speakers", R.string.widget_speakers, R.drawable.ic_speaker),
+
+    /** Opens Up next, or a book's or an episode's chapters, as Now Playing's last button does. */
+    UpNext("up-next", R.string.player_up_next, R.drawable.ic_queue),
     ContinueListening("continue", PlaybackR.string.continue_listening, R.drawable.ic_audiobook),
 
-    /** One item, picked once: its cover is the button. */
+    /** One item, picked once: its cover, round, is the button. */
     PlayItem("item", R.string.widget_play_something, R.drawable.ic_album),
     ;
 
@@ -42,17 +45,33 @@ data class WidgetItem(val uri: String, val title: String, val art: String? = nul
 @Immutable
 data class WidgetSlot(val button: WidgetButton, val item: WidgetItem? = null)
 
-/** As a widget of two cells or more comes: the transport, and on a wide one the heart and shuffle. */
+/**
+ * As a widget of two cells or more comes, as the owner sets theirs: play and next at the end, the
+ * speakers before them, and on a wide one shuffle and the heart first.
+ */
 val DefaultSlots: List<WidgetSlot> = listOf(
-    WidgetButton.Previous,
+    WidgetButton.Shuffle,
+    WidgetButton.Favourite,
+    WidgetButton.Speakers,
     WidgetButton.PlayPause,
     WidgetButton.Next,
-    WidgetButton.Favourite,
-    WidgetButton.Shuffle,
 ).map(::WidgetSlot)
 
-/** A widget has none to eight buttons; those its size cannot hold give way from the end. */
+/** A widget has none to eight buttons; those its size cannot hold give way ([standing]). */
 const val MAX_BUTTONS = 8
+
+/**
+ * Which of [buttons] stand where only [room] fit: play and pause stays longest, the others give way
+ * from the start, so the end, where play and next stand as a widget comes, stays; in their order.
+ */
+internal fun <T> standing(buttons: List<T>, room: Int, button: (T) -> WidgetButton): List<T> {
+    if (buttons.size <= room) return buttons
+    if (room <= 0) return emptyList()
+    val play = buttons.indexOfFirst { button(it) == WidgetButton.PlayPause }.takeIf { it >= 0 }
+    val others = buttons.indices.filter { it != play }.takeLast(if (play != null) room - 1 else room)
+    val kept = others.toSet() + listOfNotNull(play)
+    return buttons.filterIndexed { i, _ -> i in kept }
+}
 
 /** Which buttons stand on a shaded cell: play and pause alone, every one, or none. */
 enum class WidgetCells(val id: String, @StringRes val label: Int) {

@@ -9,6 +9,7 @@
     <string name="widget_setup_title">Widget</string>
     <string name="widget_setup_done">Done</string>
     <string name="widget_look_cover">Blurred cover</string>
+    <string name="widget_look_darkened">Darkened cover</string>
     <string name="widget_look_plain">Plain</string>
     <string name="widget_look_clear">Clear</string>
     <string name="widget_speaker">Speaker</string>
@@ -29,6 +30,7 @@
     <string name="widget_previous_note">15 s back in books and episodes</string>
     <string name="widget_louder_note">Stops at your limit of %1$s</string>
     <string name="widget_speakers_note">Choose where the music plays</string>
+    <string name="widget_up_next_note">Opens what plays next; in books and episodes, the chapters</string>
     <string name="widget_continue_note">The book or episode heard last</string>
     <string name="widget_something_note">An album, a playlist, a station, a book</string>
     <string name="widget_pick_title">Play something</string>
@@ -51,6 +53,7 @@
     <string name="widget_summary_paused">%1$s. Paused on %2$s</string>
     <string name="widget_style">Background</string>
     <string name="widget_look_cover_note">The cover of what\'s playing, softened</string>
+    <string name="widget_look_darkened_note">The cover of what\'s playing, sharp and darker</string>
     <string name="widget_look_plain_note">In your phone\'s colours</string>
     <string name="widget_look_clear_note">Only words and buttons, on your wallpaper</string>
     <string name="widget_cells_play_note">Play stands out</string>
@@ -60,8 +63,8 @@
     <string name="widget_words">What\'s playing</string>
     <string name="widget_words_stay">Without buttons, the widget shows what\'s playing</string>
     <plurals name="widget_fits">
-        <item quantity="one">Only the first button fits at this size. Drag the one you need most to the top.</item>
-        <item quantity="other">Only the first %d buttons fit at this size. Drag the ones you need most to the top.</item>
+        <item quantity="one">Only one button fits at this size: play, or else the last.</item>
+        <item quantity="other">Only %d buttons fit at this size: play, and the last ones. Drag the ones you need most down.</item>
     </plurals>
     <string name="widget_fits_none">No button fits at this size.</string>
 </resources>

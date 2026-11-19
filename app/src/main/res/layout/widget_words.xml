@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The speaker and what plays, in the phone's own sans-serif, which WidgetText measures: sizes and
-     lines as WidgetLine has them. The view stands the words' lead outside its box at the start, and
-     each line's start padding puts its first ink on the box's edge (WidgetWordsViews). The level
-     stands after the name in a view of its own; the time under all. -->
+     lines as WidgetLine has them. The view stands the words' lead outside its box at either side,
+     and each line's padding puts its first ink, and the level's last, on the box's edge
+     (WidgetWordsViews). The level, the speaker's volume, stands at the end of the speaker's row,
+     the name taking what it leaves; the time under all. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_words"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/widget_words_lead_out"
+    android:layout_marginEnd="@dimen/widget_words_lead_out"
     android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/widget_speaker_row"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -30,8 +32,9 @@
 
         <TextView
             android:id="@+id/widget_speaker"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:ellipsize="end"
             android:fontFamily="sans-serif"
             android:includeFontPadding="false"
@@ -41,22 +44,35 @@
             android:paddingEnd="0dp"
             android:text="@string/app_name"
             android:textColor="@color/widget_words_light"
-            android:textFontWeight="600"
+            android:textFontWeight="400"
             android:textSize="13sp" />
+
+        <ImageView
+            android:id="@+id/widget_level_glyph"
+            android:layout_width="13sp"
+            android:layout_height="13sp"
+            android:layout_marginStart="8sp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_volume"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/widget_level"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
             android:fontFamily="sans-serif"
+            android:fontFeatureSettings="tnum"
             android:includeFontPadding="false"
             android:lineHeight="16sp"
             android:maxLines="1"
-            android:visibility="gone"
-            android:textColor="@color/widget_quiet_light"
-            android:textFontWeight="600"
-            android:textSize="13sp" />
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:textColor="@color/widget_words_light"
+            android:textFontWeight="400"
+            android:textSize="13sp"
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView
@@ -70,7 +86,7 @@
         android:maxLines="1"
         android:paddingStart="5dp"
         android:paddingTop="10dp"
-        android:paddingEnd="0dp"
+        android:paddingEnd="@dimen/widget_words_lead"
         android:text="@string/player_not_playing"
         android:textColor="@color/widget_words_light"
         android:textFontWeight="700"
@@ -87,7 +103,7 @@
         android:maxLines="1"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
-        android:paddingEnd="0dp"
+        android:paddingEnd="@dimen/widget_words_lead"
         android:textColor="@color/widget_quiet_light"
         android:textFontWeight="400"
         android:textSize="13sp"
@@ -108,7 +124,7 @@
         android:maxLines="1"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
-        android:paddingEnd="0dp"
+        android:paddingEnd="@dimen/widget_words_lead"
         android:textColor="@color/widget_quiet_light"
         android:textFontWeight="400"
         android:textSize="13sp"
@@ -126,7 +142,7 @@
         android:maxLines="1"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
-        android:paddingEnd="0dp"
+        android:paddingEnd="@dimen/widget_words_lead"
         android:textColor="@color/widget_quiet_light"
         android:textFontWeight="400"
         android:textSize="13sp"

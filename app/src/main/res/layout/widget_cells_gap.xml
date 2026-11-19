@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Between two rows of cells, as between two cells (WidgetSizes.GAP). An ImageView, not a View: a
+     launcher inflates only the classes widgets may use. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/widget_cell_gap"
+    android:importantForAccessibility="no" />

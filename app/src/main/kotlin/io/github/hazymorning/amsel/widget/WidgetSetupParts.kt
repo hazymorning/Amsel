@@ -118,7 +118,7 @@ internal fun LazyListScope.partRows(
                         part,
                         at,
                         last = buttons.lastIndex,
-                        fits = at < state.fits,
+                        fits = part.place in state.standing,
                         removable = words || slots.size > 1,
                         shape = shape,
                         reorder = reorder,

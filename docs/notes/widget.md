@@ -17,23 +17,26 @@ at whatever size the launcher finally draws.
 | Tile | under two cells both ways | the whole tile is one button: its cell in the frame; a Play … button is its item's cover; with no button, the cover of what plays |
 | Pad | one row under four cells wide, or what plays left out | the buttons alone, in as few rows as hold them, in the frame's middle |
 | Line | one row, no buttons | the speaker over the title |
-| Card | two rows and more | the speaker, the title, the line under it and the time, above or below a row of buttons |
-| Poster | two cells wide, tall enough for the cover across | the cover across the frame, the speaker and the title under it, a row of buttons at the foot or the top |
+| Card | two rows and more | the speaker, the title, the line under it and the time, above or below rows of buttons |
+| Poster | two cells wide, tall enough for the cover across and the rows | the cover across the frame, the speaker and the title under it, rows of buttons at the foot or the top |
 | Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end or the start |
-| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, above or below a row of buttons |
+| Player | two rows and more, four cells wide | the cover beside what plays, in its middle, above or below rows of buttons |
 
 What plays (the cover and the words) is a part of the widget as its buttons are: before them, as it
-comes, after them, or left out. The two parts stand at the widget's two ends, the room between
-them; a part with nothing in it leaves the other alone. Left out, the buttons fill the widget (Pad):
-in as few rows as hold them, each as full as the next, their cells as wide as the row allows and
-about as high, at least 56; a last row with fewer keeps the others' cell width, in its middle. Four
-buttons in a square stand two by two.
+comes, after them, or left out. The two parts stand at the widget's two ends, the room between them;
+a part with nothing in it leaves the other alone. Left out, the buttons fill the widget (Pad): in as
+few rows as hold them, each as full as the next, their cells as wide as the row allows and about as
+high, at least 56; a last row with fewer keeps the others' cell width, in its middle. Four buttons
+in a square stand two by two. Buttons one row cannot hold take more rows, each as full as the next
+and 4 dp apart, as long as what plays keeps its speaker, a title line and the line under it: two
+cells by three hold five, four by three eight. A tall two-cell widget shows its cover across only
+where its rows leave room for it.
 
 The layouts hold the frame and the places; the cells and the words are added at draw time
-(`RemoteViews.addView`): a row before what plays and one after it, of which one is used, and the
-words in the layout of their size. So the order is the person's without a layout for each order,
+(`RemoteViews.addView`): rows before what plays and rows after it, of which one place is used, and
+the words in the layout of their size. So the order is the person's without a layout for each order,
 and no layout carries eight fixed buttons. The picker's preview and a widget's first moment show
-fixed layouts of the transport (`widget_preview_*`).
+fixed layouts of the buttons as they come (`widget_preview_*`).
 
 ## Frame and cells
 
@@ -66,7 +69,7 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
   the title's second line, the line under the title; then the speaker and the title grow an eighth
   smaller, 4 dp apart (`widget_words_small`), before the speaker's line goes, so a strip lower than
   usual keeps both: from 62 dp, as the two small lines stand in its middle by their ink and their box
-  may take its lead above and below the frame; the level after the speaker's name whole or not at all. Where every line has
+  may take its lead above and below the frame. Where every line has
   room, as on a card two by two and a half or a player three rows high, they are a fifth larger
   (`widget_words_large`).
 - **Time:** while a song plays, where it stands of its length; while a book or an episode plays,
@@ -75,7 +78,12 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
   whenever the launcher lays the widget out anew and runs on (AOSP `Chronometer`).
 - **Covers:** a bar's and a player's are as high as their place and as wide as high; a poster's as
   wide as the frame.
-- Buttons that a size cannot hold give way whole, from the end; at a large text size a bar gives a
+- **The speaker's line** is set regular under the bold title, and its volume stands at its end,
+  wherever the speaker reports one (not This phone): the volume's glyph and its number, as Now
+  Playing has them, the last ink on the frame. It stays whole; the speaker's glyph gives way before
+  the name is cut, then the name is.
+- Buttons that a size cannot hold give way whole: play and pause last, the others from the start, so
+  the end stays, where play and next stand as a widget comes; at a large text size a bar gives a
   button way before its words. A button with nothing to act on in what plays gives way too: the heart,
   shuffle and repeat for a book, an episode or a station.
 - `WidgetInsetsTest` draws every form at the size it was laid out for and at sizes 8 to 16 dp smaller
@@ -86,17 +94,20 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
 
 - **Cover:** the cover of what plays, blurred small and scaled up, under a veil of paper or of
   black, whichever lets the words read; at night the cover lies dimmed. Nothing playing: Surface 1.
+- **Darkened:** the cover itself, sharp, cropped to the widget, under a black veil that lets paper
+  read on any cover (5.8 to 1 on a white one, the quiet words 3.9), darker at night.
 - **Plain:** the system's colours (Material You) from Android 12, as Clock and Weather; Amsel's
   paper before.
 - **Clear:** no ground; the words and glyphs in ink or paper as Android advises for the wallpaper
   (`WallpaperColors.HINT_SUPPORTS_DARK_TEXT`), drawn again when the wallpaper changes.
 
 Cells are the tone's shade: ink or paper over the cover, the system's secondary container in Plain.
-Under the Cover look, from Android 12, play and pause take the cover's own colour where it has one
+Under the cover looks, from Android 12, play and pause take the cover's own colour where it has one
 (the hue most of its coloured pixels share, deep on a light ground, bright on a dark one), its glyph
 in ink or paper, whichever reads (`WidgetArt.accent`).
 Covers shown sharp keep Amsel's cover corners (rule 7) and at night the night's range, as in the
-app. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
+app; a Play … button alone is round, wherever it stands, as the owner asked: it starts what it
+shows. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
 Amsel's weights, the one font a widget can count on.
 
 ## Buttons
@@ -110,13 +121,14 @@ Amsel's weights, the one font a widget can count on.
 | Shuffle, Repeat | as Now Playing's; repeat goes off, all, one | quieter while off; repeat one's own glyph |
 | Quieter, Louder | the server's own step, as its volume up and down take it: its Volume step setting, else 1 near silence and near full, 2, and 3 in the middle; Louder stops at the volume limit and says so | speaker low, high |
 | Speakers | opens Play on (`amsel://speakers`) | the speaker |
+| Up next | opens Up next over Now Playing (`amsel://up-next`); in a book or an episode, its chapters, as Now Playing's last button | the list; the chapters' list |
 | Continue listening | the book or episode heard last (`Catalog.inProgress(1)`) | a book |
-| Play … | one album, playlist, artist, station, book or podcast, picked once | its cover |
+| Play … | one album, playlist, artist, station, book or podcast, picked once | its cover, round |
 
 None to eight, in the person's order; the widget's page says how many fit at its size and which. As they
-come: Button, play and pause; Buttons and Now playing, the transport, then the heart and shuffle
-where the widget is wide. With Quieter or Louder among them, the level stands after the speaker's
-name.
+come, as the owner sets theirs: Button, play and pause; Buttons and Now playing, shuffle, the heart,
+the speakers, play and next, of which two cells hold the speakers, play and next, and the owner's
+narrower two play and next. A widget saved with the earlier transport, untouched, comes so too.
 
 ## The speaker
 
@@ -126,18 +138,18 @@ plays.
 
 ## Its page
 
-A widget is placed without a page (`configuration_optional`); a long press on it, the launcher's
-way to change a widget (`reconfigurable`), opens its page, as does placing it before Android 12.
-The page shows the widget at its size on the home screen, over the wallpaper's own colour, and
-under it three rows, each opening its choices with a line on what each does: the speaker, the
-background (blurred cover, plain, clear) and which buttons have a background (play alone, all,
+A widget is placed without a page (`configuration_optional`); a long press on it, the launcher's way
+to change a widget (`reconfigurable`), opens its page, as does placing it before Android 12. The
+page shows the widget at its size on the home screen, over the wallpaper's own colour, and under it
+three rows, each opening its choices with a line on what each does: the speaker, the background
+(blurred cover, darkened cover, plain, clear) and which buttons have a background (play alone, all,
 none, which fits more). Then the widget's parts in their order: what plays, with its switch, at
 either end, and the buttons, each to change or take away; every part moves by its handle, a held
 press or TalkBack's actions, as on Amsel's arrange pages, and what plays lands at the nearer end.
-Where the size cannot hold every button a sentence says that the first so many show and to drag the
-most needed up, and each hidden one says when it shows. One more while there are fewer than eight;
-the last part stays. Play … picks with Search, its recent searches first. Done saves; leaving
-leaves the widget as it was.
+Where the size cannot hold every button a sentence says that play and the last so many show and to
+drag the most needed down, and each hidden one says when it shows. One more while there are fewer
+than eight; the last part stays. Play … picks from the library by kind, played lately first, as the
+Library tab has it, or with Search. Done saves; leaving leaves the widget as it was.
 
 ## Taps, also while Amsel is closed
 
@@ -165,8 +177,8 @@ leaves the widget as it was.
 
 ## Seen by TalkBack and in the picker
 
-The widget as a whole says what plays, by whom and where ("Lanterns, Marlene Vogt. Playing on
-Kitchen") before its buttons; shuffle, repeat and the heart say whether they are on. From Android 15
+The widget as a whole says what plays, by whom, where and how loud ("Lanterns, Marlene Vogt. Playing
+on Kitchen. Volume, 40 %") before its buttons; shuffle, repeat and the heart say whether they are on. From Android 15
 the widget picker shows each kind with what plays now (`WidgetPreviews`, about once an hour, as
 Android allows).
 
