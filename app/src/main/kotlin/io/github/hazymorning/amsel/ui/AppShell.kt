@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -112,9 +113,11 @@ fun AppShell(
     val closePlayer: () -> Unit = { scope.launch { layer.close() } }
     val tabs = rememberTabStacks(closePlayer, slots)
     var newSearch by rememberSaveable { mutableIntStateOf(0) }
+    val upNext = remember { mutableStateOf(false) }
     val playing by rememberUpdatedState(nowPlaying)
     LaunchedEffect(opening) {
-        when (opening ?: return@LaunchedEffect) {
+        val asked = opening ?: return@LaunchedEffect
+        when (asked) {
             Opening.Search -> {
                 tabs.popToRoot(Tab.Search)
                 tab = Tab.Search
@@ -124,9 +127,10 @@ fun AppShell(
 
             // Opened cold, the speaker reports a moment after the app shows; if nothing plays by
             // then, Home stays, rather than Now Playing rising over it later out of nowhere.
-            Opening.NowPlaying -> withTimeoutOrNull(NOW_PLAYING_WAIT_MS) {
+            Opening.NowPlaying, Opening.UpNext -> withTimeoutOrNull(NOW_PLAYING_WAIT_MS) {
                 snapshotFlow { playing }.first { it != null }
                 layer.open()
+                if (asked == Opening.UpNext) upNext.value = true
             }
 
             Opening.Speakers -> onSpeaker()
@@ -155,6 +159,7 @@ fun AppShell(
         LocalOpenNowPlaying provides openPlayer,
         LocalNewSearch provides newSearch,
         LocalStartSearch provides startSearch,
+        LocalUpNextAsked provides upNext,
     ) {
         Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
             CompositionLocalProvider(LocalDockInset provides dockInset) {
@@ -289,6 +294,12 @@ val LocalNewSearch = compositionLocalOf { 0 }
 
 /** Goes to Search, emptied, the keyboard up: Home's Search field. */
 val LocalStartSearch = staticCompositionLocalOf<() -> Unit> { {} }
+
+/**
+ * Set once a link to Up next (a widget's button) has opened Now Playing, which then opens Up next, or
+ * the chapters, and clears it.
+ */
+val LocalUpNextAsked = staticCompositionLocalOf<MutableState<Boolean>> { mutableStateOf(false) }
 
 /** How long a Now Playing link waits for the speaker to say what plays. */
 private const val NOW_PLAYING_WAIT_MS = 5_000L

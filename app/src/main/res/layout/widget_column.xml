@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Two rows and more, or one row without buttons: what plays, a poster's cover over it, and a row
+<!-- Two rows and more, or one row without buttons: what plays, a poster's cover over it, and rows
      of button cells before or after it. The frame, the gaps and where what plays stands are set from
      WidgetDrawing; the cells and the words are added there. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -34,15 +34,14 @@
         android:orientation="vertical"
         android:padding="@dimen/widget_padding">
 
-        <!-- A row of cells as wide as the widget: its padding keeps them in the frame. -->
+        <!-- Rows of cells as wide as the widget (widget_cells_row): its padding keeps them in the frame. -->
         <LinearLayout
             android:id="@+id/widget_cells_start"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/widget_cell_height"
+            android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/widget_padding_out"
             android:layout_marginEnd="@dimen/widget_padding_out"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:visibility="gone" />
 
         <!-- Takes what the cells leave, so words that do not fit are cut here, never the cells. -->
@@ -124,11 +123,10 @@
         <LinearLayout
             android:id="@+id/widget_cells_end"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/widget_cell_height"
+            android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/widget_padding_out"
             android:layout_marginEnd="@dimen/widget_padding_out"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>

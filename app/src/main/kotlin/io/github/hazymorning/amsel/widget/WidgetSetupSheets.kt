@@ -97,7 +97,7 @@ internal fun SpeakerChoices(current: String?, speakers: List<WidgetSpeaker>, onC
     }
 }
 
-/** The widget's ground: the blurred cover of what plays, the phone's colours, or the wallpaper. */
+/** The widget's ground: the cover of what plays, blurred or darkened; the phone's colours; or the wallpaper. */
 @Composable
 internal fun StyleChoices(current: WidgetStyle, onChoose: (WidgetStyle) -> Unit) = DescribedChoices(
     stringResource(R.string.widget_style),
@@ -108,6 +108,7 @@ internal fun StyleChoices(current: WidgetStyle, onChoose: (WidgetStyle) -> Unit)
         stringResource(
             when (it) {
                 WidgetStyle.Cover -> R.string.widget_look_cover_note
+                WidgetStyle.Darkened -> R.string.widget_look_darkened_note
                 WidgetStyle.Plain -> R.string.widget_look_plain_note
                 WidgetStyle.Clear -> R.string.widget_look_clear_note
             },
@@ -182,6 +183,8 @@ private fun note(button: WidgetButton, current: WidgetSlot?, volumeLimit: Int): 
 
     WidgetButton.Speakers -> stringResource(R.string.widget_speakers_note)
 
+    WidgetButton.UpNext -> stringResource(R.string.widget_up_next_note)
+
     WidgetButton.ContinueListening -> stringResource(R.string.widget_continue_note)
 
     WidgetButton.PlayItem -> current?.item?.title ?: stringResource(R.string.widget_something_note)
@@ -200,6 +203,7 @@ internal fun slotTitle(slot: WidgetSlot): String = slot.item?.takeIf {
 internal val WidgetStyle.label: Int
     get() = when (this) {
         WidgetStyle.Cover -> R.string.widget_look_cover
+        WidgetStyle.Darkened -> R.string.widget_look_darkened
         WidgetStyle.Plain -> R.string.widget_look_plain
         WidgetStyle.Clear -> R.string.widget_look_clear
     }

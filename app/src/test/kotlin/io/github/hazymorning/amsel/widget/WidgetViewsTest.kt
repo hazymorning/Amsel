@@ -39,17 +39,54 @@ class WidgetViewsTest {
 
     private fun View.shows(id: Int): Boolean = findViewById<View>(id)?.visibility == View.VISIBLE
 
+    /** Laid out at [size], as the launcher lays a widget out. */
+    private fun View.measured(size: SizeF) {
+        val px = { dp: Float -> (dp * resources.displayMetrics.density).toInt() }
+        measure(
+            View.MeasureSpec.makeMeasureSpec(px(size.width), View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(px(size.height), View.MeasureSpec.EXACTLY),
+        )
+        layout(0, 0, measuredWidth, measuredHeight)
+    }
+
     @Test fun eachButtonSaysWhatItDoes() {
         val widget = drawn(WidgetSample.music)
-        assertEquals("Previous", widget.button(1))
+        assertEquals("Speakers", widget.button(1))
         assertEquals("Pause", widget.button(2))
         assertEquals("Next", widget.button(3))
     }
 
     @Test fun aBooksSkipsAreSeconds() {
-        val widget = drawn(WidgetSample.book.copy(playing = true))
+        val transport = listOf(WidgetButton.Previous, WidgetButton.PlayPause, WidgetButton.Next).map(::WidgetSlot)
+        val widget = drawn(WidgetSample.book.copy(playing = true), transport)
         assertEquals("Back 15 seconds", widget.button(1))
         assertEquals("Forward 30 seconds", widget.button(3))
+    }
+
+    /** Where fewer fit than are set, play stays, and the others give way from the start. */
+    @Test fun playAndTheEndStayWhereFewFit() {
+        val shown = { size: SizeF -> drawn(WidgetSample.music, size = size).cells().map { it.contentDescription } }
+        assertEquals(listOf("Speakers", "Pause", "Next"), shown(WidgetSample.row))
+        // The owner's phone: two cells are 162 dp, room for two.
+        assertEquals(listOf("Pause", "Next"), shown(SizeF(162f, 96f)))
+        assertEquals(listOf("Shuffle, off", "Favourite, on", "Speakers", "Pause", "Next"), shown(WidgetSample.player))
+        assertEquals("Pause", drawn(WidgetSample.music, size = WidgetSample.tile).contentDescription)
+    }
+
+    /** Two cells by three hold every button as it comes, in two rows: three, then two. */
+    @Test fun aTallWidgetsButtonsTakeTwoRows() {
+        val cells = drawn(WidgetSample.music, size = WidgetSample.tallCard).cells()
+        assertEquals(5, cells.size)
+        assertEquals(cells[0].parent, cells[2].parent)
+        assertEquals(cells[3].parent, cells[4].parent)
+        assertEquals(false, cells[2].parent == cells[3].parent)
+    }
+
+    /** Up next, and in a book or an episode its chapters, as Now Playing's last button. */
+    @Test fun upNextNamesWhatItOpens() {
+        val slots = listOf(WidgetSlot(WidgetButton.UpNext))
+        assertEquals("Up next", drawn(WidgetSample.music, slots).button(1))
+        assertEquals("Chapters", drawn(WidgetSample.book, slots).button(1))
     }
 
     @Test fun aPlayButtonNamesItsItem() {
@@ -59,11 +96,25 @@ class WidgetViewsTest {
         assertEquals("Play Blue Hour", widget.button(4))
     }
 
-    @Test fun theLevelStandsByTheSpeakerWithAVolumeButton() {
-        val withVolume = drawn(WidgetSample.music, WidgetSample.ownButtons)
-        assertEquals("Kitchen", withVolume.text(R.id.widget_speaker))
-        assertEquals(" · 40 %", withVolume.text(R.id.widget_level))
-        assertEquals(false, drawn(WidgetSample.music).shows(R.id.widget_level))
+    /** The speaker's volume stands at the end of its line wherever it reports one, with or without volume buttons. */
+    @Test fun theLevelStandsAtTheEndOfTheSpeakersLine() {
+        val widget = drawn(WidgetSample.music)
+        assertEquals("Kitchen", widget.text(R.id.widget_speaker))
+        assertEquals("40", widget.text(R.id.widget_level))
+        assertEquals(true, widget.shows(R.id.widget_level_glyph))
+        assertEquals("silent", drawn(WidgetSample.music.copy(volume = 0)).text(R.id.widget_level))
+        val phone = drawn(WidgetSample.music.copy(volume = null))
+        assertEquals(false, phone.shows(R.id.widget_level))
+        assertEquals(false, phone.shows(R.id.widget_level_glyph))
+    }
+
+    /** A long name gives way to the level, which stays whole. */
+    @Test fun aLongNameIsCutBeforeTheLevel() {
+        val look = WidgetSample.music.copy(speaker = "The long room downstairs by the garden door")
+        val widget = drawn(look).apply { measured(WidgetSample.card) }
+        val level = widget.findViewById<TextView>(R.id.widget_level)
+        assertEquals(0, level.layout.getEllipsisCount(0))
+        assertEquals(true, widget.findViewById<TextView>(R.id.widget_speaker).layout.getEllipsisCount(0) > 0)
     }
 
     @Test fun playAndPauseShowWhatTheyDo() {
@@ -139,7 +190,7 @@ class WidgetViewsTest {
     /** TalkBack hears the widget as a whole before its buttons: what plays, and where. */
     @Test fun theWidgetSaysWhatPlaysWhere() {
         assertEquals(
-            "Lanterns, Marlene Vogt. Playing on Kitchen",
+            "Lanterns, Marlene Vogt. Playing on Kitchen. Volume, 40\u00A0%",
             drawn(WidgetSample.music).said(android.R.id.background),
         )
     }
@@ -155,7 +206,8 @@ class WidgetViewsTest {
             WidgetSample.strip to WordSize.Small.scale,
         )
         for ((size, scale) in sizes) {
-            val widget = drawn(WidgetSample.music.copy(failure = "x"), size = size)
+            // As many buttons as one row holds, so a tall card gives its room to the words.
+            val widget = drawn(WidgetSample.music.copy(failure = "x"), DefaultSlots.takeLast(3), size)
             for ((id, line) in listOf(
                 R.id.widget_speaker to WidgetLine.Speaker,
                 R.id.widget_title to WidgetLine.Title,

@@ -14,10 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.sample.SampleData
 import io.github.hazymorning.amsel.testing.ScreenshotTest
 import io.github.hazymorning.amsel.testing.ShotVariant
+import io.github.hazymorning.amsel.ui.components.PageTopBar
+import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
+import io.github.hazymorning.amsel.ui.screens.library.LibraryUiState
+import io.github.hazymorning.amsel.ui.screens.search.SearchScreen
+import io.github.hazymorning.amsel.ui.screens.search.SearchUiState
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.isNight
 import org.junit.Test
@@ -40,6 +48,9 @@ class WidgetShots : ScreenshotTest() {
     /** Wide and tall: buttons as many as fit, the cover across a tall narrow one. */
     @Test fun roomy() = snap("widget_roomy", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Roomy() } }
 
+    /** Tall enough, the buttons take more rows: eight in two of four; five in three and two, before or after what plays. */
+    @Test fun rows() = snap("widget_rows", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Rows() } }
+
     /** Three rows high, four wide: the words a fifth larger beside the cover, every line with room. */
     @Test fun large() = snap("widget_large", listOf(ShotVariant.Light)) {
         HomeScreen {
@@ -56,6 +67,30 @@ class WidgetShots : ScreenshotTest() {
 
     /** What plays after the buttons, or left out for a grid of them; a low strip; bare buttons where cells would not fit. */
     @Test fun parts() = snap("widget_parts", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Parts() } }
+
+    /** The darkened cover in every form: paper over the cover, round Play … buttons, Up next. */
+    @Test fun darkened() = snap("widget_darkened", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        HomeScreen { Darkened() }
+    }
+
+    /** Play …'s page with the field empty: the library by kind, played lately first. */
+    @Test fun pick() = snap("widget_pick", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+        SearchScreen(
+            state = SearchUiState(),
+            onQueryChange = {},
+            onPlayTrack = {},
+            onOpen = {},
+            onTrackMore = {},
+            onMore = {},
+            onRetry = {},
+            bar = { PageTopBar(stringResource(R.string.widget_pick_title), onBack = {}) },
+            browse = { insets ->
+                val kinds = listOf(LibraryKind.Playlists, LibraryKind.Albums, LibraryKind.Artists, LibraryKind.Radio)
+                val shelf = LibraryUiState(kind = LibraryKind.Playlists, items = SampleData.playlists, kinds = kinds)
+                WidgetShelf(shelf, onKind = {}, onRetry = {}, onPick = {}, insets = insets)
+            },
+        )
+    }
 
     @Test fun setup() = snap("widget_setup", ShotVariant.entries) { Setup() }
 
@@ -100,6 +135,33 @@ class WidgetShots : ScreenshotTest() {
             column = 0,
             row = 4,
         )
+    }
+
+    @Composable
+    private fun Darkened() {
+        val darkened = WidgetSetup(style = WidgetStyle.Darkened)
+        val play = listOf(WidgetSlot(WidgetButton.PlayPause))
+        val blueHour = listOf(WidgetSlot(WidgetButton.PlayItem, WidgetSample.blueHour))
+        val upNext = listOf(WidgetButton.UpNext, WidgetButton.PlayPause, WidgetButton.Next).map(::WidgetSlot)
+        val rest = listOf(WidgetButton.Favourite, WidgetButton.UpNext, WidgetButton.PlayPause, WidgetButton.Next)
+        val own = blueHour + rest.map(::WidgetSlot)
+        Widget(darkened, WidgetSample.music, WidgetSample.row, column = 0, row = 0)
+        Widget(darkened.copy(slots = blueHour), WidgetSample.music, WidgetSample.tile, column = 2, row = 0)
+        Widget(darkened.copy(slots = play), WidgetSample.music, WidgetSample.tile, column = 3, row = 0)
+        Widget(darkened, WidgetSample.music, WidgetSample.card, column = 0, row = 1)
+        Widget(darkened.copy(slots = upNext), WidgetSample.book, WidgetSample.card, column = 2, row = 1)
+        Widget(darkened, WidgetSample.music, WidgetSample.bar, column = 0, row = 3)
+        Widget(darkened.copy(slots = own), WidgetSample.music, WidgetSample.player, column = 0, row = 4)
+    }
+
+    @Composable
+    private fun Rows() {
+        val more = listOf(WidgetButton.Previous, WidgetButton.UpNext, WidgetButton.Repeat)
+        val eight = DefaultSlots + more.map(::WidgetSlot)
+        Widget(WidgetSetup(slots = eight), WidgetSample.music, WidgetSample.tallPlayer, column = 0, row = 0)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.tallCard, column = 0, row = 3)
+        val after = WidgetSetup(words = WidgetWordsPlace.After)
+        Widget(after, WidgetSample.music, WidgetSample.tallCard, column = 2, row = 3)
     }
 
     @Composable
@@ -212,6 +274,7 @@ class WidgetShots : ScreenshotTest() {
             picture = picture,
             size = WidgetSample.card,
             fits = 3,
+            standing = setOf(1, 2, 3),
             speakers = Rooms,
             volumeLimit = 70,
         )

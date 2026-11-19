@@ -39,7 +39,7 @@ internal class WidgetDrawing(
     private val density = context.resources.displayMetrics.density
     private val cells =
         WidgetCellsViews(context, text, slots, id, setup, look, pictures, tone, ground.cover, taps, ::px)
-    private val words = WidgetWordsViews(context, text, look, setup.slots, tone, ::px)
+    private val words = WidgetWordsViews(context, text, look, tone, ::px)
 
     /** Bare buttons draw nothing at a row's ends, so their row reaches into the frame. */
     private val side = if (setup.cells == WidgetCells.None) REACH else PADDING - GAP / 2
@@ -88,7 +88,7 @@ internal class WidgetDrawing(
         shows(R.id.widget_art_box, poster)
         if (poster) art(fit, cap = false)
         words(fit, align, fit.width - 2 * PADDING)
-        cellsRow(shown, after, R.layout.widget_cell)
+        cellRows(shown, after, fit.columns)
     }
 
     /** The cover beside what plays, in its middle, above the cells or below them; the room between. */
@@ -96,11 +96,10 @@ internal class WidgetDrawing(
         val shown = cells.shown(fit)
         val after = after(shown)
         art(fit, cap = true)
-        val cellsHeight = if (shown.isEmpty()) 0f else CELL_HEIGHT
-        val spare = px(fit.height - 2 * PADDING - cellsHeight - fit.art)
+        val spare = px(fit.height - 2 * PADDING - rowsHeight(buttonRows(fit)) - fit.art)
         setViewPadding(R.id.widget_top, 0, if (after) spare else 0, 0, if (after) 0 else spare)
         words(fit, WordsAlign.Middle, fit.width - 2 * PADDING - fit.art - ART_TO_WORDS)
-        cellsRow(shown, after, R.layout.widget_cell)
+        cellRows(shown, after, fit.columns)
     }
 
     /** The cover and what plays, the cells after them or before them, as high as beside words. */
@@ -119,7 +118,10 @@ internal class WidgetDrawing(
         setViewPadding(R.id.widget_words_box, px(ART_TO_WORDS), 0, if (shown.isEmpty() || after) 0 else gap, 0)
         val cellsWidth = if (shown.isEmpty()) 0f else shown.size * BAR_CELL - GAP + WORDS_TO_CELLS
         words(fit, WordsAlign.Middle, fit.width - 2 * PADDING - fit.art - ART_TO_WORDS - cellsWidth)
-        cellsRow(shown, after, R.layout.widget_cell_bar, sides = false, inset = px((target - cell) / 2))
+        val (row, other) = rowsBy(after)
+        clear(other)
+        shows(row, shown.isNotEmpty())
+        cells.row(this, row, shown, R.layout.widget_cell_bar, inset = px((target - cell) / 2))
     }
 
     /** Buttons alone, in rows in the frame's middle. */
@@ -161,24 +163,26 @@ internal class WidgetDrawing(
     }
 
     /**
-     * [shown] in the row before what plays where it comes [after] them, else in the one after it;
-     * the other row gone. A row as wide as the widget keeps them in the frame with its [sides]; the
-     * cells stand [inset] px in from their targets above and below.
+     * [shown] in rows of [columns] before what plays where it comes [after] them, else after it; the
+     * other place gone. The rows as wide as the widget keep the cells in the frame.
      */
-    private fun RemoteViews.cellsRow(
-        shown: List<PlacedSlot>,
-        after: Boolean,
-        @LayoutRes layout: Int,
-        sides: Boolean = true,
-        inset: Int = 0,
-    ) {
-        val row = if (after) R.id.widget_cells_start else R.id.widget_cells_end
-        val other = if (after) R.id.widget_cells_end else R.id.widget_cells_start
-        removeAllViews(other)
-        shows(other, false)
-        shows(row, shown.isNotEmpty())
-        if (sides) setViewPadding(row, px(side), 0, px(side), 0)
-        cells.row(this, row, shown, layout, inset)
+    private fun RemoteViews.cellRows(shown: List<PlacedSlot>, after: Boolean, columns: Int) {
+        val (rows, other) = rowsBy(after)
+        clear(other)
+        shows(rows, shown.isNotEmpty())
+        setViewPadding(rows, px(side), 0, px(side), 0)
+        cells.rows(this, rows, shown, columns)
+    }
+
+    /** The place for the cells, before what plays where it comes [after] them, and the other one. */
+    private fun rowsBy(after: Boolean): Pair<Int, Int> {
+        val (start, end) = R.id.widget_cells_start to R.id.widget_cells_end
+        return if (after) start to end else end to start
+    }
+
+    private fun RemoteViews.clear(place: Int) {
+        removeAllViews(place)
+        shows(place, false)
     }
 
     /**
@@ -217,10 +221,10 @@ internal class WidgetDrawing(
 
     /**
      * One cell: the whole tile is the button, its cell in the frame as every form's. A Play … button
-     * is its item's cover, a tile without buttons the cover of what plays.
+     * is its item's cover, round; a tile without buttons the cover of what plays.
      */
     private fun tile(fit: WidgetFit) = RemoteViews(context.packageName, R.layout.widget_tile).apply {
-        val first = setup.slots.withIndex().firstOrNull { it.value.button.availableIn(look) }
+        val first = setup.shown(look, 1).firstOrNull()
         val slot = first?.value?.takeIf { fit.buttons > 0 }
         val side = px(minOf(fit.width, fit.height))
         val face = when {
@@ -228,7 +232,8 @@ internal class WidgetDrawing(
             slot == null && playing -> pictures.art[side]
             else -> null
         }
-        val night = pictures.blanks[side]?.takeIf { face != null }
+        val shape = if (slot?.button == WidgetButton.PlayItem) pictures.rounds else pictures.blanks
+        val night = shape[side]?.takeIf { face != null }
         ground(clear = face != null)
         shows(R.id.widget_face, face != null)
         shows(R.id.widget_face_night, night != null)

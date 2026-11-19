@@ -26,7 +26,7 @@ data class WidgetLook(
     val subtitle: String? = null,
     /** The cover's address on the server, at [COVER_PX], for the blurred ground. */
     val art: String? = null,
-    /** The same cover at [ART_PX], for a bar's, a player's or a tile's cover. */
+    /** The same cover at [ART_PX], for a bar's, a player's or a tile's cover, and the Darkened look's ground. */
     val artLarge: String? = null,
     val playing: Boolean = false,
     /** A book or an episode: the skips are 30 s forward and 15 s back, as on the dock. */
