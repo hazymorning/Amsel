@@ -174,12 +174,14 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         Favorites(data.session.api, data.library, messages, data.session.state, data.session.client.events, scope)
     }
 
-    val playing: Playing by lazy {
+    private val playingOnce = lazy {
         Playing(app, data, playbackGraph, phone, dispatcher, local, mapper, favorites, scope).also {
             // Once built: the widgets read what plays from it.
             scope.launch { widgets.follow() }
         }
     }
+
+    val playing: Playing by playingOnce
 
     /** The home screen's widgets: what plays where, and the buttons each person set. */
     val widgets: Widgets by lazy {
@@ -208,6 +210,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             },
             lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
             source = { widgetSource() },
+            live = playingOnce::isInitialized,
         )
     }
 

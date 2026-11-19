@@ -59,6 +59,8 @@ class Widgets(
     private val lastStarted: suspend () -> WidgetItem?,
     /** Asked for once there is a widget. */
     private val source: () -> WidgetSource,
+    /** Amsel follows the music in this run: a widget placed now follows it at once. */
+    private val live: () -> Boolean = { false },
 ) {
     private val manager = AppWidgetManager.getInstance(context)
     private val render = WidgetRender(context, images)
@@ -153,6 +155,7 @@ class Widgets(
         loadSetups()
         val looks = _looks.value ?: store.looks().mapValues { (_, look) -> look.copy(playing = false, failure = null) }
         drawing.withLock { for (id in ids) drawOne(id, looks) }
+        if (live()) follow()
     }
 
     /** Widget [id] is set up: it is drawn so at once. */
@@ -166,7 +169,7 @@ class Widgets(
     suspend fun setup(id: Int): WidgetSetup = store.setup(id) ?: kindOf(id).setup
 
     /** Widget [id]'s size in portrait, as the launcher gives it. */
-    fun size(id: Int): SizeF = render.sizes(id, kindOf(id)).first()
+    fun size(id: Int): SizeF = render.sizes(id, kindOf(id)).maxBy { it.height }
 
     /** Widget [id] as it would show [look] with [setup] at [size], for its page: nothing on it acts. */
     suspend fun picture(id: Int, setup: WidgetSetup, look: WidgetLook, size: SizeF): RemoteViews =

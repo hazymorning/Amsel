@@ -61,7 +61,7 @@ class WidgetsTest {
 
     @After fun end() = ended.forEach { it.cancel() }
 
-    private fun widgets(scope: CoroutineScope) = Widgets(
+    private fun widgets(scope: CoroutineScope, live: Boolean = false) = Widgets(
         context,
         store,
         ImageLoader(context),
@@ -69,6 +69,7 @@ class WidgetsTest {
         hands = { error("No taps here") },
         lastStarted = { null },
         source = { source },
+        live = { live },
     )
 
     /** A widget of [provider] placed at [width] by [height] dp. */
@@ -126,6 +127,19 @@ class WidgetsTest {
         val widgets = widgets()
         val id = place(AmselWidget::class.java, 172f, 204f)
         widgets.follow()
+        settle { text(id, R.id.widget_title) == "Lanterns" }
+        assertEquals("Lanterns", text(id, R.id.widget_title))
+    }
+
+    /** Placed while Amsel follows the music, a widget shows what plays without its page. */
+    @Test fun aWidgetPlacedWhileAmselRunsFollowsAtOnce() = runTest {
+        val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
+        ended += scope
+        val widgets = widgets(scope, live = true)
+        val id = place(AmselButtonsWidget::class.java, 172f, 96f)
+        widgets.redraw(intArrayOf(id))
+        resize(id, 172f, 204f)
+        widgets.redraw(intArrayOf(id))
         settle { text(id, R.id.widget_title) == "Lanterns" }
         assertEquals("Lanterns", text(id, R.id.widget_title))
     }
