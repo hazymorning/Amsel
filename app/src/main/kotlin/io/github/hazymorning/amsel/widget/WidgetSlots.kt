@@ -49,14 +49,14 @@ internal fun WidgetButton.glyphFor(look: WidgetLook): Int = when {
     else -> glyph
 }
 
-/** The views of button [index] in a row: its target, and its glyph, play disc or cover; the gap before it. */
-internal class SlotIds(val slot: Int, val glyph: Int, val disc: Int, val face: Int, val gapBefore: Int?) {
+/** The views of button [index] in a row: its cell, and its glyph or cover. */
+internal class SlotIds(val slot: Int, val glyph: Int, val face: Int) {
     companion object {
         private val All = listOf(
-            SlotIds(R.id.widget_slot_1, R.id.widget_glyph_1, R.id.widget_disc_1, R.id.widget_face_1, null),
-            SlotIds(R.id.widget_slot_2, R.id.widget_glyph_2, R.id.widget_disc_2, R.id.widget_face_2, R.id.widget_gap_1),
-            SlotIds(R.id.widget_slot_3, R.id.widget_glyph_3, R.id.widget_disc_3, R.id.widget_face_3, R.id.widget_gap_2),
-            SlotIds(R.id.widget_slot_4, R.id.widget_glyph_4, R.id.widget_disc_4, R.id.widget_face_4, R.id.widget_gap_3),
+            SlotIds(R.id.widget_slot_1, R.id.widget_glyph_1, R.id.widget_face_1),
+            SlotIds(R.id.widget_slot_2, R.id.widget_glyph_2, R.id.widget_face_2),
+            SlotIds(R.id.widget_slot_3, R.id.widget_glyph_3, R.id.widget_face_3),
+            SlotIds(R.id.widget_slot_4, R.id.widget_glyph_4, R.id.widget_face_4),
         )
 
         fun of(index: Int): SlotIds = All[index]

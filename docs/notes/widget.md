@@ -8,35 +8,41 @@ Glance would add itself and WorkManager and draws `RemoteViews` all the same.
 ## Forms
 
 The launcher reports a widget's sizes (`OPTION_APPWIDGET_SIZES`, its portrait and landscape before
-Android 12); Amsel lays out each one exactly (`WidgetFit`) and hands them over together, so the
-launcher shows the right one at once, and draws again when a widget is resized.
+Android 12); Amsel picks the form, the number of buttons and how much of what plays for each, and
+draws again when a widget is resized. Where everything stands is the layouts' own work, so it holds
+at whatever size the launcher finally draws.
 
 | Form | Size | Holds |
 | --- | --- | --- |
-| Tile | under two cells both ways | the whole cell is one button: its glyph on a round ground of 44 dp in the middle; a Play … button is its item's cover; with no button, the cover of what plays |
-| Row | one row, under four cells wide | the buttons in the middle of its height; with none, the speaker over the title |
-| Card | two rows and more | the speaker, the title and the line under it over the buttons |
-| Bar | one row, four cells wide | the cover, the speaker over the title, the buttons at the end |
-| Player | two rows and more, four cells wide | the cover at the start, the words over the buttons beside it |
+| Tile | under two cells both ways | the whole tile is one button: its cell in the frame; a Play … button is its item's cover; with no button, the cover of what plays |
+| Row | one row, under four cells wide | the buttons as cells filling the frame; with none, the speaker over the title |
+| Card | two rows and more | the speaker, the title and the line under it, over a row of cells |
+| Bar | one row, four cells wide | the cover, the speaker over the title, the cells at the end |
+| Player | two rows and more, four cells wide | the cover beside what plays, over a row of cells |
 
-## Room, measured to the ink
+## Frame and cells
 
-Every distance is to the ink, not to a view's box: a glyph's drawing (`IconInk`), the disc, a cover,
-a word's first letter (its side bearing) and capitals (its font's metrics, read on the phone).
+The first two layouts placed bare glyphs by their measured ink at the sizes the launcher reported.
+On a real home screen the gaps came out uneven: glyphs of different widths left unequal gaps between
+them, and a row gave up room at its ends to keep a third button. Google's own widget layouts
+(Jetpack Glance canonical layouts, `ToolBarLayout`: 12 dp padding, equal-width cells, 24 dp icons,
+48 dp targets) show the way that cannot drift:
 
-- A card and a player keep 16 dp on all four sides: the speaker's glyph at the top, the first word
-  and the first button at the start, the last button at the end, the tallest button at the foot.
-- A row keeps at its ends the room above and below its tallest button, less only where that room
-  would cost a button, never under 12. A bar keeps around its cover what its height gives, 8 to 16,
-  and the same at its end.
-- Buttons are 48 dp targets, each ink in the middle of its own, spread from the first ink to the
-  last; a single one stands in a row's middle. Those a size cannot hold give way whole, from the
-  end. Where a target would reach past the widget, its ink moves inside it instead.
-- The words give way in order as the height or the text size asks: the line under the title, the
-  title's second line, the speaker's line. The level after the speaker's name shows whole or not
-  at all.
-- `WidgetInsetsTest` draws every form and measures its ink from each edge; `WidgetFitTest` lays out
-  every width and height and checks the same.
+- **One frame:** 12 dp on all four sides of every form, set in the layouts (`widget_padding`).
+- **Cells:** each button is a cell with the corner of the widget less the frame (28 − 12 = 16). Cells
+  share their row's width equally, 4 dp apart; play and pause is the filled one. A cell's shape
+  stands 2 dp inside its touch target on either side, so the targets meet and reach 2 dp into the
+  frame: three targets of 48 dp fit two cells of a usual phone (172 dp), each cell 46.7 dp wide.
+- **Words:** their first letter's ink (its side bearing, the font's metrics read on the phone) and
+  the speaker's glyph stand on the frame; in a row or a bar their ink, not their box, stands in the
+  middle. They give way in order as the height or the text size asks: the line under the title, the
+  title's second line, the speaker's line; the level after the speaker's name whole or not at all.
+- **Covers:** a bar's and a player's are as high as their place and as wide as high.
+- Buttons that a size cannot hold give way whole, from the end; at a large text size a bar gives a
+  button way before its words.
+- `WidgetInsetsTest` draws every form at the size it was laid out for and at sizes 8 to 16 dp smaller
+  and larger, and measures the frame and the gaps in pixels; `WidgetFitTest` checks that no target
+  is narrower than 48 dp at any width.
 
 ## Looks
 
@@ -47,6 +53,7 @@ a word's first letter (its side bearing) and capitals (its font's metrics, read 
 - **Clear:** no ground; the words and glyphs in ink or paper as Android advises for the wallpaper
   (`WallpaperColors.HINT_SUPPORTS_DARK_TEXT`), drawn again when the wallpaper changes.
 
+Cells are the tone's shade: ink or paper over the cover, the system's secondary container in Plain.
 Covers shown sharp keep Amsel's cover corners (rule 7) and at night the night's range, as in the
 app. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
 Amsel's weights, the one font a widget can count on.
@@ -77,9 +84,10 @@ plays.
 A widget is placed without a page (`configuration_optional`); a long press on it, the launcher's
 way to change a widget (`reconfigurable`), opens its page, as does placing it before Android 12.
 The page shows the widget at its size on the home screen, over the wallpaper's own colour, and
-under it the look (Cover, Plain, Clear), the speaker, and the buttons, each to change or take
-away, one more while there are fewer than four. A button the size cannot hold says so in its row.
-Play … picks with Search, its recent searches first. Done saves; leaving leaves the widget as it was.
+under it the look (Cover, Plain, Clear), the speaker, and the buttons: each to change, take away
+or move by its handle, a held press or TalkBack's actions, as on Amsel's arrange pages; one more
+while there are fewer than four. A button the size cannot hold says so in its row. Play … picks
+with Search, its recent searches first. Done saves; leaving leaves the widget as it was.
 
 ## Taps, also while Amsel is closed
 
@@ -119,11 +127,10 @@ ones, stale widgets, too much image memory. Home Assistant actions stay out
 
 `:app`, package `widget`: the providers (`AmselWidget`, `AmselButtonWidget`, `AmselButtonsWidget`),
 `Widgets` (following, drawing and taps, in `AppGraph`), `WidgetRender` (sizes and pictures),
-`WidgetFit` and `WidgetPlace` (the geometry), `WidgetViews`, `WidgetDrawing` and `WidgetWordsViews`
-(the views), `WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover
+`WidgetFit` (forms and counts), `WidgetViews`, `WidgetDrawing` and `WidgetWordsViews` (the views), `WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover
 corners), `WidgetTaps`, `SessionHands` and `SpeakerHands` (taps), `WidgetStore`, and the page
-(`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupSheets`, `WidgetSetupViewModel`,
-`WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`. Tests: `WidgetFitTest`,
+(`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupButtons`, `WidgetSetupSheets`,
+`WidgetSetupViewModel`, `WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`. Tests: `WidgetFitTest`,
 `WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`, `WidgetArtTest`,
 `WidgetLookTest`, and `WidgetShots` (every form, the looks, the states, the page; light, dark, 200 %
 and German).

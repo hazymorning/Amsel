@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -159,9 +160,13 @@ class FirstRunJourneyTest {
             hasText("Sign in") and !hasSetTextAction() and androidx.compose.ui.test.hasClickAction(),
         ).performClick()
 
-        // Home says its first tip above the sections; closed, it is gone for good.
+        // Home says its first tip above the sections; closed, it is gone for good. Its row fades
+        // out first, which a fast server's library can outrun.
         waitFor("Long-press a heading", 30_000)
         compose.onNodeWithContentDescription("Dismiss tip").performClick()
+        compose.waitUntil(5_000) {
+            compose.onAllNodesWithContentDescription("Dismiss tip").fetchSemanticsNodes().isEmpty()
+        }
 
         // Home, with the server's library.
         waitFor("New in your library", 30_000)
