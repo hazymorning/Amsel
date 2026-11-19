@@ -120,8 +120,8 @@ object WidgetSizes {
 
     const val GLYPH = 24f
 
-    /** A Play … button's cover, inside its cell. */
-    const val FACE = 28f
+    /** A Play … button's round cover, inside its cell: as much to the eye as a glyph's square of 28. */
+    const val FACE = 32f
 
     const val TITLE_TO_SUBTITLE = 4f
 

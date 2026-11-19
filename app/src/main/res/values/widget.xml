@@ -18,9 +18,11 @@
     <!-- A tile's cell stands on the frame: its shape is inset by half a gap at the sides. -->
     <dimen name="widget_tile_side">14dp</dimen>
     <dimen name="widget_cell_height">56dp</dimen>
-    <!-- The words' view stands this much outside its box at the start, and each line moves back in
-         by what its first letter leaves (WidgetWordsViews). -->
+    <!-- The words' view stands this much outside its box at either side, and each line moves back in
+         by what its first letter leaves (WidgetWordsViews); at the end, by the lead itself, and the
+         speaker's row by less, as the level's last letter leaves. -->
     <dimen name="widget_words_lead_out">-6dp</dimen>
+    <dimen name="widget_words_lead">6dp</dimen>
     <!-- Words in the middle stand there by their ink: their box may reach half the lead past the
          frame above and below (WidgetFit.centred). -->
     <dimen name="widget_words_lead_out_half">-3dp</dimen>

@@ -28,6 +28,8 @@ internal class WidgetSlots(private val context: Context) {
                 context.getString(R.string.previous)
             }
 
+            WidgetButton.UpNext -> context.getString(if (look.spoken) R.string.player_chapters else slot.button.label)
+
             WidgetButton.PlayItem -> slot.item?.let { context.getString(R.string.widget_play_item, it.title) }
                 ?: context.getString(slot.button.label)
 
@@ -51,14 +53,15 @@ internal class WidgetSlots(private val context: Context) {
         }
     }
 
-    /** What TalkBack says for the widget as a whole: what plays, by whom, and where. */
+    /** What TalkBack says for the widget as a whole: what plays, by whom, where, and how loud. */
     fun summary(look: WidgetLook): String {
         if (!look.signedIn) return context.getString(R.string.widget_sign_in)
-        val title = look.title ?: return context.getString(R.string.player_not_playing)
+        val volume = look.volume?.let { ". " + context.getString(R.string.player_volume_now, it) }.orEmpty()
+        val title = look.title ?: return context.getString(R.string.player_not_playing) + volume
         val what = listOfNotNull(title, look.subtitle).joinToString(", ")
         val where = look.speaker.ifBlank { return what }
         val said = if (look.playing) R.string.widget_summary_playing else R.string.widget_summary_paused
-        return context.getString(said, what, where)
+        return context.getString(said, what, where) + volume
     }
 
     private fun state(button: WidgetButton, on: Boolean): String = context.getString(
@@ -73,12 +76,13 @@ internal class WidgetSlots(private val context: Context) {
     }
 }
 
-/** A button's glyph: a book's skips are by seconds, as on the dock. */
+/** A button's glyph: a book's skips are by seconds, as on the dock; its Up next, its chapters. */
 @DrawableRes
 internal fun WidgetButton.glyphFor(look: WidgetLook): Int = when {
     this == WidgetButton.PlayPause -> if (look.playing) R.drawable.ic_pause_slim else R.drawable.ic_play
     this == WidgetButton.Next && look.spoken -> R.drawable.ic_skip_forward
     this == WidgetButton.Previous && look.spoken -> R.drawable.ic_skip_back
+    this == WidgetButton.UpNext && look.spoken -> R.drawable.ic_chapters
     this == WidgetButton.Favourite && look.favourite == true -> R.drawable.ic_favorite_filled
     this == WidgetButton.Repeat && look.repeat == RepeatMode.One -> R.drawable.ic_repeat_one
     else -> glyph

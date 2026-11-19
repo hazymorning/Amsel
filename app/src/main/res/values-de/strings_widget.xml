@@ -9,6 +9,7 @@
     <string name="widget_setup_title">Widget</string>
     <string name="widget_setup_done">Fertig</string>
     <string name="widget_look_cover">Verschwommenes Cover</string>
+    <string name="widget_look_darkened">Verdunkeltes Cover</string>
     <string name="widget_look_plain">Einfarbig</string>
     <string name="widget_look_clear">Transparent</string>
     <string name="widget_speaker">Lautsprecher</string>
@@ -29,6 +30,7 @@
     <string name="widget_previous_note">Bei Hörbüchern und Folgen 15\u00A0Sek. zurück</string>
     <string name="widget_louder_note">Nur bis zu deiner Lautstärkegrenze von %1$s</string>
     <string name="widget_speakers_note">Wählen, wo die Musik läuft</string>
+    <string name="widget_up_next_note">Öffnet, was als Nächstes läuft, bei Hörbüchern und Folgen die Kapitel</string>
     <string name="widget_continue_note">Das Hörbuch oder die Folge, die du zuletzt gehört hast</string>
     <string name="widget_something_note">Album, Playlist, Sender oder Hörbuch</string>
     <string name="widget_pick_title">Etwas abspielen</string>
@@ -51,6 +53,7 @@
     <string name="widget_summary_paused">%1$s. Pausiert. Lautsprecher: %2$s</string>
     <string name="widget_style">Hintergrund</string>
     <string name="widget_look_cover_note">Das Cover des laufenden Titels, weichgezeichnet</string>
+    <string name="widget_look_darkened_note">Das Cover des laufenden Titels, scharf und abgedunkelt</string>
     <string name="widget_look_plain_note">In den Farben deines Handys</string>
     <string name="widget_look_clear_note">Nur Schrift und Tasten, auf deinem Hintergrundbild</string>
     <string name="widget_cells_play_note">Die Wiedergabetaste hebt sich ab</string>
@@ -60,8 +63,8 @@
     <string name="widget_words">Was läuft</string>
     <string name="widget_words_stay">Ohne Tasten zeigt das Widget, was läuft</string>
     <plurals name="widget_fits">
-        <item quantity="one">Bei dieser Größe passt nur die erste Taste. Zieh die wichtigste nach oben.</item>
-        <item quantity="other">Bei dieser Größe passen nur die ersten %d Tasten. Zieh die wichtigsten nach oben.</item>
+        <item quantity="one">Bei dieser Größe passt nur eine Taste: Wiedergabe, sonst die letzte.</item>
+        <item quantity="other">Bei dieser Größe passen nur %d Tasten: Wiedergabe und die letzten. Zieh die wichtigsten nach unten.</item>
     </plurals>
     <string name="widget_fits_none">Bei dieser Größe passt keine Taste.</string>
 </resources>

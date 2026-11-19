@@ -32,7 +32,7 @@ class WidgetFitTest {
         }
     }
 
-    @Test fun aTileTakesTheFirstButtonAlone() {
+    @Test fun aTileTakesOneButtonAlone() {
         assertEquals(1, widgetFit(80f, 96f, 3).buttons)
         assertEquals(0, widgetFit(80f, 96f, 0).buttons)
     }
@@ -141,5 +141,20 @@ class WidgetFitTest {
         assertEquals(5, widgetFit(356f, 204f, buttons = 5).buttons)
         assertEquals(6, widgetFit(356f, 204f, buttons = 8).buttons)
         assertEquals(8, widgetFit(500f, 204f, buttons = 8).buttons)
+    }
+
+    /** Where fewer fit than are set, play and pause stays, and the others give way from the start. */
+    @Test fun playStaysAndTheOthersGiveWayFromTheStart() {
+        val set = DefaultSlots.map { it.button }
+        fun kept(room: Int, buttons: List<WidgetButton> = set) = standing(buttons, room) { it }
+        assertEquals(set, kept(5))
+        assertEquals(listOf(WidgetButton.Speakers, WidgetButton.PlayPause, WidgetButton.Next), kept(3))
+        assertEquals(listOf(WidgetButton.PlayPause, WidgetButton.Next), kept(2))
+        assertEquals(listOf(WidgetButton.PlayPause), kept(1))
+        assertEquals(emptyList<WidgetButton>(), kept(0))
+        val noPlay = listOf(WidgetButton.Quieter, WidgetButton.Louder, WidgetButton.Speakers)
+        assertEquals(listOf(WidgetButton.Louder, WidgetButton.Speakers), kept(2, noPlay))
+        val playFirst = listOf(WidgetButton.PlayPause, WidgetButton.Previous, WidgetButton.Next)
+        assertEquals(listOf(WidgetButton.PlayPause, WidgetButton.Next), kept(2, playFirst))
     }
 }

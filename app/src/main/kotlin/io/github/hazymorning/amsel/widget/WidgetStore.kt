@@ -135,19 +135,29 @@ private data class StoredWidget(
     val words: String? = null,
     val showsWords: Boolean = true,
 ) {
-    /** Each button known; one a later Amsel no longer offers is left out. */
+    /**
+     * Each button known; one a later Amsel no longer offers is left out. The buttons as they came
+     * before 2026.11.56, saved untouched, come as they come now: kept as they were, play and next
+     * would give way first.
+     */
     fun setup(): WidgetSetup = WidgetSetup(
         style = WidgetStyle.of(style),
         speaker = speaker,
         cells = WidgetCells.of(cells),
         words = WidgetWordsPlace.of(words),
         showsWords = showsWords,
-        slots = slots.take(MAX_BUTTONS).mapNotNull { stored ->
-            val button = WidgetButton.of(stored.button) ?: return@mapNotNull null
-            if (button == WidgetButton.PlayItem && stored.item == null) null else WidgetSlot(button, stored.item)
+        slots = if (slots.map { it.button } == EarlierDefault) {
+            DefaultSlots
+        } else {
+            slots.take(MAX_BUTTONS).mapNotNull { stored ->
+                val button = WidgetButton.of(stored.button) ?: return@mapNotNull null
+                if (button == WidgetButton.PlayItem && stored.item == null) null else WidgetSlot(button, stored.item)
+            }
         },
     )
 }
+
+private val EarlierDefault = listOf("previous", "play", "next", "favourite", "shuffle")
 
 @Serializable
 private data class StoredSlot(val button: String, val item: WidgetItem? = null)

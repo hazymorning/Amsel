@@ -268,7 +268,7 @@ class WidgetInsetsTest {
     @Test fun aPosterKeepsItsFrameAndGaps() {
         for (actual in around(WidgetSample.tallCard)) {
             val name = "poster at $actual"
-            val drawn = draw(DefaultSlots.take(3), WidgetSample.idle, WidgetSample.tallCard, actual)
+            val drawn = draw(DefaultSlots.takeLast(3), WidgetSample.idle, WidgetSample.tallCard, actual)
             assertFrame(WidgetSizes.PADDING, drawn, name)
             assertCells(drawn, actual.height - WidgetSizes.PADDING - WidgetSizes.CELL_HEIGHT / 2, 3, name)
         }

@@ -50,6 +50,20 @@ class WidgetStoreTest {
         )
     }
 
+    /** Saved as they came before, untouched: the buttons come as they come now; chosen ones stay. */
+    @Test fun theEarlierButtonsAsTheyCameComeAsNow() = runTest {
+        File(dir, "setups.json").writeText(
+            """[{"id":3,"slots":[{"button":"previous"},{"button":"play"},{"button":"next"},""" +
+                """{"button":"favourite"},{"button":"shuffle"}]},""" +
+                """{"id":4,"slots":[{"button":"previous"},{"button":"play"},{"button":"next"}]}]""",
+        )
+        assertEquals(DefaultSlots, store.setup(3)?.slots)
+        assertEquals(
+            listOf(WidgetButton.Previous, WidgetButton.PlayPause, WidgetButton.Next),
+            store.setup(4)?.slots?.map { it.button },
+        )
+    }
+
     @Test fun aBrokenFileStartsOver() = runTest {
         File(dir, "setups.json").writeText("{ not json")
         assertNull(store.setup(3))

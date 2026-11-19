@@ -3,6 +3,7 @@ package io.github.hazymorning.amsel.widget
 import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.core.graphics.ColorUtils
+import io.github.hazymorning.amsel.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -45,6 +46,36 @@ class WidgetArtTest {
         val thumb = WidgetArt.shaped(filled(Color.RED), px = 84, density = 3f)
         assertEquals(0, Color.alpha(thumb.getPixel(0, 0)))
         assertEquals(255, Color.alpha(thumb.getPixel(42, 42)))
+    }
+
+    /** A Play … button is round: clear where a cover's corner would still show the picture. */
+    @Test fun aPlayButtonIsRound() {
+        val face = WidgetArt.round(filled(Color.RED), px = 84, density = 3f)
+        val square = WidgetArt.shaped(filled(Color.RED), px = 84, density = 3f)
+        assertEquals(255, Color.alpha(square.getPixel(8, 8)))
+        assertEquals(0, Color.alpha(face.getPixel(8, 8)))
+        assertEquals(255, Color.alpha(face.getPixel(42, 2)))
+        assertEquals(255, Color.alpha(face.getPixel(42, 42)))
+    }
+
+    /** Darkened, the cover lies sharp and whole; play takes its colour bright, as on a dark ground. */
+    @Test fun theDarkenedCoverIsTheCoverItself() {
+        val blue = Color.rgb(60, 110, 200)
+        val cover = WidgetArt.darkened(filled(blue, width = 640, height = 512))
+        assertEquals(512, cover.bitmap.width)
+        assertEquals(512, cover.bitmap.height)
+        assertEquals(blue, cover.bitmap.getPixel(256, 256))
+        assertFalse(cover.light)
+        val accent = checkNotNull(cover.accent)
+        assertTrue(ColorUtils.calculateLuminance(accent.cell) > ColorUtils.calculateLuminance(blue))
+    }
+
+    /** Darkened, the words are paper over any cover, a white one too; with nothing playing, the empty ground's. */
+    @Test fun theDarkenedLookTakesPaperOverAnyCover() {
+        val ground = WidgetGround.of(WidgetStyle.Darkened, WidgetArt.darkened(filled(Color.WHITE)), clearInk = false)
+        assertEquals(Tone.Dark, ground.tone)
+        assertEquals(R.drawable.widget_veil_darkened, ground.veil)
+        assertEquals(Tone.Light, WidgetGround.of(WidgetStyle.Darkened, null, clearInk = false).tone)
     }
 
     /** An empty cover is the cover's shape in white, for the widget to tint in its tone. */

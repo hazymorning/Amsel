@@ -39,7 +39,7 @@ internal class WidgetDrawing(
     private val density = context.resources.displayMetrics.density
     private val cells =
         WidgetCellsViews(context, text, slots, id, setup, look, pictures, tone, ground.cover, taps, ::px)
-    private val words = WidgetWordsViews(context, text, look, setup.slots, tone, ::px)
+    private val words = WidgetWordsViews(context, text, look, tone, ::px)
 
     /** Bare buttons draw nothing at a row's ends, so their row reaches into the frame. */
     private val side = if (setup.cells == WidgetCells.None) REACH else PADDING - GAP / 2
@@ -217,10 +217,10 @@ internal class WidgetDrawing(
 
     /**
      * One cell: the whole tile is the button, its cell in the frame as every form's. A Play … button
-     * is its item's cover, a tile without buttons the cover of what plays.
+     * is its item's cover, round; a tile without buttons the cover of what plays.
      */
     private fun tile(fit: WidgetFit) = RemoteViews(context.packageName, R.layout.widget_tile).apply {
-        val first = setup.slots.withIndex().firstOrNull { it.value.button.availableIn(look) }
+        val first = setup.shown(look, 1).firstOrNull()
         val slot = first?.value?.takeIf { fit.buttons > 0 }
         val side = px(minOf(fit.width, fit.height))
         val face = when {
@@ -228,7 +228,8 @@ internal class WidgetDrawing(
             slot == null && playing -> pictures.art[side]
             else -> null
         }
-        val night = pictures.blanks[side]?.takeIf { face != null }
+        val shape = if (slot?.button == WidgetButton.PlayItem) pictures.rounds else pictures.blanks
+        val night = shape[side]?.takeIf { face != null }
         ground(clear = face != null)
         shows(R.id.widget_face, face != null)
         shows(R.id.widget_face_night, night != null)

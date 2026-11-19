@@ -86,7 +86,12 @@ class AppShellTest {
                             TextButton(onClick = { navigator.back() }) { Text("back") }
                         }
                     },
-                    nowPlaying = { _, _ -> Text("now playing layer") },
+                    nowPlaying = { _, _ ->
+                        Column {
+                            Text("now playing layer")
+                            if (LocalUpNextAsked.current.value) Text("up next asked")
+                        }
+                    },
                     sheets = {},
                 ),
             )
@@ -318,6 +323,20 @@ class AppShellTest {
         compose.waitForIdle()
         compose.onNodeWithText("now playing layer").assertDoesNotExist()
         compose.onNodeWithText("page Home").assertExists()
+    }
+
+    /** A widget's Up next button: Now Playing opens, and is asked to open Up next over itself. */
+    @Test fun anUpNextLinkOpensNowPlayingAndAsksForUpNext() {
+        val playing = mutableStateOf<NowPlayingUi?>(null)
+        shell(playing)
+        opening.value = Opening.UpNext
+        compose.waitForIdle()
+        compose.onNodeWithText("up next asked").assertDoesNotExist()
+        playing.value = SampleData.nowPlaying
+        compose.waitForIdle()
+        compose.onNodeWithText("now playing layer").assertExists()
+        compose.onNodeWithText("up next asked").assertExists()
+        assertEquals(1, opened)
     }
 
     @Test fun aSpeakersLinkOpensThePicker() {

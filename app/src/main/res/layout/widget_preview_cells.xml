@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The transport as a widget comes, for the picker's preview and while a widget is first drawn. -->
+<!-- The buttons as a widget two cells wide comes, the speakers, play and next, for the picker's
+     preview and while a widget is first drawn. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/widget_cell_height"
@@ -16,7 +17,7 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:importantForAccessibility="no"
-            android:src="@drawable/ic_skip_previous"
+            android:src="@drawable/ic_speaker"
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
     </FrameLayout>

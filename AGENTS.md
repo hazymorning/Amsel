@@ -62,7 +62,8 @@ owner's explicit wishes override the plan.
 6. Budgets fail the build: APK <= 15 MB, permission and dependency allowlists
    (`:app:checkBudgets`).
 7. One corner rule for every cover, artists included (continuous corners by size, `Shapes.cover`):
-   no artwork is ever a circle (`CoverShapeTest`).
+   no artwork is ever a circle (`CoverShapeTest`); the one exception, as the owner asked, is a
+   widget's Play … button, round as it starts what it shows.
 
 Words in the UI: "speaker" not "player", "Play on" not "transfer", "Up next" not "queue",
 "music service" not "provider". German and English strings stay in step.

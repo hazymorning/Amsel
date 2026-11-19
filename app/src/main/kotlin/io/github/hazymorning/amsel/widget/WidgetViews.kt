@@ -15,12 +15,14 @@ class WidgetPictures(
     val cover: WidgetCover? = null,
     /** What plays, sharp, in Amsel's cover corners: a bar's or a player's cover, or a tile's without buttons. */
     val art: Map<Int, Bitmap> = emptyMap(),
-    /** The Play … buttons' faces, by their cover's address. */
+    /** The Play … buttons' faces, round, by their cover's address. */
     val faces: Map<String, Bitmap> = emptyMap(),
-    /** A one-cell Play … button's cover, filling its tile. */
+    /** A one-cell Play … button's cover, round, filling its tile. */
     val tiles: Map<Int, Bitmap> = emptyMap(),
-    /** The cover's shape, empty, where nothing plays. */
+    /** The cover's shape, empty, where nothing plays, and to tint a cover at night. */
     val blanks: Map<Int, Bitmap> = emptyMap(),
+    /** The same, round, to tint a one-cell Play … button at night. */
+    val rounds: Map<Int, Bitmap> = emptyMap(),
 )
 
 /**
