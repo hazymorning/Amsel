@@ -58,7 +58,7 @@
     <string name="player_take_along">Take it along</string>
     <string name="player_leave_there">Leave it there</string>
     <string name="player_not_available">Not available</string>
-    <string name="player_transfer">Transfer playback</string>
+    <string name="player_transfer">Play on another speaker</string>
 
     <!-- Item actions -->
     <string name="player_action_play_next">Play next</string>

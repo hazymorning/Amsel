@@ -28,13 +28,15 @@ internal data class GlyphPlace(val ink: Ink, val dx: Float, val dy: Float)
 /**
  * The phone's type and Amsel's glyphs as a widget sets them, in dp: where ink starts, so the widget
  * lines up by its ink as Amsel's screens do. The words are in the phone's own sans-serif (the widget's
- * layouts name it), which this process measures as the launcher draws it, at the phone's text size.
+ * layouts name it), which this process measures as the launcher draws it, at the phone's text size,
+ * as large as [size] sets them.
  */
-internal class WidgetText(private val context: Context, private val scale: Float = 1f) {
+internal class WidgetText(private val context: Context, val size: WordSize = WordSize.Regular) {
     private val metrics get() = context.resources.displayMetrics
+    private val scale get() = size.scale
 
-    /** The type as widget_words_large sets it, [factor] times as large. */
-    fun scaled(factor: Float) = WidgetText(context, factor)
+    /** The type as [size]'s layout sets it. */
+    fun sized(size: WordSize) = if (size == this.size) this else WidgetText(context, size)
 
     /** [sp] at the phone's text size, which grows large text less than small. */
     fun dp(sp: Float): Float = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, metrics) / metrics.density
@@ -86,20 +88,6 @@ internal class WidgetText(private val context: Context, private val scale: Float
         return minOf(glyphTop, (row - name) / 2 + capTop(WidgetLine.Speaker))
     }
 
-    /** The height of one-line words' box: the speaker's row over the title, or the title alone. */
-    fun wordsBox(words: WidgetWords): Float {
-        val title = height(WidgetLine.Title)
-        if (!words.speaker) return title
-        return maxOf(speakerGlyph, height(WidgetLine.Speaker)) + WidgetSizes.SPEAKER_TO_TITLE + title
-    }
-
-    /** From the words' top to their one line's baseline, the title's, in a row or a bar. */
-    fun wordsBaseline(words: WidgetWords): Float {
-        val title = -paintMetrics(WidgetLine.Title).ascent / metrics.density
-        if (!words.speaker) return title
-        return maxOf(speakerGlyph, height(WidgetLine.Speaker)) + WidgetSizes.SPEAKER_TO_TITLE + title
-    }
-
     private fun paintMetrics(line: WidgetLine) = paint(line).fontMetricsInt
 
     /**
@@ -107,7 +95,7 @@ internal class WidgetText(private val context: Context, private val scale: Float
      * speaker's row, [titleLines] of the title, and the line under it and the time where they show.
      */
     fun wordsStack(speaker: Boolean, titleLines: Int, below: Int): Pair<Float, Float> {
-        var y = if (speaker) maxOf(speakerGlyph, height(WidgetLine.Speaker)) + WidgetSizes.SPEAKER_TO_TITLE else 0f
+        var y = if (speaker) maxOf(speakerGlyph, height(WidgetLine.Speaker)) + size.speakerToTitle else 0f
         val more = (titleLines - 1).coerceAtLeast(0) * dp(WidgetLine.Title.line * scale)
         var baseline = y + more - paintMetrics(WidgetLine.Title).ascent / metrics.density
         y += height(WidgetLine.Title) + more

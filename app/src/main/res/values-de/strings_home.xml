@@ -5,9 +5,9 @@
 
     <!-- Section titles: what a section shows, in plain words -->
     <string name="home_option_pinned">Angeheftet</string>
-    <string name="home_your_albums">Eigene Alben</string>
+    <string name="home_your_albums">Deine Alben</string>
     <string name="home_option_smart_playlists">Intelligente Playlists</string>
-    <string name="home_option_your_playlists">Eigene Playlists</string>
+    <string name="home_option_your_playlists">Deine Playlists</string>
     <string name="home_option_favorite_playlists">Lieblingsplaylists</string>
     <string name="home_option_recent_playlists">Zuletzt gehörte Playlists</string>
     <string name="home_option_new_albums">Neu in der Bibliothek</string>
@@ -23,7 +23,7 @@
     <string name="home_option_recent_stations">Zuletzt gehörte Sender</string>
     <string name="home_option_new_audiobooks">Neue Hörbücher</string>
     <string name="home_option_new_episodes">Neue Folgen</string>
-    <string name="home_option_your_podcasts">Eigene Podcasts</string>
+    <string name="home_option_your_podcasts">Deine Podcasts</string>
     <string name="home_option_played_here_choice">Zuletzt hier gehört</string>
     <string name="home_option_search">Suche</string>
 
@@ -50,7 +50,7 @@
     <string name="home_sentence_option_played_here">hier zuletzt Gehörtes</string>
     <string name="home_sentence_option_continue_listening">Angefangenes</string>
     <string name="home_sentence_option_smart_playlists">intelligente Playlists</string>
-    <string name="home_sentence_option_your_playlists">eigene Playlists</string>
+    <string name="home_sentence_option_your_playlists">deine Playlists</string>
     <string name="home_sentence_option_favorite_playlists">Lieblingsplaylists</string>
     <string name="home_sentence_option_recent_playlists">zuletzt gehörte Playlists</string>
     <string name="home_sentence_option_new_albums">neue Alben</string>
@@ -65,7 +65,7 @@
     <string name="home_sentence_option_recent_stations">zuletzt gehörte Sender</string>
     <string name="home_sentence_option_new_audiobooks">neue Hörbücher</string>
     <string name="home_sentence_option_new_episodes">neue Folgen</string>
-    <string name="home_sentence_option_your_podcasts">eigene Podcasts</string>
+    <string name="home_sentence_option_your_podcasts">deine Podcasts</string>
     <string name="home_sentence_option_search">das Suchfeld</string>
     <string name="home_sentence_layout_grid">Raster</string>
     <string name="home_sentence_layout_small">kleine Cover</string>
@@ -74,10 +74,10 @@
     <string name="home_sentence_layout_list">Liste</string>
     <string name="home_edit_add_section">Abschnitt hinzufügen</string>
     <string name="home_reset">Startseite zurücksetzen</string>
-    <string name="home_reset_question">Deine Abschnitte weichen einer neuen Startseite: Suche, Weiterhören und Reihen mit Musik. Angeheftetes bleibt.</string>
+    <string name="home_reset_question">Deine Abschnitte werden durch eine neue Startseite ersetzt: Suche, Weiterhören und Reihen mit Musik. Angeheftetes bleibt erhalten.</string>
     <string name="home_reset_do">Zurücksetzen</string>
     <string name="home_section_empty">Hier ist noch nichts</string>
-    <string name="home_section_empty_pinned">Noch nichts angeheftet. Ein Album, eine Playlist, einen Künstler, einen Sender, ein Hörbuch oder einen Podcast lange drücken und „An die Startseite anheften“ wählen.</string>
+    <string name="home_section_empty_pinned">Noch nichts angeheftet. Halte ein Album, eine Playlist, einen Künstler, einen Sender, ein Hörbuch oder einen Podcast gedrückt und wähle „An die Startseite anheften“.</string>
 
     <!-- Pins, from any item's ⋮ sheet -->
     <string name="home_action_pin">An die Startseite anheften</string>
@@ -85,7 +85,7 @@
     <string name="home_pinned">An die Startseite angeheftet</string>
     <string name="home_unpinned">Von der Startseite gelöst</string>
 
-    <string name="home_edit_failed">Die Startseite wurde nicht geändert</string>
+    <string name="home_edit_failed">Die Startseite konnte nicht geändert werden</string>
     <string name="home_edit_rename">Name des Abschnitts</string>
     <string name="home_edit_rename_action">Umbenennen</string>
     <string name="home_hide_title">Überschrift ausblenden</string>
@@ -94,8 +94,8 @@
     <string name="move_later">Nach hinten</string>
 
     <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
-    <string name="tip_edit_home">Eine Überschrift oder eine freie Stelle lange drücken, um die Startseite zu bearbeiten.</string>
-    <string name="tip_settings">Die Startseite nach unten ziehen, um die Einstellungen zu öffnen.</string>
-    <string name="tip_more">Album, Playlist oder Titel lange drücken für weitere Optionen.</string>
+    <string name="tip_edit_home">Halte eine Überschrift oder eine freie Stelle gedrückt, um die Startseite zu bearbeiten.</string>
+    <string name="tip_settings">Zieh die Startseite nach unten, um die Einstellungen zu öffnen.</string>
+    <string name="tip_more">Halte ein Album, eine Playlist oder einen Titel gedrückt, um weitere Optionen zu sehen.</string>
     <string name="tip_dismiss">Tipp ausblenden</string>
 </resources>

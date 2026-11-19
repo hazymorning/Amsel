@@ -98,21 +98,3 @@ internal fun WidgetButton.availableIn(look: WidgetLook): Boolean = when (this) {
     WidgetButton.Repeat -> look.repeat != null
     else -> true
 }
-
-/** The views of button [index] in a row: its cell, and its glyph or cover. */
-internal class SlotIds(val slot: Int, val glyph: Int, val face: Int) {
-    companion object {
-        private val All = listOf(
-            SlotIds(R.id.widget_slot_1, R.id.widget_glyph_1, R.id.widget_face_1),
-            SlotIds(R.id.widget_slot_2, R.id.widget_glyph_2, R.id.widget_face_2),
-            SlotIds(R.id.widget_slot_3, R.id.widget_glyph_3, R.id.widget_face_3),
-            SlotIds(R.id.widget_slot_4, R.id.widget_glyph_4, R.id.widget_face_4),
-            SlotIds(R.id.widget_slot_5, R.id.widget_glyph_5, R.id.widget_face_5),
-            SlotIds(R.id.widget_slot_6, R.id.widget_glyph_6, R.id.widget_face_6),
-            SlotIds(R.id.widget_slot_7, R.id.widget_glyph_7, R.id.widget_face_7),
-            SlotIds(R.id.widget_slot_8, R.id.widget_glyph_8, R.id.widget_face_8),
-        )
-
-        fun of(index: Int): SlotIds = All[index]
-    }
-}

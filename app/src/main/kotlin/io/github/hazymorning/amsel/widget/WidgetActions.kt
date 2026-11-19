@@ -12,6 +12,12 @@ interface WidgetActions {
     /** The level Louder stops at; 0 for none. */
     fun volumeLimit(): Int
 
+    /** The step the server's volume up and down take from [level], as its settings last said; never waits for it. */
+    fun volumeStep(level: Int): Int
+
+    /** The server's own step up or down, shown at once as [shown]. */
+    suspend fun nudge(speakerId: String, up: Boolean, shown: Int)
+
     suspend fun volume(speakerId: String, level: Int)
 
     /** This phone's own media volume, one of Android's steps. */
@@ -27,6 +33,10 @@ interface WidgetActions {
         val None = object : WidgetActions {
             override fun volumeLimit() = 0
 
+            override fun volumeStep(level: Int) = serverStep(level)
+
+            override suspend fun nudge(speakerId: String, up: Boolean, shown: Int) = Unit
+
             override suspend fun volume(speakerId: String, level: Int) = Unit
 
             override fun phoneVolume(up: Boolean) = Unit
@@ -40,21 +50,15 @@ interface WidgetActions {
     }
 }
 
-/**
- * The level a tap on Quieter or Louder sets, from the level the widget shows: 5 at a time, 2 below
- * 10, so a tap is heard; Louder stops at [limit] (0 for none) and does not lower a level above it.
- * Set as a level, not as a step on the server, so the speaker ends where the widget says.
- */
-internal fun volumeAfter(level: Int, up: Boolean, limit: Int): Int {
-    val step = if (level < FINE_BELOW || (!up && level <= FINE_BELOW)) FINE_STEP else STEP
-    if (!up) return (level - step).coerceAtLeast(0)
-    val top = if (limit in 1..MAX_LEVEL) maxOf(limit, level) else MAX_LEVEL
-    return (level + step).coerceAtMost(top)
+/** The server's own step at [level] where its settings name none: finer near silence and near full. */
+internal fun serverStep(level: Int): Int = when {
+    level < LADDER_FINE || level > MAX_LEVEL - LADDER_FINE -> 1
+    level < LADDER_MID || level > MAX_LEVEL - LADDER_MID -> 2
+    else -> 3
 }
 
-private const val STEP = 5
-private const val FINE_STEP = 2
-private const val FINE_BELOW = 10
+private const val LADDER_FINE = 10
+private const val LADDER_MID = 30
 private const val MAX_LEVEL = 100
 
 /**
@@ -79,6 +83,12 @@ internal class StateTaps(private val actions: WidgetActions, private val elapsed
         return null
     }
 
+    /**
+     * The server takes the step, by its own setting and from the level it last set, so taps in a row
+     * add up; the widget shows at once where it lands by the setting last read. Louder stops at the
+     * person's limit: a step that would pass it sets the limit, one from the limit or above it does
+     * nothing and says so.
+     */
     private suspend fun volume(shown: WidgetLook, up: Boolean): Refusal? {
         if (shown.phone) {
             actions.phoneVolume(up)
@@ -87,11 +97,18 @@ internal class StateTaps(private val actions: WidgetActions, private val elapsed
         val id = shown.speakerId ?: return null
         val now = elapsedRealtime()
         val level = asked[id]?.takeIf { (_, at) -> now - at < STEP_ON_MS }?.first ?: shown.volume ?: return null
-        val limit = actions.volumeLimit()
-        val next = volumeAfter(level, up, limit)
-        if (next == level) return if (up && limit > 0 && level >= limit) Refusal.AtLimit(limit) else null
-        asked[id] = next to now
-        actions.volume(id, next)
+        val limit = actions.volumeLimit().takeIf { it > 0 }
+        if (up && limit != null && level >= limit) return Refusal.AtLimit(limit)
+        val step = actions.volumeStep(level)
+        val next = (if (up) level + step else level - step).coerceIn(0, MAX_LEVEL)
+        if (next == level) return null
+        if (up && limit != null && next > limit) {
+            asked[id] = limit to now
+            actions.volume(id, limit)
+        } else {
+            asked[id] = next to now
+            actions.nudge(id, up, next)
+        }
         return null
     }
 
