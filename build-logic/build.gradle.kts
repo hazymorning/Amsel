@@ -15,5 +15,9 @@ gradlePlugin {
             id = "amsel.budgets"
             implementationClass = "BudgetsPlugin"
         }
+        register("robolectric") {
+            id = "amsel.robolectric"
+            implementationClass = "RobolectricPlugin"
+        }
     }
 }
