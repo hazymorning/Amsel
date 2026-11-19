@@ -54,6 +54,11 @@ import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.SpokenWord
+import io.github.hazymorning.amsel.widget.SessionHands
+import io.github.hazymorning.amsel.widget.WidgetItem
+import io.github.hazymorning.amsel.widget.WidgetStore
+import io.github.hazymorning.amsel.widget.Widgets
+import io.github.hazymorning.amsel.widget.widgetLook
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -61,6 +66,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Call
@@ -102,6 +108,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     private suspend fun forgetSession() {
         recentSearches.clear()
         bookmarks.clear()
+        widgets.forgetLook()
         imageLoader.memoryCache?.clear()
         withContext(Dispatchers.IO) { imageLoader.diskCache?.clear() }
     }
@@ -164,7 +171,37 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     val playing: Playing by lazy {
-        Playing(app, data, playbackGraph, phone, dispatcher, local, mapper, favorites, scope)
+        Playing(app, data, playbackGraph, phone, dispatcher, local, mapper, favorites, scope).also {
+            // Once built: the widgets read what plays from it.
+            scope.launch { widgets.follow() }
+        }
+    }
+
+    /** The home screen's widgets: what plays where, and the buttons each person set. */
+    val widgets: Widgets by lazy {
+        Widgets(
+            app,
+            WidgetStore(app.filesDir.resolve(WIDGET_FOLDER)),
+            imageLoader,
+            scope,
+            hands = {
+                SessionHands(
+                    app,
+                    wakeSession = data.session::wake,
+                    onPhone = { playbackGraph.sessionTarget.value.isPhone },
+                    showPlaying = { on ->
+                        playbackGraph.sessionTarget.value.playerId?.let { playing.optimistic.playing(it, on) }
+                    },
+                )
+            },
+            lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
+            source = {
+                val looks = combine(playing.speaker, playing.nowPlaying, data.session.state) { speaker, np, session ->
+                    widgetLook(speaker, playing.nameOf(speaker), np, session)
+                }
+                looks to playbackGraph.failures.map { app.getString(it.text, playing.nameOf(it.playerId)) }
+            },
+        )
     }
 
     val playback: Playback by lazy {
@@ -323,3 +360,6 @@ private const val APK_TYPE = "application/vnd.android.package-archive"
 
 /** In the cache, as `res/xml/updates.xml` shares it with the installer. */
 private const val UPDATE_FOLDER = "update"
+
+/** The widgets' buttons and what they showed last, kept between runs. */
+private const val WIDGET_FOLDER = "widget"

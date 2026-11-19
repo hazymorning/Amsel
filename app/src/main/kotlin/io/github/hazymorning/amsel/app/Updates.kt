@@ -198,7 +198,7 @@ class Updates(
                 parsed.pathSegments.take(RELEASE_PATH.size) == RELEASE_PATH
         }
 
-        /** Far over the 8 MB an APK may take (rule 6): what is larger is not Amsel. */
+        /** Far over the 15 MB an APK may take (rule 6): what is larger is not Amsel. */
         const val MAX_BYTES = 64L * 1024 * 1024
         const val BUFFER = 64 * 1024
 

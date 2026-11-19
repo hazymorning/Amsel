@@ -90,6 +90,7 @@ speaker             room                   custom
 queue               queue                  custom
 phone               device-mobile
 volume              speaker-high
+volume_low          speaker-low
 
 # States.
 offline             wifi-slash

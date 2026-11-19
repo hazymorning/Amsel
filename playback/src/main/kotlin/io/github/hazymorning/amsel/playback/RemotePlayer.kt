@@ -260,7 +260,9 @@ class RemotePlayer(
             if (snapshot?.current == null) standIn = resumed
             return Futures.immediateVoidFuture()
         }
-        prepared = BrowseIds.toPlayRequest(playerId, mediaItems.map { it.mediaId }, startIndex)
+        // Its title shows while the speaker starts it, as a play from the app shows its own.
+        val title = mediaItems.getOrNull(startIndex)?.mediaMetadata?.title?.toString()
+        prepared = BrowseIds.toPlayRequest(playerId, mediaItems.map { it.mediaId }, startIndex)?.copy(title = title)
         return Futures.immediateVoidFuture()
     }
 
