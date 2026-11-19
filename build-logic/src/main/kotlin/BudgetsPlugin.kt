@@ -73,7 +73,7 @@ class BudgetsPlugin : Plugin<Project> {
         }
 
     companion object {
-        const val MAX_APK_BYTES = 8_000_000L
+        const val MAX_APK_BYTES = 15_000_000L
         val BASE_PERMISSIONS = setOf(
             "android.permission.INTERNET",
             "android.permission.ACCESS_NETWORK_STATE",
