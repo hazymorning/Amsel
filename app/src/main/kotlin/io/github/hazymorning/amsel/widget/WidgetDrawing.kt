@@ -111,7 +111,8 @@ internal class WidgetDrawing(
         ground()
         opens()
         if (buttonsShown(fit) == 0) {
-            words(fit, start = fit.inset, top = centred(fit), end = fit.inset, width = fit.width)
+            val inset = WidgetSizes.INSET
+            words(fit, start = inset, top = centred(fit), end = inset, width = fit.width)
         } else {
             shows(R.id.widget_words, false)
         }
@@ -267,10 +268,12 @@ internal class WidgetDrawing(
         } else {
             tileButton(slot)
         }
-        setContentDescription(
-            android.R.id.background,
-            slot?.let { slots.label(it, look) } ?: context.getString(R.string.open_now_playing),
-        )
+        val says = when {
+            !look.signedIn -> context.getString(R.string.widget_sign_in)
+            slot == null -> context.getString(R.string.open_now_playing)
+            else -> slots.label(slot, look)
+        }
+        setContentDescription(android.R.id.background, says)
         if (!taps) return
         val press = when {
             !look.signedIn -> open(context, null)

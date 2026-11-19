@@ -146,17 +146,16 @@ fun widgetFit(width: Float, height: Float, inks: List<Ink>, type: WidgetType = W
  * [WidgetSizes.ROW_MIN]. Without buttons, or none that fit, what plays.
  */
 private fun row(width: Float, height: Float, inks: List<Ink>, type: WidgetType): WidgetFit {
+    // Shown where no button stands, signed out too: their room at the sides is the card's.
+    val words = oneLine(height - 2 * WidgetSizes.ROW_MIN, type)
     val most = fitting(inks, width - 2 * WidgetSizes.ROW_MIN, WidgetSizes.ROW_MIN, WidgetSizes.ROW_MIN)
     val tallest = inks.take(most).maxOfOrNull { it.height }
-    if (tallest == null) {
-        val words = oneLine(height - 2 * WidgetSizes.ROW_MIN, type)
-        return WidgetFit(WidgetForm.Row, width, height, WidgetSizes.INSET, buttons = 0, words = words)
-    }
+        ?: return WidgetFit(WidgetForm.Row, width, height, WidgetSizes.INSET, buttons = 0, words = words)
     var inset = maxOf(WidgetSizes.ROW_MIN, (height - tallest) / 2)
     while (inset > WidgetSizes.ROW_MIN && fitting(inks, width - 2 * inset, inset, inset) < most) {
         inset = maxOf(WidgetSizes.ROW_MIN, inset - ROW_STEP)
     }
-    return WidgetFit(WidgetForm.Row, width, height, inset, most)
+    return WidgetFit(WidgetForm.Row, width, height, inset, most, words = words)
 }
 
 /**

@@ -74,13 +74,8 @@ object WidgetSample {
         val views = WidgetViews(context)
         val fit = views.fit(size.width, size.height, setup, look, emptySet())
         val side = views.px(fit.art)
-        val blanks = if (side >
-            0
-        ) {
-            mapOf(side to WidgetArt.blank(side, context.resources.displayMetrics.density))
-        } else {
-            emptyMap()
-        }
+        val density = context.resources.displayMetrics.density
+        val blanks = listOf(side).filter { it > 0 }.associateWith { WidgetArt.blank(it, density) }
         return views.build(1, setup, look, listOf(fit), WidgetPictures(blanks = blanks), clearInk = false, taps = false)
     }
 }

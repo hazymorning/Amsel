@@ -1,8 +1,11 @@
 package io.github.hazymorning.amsel.widget
 
+import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.SizeF
 import android.widget.RemoteViews
 import coil3.ImageLoader
@@ -88,30 +91,43 @@ class Widgets(
         val source = source()
         following = scope.launch {
             loadSetups()
-            launch {
-                source.failures.collect { (speaker, text) ->
-                    _looks.value?.values?.firstOrNull { it.speakerId == speaker }?.let {
-                        said.value =
-                            it.withoutFailure() to text
-                    }
-                }
-            }
+            launch { source.failures.collect(::sayFailure) }
             setups.map { all -> all.values.mapNotNull { it.speaker }.toSet() }
                 .distinctUntilChanged()
                 .flatMapLatest { fixed -> looksOf(source, fixed) }
-                .combine(said) { looks, failure ->
-                    looks.mapValues { (_, look) ->
-                        if (failure?.first ==
-                            look
-                        ) {
-                            look.copy(failure = failure.second)
-                        } else {
-                            look
-                        }
-                    }
-                }
+                .combine(said, ::withFailure)
                 .distinctUntilChanged()
                 .collectLatest { draw(it) }
+        }
+        listenToWallpaper(true)
+    }
+
+    private fun sayFailure(failure: Pair<String, String>) {
+        val (speaker, text) = failure
+        val shown = _looks.value?.values?.firstOrNull { it.speakerId == speaker } ?: return
+        said.value = shown.withoutFailure() to text
+    }
+
+    /** [looks], the one a tap went wrong on with its sentence. */
+    private fun withFailure(looks: Map<String, WidgetLook>, failure: Pair<WidgetLook, String>?) =
+        looks.mapValues { (_, look) -> if (look == failure?.first) look.copy(failure = failure.second) else look }
+
+    /** A clear widget's words take ink or paper by the wallpaper: they are drawn again when it changes. */
+    private val wallpaperChanged = WallpaperManager.OnColorsChangedListener { _, which ->
+        val clear = setups.value.values.any { it.style == WidgetStyle.Clear }
+        if (clear && which and WallpaperManager.FLAG_SYSTEM != 0) scope.launch { _looks.value?.let { draw(it) } }
+    }
+
+    private fun listenToWallpaper(on: Boolean) {
+        val wallpapers = WallpaperManager.getInstance(context)
+        try {
+            if (on) {
+                wallpapers.addOnColorsChangedListener(wallpaperChanged, Handler(Looper.getMainLooper()))
+            } else {
+                wallpapers.removeOnColorsChangedListener(wallpaperChanged)
+            }
+        } catch (e: RuntimeException) {
+            // A phone without a wallpaper service: a clear widget follows its wallpaper at the next song.
         }
     }
 
@@ -129,6 +145,7 @@ class Widgets(
         if (ids().isNotEmpty()) return
         following?.cancel()
         following = null
+        listenToWallpaper(false)
     }
 
     /** Widgets [ids] need drawing (Amsel started, or a widget changed size): as they showed, at rest, if Amsel follows no music yet. */
@@ -204,22 +221,9 @@ class Widgets(
     private fun say(setup: WidgetSetup, text: String) {
         val looks = _looks.value ?: return
         val shown = looks[setup.speaker ?: AMSELS] ?: return
-        said.value = shown.withoutFailure() to text
-        if (following?.isActive != true) {
-            scope.launch {
-                draw(
-                    looks.mapValues { (_, look) ->
-                        if (look ==
-                            shown
-                        ) {
-                            look.copy(failure = text)
-                        } else {
-                            look
-                        }
-                    },
-                )
-            }
-        }
+        val failure = shown.withoutFailure() to text
+        said.value = failure
+        if (following?.isActive != true) scope.launch { draw(withFailure(looks, failure)) }
     }
 
     private suspend fun loadSetups() {

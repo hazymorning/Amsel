@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.widget
 
 import android.appwidget.AppWidgetManager
 import android.content.Intent
+import android.graphics.Color.TRANSPARENT
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,12 +22,7 @@ import io.github.hazymorning.amsel.ui.theme.ThemeMode
  */
 class WidgetSetupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            navigationBarStyle = SystemBarStyle.auto(
-                android.graphics.Color.TRANSPARENT,
-                android.graphics.Color.TRANSPARENT,
-            ),
-        )
+        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(TRANSPARENT, TRANSPARENT))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) window.isNavigationBarContrastEnforced = false
         super.onCreate(savedInstanceState)
         val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
