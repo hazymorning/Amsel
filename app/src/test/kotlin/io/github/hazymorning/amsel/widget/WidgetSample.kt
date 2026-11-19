@@ -67,8 +67,8 @@ object WidgetSample {
     val bar = SizeF(356f, 96f)
     val player = SizeF(356f, 204f)
 
-    /** One row on a phone with five rows: a strip a little lower than the others. */
-    val strip = SizeF(356f, 72f)
+    /** One row on a phone with lower rows, as the owner's 65 dp: a strip lower than the others. */
+    val strip = SizeF(356f, 66f)
 
     /** Two cells by three. */
     val tallCard = SizeF(172f, 312f)
