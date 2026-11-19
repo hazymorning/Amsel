@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.widget
 
 import io.github.hazymorning.amsel.widget.WidgetSizes.PADDING
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -73,5 +74,36 @@ class WidgetFitTest {
         val fit = widgetFit(356f, 96f, 3)
         assertEquals(96f - 2 * PADDING, fit.art, 0.01f)
         assertEquals(3, fit.buttons)
+    }
+
+    @Test fun theTimeGivesWayFirst() {
+        val roomy = widgetFit(172f, 204f, buttons = 3, time = true).words
+        assertEquals(WidgetWords(speaker = true, titleLines = 2, subtitle = true, time = true), roomy)
+        val tight = widgetFit(172f, 176f, buttons = 3, time = true).words
+        assertEquals(WidgetWords(speaker = true, titleLines = 2, subtitle = true), tight)
+    }
+
+    /** Type grows a fifth on a widget where all its lines have room at that size, and only there. */
+    @Test fun wordsGrowWhereEveryLineHasRoom() {
+        assertFalse(widgetFit(172f, 204f, buttons = 3, time = true).large)
+        assertTrue(widgetFit(172f, 260f, buttons = 3, time = true).large)
+        assertFalse(widgetFit(356f, 204f, buttons = 5, time = true).large)
+        assertTrue(widgetFit(356f, 320f, buttons = 5, time = true).large)
+    }
+
+    /** Two cells wide and three high, the cover stands across, as on a small player; its words under it. */
+    @Test fun aTallNarrowWidgetShowsItsCoverAcross() {
+        val fit = widgetFit(172f, 312f, buttons = 3, time = true)
+        assertEquals(WidgetForm.Poster, fit.form)
+        assertEquals(148f, fit.art, 0.01f)
+        assertEquals(3, fit.buttons)
+        assertTrue(fit.words.speaker && fit.words.titleLines >= 1)
+        assertEquals(WidgetForm.Card, widgetFit(172f, 260f, buttons = 3).form)
+    }
+
+    @Test fun aWideWidgetHoldsMoreThanFourButtons() {
+        assertEquals(5, widgetFit(356f, 204f, buttons = 5).buttons)
+        assertEquals(7, widgetFit(356f, 204f, buttons = 8).buttons)
+        assertEquals(8, widgetFit(500f, 204f, buttons = 8).buttons)
     }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A button without a cell: its cell's shade shows only while it is pressed. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="@dimen/widget_cell_inset"
+    android:insetRight="@dimen/widget_cell_inset">
+    <selector>
+        <item android:state_pressed="true">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/widget_cell_light" />
+                <corners android:radius="@dimen/widget_cell_radius" />
+            </shape>
+        </item>
+        <item android:drawable="@android:color/transparent" />
+    </selector>
+</inset>

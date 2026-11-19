@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.SizeF
 import android.widget.RemoteViews
 import coil3.ImageLoader
@@ -61,7 +62,11 @@ class Widgets(
     private val source: () -> WidgetSource,
     /** Amsel follows the music in this run: a widget placed now follows it at once. */
     private val live: () -> Boolean = { false },
+    actions: WidgetActions = WidgetActions.None,
 ) {
+    private val states = StateTaps(actions, SystemClock::elapsedRealtime)
+    private val previews =
+        WidgetPreviews(context) { kind, look -> render.draw(0, kind.setup, look, listOf(kind.start), false) }
     private val manager = AppWidgetManager.getInstance(context)
     private val render = WidgetRender(context, images)
     private val drawing = Mutex()
@@ -98,6 +103,7 @@ class Widgets(
                 .distinctUntilChanged()
                 .flatMapLatest { fixed -> looksOf(source, fixed) }
                 .combine(said, ::withFailure)
+                .map { steadyClocks(it, _looks.value) }
                 .distinctUntilChanged()
                 .collectLatest { draw(it) }
         }
@@ -157,8 +163,7 @@ class Widgets(
         loadSetups()
         // Read under the lock: a look read before it could be older than one drawn meanwhile, and cover it.
         drawing.withLock {
-            val looks = _looks.value
-                ?: store.looks().mapValues { (_, look) -> look.copy(playing = false, failure = null) }
+            val looks = _looks.value ?: store.looks().mapValues { (_, look) -> look.atRest() }
             for (id in ids) drawOne(id, looks)
         }
         if (live()) follow()
@@ -208,9 +213,10 @@ class Widgets(
 
                 WidgetButton.Previous -> hands.previous()
 
-                WidgetButton.Quieter -> hands.volume(up = false)
-
-                WidgetButton.Louder -> hands.volume(up = true)
+                WidgetButton.Quieter, WidgetButton.Louder, WidgetButton.Shuffle, WidgetButton.Repeat,
+                WidgetButton.Favourite,
+                -> (shown(setup)?.let { states.tap(button.button, it) } as? StateTaps.Refusal.AtLimit)
+                    ?.let { say(setup, limitText(it.limit)) }
 
                 WidgetButton.ContinueListening -> lastStarted()?.let { hands.play(it) }
                     ?: say(setup, context.getString(R.string.widget_nothing_to_continue))
@@ -226,6 +232,13 @@ class Widgets(
             say(setup, context.getString(failureText(e, play = true)))
         }
     }
+
+    /** What [setup]'s widget shows now, or showed when Amsel last drew it. */
+    private suspend fun shown(setup: WidgetSetup): WidgetLook? =
+        (_looks.value ?: store.looks())[setup.speaker ?: AMSELS]
+
+    private fun limitText(limit: Int): String =
+        context.getString(R.string.widget_at_limit, context.getString(R.string.player_volume_percent, limit))
 
     private fun say(setup: WidgetSetup, text: String) {
         val looks = _looks.value ?: return
@@ -244,6 +257,7 @@ class Widgets(
     private suspend fun drawLocked(looks: Map<String, WidgetLook>) {
         _looks.value = looks
         for (id in ids()) drawOne(id, looks)
+        looks[AMSELS]?.let { scope.launch { previews.offer(it) } }
         if (looks[AMSELS]?.signedIn == false) {
             store.forgetLooks()
             render.forget()
@@ -267,13 +281,6 @@ class Widgets(
     private fun WidgetLook.withoutFailure() = copy(failure = null)
 
     private companion object {
-        /** Each kind's provider, as the launcher names it. */
-        val Providers: Map<Class<*>, WidgetKind> = mapOf(
-            AmselButtonWidget::class.java to WidgetKind.Button,
-            AmselButtonsWidget::class.java to WidgetKind.Buttons,
-            AmselWidget::class.java to WidgetKind.NowPlaying,
-        )
-
         fun classFor(name: String): Class<*>? = Providers.keys.firstOrNull { it.name == name }
     }
 }

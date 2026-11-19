@@ -36,9 +36,13 @@ class WidgetViews(private val context: Context) {
     /** What TalkBack says for a button, and what the widget's page calls it. */
     fun label(slot: WidgetSlot, look: WidgetLook): String = slots.label(slot, look)
 
-    /** How a widget [width] by [height] dp lays out [setup]. */
+    /** How a widget [width] by [height] dp lays out [setup], every button of it, as its page counts them. */
     fun fit(width: Float, height: Float, setup: WidgetSetup): WidgetFit =
         widgetFit(width, height, setup.slots.size, text.type)
+
+    /** How it lays out what [look] shows: a button with nothing to act on there gives way; its time shows. */
+    fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetLook): WidgetFit =
+        widgetFit(width, height, setup.slots.count { it.button.availableIn(look) }, text.type, look.hasTime)
 
     /**
      * Widget [id] at each of [fits]: from Android 12 the launcher shows the one for its size; before,

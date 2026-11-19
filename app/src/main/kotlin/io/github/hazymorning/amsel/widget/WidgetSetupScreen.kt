@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -42,6 +43,7 @@ import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.rememberReorderable
+import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.screens.settings.LabelToBlock
 import io.github.hazymorning.amsel.ui.screens.settings.RowWords
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsBlock
@@ -70,6 +72,7 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
     val state by viewModel.state.collectAsStateWithLifecycle()
     var sheet by rememberSaveable { mutableStateOf<Int?>(null) }
     var choosingSpeaker by rememberSaveable { mutableStateOf(false) }
+    var choosingCells by rememberSaveable { mutableStateOf(false) }
     var picking by rememberSaveable { mutableStateOf<Int?>(null) }
     val pickingSlot = picking
     if (pickingSlot != null) {
@@ -88,6 +91,7 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
         wallpaper,
         onStyle = viewModel::style,
         onSpeaker = { choosingSpeaker = true },
+        onCells = { choosingCells = true },
         onSlot = { sheet = it },
         onRemove = viewModel::remove,
         onReorder = viewModel::reorder,
@@ -114,6 +118,11 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
             SpeakerChoices(state.setup.speaker, state.speakers) { id -> close { viewModel.speaker(id) } }
         }
     }
+    if (choosingCells) {
+        AmselSheet(onDismiss = { choosingCells = false }) {
+            CellsChoices(state.setup.cells) { cells -> close { viewModel.cells(cells) } }
+        }
+    }
 }
 
 /**
@@ -127,6 +136,7 @@ fun WidgetSetupScreen(
     wallpaper: Color?,
     onStyle: (WidgetStyle) -> Unit,
     onSpeaker: () -> Unit,
+    onCells: () -> Unit,
     onSlot: (Int) -> Unit,
     onRemove: (Int) -> Unit,
     onReorder: (List<Int>) -> Unit,
@@ -173,11 +183,20 @@ fun WidgetSetupScreen(
                                 ?: stringResource(R.string.widget_speaker_amsel)
                             ValueRow(stringResource(R.string.widget_speaker), name, shape, onSpeaker)
                         }
+                        row { shape ->
+                            ValueRow(
+                                stringResource(R.string.widget_cells),
+                                stringResource(state.setup.cells.label),
+                                shape,
+                                onCells,
+                            )
+                        }
                     }
                 }
                 item(key = BUTTONS) {
+                    val fits = pluralStringResource(R.plurals.widget_fits, state.fits, state.fits)
                     GroupLabel(
-                        stringResource(R.string.widget_buttons),
+                        stringResource(R.string.widget_buttons) + DOT_SEPARATOR + fits,
                         above = Space.S8,
                         below = LabelToBlock,
                         start = RowWords,

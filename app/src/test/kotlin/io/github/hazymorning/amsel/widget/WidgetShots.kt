@@ -34,6 +34,26 @@ class WidgetShots : ScreenshotTest() {
     /** Nothing playing, and signed out. */
     @Test fun states() = snap("widget_states") { HomeScreen { States() } }
 
+    /** The cells as the person wants them: play and pause alone, as they come; every button; none. */
+    @Test fun cells() = snap("widget_cells", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Cells() } }
+
+    /** Wide and tall: buttons as many as fit, the cover across a tall narrow one. */
+    @Test fun roomy() = snap("widget_roomy", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Roomy() } }
+
+    /** Three rows high, four wide: the words a fifth larger beside the cover, every line with room. */
+    @Test fun large() = snap("widget_large", listOf(ShotVariant.Light)) {
+        HomeScreen {
+            Widget(WidgetSetup(), WidgetSample.music, WidgetSample.tallPlayer, column = 0, row = 0)
+            Widget(
+                WidgetSetup(slots = WidgetSample.ownButtons),
+                WidgetSample.book,
+                WidgetSample.tallPlayer,
+                column = 0,
+                row = 3,
+            )
+        }
+    }
+
     @Test fun setup() = snap("widget_setup", ShotVariant.entries) { Setup() }
 
     @Test fun choices() = snapScreen("widget_choices", listOf(ShotVariant.Light, ShotVariant.Dark)) {
@@ -97,6 +117,29 @@ class WidgetShots : ScreenshotTest() {
     }
 
     @Composable
+    private fun Cells() {
+        val all = WidgetSetup(cells = WidgetCells.All)
+        val none = WidgetSetup(cells = WidgetCells.None)
+        val play = listOf(WidgetSlot(WidgetButton.PlayPause))
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.row, column = 0, row = 0)
+        Widget(all, WidgetSample.music, WidgetSample.row, column = 2, row = 0)
+        Widget(none, WidgetSample.music, WidgetSample.row, column = 0, row = 1)
+        Widget(all.copy(slots = play), WidgetSample.music, WidgetSample.tile, column = 2, row = 1)
+        Widget(none.copy(slots = play), WidgetSample.music, WidgetSample.tile, column = 3, row = 1)
+        Widget(all, WidgetSample.music, WidgetSample.card, column = 0, row = 2)
+        Widget(none, WidgetSample.music, WidgetSample.card, column = 2, row = 2)
+    }
+
+    @Composable
+    private fun Roomy() {
+        val seven = DefaultSlots + listOf(WidgetSlot(WidgetButton.Repeat), WidgetSlot(WidgetButton.Quieter))
+        Widget(WidgetSetup(slots = seven), WidgetSample.music, WidgetSample.player, column = 0, row = 0)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.tallCard, column = 0, row = 2)
+        Widget(WidgetSetup(), WidgetSample.book, WidgetSample.tallCard, column = 2, row = 2)
+        Widget(WidgetSetup(slots = seven), WidgetSample.music, WidgetSample.bar, column = 0, row = 5)
+    }
+
+    @Composable
     private fun States() {
         Widget(WidgetSetup(), WidgetSample.idle, WidgetSample.card, column = 0, row = 0)
         Widget(WidgetSetup(), WidgetSample.signedOut, WidgetSample.card, column = 2, row = 0)
@@ -148,6 +191,7 @@ class WidgetShots : ScreenshotTest() {
             wallpaper = Wallpaper,
             onStyle = {},
             onSpeaker = {},
+            onCells = {},
             onSlot = {},
             onRemove = {},
             onReorder = {},

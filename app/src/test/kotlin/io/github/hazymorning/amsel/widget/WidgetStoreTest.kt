@@ -25,6 +25,7 @@ class WidgetStoreTest {
             style = WidgetStyle.Clear,
             speaker = "kitchen",
             slots = listOf(WidgetSlot(WidgetButton.Quieter), WidgetSlot(WidgetButton.PlayItem, album)),
+            cells = WidgetCells.None,
         )
         store.setSetup(7, chosen)
         store.setSetup(8, WidgetSetup(slots = emptyList()))

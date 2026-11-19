@@ -58,6 +58,7 @@ import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.widget.SessionHands
 import io.github.hazymorning.amsel.widget.SpeakerHands
+import io.github.hazymorning.amsel.widget.WidgetCommands
 import io.github.hazymorning.amsel.widget.WidgetItem
 import io.github.hazymorning.amsel.widget.WidgetSource
 import io.github.hazymorning.amsel.widget.WidgetStore
@@ -195,7 +196,6 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
                     SessionHands(
                         app,
                         wakeSession = data.session::wake,
-                        onPhone = { playbackGraph.sessionTarget.value.isPhone },
                         showPlaying = { on ->
                             playbackGraph.sessionTarget.value.playerId?.let { playing.optimistic.playing(it, on) }
                         },
@@ -211,19 +211,32 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
             source = { widgetSource() },
             live = playingOnce::isInitialized,
+            actions = WidgetCommands(app, data, playbackGraph.commands, playing.optimistic, favorites),
         )
     }
 
     private fun widgetSource() = object : WidgetSource {
-        override val looks = combine(playing.speaker, playing.nowPlaying, data.session.state) { speaker, np, session ->
-            widgetLook(speaker, playing.nameOf(speaker), np, session)
-        }
-
-        override fun lookOf(id: String) =
-            combine(playing.speakers, playing.nowPlayingOf(id), data.session.state) { speakers, np, session ->
-                val speaker = speakers.firstOrNull { it.id == id } ?: SpeakerUi(id, "", available = false)
-                widgetLook(speaker, playing.nameOf(id), np, session)
+        override val looks =
+            combine(playing.speaker, playing.nowPlaying, data.session.state, data.permissions) {
+                    speaker,
+                    np,
+                    session,
+                    may,
+                ->
+                widgetLook(speaker, playing.nameOf(speaker), np, session, may.canWriteLibrary)
             }
+
+        override fun lookOf(id: String) = combine(
+            playing.speakers,
+            playing.nowPlayingOf(id),
+            data.session.state,
+            data.permissions,
+            favorites.known,
+        ) { speakers, np, session, may, liked ->
+            val speaker = speakers.firstOrNull { it.id == id } ?: SpeakerUi(id, "", available = false)
+            val heart = np?.key?.let(liked::get)?.let { np.copy(favorite = it) } ?: np
+            widgetLook(speaker, playing.nameOf(id), heart, session, may.canWriteLibrary)
+        }
 
         override val failures =
             playbackGraph.failures.map { it.playerId to app.getString(it.text, playing.nameOf(it.playerId)) }

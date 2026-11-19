@@ -2,8 +2,10 @@ package io.github.hazymorning.amsel.widget
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import androidx.core.graphics.ColorUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,4 +53,17 @@ class WidgetArtTest {
         assertEquals(0, Color.alpha(blank.getPixel(0, 0)))
         assertEquals(Color.WHITE, blank.getPixel(72, 72))
     }
+
+    /** Play and pause take a coloured cover's own colour, with a glyph that reads on it. */
+    @Test fun aColouredCoverLendsPlayItsColour() {
+        for (colour in listOf(Color.rgb(60, 110, 200), Color.rgb(240, 200, 60), Color.rgb(150, 30, 40))) {
+            val accent = checkNotNull(WidgetArt.cover(filled(colour)).accent)
+            val hue = FloatArray(3).also { Color.colorToHSV(accent.cell, it) }[0]
+            val wanted = FloatArray(3).also { Color.colorToHSV(colour, it) }[0]
+            assertEquals(wanted, hue, 6f)
+            assertTrue(ColorUtils.calculateContrast(accent.glyph, accent.cell) >= 3.0)
+        }
+    }
+
+    @Test fun aGreyCoverLendsNone() = assertNull(WidgetArt.cover(filled(Color.rgb(128, 128, 128))).accent)
 }

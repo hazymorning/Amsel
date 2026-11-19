@@ -49,3 +49,10 @@ class AmselButtonWidget : WidgetProvider()
 
 /** Buttons: two cells in one row. */
 class AmselButtonsWidget : WidgetProvider()
+
+/** Each kind's provider, as the launcher names it. */
+internal val Providers: Map<Class<*>, WidgetKind> = mapOf(
+    AmselButtonWidget::class.java to WidgetKind.Button,
+    AmselButtonsWidget::class.java to WidgetKind.Buttons,
+    AmselWidget::class.java to WidgetKind.NowPlaying,
+)

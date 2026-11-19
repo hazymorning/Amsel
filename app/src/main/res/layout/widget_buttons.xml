@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The buttons: touch targets of equal width side by side, each showing its cell half a gap inside
-     it (widget_cell_*), so the layout itself keeps cells and gaps even at any size the launcher
-     gives. As it comes, the transport. -->
+<!-- The buttons: touch targets of equal width side by side, each showing its cell or, bare, its
+     pressed shade half a gap inside it (widget_cell_*, widget_bare_*), so the layout itself keeps
+     them and their gaps even at any size the launcher gives. As it comes, the transport. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_row"
     android:layout_width="match_parent"
@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="match_parent"
-        android:background="@drawable/widget_cell_light">
+        android:background="@drawable/widget_bare_light">
 
         <ImageView
             android:id="@+id/widget_glyph_1"
@@ -66,7 +66,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="match_parent"
-        android:background="@drawable/widget_cell_light">
+        android:background="@drawable/widget_bare_light">
 
         <ImageView
             android:id="@+id/widget_glyph_3"
@@ -92,7 +92,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="match_parent"
-        android:background="@drawable/widget_cell_light"
+        android:background="@drawable/widget_bare_light"
         android:visibility="gone">
 
         <ImageView
@@ -107,6 +107,114 @@
 
         <ImageView
             android:id="@+id/widget_face_4"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/widget_slot_5"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bare_light"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/widget_glyph_5"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_speaker"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <ImageView
+            android:id="@+id/widget_face_5"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/widget_slot_6"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bare_light"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/widget_glyph_6"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_speaker"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <ImageView
+            android:id="@+id/widget_face_6"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/widget_slot_7"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bare_light"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/widget_glyph_7"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_speaker"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <ImageView
+            android:id="@+id/widget_face_7"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/widget_slot_8"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_bare_light"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/widget_glyph_8"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_speaker"
+            android:tint="@color/widget_glyph_light"
+            android:tintMode="src_in" />
+
+        <ImageView
+            android:id="@+id/widget_face_8"
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:layout_gravity="center"
