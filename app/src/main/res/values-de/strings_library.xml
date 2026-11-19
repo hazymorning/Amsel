@@ -4,7 +4,7 @@
     <string name="library_sort_recently_played">Zuletzt gehört</string>
     <string name="library_sort_recently_added">Zuletzt hinzugefügt</string>
     <string name="library_sort_a_to_z">A–Z</string>
-    <string name="library_sort_description">Sortiert nach %1$s. Reihenfolge ändern</string>
+    <string name="library_sort_description">Sortierung: %1$s. Reihenfolge ändern</string>
 
     <!-- A–Z scrubber, for TalkBack -->
     <string name="library_scrubber">Zu einem Buchstaben springen</string>

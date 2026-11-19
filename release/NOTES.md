@@ -1,21 +1,17 @@
-# Full plumage
+# Second brood
 
 ## New
 
-- **Buttons your way:** choose which buttons sit on a shaded cell: play alone, every one, or none.
-- **Room for more:** a wide widget holds up to eight buttons; its page says how many fit.
-- **Heart, shuffle and repeat:** new buttons that show whether they are on.
-- **The time:** a song's place and length, or what a book has left, counts on by itself.
-- **Tall widgets show the cover,** like a small player.
+- **What plays, where you want it:** above or below the buttons, at either end of a strip, or left out, so the buttons fill the widget, four in a square as two by two.
+- **Two lines in a low strip:** the speaker stays over the title, a little smaller.
+- **More buttons without backgrounds:** they reach into the edge, so a small square holds three.
 
 ## Better
 
-- **Play in the cover's colour.**
-- **Words beside a cover stand in its middle,** and grow on large widgets.
-- **Buttons in one row** are no taller than elsewhere.
-- **The widget picker** shows what plays now, from Android 15.
-- **TalkBack** hears what plays where, and whether shuffle or the heart is on.
+- **The widget's page** says how many buttons fit at its size and when the others show; each background choice says what it does.
+- **More room at the edges:** 16 dp, as Android has it for widgets.
+- **German** reads as plain German throughout Amsel.
 
 ## Fixed
 
-- **Quieter and Louder:** each tap moves the shown speaker one step, shown at once; a tap that started Amsel no longer changed the phone's volume.
+- **Quieter and Louder** take your server's own step, 1 % if you set it so.

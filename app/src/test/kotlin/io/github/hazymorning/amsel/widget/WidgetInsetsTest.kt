@@ -86,8 +86,9 @@ class WidgetInsetsTest {
         planned: SizeF,
         actual: SizeF = planned,
         cells: WidgetCells = WidgetCells.All,
+        words: WidgetWordsPlace = WidgetWordsPlace.Before,
     ): Drawn {
-        val setup = WidgetSetup(style = WidgetStyle.Plain, slots = slots, cells = cells)
+        val setup = WidgetSetup(style = WidgetStyle.Plain, slots = slots, cells = cells, words = words)
         val view = WidgetSample.plain(context, setup, look, planned).apply(context, FrameLayout(context))
         val width = (actual.width * density).roundToInt()
         val height = (actual.height * density).roundToInt()
@@ -163,23 +164,54 @@ class WidgetInsetsTest {
         }
     }
 
-    /** Bare, the buttons' glyphs stand as evenly as their cells: each in the middle of its own. */
+    /** Bare, the buttons reach into the frame, their glyphs each in the middle of its own target. */
     @Test fun bareButtonsStandEvenly() {
         for (actual in around(WidgetSample.row)) {
             val drawn = draw(DefaultSlots.take(3), music, WidgetSample.row, actual, cells = WidgetCells.None)
             val middles = glyphs(drawn.cells(actual.height / 2)).map { (it.first + it.second) / 2 }
             println("bare row at $actual: $middles")
             assertEquals("bare row at $actual", 3, middles.size)
-            val inner = actual.width - 2 * WidgetSizes.PADDING
-            val pitch = (inner + WidgetSizes.GAP) / 3
+            val pitch = (actual.width - 2 * WidgetSizes.REACH) / 3
             middles.forEachIndexed { i, middle ->
-                assertEquals(
-                    "bare row at $actual, glyph $i",
-                    WidgetSizes.PADDING - WidgetSizes.GAP / 2 + pitch * (i + 0.5f),
-                    middle,
-                    1f,
-                )
+                assertEquals("bare row at $actual, glyph $i", WidgetSizes.REACH + pitch * (i + 0.5f), middle, 1f)
             }
+        }
+    }
+
+    /** After the buttons, the cells stand on the frame at the top and the last line's baseline at the foot. */
+    @Test fun wordsAfterTheButtonsKeepTheFrame() {
+        // A line under the title without a descender, which would reach past its baseline.
+        val look = music.copy(subtitle = "Ana Holm", durationMs = 0)
+        for (actual in around(WidgetSample.card)) {
+            val name = "card, words after, at $actual"
+            val drawn = draw(DefaultSlots, look, WidgetSample.card, actual, words = WidgetWordsPlace.After)
+            assertFrame(WidgetSizes.PADDING, drawn, name)
+            assertCells(drawn, WidgetSizes.PADDING + WidgetSizes.CELL_HEIGHT / 2, 3, name)
+        }
+    }
+
+    /** Without what plays, the buttons' grid keeps the frame at the sides, the gaps between, in the middle. */
+    @Test fun aPadKeepsItsFrameAndGaps() {
+        val four = DefaultSlots.take(4)
+        // Each row's middle, half a row from the widget's.
+        val half = (widgetFit(WidgetSample.card.width, WidgetSample.card.height, 4, words = WidgetWordsPlace.None).cell + WidgetSizes.GAP) / 2
+        for (actual in around(WidgetSample.card)) {
+            val name = "pad at $actual"
+            val drawn = draw(four, music, WidgetSample.card, actual, words = WidgetWordsPlace.None)
+            val (start, top, end, bottom) = drawn.frame()
+            assertEquals("$name start", WidgetSizes.PADDING, start, TOLERANCE)
+            assertEquals("$name end", WidgetSizes.PADDING, end, TOLERANCE)
+            assertEquals("$name top and bottom", top, bottom, TOLERANCE)
+            assertTrue("$name: top $top", top >= WidgetSizes.PADDING - TOLERANCE)
+            assertCells(drawn, actual.height / 2 - half, 2, name)
+            assertCells(drawn, actual.height / 2 + half, 2, name)
+        }
+    }
+
+    /** A strip lower than the others keeps its frame: the cover and the cells on it, the words smaller. */
+    @Test fun aStripKeepsItsFrame() {
+        for (actual in around(WidgetSample.strip)) {
+            assertFrame(WidgetSizes.PADDING, draw(DefaultSlots, WidgetSample.idle, WidgetSample.strip, actual), "strip at $actual")
         }
     }
 

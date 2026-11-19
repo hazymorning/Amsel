@@ -54,7 +54,22 @@ class WidgetShots : ScreenshotTest() {
         }
     }
 
+    /** What plays after the buttons, or left out for a grid of them; a low strip; bare buttons where cells would not fit. */
+    @Test fun parts() = snap("widget_parts", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Parts() } }
+
     @Test fun setup() = snap("widget_setup", ShotVariant.entries) { Setup() }
+
+    @Test fun setupGerman() = snap("widget_setup_german", qualifiers = "de") { Setup() }
+
+    @Test fun background() = snapScreen("widget_background") {
+        Setup()
+        AmselSheet(onDismiss = {}) { StyleChoices(current = WidgetStyle.Cover, onChoose = {}) }
+    }
+
+    @Test fun cellsGerman() = snapScreen("widget_cells_choices_german", qualifiers = "de") {
+        Setup()
+        AmselSheet(onDismiss = {}) { CellsChoices(current = WidgetCells.Play, onChoose = {}) }
+    }
 
     @Test fun choices() = snapScreen("widget_choices", listOf(ShotVariant.Light, ShotVariant.Dark)) {
         Setup()
@@ -85,6 +100,20 @@ class WidgetShots : ScreenshotTest() {
             column = 0,
             row = 4,
         )
+    }
+
+    @Composable
+    private fun Parts() {
+        val after = WidgetSetup(words = WidgetWordsPlace.After)
+        val pad = WidgetSetup(slots = DefaultSlots.take(4), words = WidgetWordsPlace.None)
+        val small = SizeF(152f, 172f)
+        Widget(after, WidgetSample.music, WidgetSample.card, column = 0, row = 0)
+        Widget(pad, WidgetSample.music, WidgetSample.card, column = 2, row = 0)
+        Widget(WidgetSetup(), WidgetSample.music, small, column = 0, row = 2)
+        Widget(WidgetSetup(cells = WidgetCells.None), WidgetSample.music, small, column = 2, row = 2)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.strip, column = 0, row = 4)
+        Widget(after, WidgetSample.music, WidgetSample.bar, column = 0, row = 5)
+        Widget(pad.copy(slots = DefaultSlots), WidgetSample.music, WidgetSample.bar, column = 0, row = 6)
     }
 
     @Composable
@@ -189,12 +218,11 @@ class WidgetShots : ScreenshotTest() {
         WidgetSetupScreen(
             state,
             wallpaper = Wallpaper,
-            onStyle = {},
-            onSpeaker = {},
-            onCells = {},
-            onSlot = {},
+            onSheet = {},
             onRemove = {},
             onReorder = {},
+            onShowWords = {},
+            onMoveWords = {},
             onDone = {},
             onBack = {},
         )

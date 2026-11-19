@@ -2,28 +2,25 @@
 <resources>
     <!-- Below Android 12 a launcher does not round a widget; the widget stays square, as widgets were. -->
     <dimen name="widget_radius">0dp</dimen>
-    <!-- A widget's inner frame: the same room on every side. -->
-    <dimen name="widget_padding">12dp</dimen>
+    <!-- A widget's inner frame: the same room on every side, as Android has it for widgets
+         (system_app_widget_internal_padding). -->
+    <dimen name="widget_padding">16dp</dimen>
+    <!-- A row of cells spans the widget's width; its padding keeps the cells in the frame. -->
+    <dimen name="widget_padding_out">-16dp</dimen>
     <!-- Half the 4 dp gap between cells: a cell's shape stands this far inside its touch target on
          either side, and a row of targets reaches this far into the frame. -->
     <dimen name="widget_cell_inset">2dp</dimen>
     <dimen name="widget_cell_inset_out">-2dp</dimen>
     <dimen name="widget_bar_cell">52dp</dimen>
     <!-- A tile's cell stands on the frame: its shape is inset by half a gap at the sides. -->
-    <dimen name="widget_tile_side">10dp</dimen>
-    <!-- From the words to a bar's first cell, 8, less the target's half gap. -->
-    <dimen name="widget_words_to_bar_cells">6dp</dimen>
+    <dimen name="widget_tile_side">14dp</dimen>
     <dimen name="widget_cell_height">56dp</dimen>
-    <dimen name="widget_words_to_cells">8dp</dimen>
-    <!-- The words' box stands this much outside the frame, top and start, and each line moves back
-         in by what its first letter and capitals leave (WidgetWordsViews). -->
+    <!-- The words' view stands this much outside its box at the start, and each line moves back in
+         by what its first letter leaves (WidgetWordsViews). -->
     <dimen name="widget_words_lead_out">-6dp</dimen>
-    <dimen name="widget_words_lead_out_top">6dp</dimen>
-    <dimen name="widget_padding_words">6dp</dimen>
-    <!-- From a cover's edge to the words' ink beside it: 12, less the words' lead. -->
+    <dimen name="widget_art_to_words">12dp</dimen>
+    <!-- From a poster's cover to the words' ink under it: 12, less the words' lead. -->
     <dimen name="widget_art_to_words_lead">6dp</dimen>
-    <!-- A cell's corner: the widget's own (28) less the frame (12), so the two curves run alike. -->
-    <dimen name="widget_cell_radius">16dp</dimen>
-    <!-- Half the cover's own top margin: a view centred with a top margin moves down by all of it. -->
-    <dimen name="widget_words_on_art">3dp</dimen>
+    <!-- A cell's corner: the widget's own (28) less the frame (16), so the two curves run alike. -->
+    <dimen name="widget_cell_radius">12dp</dimen>
 </resources>

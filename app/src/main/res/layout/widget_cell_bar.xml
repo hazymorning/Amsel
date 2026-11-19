@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widget_cell at a bar's end: a target 52 dp wide, its cell 48. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_cell"
+    android:layout_width="@dimen/widget_bar_cell"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bare_light">
+
+    <ImageView
+        android:id="@+id/widget_glyph"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:tint="@color/widget_glyph_light"
+        android:tintMode="src_in" />
+
+    <ImageView
+        android:id="@+id/widget_face"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+</FrameLayout>

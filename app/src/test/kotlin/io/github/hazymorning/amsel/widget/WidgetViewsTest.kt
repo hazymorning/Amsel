@@ -27,7 +27,11 @@ class WidgetViewsTest {
         look: WidgetLook,
         slots: List<WidgetSlot> = DefaultSlots,
         size: SizeF = WidgetSample.card,
-    ): View = WidgetSample.plain(context, WidgetSetup(slots = slots), look, size).apply(context, FrameLayout(context))
+        setup: WidgetSetup = WidgetSetup(slots = slots),
+    ): View = WidgetSample.plain(context, setup, look, size).apply(context, FrameLayout(context))
+
+    /** What button [n], counted from 1, says. */
+    private fun View.button(n: Int): CharSequence? = cells()[n - 1].contentDescription
 
     private fun View.said(id: Int): CharSequence? = findViewById<View>(id).contentDescription
 
@@ -37,22 +41,22 @@ class WidgetViewsTest {
 
     @Test fun eachButtonSaysWhatItDoes() {
         val widget = drawn(WidgetSample.music)
-        assertEquals("Previous", widget.said(R.id.widget_slot_1))
-        assertEquals("Pause", widget.said(R.id.widget_slot_2))
-        assertEquals("Next", widget.said(R.id.widget_slot_3))
+        assertEquals("Previous", widget.button(1))
+        assertEquals("Pause", widget.button(2))
+        assertEquals("Next", widget.button(3))
     }
 
     @Test fun aBooksSkipsAreSeconds() {
         val widget = drawn(WidgetSample.book.copy(playing = true))
-        assertEquals("Back 15 seconds", widget.said(R.id.widget_slot_1))
-        assertEquals("Forward 30 seconds", widget.said(R.id.widget_slot_3))
+        assertEquals("Back 15 seconds", widget.button(1))
+        assertEquals("Forward 30 seconds", widget.button(3))
     }
 
     @Test fun aPlayButtonNamesItsItem() {
         val widget = drawn(WidgetSample.music, WidgetSample.ownButtons, SizeF(240f, 240f))
-        assertEquals("Quieter", widget.said(R.id.widget_slot_1))
-        assertEquals("Continue listening", widget.said(R.id.widget_slot_3))
-        assertEquals("Play Blue Hour", widget.said(R.id.widget_slot_4))
+        assertEquals("Quieter", widget.button(1))
+        assertEquals("Continue listening", widget.button(3))
+        assertEquals("Play Blue Hour", widget.button(4))
     }
 
     @Test fun theLevelStandsByTheSpeakerWithAVolumeButton() {
@@ -64,21 +68,20 @@ class WidgetViewsTest {
 
     @Test fun playAndPauseShowWhatTheyDo() {
         val playing = drawn(WidgetSample.music)
-        assertEquals(true, playing.shows(R.id.widget_glyph_2))
-        assertEquals("Pause", playing.said(R.id.widget_slot_2))
-        assertEquals("Play", drawn(WidgetSample.music.copy(playing = false)).said(R.id.widget_slot_2))
+        assertEquals(true, playing.cells()[1].shows(R.id.widget_glyph))
+        assertEquals("Pause", playing.button(2))
+        assertEquals("Play", drawn(WidgetSample.music.copy(playing = false)).button(2))
     }
 
     /** A card two cells wide holds three buttons: a fourth gives way whole, never cut. */
     @Test fun whatDoesNotFitGivesWayWhole() {
         val widget = drawn(WidgetSample.music, WidgetSample.ownButtons)
-        assertEquals(true, widget.shows(R.id.widget_slot_3))
-        assertEquals(false, widget.shows(R.id.widget_slot_4))
+        assertEquals(3, widget.cells().size)
     }
 
     @Test fun noButtonsLeaveTheWordsAlone() {
         val widget = drawn(WidgetSample.music, emptyList())
-        assertEquals(false, widget.shows(R.id.widget_row))
+        assertEquals(0, widget.cells().size)
         assertEquals(3, widget.findViewById<TextView>(R.id.widget_title).maxLines)
     }
 
@@ -93,7 +96,7 @@ class WidgetViewsTest {
         val widget = drawn(WidgetSample.signedOut)
         assertEquals("Sign in to Amsel", widget.text(R.id.widget_title))
         assertEquals(false, widget.shows(R.id.widget_speaker_glyph))
-        assertEquals(false, widget.shows(R.id.widget_row))
+        assertEquals(0, widget.cells().size)
     }
 
     @Test fun aFailureStandsWhereTheArtistStood() {
@@ -115,10 +118,7 @@ class WidgetViewsTest {
 
     /** A book has no heart and no shuffle: the transport stands alone and evenly where they were. */
     @Test fun buttonsWithNothingToActOnGiveWay() {
-        val shown = { look: WidgetLook ->
-            val widget = drawn(look, size = WidgetSample.player)
-            (1..MAX_BUTTONS).count { widget.findViewById<View>(slotId(it)).visibility == View.VISIBLE }
-        }
+        val shown = { look: WidgetLook -> drawn(look, size = WidgetSample.player).cells().size }
         assertEquals(5, shown(WidgetSample.music))
         assertEquals(3, shown(WidgetSample.book))
     }
@@ -131,9 +131,9 @@ class WidgetViewsTest {
                 WidgetSlot(WidgetButton.Favourite),
             )
         val widget = drawn(WidgetSample.music.copy(shuffle = true, repeat = RepeatMode.One), slots)
-        assertEquals("Shuffle, on", widget.said(slotId(1)))
-        assertEquals("Repeat, One song", widget.said(slotId(2)))
-        assertEquals("Favourite, on", widget.said(slotId(3)))
+        assertEquals("Shuffle, on", widget.button(1))
+        assertEquals("Repeat, One song", widget.button(2))
+        assertEquals("Favourite, on", widget.button(3))
     }
 
     /** TalkBack hears the widget as a whole before its buttons: what plays, and where. */
@@ -144,14 +144,17 @@ class WidgetViewsTest {
         )
     }
 
-    private fun slotId(n: Int) = SlotIds.of(n - 1).slot
-
-    /** What WidgetText measures is what the layouts set: as they come, and a fifth larger where all has room. */
+    /** What WidgetText measures is what the layouts set: as they come, smaller in a strip, larger where all has room. */
     @Test fun theTypeIsTheLayouts() {
         val px = { sp: Float ->
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, context.resources.displayMetrics)
         }
-        for ((size, scale) in listOf(WidgetSample.card to 1f, SizeF(172f, 260f) to WidgetSizes.LARGE)) {
+        val sizes = listOf(
+            WidgetSample.card to WordSize.Regular.scale,
+            SizeF(172f, 260f) to WordSize.Large.scale,
+            WidgetSample.strip to WordSize.Small.scale,
+        )
+        for ((size, scale) in sizes) {
             val widget = drawn(WidgetSample.music.copy(failure = "x"), size = size)
             for ((id, line) in listOf(
                 R.id.widget_speaker to WidgetLine.Speaker,
@@ -165,5 +168,37 @@ class WidgetViewsTest {
                 assertEquals("$size", line.weight, view.typeface.weight)
             }
         }
+    }
+
+    /** After the buttons, what plays stands at the foot, the cells at the top. */
+    @Test fun whatPlaysCanFollowTheButtons() {
+        val widget = drawn(WidgetSample.music, setup = WidgetSetup(words = WidgetWordsPlace.After))
+        assertEquals(true, widget.shows(R.id.widget_cells_start))
+        assertEquals(false, widget.shows(R.id.widget_cells_end))
+        assertEquals(3, widget.cells().size)
+    }
+
+    /** Left out, what plays gives the buttons the widget: four in two rows of two. */
+    @Test fun withoutWhatPlaysTheButtonsFillTheWidget() {
+        val four = DefaultSlots.take(4)
+        val widget = drawn(WidgetSample.music, setup = WidgetSetup(slots = four, words = WidgetWordsPlace.None))
+        assertEquals(false, widget.shows(R.id.widget_words))
+        val cells = widget.cells()
+        assertEquals(4, cells.size)
+        assertEquals(cells[0].parent, cells[1].parent)
+        assertEquals(false, cells[1].parent == cells[2].parent)
+    }
+
+    /** In a strip lower than the speaker's line and the title at their size, both stay, smaller. */
+    @Test fun aStripKeepsTheSpeakerOverTheTitle() {
+        val widget = drawn(WidgetSample.music, size = WidgetSample.strip)
+        assertEquals(true, widget.shows(R.id.widget_speaker_row))
+        assertEquals("Lanterns", widget.text(R.id.widget_title))
+    }
+
+    /** Signed out, a widget without what plays still asks to sign in. */
+    @Test fun signedOutAWidgetOfButtonsAsksToSignIn() {
+        val widget = drawn(WidgetSample.signedOut, setup = WidgetSetup(words = WidgetWordsPlace.None))
+        assertEquals("Sign in to Amsel", widget.text(R.id.widget_title))
     }
 }

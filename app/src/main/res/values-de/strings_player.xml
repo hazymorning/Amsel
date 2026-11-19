@@ -52,7 +52,7 @@
     <string name="player_take_along">Mitnehmen</string>
     <string name="player_leave_there">Dort lassen</string>
     <string name="player_not_available">Nicht verfügbar</string>
-    <string name="player_transfer">Wiedergabe übertragen</string>
+    <string name="player_transfer">Woanders weiterhören</string>
 
     <!-- Item actions -->
     <string name="player_action_play_next">Als Nächstes abspielen</string>
@@ -68,7 +68,7 @@
     <string name="player_action_mark_finished">Als beendet markieren</string>
     <string name="player_action_mark_unfinished">Als nicht beendet markieren</string>
     <string name="player_action_mark_played">Als gehört markieren</string>
-    <string name="player_action_mark_unplayed">Als ungehört markieren</string>
+    <string name="player_action_mark_unplayed">Als nicht gehört markieren</string>
     <string name="player_action_go_to_author">Zum Autor</string>
     <string name="player_action_go_to_audiobook">Zum Hörbuch</string>
     <string name="player_action_go_to_podcast">Zum Podcast</string>

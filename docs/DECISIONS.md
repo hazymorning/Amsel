@@ -832,3 +832,12 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-19 | Words a fifth larger where every line has room; Google asks to rearrange before growing type, which the time, the Poster and the centring do first | Q3 |
 | 2026-11-19 | The widget picker shows what plays now from Android 15 (generated previews), about once an hour as Android allows | Q1 |
 | 2026-11-19 | A sideways swipe between views is parked: the home screen takes sideways swipes; a widget sees taps and vertical swipes only | Evidence (developer guide, Launcher3) |
+| 2026-11-19 | A widget's Quieter and Louder take the server's own step, as its volume up and down do: its Volume step setting, read now and then, else its ladder of 1, 2 and 3; the widget shows where it lands at once | Owner (1 % set, 2 % taken); rule 1 |
+| 2026-11-19 | A widget's frame is 16 dp, Android's own room inside a widget, its cells' corners 12 | Owner (too near the edge) |
+| 2026-11-19 | What plays is a part of a widget as its buttons are: before them, after them, or left out; the two parts stand at the widget's ends; left out, the buttons fill it in as few rows as hold them, cells about square, in the middle | Owner |
+| 2026-11-19 | A widget's words grow an eighth smaller before the speaker's line goes, so a low strip keeps the speaker over the title | Owner |
+| 2026-11-19 | Bare buttons reach sideways into a widget's frame, to 4 dp from its edge, as they draw nothing there: a small square holds three | Owner; Q2 |
+| 2026-11-19 | A widget's page: rows for the speaker, the background (Blurred cover, Plain, Clear) and which buttons have one, each choice saying what it does; its parts with a sentence where not every button fits, a hidden one saying when it shows | Owner (not self-explanatory); Q1 |
+| 2026-11-19 | A widget's cells and words are added at draw time (`RemoteViews.addView`), not eight fixed slots in each layout: any order without a layout for each, four layouts fewer | Q2 |
+| 2026-11-19 | German speaks to the person with "du" where a sentence says what to do, as Android's own German does; buttons and rows stay infinitives; failures read "… konnte nicht … werden"; about a hundred strings rewritten as plain German. This replaces the neutral tone of 2026-11-02 | Owner (natural German); Q1 |
+| 2026-11-19 | "Transfer playback" reads "Play on another speaker", as the words rule has it | AGENTS |

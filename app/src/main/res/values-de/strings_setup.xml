@@ -12,13 +12,13 @@
     <string name="setup_not_found">Music\u00A0Assistant wurde in diesem Netzwerk nicht gefunden</string>
     <string name="setup_address">Serveradresse</string>
     <string name="setup_address_example">Zum Beispiel 192.168.1.20</string>
-    <string name="setup_https">Unterwegs eine Adresse mit https:// verwenden, damit die Verbindung sicher ist.</string>
+    <string name="setup_https">Verwende unterwegs eine Adresse mit https://, damit die Verbindung sicher ist.</string>
     <string name="setup_connect">Verbinden</string>
     <string name="setup_connecting">Wird verbunden</string>
     <string name="setup_error_unreachable">Music\u00A0Assistant ist unter dieser Adresse nicht erreichbar</string>
     <string name="setup_error_certificate">Das Zertifikat des Servers ist nicht gültig</string>
-    <string name="setup_error_https">Music\u00A0Assistant ist über https nicht erreichbar. Für http zu Hause die Adresse mit http:// und Port eingeben.</string>
-    <string name="setup_finish_setup">Zuerst die Einrichtung von Music\u00A0Assistant abschließen</string>
+    <string name="setup_error_https">Music\u00A0Assistant ist über https nicht erreichbar. Für http zu Hause gib die Adresse mit http:// und Port ein.</string>
+    <string name="setup_finish_setup">Schließ zuerst die Einrichtung von Music\u00A0Assistant ab</string>
 
     <!-- Sign in -->
     <string name="setup_sign_in_home_assistant">Mit Home\u00A0Assistant anmelden</string>
@@ -32,10 +32,10 @@
     <string name="setup_sign_in">Anmelden</string>
     <string name="setup_signing_in">Wird angemeldet</string>
     <string name="setup_error_password">Das Passwort stimmt nicht</string>
-    <string name="setup_error_too_many_attempts">Zu viele Versuche. Bitte kurz warten und noch einmal versuchen.</string>
-    <string name="setup_error_account_disabled">Dieses Konto ist in Music\u00A0Assistant ausgeschaltet</string>
-    <string name="setup_error_sign_in_unreachable">Music\u00A0Assistant ist nicht erreichbar. Bitte noch einmal versuchen.</string>
-    <string name="setup_error_home_assistant">Die Anmeldung mit Home\u00A0Assistant wurde nicht abgeschlossen. Bitte noch einmal versuchen.</string>
+    <string name="setup_error_too_many_attempts">Zu viele Versuche. Warte eine Minute und versuch es dann noch einmal.</string>
+    <string name="setup_error_account_disabled">Dieses Konto ist in Music\u00A0Assistant deaktiviert</string>
+    <string name="setup_error_sign_in_unreachable">Music\u00A0Assistant ist nicht erreichbar. Versuch es noch einmal.</string>
+    <string name="setup_error_home_assistant">Die Anmeldung mit Home Assistant wurde nicht abgeschlossen. Versuch es noch einmal.</string>
 
     <!-- Home Assistant's sign-in page -->
     <string name="setup_opening_home_assistant">Home\u00A0Assistant wird geöffnet…</string>

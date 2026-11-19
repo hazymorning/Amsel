@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One row, four cells wide: the cover, what plays, the button cells at the end. -->
+<!-- One row, four cells wide: the cover and what plays, the button cells before or after them. The
+     cells and the words are added from WidgetDrawing. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -34,23 +35,36 @@
         android:orientation="horizontal"
         android:padding="@dimen/widget_padding">
 
+        <!-- Targets 52 dp wide, which reach half a gap into the frame at the row's end. -->
+        <LinearLayout
+            android:id="@+id/widget_cells_start"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/widget_cell_inset_out"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="gone" />
+
         <include
             layout="@layout/widget_art"
             android:layout_width="wrap_content"
             android:layout_height="match_parent" />
 
-        <include
-            layout="@layout/widget_words"
+        <FrameLayout
+            android:id="@+id/widget_words_box"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/widget_art_to_words_lead"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:paddingStart="@dimen/widget_art_to_words"
+            android:paddingEnd="0dp" />
 
-        <include
-            layout="@layout/widget_buttons_bar"
+        <LinearLayout
+            android:id="@+id/widget_cells_end"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_marginStart="@dimen/widget_words_to_bar_cells"
-            android:layout_marginEnd="@dimen/widget_cell_inset_out" />
+            android:layout_marginEnd="@dimen/widget_cell_inset_out"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>

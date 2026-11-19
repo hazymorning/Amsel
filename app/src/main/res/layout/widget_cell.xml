@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A button: a touch target sharing its row's width, showing its cell or, bare, its pressed shade
+     half a gap inside it (widget_cell_*, widget_bare_*), so the layout keeps the cells and their gaps
+     even at any size the launcher gives. Its glyph, or its item's cover, in the middle. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_cell"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    android:background="@drawable/widget_bare_light">
+
+    <ImageView
+        android:id="@+id/widget_glyph"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:tint="@color/widget_glyph_light"
+        android:tintMode="src_in" />
+
+    <ImageView
+        android:id="@+id/widget_face"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+</FrameLayout>

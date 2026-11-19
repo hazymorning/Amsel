@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- widget_words a fifth larger (WidgetSizes.LARGE), for a widget with room for it all. -->
+<!-- widget_words a fifth larger (WordSize.Large), for a widget with room for it all. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_words"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingTop="3dp">
+    android:layout_marginStart="@dimen/widget_words_lead_out"
+    android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/widget_speaker_row"

@@ -11,15 +11,25 @@ import org.junit.Test
  * cold start the tap that started Amsel came before Amsel knew its speaker, and went to the phone.
  */
 class StateTapsTest {
-    private class Asked(var limit: Int = 0) : WidgetActions {
+    private class Asked(var limit: Int = 0, var step: Int? = null) : WidgetActions {
+        /** Each volume asked, as the widget shows it: a set level, or the server's step and where it lands. */
         val volumes = mutableListOf<Pair<String, Int>>()
+        val nudges = mutableListOf<String>()
         val phone = mutableListOf<Boolean>()
         val asked = mutableListOf<String>()
 
         override fun volumeLimit() = limit
 
+        override suspend fun volumeStep(level: Int) = step ?: serverStep(level)
+
+        override suspend fun nudge(speakerId: String, up: Boolean, shown: Int) {
+            volumes += speakerId to shown
+            nudges += if (up) "up" else "down"
+        }
+
         override suspend fun volume(speakerId: String, level: Int) {
             volumes += speakerId to level
+            nudges += "set"
         }
 
         override fun phoneVolume(up: Boolean) {
@@ -53,34 +63,52 @@ class StateTapsTest {
         repeat = RepeatMode.Off,
     )
 
-    @Test fun louderSetsTheShownSpeakerAHeardStepHigher() = runTest {
+    /** The server takes the step its settings name; the widget shows where it lands. */
+    @Test fun louderTakesTheServersStepOnTheShownSpeaker() = runTest {
+        asked.step = 1
         taps.tap(WidgetButton.Louder, kitchen)
-        assertEquals(listOf("kitchen" to 45), asked.volumes)
+        assertEquals(listOf("kitchen" to 41), asked.volumes)
+        assertEquals(listOf("up"), asked.nudges)
         assertTrue(asked.phone.isEmpty())
     }
 
+    @Test fun withoutASettingTheServersLadderShows() = runTest {
+        taps.tap(WidgetButton.Louder, kitchen)
+        now += 3_000
+        taps.tap(WidgetButton.Quieter, kitchen.copy(volume = 8))
+        now += 3_000
+        taps.tap(WidgetButton.Louder, kitchen.copy(volume = 20))
+        assertEquals(listOf(43, 7, 22), asked.volumes.map { it.second })
+    }
+
     @Test fun tapsInARowStepOnBeforeTheSpeakerReports() = runTest {
+        asked.step = 1
         taps.tap(WidgetButton.Louder, kitchen)
         now += 300
         taps.tap(WidgetButton.Louder, kitchen)
         now += 300
         taps.tap(WidgetButton.Quieter, kitchen)
-        assertEquals(listOf(45, 50, 45), asked.volumes.map { it.second })
+        assertEquals(listOf(41, 42, 41), asked.volumes.map { it.second })
+        assertEquals(listOf("up", "up", "down"), asked.nudges)
     }
 
     @Test fun aLaterTapStepsFromWhatTheSpeakerShows() = runTest {
+        asked.step = 1
         taps.tap(WidgetButton.Louder, kitchen)
         now += 5_000
         taps.tap(WidgetButton.Louder, kitchen.copy(volume = 60))
-        assertEquals(listOf(45, 65), asked.volumes.map { it.second })
+        assertEquals(listOf(41, 61), asked.volumes.map { it.second })
     }
 
+    /** A step that would pass the limit sets the limit; from the limit Louder does nothing and says so. */
     @Test fun louderStopsAtTheLimitAndSaysSo() = runTest {
         asked.limit = 70
+        asked.step = 5
         assertEquals(null, taps.tap(WidgetButton.Louder, kitchen.copy(volume = 68)))
         now += 300
         assertEquals(StateTaps.Refusal.AtLimit(70), taps.tap(WidgetButton.Louder, kitchen.copy(volume = 68)))
         assertEquals(listOf(70), asked.volumes.map { it.second })
+        assertEquals(listOf("set"), asked.nudges)
     }
 
     @Test fun louderNeverLowersALevelAboveTheLimit() = runTest {
@@ -88,14 +116,11 @@ class StateTapsTest {
         assertEquals(StateTaps.Refusal.AtLimit(70), taps.tap(WidgetButton.Louder, kitchen.copy(volume = 80)))
         assertTrue(asked.volumes.isEmpty())
         taps.tap(WidgetButton.Quieter, kitchen.copy(volume = 80))
-        assertEquals(listOf(75), asked.volumes.map { it.second })
+        assertEquals(listOf(78), asked.volumes.map { it.second })
     }
 
-    @Test fun nearSilenceTheStepsAreFine() {
-        assertEquals(6, volumeAfter(8, up = false, limit = 0))
-        assertEquals(0, volumeAfter(1, up = false, limit = 0))
-        assertEquals(10, volumeAfter(8, up = true, limit = 0))
-        assertEquals(100, volumeAfter(98, up = true, limit = 0))
+    @Test fun theLadderIsTheServers() {
+        assertEquals(listOf(1, 2, 3, 3, 2, 1), listOf(5, 20, 30, 70, 80, 95).map(::serverStep))
     }
 
     @Test fun thisPhoneMovesThePhonesOwnVolume() = runTest {

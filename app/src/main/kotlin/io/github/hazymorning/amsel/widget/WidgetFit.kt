@@ -1,6 +1,7 @@
 package io.github.hazymorning.amsel.widget
 
 import androidx.compose.runtime.Immutable
+import kotlin.math.ceil
 import kotlin.math.floor
 
 /** What a widget is at its size. */
@@ -8,19 +9,22 @@ enum class WidgetForm {
     /** One cell: one button in the middle, or a cover. */
     Tile,
 
-    /** One row: the buttons side by side; without buttons, what plays. */
-    Row,
+    /** Buttons alone, in rows in the frame's middle: one row high, or what plays left out. */
+    Pad,
 
-    /** Two rows and more: the speaker and what plays, over the buttons. */
+    /** One row without buttons: what plays. */
+    Line,
+
+    /** Two rows and more: what plays above or below a row of buttons. */
     Card,
 
-    /** One row, four cells wide: the cover, what plays, the buttons at the end. */
+    /** One row, four cells wide: the cover and what plays, the buttons before or after them. */
     Bar,
 
-    /** Two rows and more, four cells wide: the cover beside what plays, over the buttons. */
+    /** Two rows and more, four cells wide: the cover beside what plays, above or below a row of buttons. */
     Player,
 
-    /** Two cells wide and tall enough: the cover across, what plays under it, the buttons at the foot. */
+    /** Two cells wide and tall enough: the cover across, what plays under it, a row of buttons. */
     Poster,
 }
 
@@ -31,13 +35,26 @@ data class WidgetType(val speaker: Float = 16f, val title: Float = 20f, val subt
     fun scaled(factor: Float) = WidgetType(speaker * factor, title * factor, subtitle * factor)
 }
 
+/**
+ * How large what plays is set, against res/layout/widget_words.xml: smaller, closer lines keep the
+ * speaker over the title in a strip; larger where every line has room.
+ */
+enum class WordSize(val scale: Float, val speakerToTitle: Float) {
+    Small(0.875f, 4f),
+    Regular(1f, 10f),
+    Large(1.2f, 10f),
+}
+
 /** How much of what plays shows: the speaker's line, the title's lines, the line under it, its time. */
 @Immutable
 data class WidgetWords(val speaker: Boolean, val titleLines: Int, val subtitle: Boolean, val time: Boolean = false) {
-    fun needs(type: WidgetType): Float = (if (speaker) type.speaker + WidgetSizes.SPEAKER_TO_TITLE else 0f) +
-        type.title * titleLines +
-        (if (subtitle) WidgetSizes.TITLE_TO_SUBTITLE + type.subtitle else 0f) +
-        if (time) WidgetSizes.TITLE_TO_SUBTITLE + type.subtitle else 0f
+    fun needs(type: WidgetType, size: WordSize = WordSize.Regular): Float {
+        val set = type.scaled(size.scale)
+        return (if (speaker) set.speaker + size.speakerToTitle else 0f) +
+            set.title * titleLines +
+            (if (subtitle) WidgetSizes.TITLE_TO_SUBTITLE + set.subtitle else 0f) +
+            if (time) WidgetSizes.TITLE_TO_SUBTITLE + set.subtitle else 0f
+    }
 
     companion object {
         val None = WidgetWords(speaker = false, titleLines = 0, subtitle = false)
@@ -56,23 +73,29 @@ data class WidgetFit(
     val height: Float,
     /** How many of the person's buttons stand, from the start of their order. */
     val buttons: Int,
-    /** The cover's side in a bar or a player; 0 elsewhere. */
+    /** The cover's side in a bar, a player or a poster; 0 elsewhere. */
     val art: Float = 0f,
     val words: WidgetWords = WidgetWords.None,
-    /** The words [WidgetSizes.LARGE] times as large: a card's or a player's with room for all of them. */
-    val large: Boolean = false,
+    val size: WordSize = WordSize.Regular,
+    /** A pad's buttons in each of its rows; the last row may hold fewer. */
+    val columns: Int = buttons,
+    /** A pad's cells' height. */
+    val cell: Float = WidgetSizes.CELL_HEIGHT,
 )
 
 /** The widget's measures, in dp; the frame and the gap are res/values/widget.xml's. */
 object WidgetSizes {
-    /** The room on every side, inside the widget's edge. */
-    const val PADDING = 12f
+    /** The room on every side, inside the widget's edge: Android's own for widgets. */
+    const val PADDING = 16f
 
     /**
      * Between two button cells. Each cell stands half of it inside its touch target, so the targets
      * meet and reach that half into the frame at a row's ends.
      */
     const val GAP = 4f
+
+    /** Bare buttons draw nothing at a row's ends: their targets reach this near the widget's edge. */
+    const val REACH = 4f
 
     /** A button's touch target is at least this wide. */
     const val CELL_MIN = 48f
@@ -83,7 +106,7 @@ object WidgetSizes {
     /** A bar's button: a cell of 48 in a target of 52. */
     const val BAR_CELL = 52f
 
-    /** Between the words and the cells under them, and before a bar's cells. */
+    /** Between the words and the cells beside them. */
     const val WORDS_TO_CELLS = 8f
 
     /** From a cover to the words beside it. */
@@ -100,123 +123,157 @@ object WidgetSizes {
     /** A Play … button's cover, inside its cell. */
     const val FACE = 28f
 
-    const val SPEAKER_TO_TITLE = 10f
     const val TITLE_TO_SUBTITLE = 4f
+
+    /**
+     * The words' view stands this far outside its box at the start (widget_words_lead_out), and a
+     * box past the frame on the side its words align to: each line moves back in by what its first
+     * ink leaves, which no padding below none could do.
+     */
+    const val LEAD = 6f
 
     /** Under these a widget is one column, or one row, wide. */
     const val TWO_CELLS = 110f
 
     /** From here a widget is wide enough for a cover beside what plays. */
     const val WIDE = 300f
-
-    /** Words with room for every line they have grow by this, as type grows with a page. */
-    const val LARGE = 1.2f
 }
 
-/** The fit of a widget [width] by [height] dp for [buttons] buttons, set in [type]; with a time line where there is [time]. */
+/**
+ * The fit of a widget [width] by [height] dp for [buttons] buttons, set in [type]; with a time line
+ * where there is [time], what plays [words], and [bare] buttons, which reach into the frame.
+ */
 fun widgetFit(
     width: Float,
     height: Float,
     buttons: Int,
     type: WidgetType = WidgetType(),
     time: Boolean = false,
+    words: WidgetWordsPlace = WidgetWordsPlace.Before,
+    bare: Boolean = false,
 ): WidgetFit {
     val s = WidgetSizes
     val oneRow = height < s.TWO_CELLS
     val inner = width - 2 * s.PADDING
     val innerHeight = height - 2 * s.PADDING
+    val row = span(width, bare)
     val form = when {
         width < s.TWO_CELLS && oneRow -> WidgetForm.Tile
 
-        oneRow -> if (width >= s.WIDE) WidgetForm.Bar else WidgetForm.Row
+        // Beside buttons a row narrower than a bar has no room for words.
+        buttons > 0 && (words == WidgetWordsPlace.None || oneRow && width < s.WIDE) -> WidgetForm.Pad
+
+        oneRow -> if (width >= s.WIDE) WidgetForm.Bar else WidgetForm.Line
 
         width >= s.WIDE -> WidgetForm.Player
 
         // A cover as wide as the frame, the speaker and the title under it, the cells: all with room.
-        width >= s.TWO_CELLS && innerHeight >= inner + s.ART_TO_WORDS + type.speaker + s.SPEAKER_TO_TITLE +
-            type.title + under(cells(inner, buttons)) -> WidgetForm.Poster
+        width >= s.TWO_CELLS && innerHeight >= inner + s.ART_TO_WORDS +
+            SPEAKER_AND_TITLE.needs(type) + under(cells(row, buttons)) -> WidgetForm.Poster
 
         else -> WidgetForm.Card
     }
     return when (form) {
         WidgetForm.Tile -> WidgetFit(form, width, height, buttons = minOf(1, buttons))
 
+        WidgetForm.Pad -> pad(width, height, buttons, bare)
+
         // Shown where no button stands, signed out too.
-        WidgetForm.Row -> WidgetFit(form, width, height, cells(inner, buttons), words = oneLine(innerHeight, type))
+        WidgetForm.Line -> said(WidgetFit(form, width, height, 0), innerHeight, type, alone = true, strip = true)
 
         WidgetForm.Card -> {
-            val shown = cells(inner, buttons)
-            val room = innerHeight - under(shown)
-            val large = words(room, type.scaled(s.LARGE), shown == 0, time).takeIf { it.whole(time) }
-            WidgetFit(
-                form,
-                width,
-                height,
-                shown,
-                words = large ?: words(room, type, shown == 0, time),
-                large =
-                    large != null,
-            )
+            val shown = cells(row, buttons)
+            said(WidgetFit(form, width, height, shown), innerHeight - under(shown), type, shown == 0, time)
         }
 
         WidgetForm.Bar -> {
             val art = innerHeight
             // Larger type keeps a bar's words their room: a button gives way first.
-            val words = s.WORDS_MIN * type.title / WidgetType().title
-            val room = inner - art - s.ART_TO_WORDS - words - s.WORDS_TO_CELLS
+            val least = s.WORDS_MIN * type.title / WidgetType().title
+            val room = inner - art - s.ART_TO_WORDS - least - s.WORDS_TO_CELLS
             val shown = floor((room + s.GAP + EPSILON) / s.BAR_CELL).toInt().coerceIn(0, buttons)
-            WidgetFit(form, width, height, shown, art, oneLine(innerHeight, type))
+            said(WidgetFit(form, width, height, shown, art), innerHeight, type, shown == 0, strip = true)
         }
 
         WidgetForm.Poster -> {
-            val shown = cells(inner, buttons)
+            val shown = cells(row, buttons)
             val room = innerHeight - inner - s.ART_TO_WORDS - under(shown)
-            WidgetFit(form, width, height, shown, art = inner, words = words(room, type, alone = false, time))
+            said(WidgetFit(form, width, height, shown, art = inner), room, type, alone = false, time = time)
         }
 
         WidgetForm.Player -> {
-            val shown = cells(inner, buttons)
+            val shown = cells(row, buttons)
             val top = innerHeight - under(shown)
             val art = minOf(top, inner * s.ART_SHARE)
-            val large = words(top, type.scaled(s.LARGE), shown == 0, time).takeIf { it.whole(time) }
-            WidgetFit(form, width, height, shown, art, large ?: words(top, type, shown == 0, time), large != null)
+            said(WidgetFit(form, width, height, shown, art), top, type, shown == 0, time)
         }
     }
 }
 
+/** The width a row of targets spans: the frame and the half gaps its ends reach, or bare, nearly all. */
+internal fun span(width: Float, bare: Boolean): Float =
+    if (bare) width - 2 * WidgetSizes.REACH else width - 2 * WidgetSizes.PADDING + WidgetSizes.GAP
+
+/** How many of [wanted] targets, each at least a touch target wide, stand side by side in [span] dp. */
+internal fun cells(span: Float, wanted: Int): Int =
+    floor((span + EPSILON) / WidgetSizes.CELL_MIN).toInt().coerceIn(0, wanted)
+
 /**
- * How many of [wanted] cells stand side by side in [room] dp: their targets, which reach half a gap
- * past the room at both ends, are each at least a touch target wide.
+ * Buttons alone: in as few rows as hold them, each as full as the next; cells as wide as their row
+ * allows and about as high, the grid in the frame's middle.
  */
-internal fun cells(room: Float, wanted: Int): Int {
-    val fit = floor((room + WidgetSizes.GAP + EPSILON) / WidgetSizes.CELL_MIN).toInt()
-    return fit.coerceIn(0, wanted)
+private fun pad(width: Float, height: Float, buttons: Int, bare: Boolean): WidgetFit {
+    val s = WidgetSizes
+    val row = span(width, bare)
+    val across = cells(row, buttons).coerceAtLeast(1)
+    val down = floor((height - 2 * s.PADDING + s.GAP + EPSILON) / (s.CELL_MIN + s.GAP)).toInt().coerceAtLeast(1)
+    val shown = minOf(buttons, across * down)
+    val rows = ceil(shown.toFloat() / across).toInt()
+    val columns = ceil(shown.toFloat() / rows).toInt()
+    val wide = row / columns - s.GAP
+    val most = (height - 2 * s.PADDING - (rows - 1) * s.GAP) / rows
+    return WidgetFit(WidgetForm.Pad, width, height, shown, columns = columns, cell = minOf(most, maxOf(s.CELL_HEIGHT, wide)))
+}
+
+/** The height a row of cells takes beside the words, with the gap between. */
+private fun under(cells: Int): Float = if (cells == 0) 0f else WidgetSizes.CELL_HEIGHT + WidgetSizes.WORDS_TO_CELLS
+
+private val SPEAKER_AND_TITLE = WidgetWords(speaker = true, titleLines = 1, subtitle = false)
+private val TITLE = WidgetWords(speaker = false, titleLines = 1, subtitle = false)
+
+/**
+ * [fit] with as much of what plays as [room] dp hold, and its size: a fifth larger where every line
+ * has room; else the time gives way first, then the title's second line and the line under it; then
+ * the speaker and the title grow smaller before the speaker's line goes. A third title line is a
+ * card's without buttons; a [strip] one row high keeps the title to one.
+ */
+private fun said(
+    fit: WidgetFit,
+    room: Float,
+    type: WidgetType,
+    alone: Boolean,
+    time: Boolean = false,
+    strip: Boolean = false,
+): WidgetFit {
+    fun fits(words: WidgetWords, size: WordSize) = words.needs(type, size) <= room + EPSILON
+    val lines = listOfNotNull(
+        WidgetWords(speaker = true, titleLines = 3, subtitle = true, time = true).takeIf { alone && time && !strip },
+        WidgetWords(speaker = true, titleLines = 3, subtitle = true).takeIf { alone && !strip },
+        WidgetWords(speaker = true, titleLines = 2, subtitle = true, time = true).takeIf { time && !strip },
+        WidgetWords(speaker = true, titleLines = 2, subtitle = true).takeIf { !strip },
+        WidgetWords(speaker = true, titleLines = 1, subtitle = true),
+        SPEAKER_AND_TITLE,
+    )
+    val large = lines.firstOrNull { fits(it, WordSize.Large) }?.takeIf { !strip && it.whole(time) }
+    if (large != null) return fit.copy(words = large, size = WordSize.Large)
+    val regular = lines.firstOrNull { fits(it, WordSize.Regular) }
+    if (regular != null) return fit.copy(words = regular, size = WordSize.Regular)
+    val (words, size) = listOf(SPEAKER_AND_TITLE to WordSize.Small, TITLE to WordSize.Regular, TITLE to WordSize.Small)
+        .firstOrNull { (words, size) -> fits(words, size) } ?: (WidgetWords.None to WordSize.Regular)
+    return fit.copy(words = words, size = size)
 }
 
 /** Every line: the speaker's, two of the title, the line under it, and the time where there is one. */
 private fun WidgetWords.whole(time: Boolean) = speaker && titleLines >= 2 && subtitle && (this.time || !time)
-
-/** The height a row of cells takes under the words, with the gap above it. */
-private fun under(cells: Int): Float = if (cells == 0) 0f else WidgetSizes.CELL_HEIGHT + WidgetSizes.WORDS_TO_CELLS
-
-/**
- * As much of what plays as [room] dp hold: the time gives way first, then the title's second line,
- * the line under the title, the speaker's line. A third line is a card's without buttons.
- */
-private fun words(room: Float, type: WidgetType, alone: Boolean, time: Boolean): WidgetWords = listOfNotNull(
-    WidgetWords(speaker = true, titleLines = 3, subtitle = true, time = true).takeIf { alone && time },
-    WidgetWords(speaker = true, titleLines = 3, subtitle = true).takeIf { alone },
-    WidgetWords(speaker = true, titleLines = 2, subtitle = true, time = true).takeIf { time },
-    WidgetWords(speaker = true, titleLines = 2, subtitle = true),
-    WidgetWords(speaker = true, titleLines = 1, subtitle = true),
-    WidgetWords(speaker = true, titleLines = 1, subtitle = false),
-    WidgetWords(speaker = false, titleLines = 1, subtitle = false),
-).firstOrNull { it.needs(type) <= room + EPSILON } ?: WidgetWords.None
-
-/** The speaker's line over the title, or the title alone, in one row [room] dp high. */
-private fun oneLine(room: Float, type: WidgetType): WidgetWords = listOf(
-    WidgetWords(speaker = true, titleLines = 1, subtitle = false),
-    WidgetWords(speaker = false, titleLines = 1, subtitle = false),
-).firstOrNull { it.needs(type) <= room + EPSILON } ?: WidgetWords.None
 
 private const val EPSILON = 0.01f

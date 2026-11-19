@@ -83,6 +83,7 @@ class WidgetStore(private val dir: File) {
                 setup.style.id,
                 setup.speaker,
                 setup.cells.id,
+                setup.words.id,
             )
         }
         write(setupsFile) { it.writeText(json.encodeToString(ListSerializer(StoredWidget.serializer()), stored)) }
@@ -130,12 +131,14 @@ private data class StoredWidget(
     val style: String? = null,
     val speaker: String? = null,
     val cells: String? = null,
+    val words: String? = null,
 ) {
     /** Each button known; one a later Amsel no longer offers is left out. */
     fun setup(): WidgetSetup = WidgetSetup(
         style = WidgetStyle.of(style),
         speaker = speaker,
         cells = WidgetCells.of(cells),
+        words = WidgetWordsPlace.of(words),
         slots = slots.take(MAX_BUTTONS).mapNotNull { stored ->
             val button = WidgetButton.of(stored.button) ?: return@mapNotNull null
             if (button == WidgetButton.PlayItem && stored.item == null) null else WidgetSlot(button, stored.item)
