@@ -808,3 +808,9 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-19 | The release APK may take 15 MB, up from 8 (`:app:checkBudgets`, rule 6) | Owner |
 | 2026-11-19 | Widgets, next (`docs/notes/widget.md`): one widget in three starting sizes, 1 × 1, 2 × 1 and 2 × 2, its form following its size; none to four buttons of 48 dp, those that do not fit dropped whole; a look of Cover, Plain (the system's colours) or Clear; a speaker of its own or Amsel's; no padding, corner or font settings | Owner; E (survey of players, Google's widget quality guidance); Q2 |
 | 2026-11-19 | Home Assistant actions on widget buttons stay out: each needs setting up in Home Assistant, whose app has its own action and media widgets | Rule 3 (works untold); Q2 |
+| 2026-11-19 | Built as planned. Every distance on a widget is to the ink, as on Amsel's screens: a card and a player keep 16 all round, a row's ends its room above and below, less only where that costs a button; `WidgetInsetsTest` measures it | Owner ("ordentliches Padding"); Q3 |
+| 2026-11-19 | A widget is placed without its page (`configuration_optional`); a long press opens it to change the look, the speaker or the buttons | Q2 |
+| 2026-11-19 | A one-cell widget is one button over the whole cell; a Play … button there is its item's cover, a widget without buttons the cover of what plays | Q1 (48 dp, an icon's size) |
+| 2026-11-19 | A widget can keep to one speaker; This phone is not offered, as it plays only where Amsel plays | Q1 |
+| 2026-11-19 | A widget's covers keep Amsel's cover corners and the night's range, and come from Amsel's cover cache; the widget keeps only its setup and what it showed last | Rule 7; Q3; Q4 |
+| 2026-11-19 | The level after a widget's speaker shows whole or not at all, and a button its size cannot hold says so on the widget's page | Q1 |
