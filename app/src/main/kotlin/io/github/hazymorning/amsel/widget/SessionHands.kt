@@ -24,7 +24,7 @@ interface WidgetHands {
     /** Opens the connection, as a command from outside the app does: what the speaker holds is known sooner. */
     fun wake()
 
-    fun play()
+    suspend fun play()
 
     suspend fun pause()
 
@@ -57,7 +57,7 @@ internal class SessionHands(
      * Play as a headset's play: through the media button, which starts the service in front at once
      * and resumes what the speaker holds, with the "Amsel" stand-in until it reports.
      */
-    override fun play() {
+    override suspend fun play() {
         showPlaying(true)
         val press = Intent(Intent.ACTION_MEDIA_BUTTON)
             .setClass(context, PlaybackService::class.java)

@@ -21,7 +21,7 @@ class WidgetTaps : BroadcastReceiver() {
         if (intent.action != TAP) return
         val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         val slot = intent.getIntExtra(SLOT, -1)
-        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID || slot !in 0 until SLOTS) return
+        if (widgetId == AppWidgetManager.INVALID_APPWIDGET_ID || slot !in 0 until MAX_BUTTONS) return
         val shownPlaying = intent.getBooleanExtra(SHOWN_PLAYING, false)
         val pending = goAsync()
         val graph = context.graph

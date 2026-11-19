@@ -52,10 +52,14 @@ import io.github.hazymorning.amsel.playback.DownloadService
 import io.github.hazymorning.amsel.playback.LocalPlayback
 import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
+import io.github.hazymorning.amsel.playback.Target
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
+import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.widget.SessionHands
+import io.github.hazymorning.amsel.widget.SpeakerHands
 import io.github.hazymorning.amsel.widget.WidgetItem
+import io.github.hazymorning.amsel.widget.WidgetSource
 import io.github.hazymorning.amsel.widget.WidgetStore
 import io.github.hazymorning.amsel.widget.Widgets
 import io.github.hazymorning.amsel.widget.widgetLook
@@ -170,12 +174,14 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         Favorites(data.session.api, data.library, messages, data.session.state, data.session.client.events, scope)
     }
 
-    val playing: Playing by lazy {
+    private val playingOnce = lazy {
         Playing(app, data, playbackGraph, phone, dispatcher, local, mapper, favorites, scope).also {
             // Once built: the widgets read what plays from it.
             scope.launch { widgets.follow() }
         }
     }
+
+    val playing: Playing by playingOnce
 
     /** The home screen's widgets: what plays where, and the buttons each person set. */
     val widgets: Widgets by lazy {
@@ -184,24 +190,43 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             WidgetStore(app.filesDir.resolve(WIDGET_FOLDER)),
             imageLoader,
             scope,
-            hands = {
-                SessionHands(
-                    app,
-                    wakeSession = data.session::wake,
-                    onPhone = { playbackGraph.sessionTarget.value.isPhone },
-                    showPlaying = { on ->
-                        playbackGraph.sessionTarget.value.playerId?.let { playing.optimistic.playing(it, on) }
-                    },
-                )
+            hands = { speaker ->
+                if (speaker == null) {
+                    SessionHands(
+                        app,
+                        wakeSession = data.session::wake,
+                        onPhone = { playbackGraph.sessionTarget.value.isPhone },
+                        showPlaying = { on ->
+                            playbackGraph.sessionTarget.value.playerId?.let { playing.optimistic.playing(it, on) }
+                        },
+                    )
+                } else {
+                    SpeakerHands(
+                        wakeSession = data.session::wake,
+                        player = { playbackGraph.playerFor(Target(speaker, isPhone = false)) },
+                        showPlaying = { on -> playing.optimistic.playing(speaker, on) },
+                    )
+                }
             },
             lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
-            source = {
-                val looks = combine(playing.speaker, playing.nowPlaying, data.session.state) { speaker, np, session ->
-                    widgetLook(speaker, playing.nameOf(speaker), np, session)
-                }
-                looks to playbackGraph.failures.map { app.getString(it.text, playing.nameOf(it.playerId)) }
-            },
+            source = { widgetSource() },
+            live = playingOnce::isInitialized,
         )
+    }
+
+    private fun widgetSource() = object : WidgetSource {
+        override val looks = combine(playing.speaker, playing.nowPlaying, data.session.state) { speaker, np, session ->
+            widgetLook(speaker, playing.nameOf(speaker), np, session)
+        }
+
+        override fun lookOf(id: String) =
+            combine(playing.speakers, playing.nowPlayingOf(id), data.session.state) { speakers, np, session ->
+                val speaker = speakers.firstOrNull { it.id == id } ?: SpeakerUi(id, "", available = false)
+                widgetLook(speaker, playing.nameOf(id), np, session)
+            }
+
+        override val failures =
+            playbackGraph.failures.map { it.playerId to app.getString(it.text, playing.nameOf(it.playerId)) }
     }
 
     val playback: Playback by lazy {

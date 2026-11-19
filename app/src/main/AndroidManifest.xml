@@ -59,7 +59,7 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
-        <!-- The widget's page: the launcher opens it when the widget is placed, and to change it. -->
+        <!-- A widget's page: the launcher opens it to change the widget, and on older Androids as it is placed. -->
         <activity
             android:name=".widget.WidgetSetupActivity"
             android:excludeFromRecents="true"
@@ -70,10 +70,33 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
+        <!-- The widget, three ways in by the size it starts at; the first keeps its name, so placed ones stay. -->
+        <receiver
+            android:name=".widget.AmselButtonWidget"
+            android:exported="false"
+            android:label="@string/widget_name_button">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_button_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.AmselButtonsWidget"
+            android:exported="false"
+            android:label="@string/widget_name_buttons">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_buttons_info" />
+        </receiver>
         <receiver
             android:name=".widget.AmselWidget"
             android:exported="false"
-            android:label="@string/app_name">
+            android:label="@string/widget_name_now_playing">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

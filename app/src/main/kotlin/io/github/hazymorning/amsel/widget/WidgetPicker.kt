@@ -54,5 +54,6 @@ fun WidgetPicker(onPick: (WidgetItem) -> Unit, onBack: () -> Unit, modifier: Mod
 /** The cover a button wears: an artist without a picture wears the first of its albums'. */
 private fun ArtRef.face(): String = (if (mosaic) quarters.firstOrNull() ?: this else this).sized(FACE_PX)
 
-private const val FACE_PX = 128
+/** As large as a tile's cover, about 80 dp; a button's face of 28 is made from it too. */
+private const val FACE_PX = 256
 private const val PICK = "widget-pick"

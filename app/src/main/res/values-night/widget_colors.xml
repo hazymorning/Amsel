@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- At night every cover lies dimmed under the night's ink. -->
+    <color name="widget_words_light">#FFE6E5DE</color>
+    <color name="widget_quiet_light">#B8E6E5DE</color>
+    <color name="widget_glyph_light">#FFE6E5DE</color>
+    <color name="widget_disc_light">#FFE6E5DE</color>
+    <color name="widget_on_disc_light">#FF131412</color>
+    <color name="widget_ground_light">#24E6E5DE</color>
+    <color name="widget_press_light">#24E6E5DE</color>
+    <color name="widget_words_dark">#FFE6E5DE</color>
+    <color name="widget_quiet_dark">#B8E6E5DE</color>
+    <color name="widget_glyph_dark">#FFE6E5DE</color>
+    <color name="widget_disc_dark">#FFE6E5DE</color>
+    <color name="widget_on_disc_dark">#FF131412</color>
+    <color name="widget_ground_dark">#24E6E5DE</color>
+    <color name="widget_press_dark">#24E6E5DE</color>
+    <color name="widget_words_plain">#FFE6E5DE</color>
+    <color name="widget_quiet_plain">#B8E6E5DE</color>
+    <color name="widget_glyph_plain">#FFE6E5DE</color>
+    <color name="widget_disc_plain">#FFE6E5DE</color>
+    <color name="widget_on_disc_plain">#FF131412</color>
+    <color name="widget_ground_plain">#24E6E5DE</color>
+    <color name="widget_press_plain">#24E6E5DE</color>
+    <color name="widget_background_plain">#FF1B1C19</color>
+    <color name="widget_background_cover">#FF1B1C19</color>
+    <!-- Lifts black to the night's ground and lowers white to its words' light, as Artwork's night tone. -->
+    <color name="widget_night_tone">#36818577</color>
+    <color name="widget_veil_light_top">#6B0A0A09</color>
+    <color name="widget_veil_light_middle">#800A0A09</color>
+    <color name="widget_veil_light_bottom">#9E0A0A09</color>
+    <color name="widget_veil_dark_top">#6B0A0A09</color>
+    <color name="widget_veil_dark_middle">#800A0A09</color>
+    <color name="widget_veil_dark_bottom">#9E0A0A09</color>
+</resources>
