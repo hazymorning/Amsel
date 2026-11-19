@@ -227,11 +227,14 @@ class WidgetInsetsTest {
         }
     }
 
-    /** A strip lower than the others keeps its frame: the cover and the cells on it, the words smaller. */
+    /**
+     * A strip of any height keeps its frame: the cover and the cells on it, the words' ink, from the
+     * first capital to the baseline, inside it, two lines from 62 dp.
+     */
     @Test fun aStripKeepsItsFrame() {
-        for (actual in around(WidgetSample.strip)) {
-            val drawn = draw(DefaultSlots, WidgetSample.idle, WidgetSample.strip, actual)
-            assertFrame(WidgetSizes.PADDING, drawn, "strip at $actual")
+        for (height in 58..90 step 4) {
+            val size = SizeF(WidgetSample.strip.width, height.toFloat())
+            assertFrame(WidgetSizes.PADDING, draw(DefaultSlots, music, size), "strip at $size")
         }
     }
 
@@ -286,8 +289,10 @@ class WidgetInsetsTest {
 
     /** A row without buttons sets what plays in its middle, its first letter on the frame. */
     @Test fun aRowsWordsStandInItsMiddle() {
+        // Lines without a descender, which hangs past the baseline the ink stands on.
+        val look = music.copy(subtitle = "Ana Holm")
         for (actual in around(WidgetSample.row)) {
-            val (start, top, _, bottom) = draw(emptyList(), music, WidgetSample.row, actual).frame()
+            val (start, top, _, bottom) = draw(emptyList(), look, WidgetSample.row, actual).frame()
             assertEquals("row words at $actual", WidgetSizes.PADDING, start, TOLERANCE)
             assertTrue("row words at $actual: $top, $bottom", abs(top - bottom) <= 2f)
         }

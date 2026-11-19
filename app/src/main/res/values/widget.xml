@@ -21,6 +21,9 @@
     <!-- The words' view stands this much outside its box at the start, and each line moves back in
          by what its first letter leaves (WidgetWordsViews). -->
     <dimen name="widget_words_lead_out">-6dp</dimen>
+    <!-- Words in the middle stand there by their ink: their box may reach half the lead past the
+         frame above and below (WidgetFit.centred). -->
+    <dimen name="widget_words_lead_out_half">-3dp</dimen>
     <dimen name="widget_art_to_words">12dp</dimen>
     <!-- From a poster's cover to the words' ink under it: 12, less the words' lead. -->
     <dimen name="widget_art_to_words_lead">6dp</dimen>
