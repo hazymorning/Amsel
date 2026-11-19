@@ -822,3 +822,13 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-19 | Robolectric's Android is a Gradle dependency (offline Robolectric, `amsel.robolectric`), so it sits in Gradle's cache; before, three jobs a run fetched its 213 MB from Maven Central, which refused CI with 429 on 2026-11-18 | Evidence; Q4 |
 | 2026-11-19 | After each release its `caches` job runs CI's checks on main only to fill the cache pull requests read, which they could not before: CI wrote no cache, being on pull requests only. CI itself still runs once per change, on its pull request | Owner (tests and releases faster); Q4 |
 | 2026-11-19 | A newer push no longer cancels a CI run: every run ends passed or failed | Owner (no more failure mails) |
+| 2026-11-19 | A widget's buttons stand on a shaded cell as the person chooses: play and pause alone (as it comes, as Google's expressive toolbar fills its main button alone), every one, or none; a bare button shows the shade while pressed | Owner; Q3 |
+| 2026-11-19 | A widget holds up to eight buttons, as many as its width takes; the page says how many fit at its size; a wide one comes with the heart and shuffle after the transport | Owner; Q1 |
+| 2026-11-19 | Quieter, Louder, shuffle, repeat and the heart act on the speaker the widget shows, from what it shows, and show at once; the volume is set as a level 5 from the shown one (2 below 10), stopping at the limit with a sentence. A tap that started Amsel went to the phone's volume, as the speaker was not yet known, and steps waited up to 5 s | Owner (volume taps erratic); evidence (AppGraph, DataPlaybackGraph) |
+| 2026-11-19 | Heart, shuffle and repeat buttons, which give way where what plays has none | Q1 |
+| 2026-11-19 | The widget shows the time, ticked by the launcher (Chronometer) while it plays and as plain words at rest, where a stopped Chronometer would drift | Q1; evidence (AOSP Chronometer, RemoteViews) |
+| 2026-11-19 | Under the Cover look play and pause take the cover's own colour, with a glyph that reads on it | Q3 |
+| 2026-11-19 | Words stand in the middle of a player's cover by their ink; one row's cells are 56 high in its middle; a tall two-cell widget shows the cover across (Poster) | Owner (no balance); Q3 |
+| 2026-11-19 | Words a fifth larger where every line has room; Google asks to rearrange before growing type, which the time, the Poster and the centring do first | Q3 |
+| 2026-11-19 | The widget picker shows what plays now from Android 15 (generated previews), about once an hour as Android allows | Q1 |
+| 2026-11-19 | A sideways swipe between views is parked: the home screen takes sideways swipes; a widget sees taps and vertical swipes only | Evidence (developer guide, Launcher3) |

@@ -21,8 +21,14 @@ import io.github.hazymorning.amsel.ui.theme.HAIRLINE_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Shapes
 import kotlin.math.pow
 
-/** The cover as the widget lays it down: blurred small, and whether ink reads on it better than paper. */
-class WidgetCover(val bitmap: Bitmap, val light: Boolean)
+/**
+ * The cover as the widget lays it down: blurred small, whether ink reads on it better than paper,
+ * and its own colour for play and pause, if it has one ([WidgetArt.accent]).
+ */
+class WidgetCover(val bitmap: Bitmap, val light: Boolean, val accent: WidgetAccent? = null)
+
+/** Play and pause's cell in a cover's colour, and its glyph in ink or paper, whichever reads. */
+class WidgetAccent(val cell: Int, val glyph: Int)
 
 /**
  * The widget's pictures, made on the phone: a launcher shows a widget's views as they are, so the
@@ -40,8 +46,47 @@ object WidgetArt {
         val pixels = IntArray(SIDE * SIDE)
         small.getPixels(pixels, 0, SIDE, 0, 0, SIDE, SIDE)
         blur(pixels, SIDE, SIDE, BLUR_RADIUS)
+        val sharp = IntArray(SIDE * SIDE)
+        small.getPixels(sharp, 0, SIDE, 0, 0, SIDE, SIDE)
         val blurred = Bitmap.createBitmap(pixels, SIDE, SIDE, Bitmap.Config.ARGB_8888)
-        return WidgetCover(blurred, inkReads(pixels, SIDE, SIDE))
+        val light = inkReads(pixels, SIDE, SIDE)
+        return WidgetCover(blurred, light, accent(sharp, light))
+    }
+
+    /**
+     * The cover's strongest colour, as Android's own media controls take theirs: the hue most of its
+     * coloured pixels share, deep on a light ground and bright on a dark one. Null for a cover with
+     * too little colour to name one.
+     */
+    internal fun accent(pixels: IntArray, light: Boolean): WidgetAccent? {
+        val weights = DoubleArray(HUES)
+        val sums = Array(HUES) { DoubleArray(3) }
+        val hsv = FloatArray(3)
+        var coloured = 0
+        for (p in pixels) {
+            Color.colorToHSV(p, hsv)
+            if (hsv[1] < MIN_SATURATION || hsv[2] < MIN_VALUE || hsv[2] > MAX_VALUE) continue
+            coloured++
+            val bin = (hsv[0] / (360f / HUES)).toInt().coerceIn(0, HUES - 1)
+            val weight = (hsv[1] * hsv[2]).toDouble()
+            weights[bin] += weight
+            sums[bin][0] += hsv[0] * weight
+            sums[bin][1] += hsv[1] * weight
+            sums[bin][2] += hsv[2] * weight
+        }
+        if (coloured < pixels.size * MIN_COLOURED) return null
+        val bin = weights.indices.maxBy { weights[it] }
+        val hue = (sums[bin][0] / weights[bin]).toFloat()
+        val saturation = (sums[bin][1] / weights[bin]).toFloat().coerceIn(ACCENT_SATURATION_MIN, ACCENT_SATURATION_MAX)
+        val cell = Color.HSVToColor(floatArrayOf(hue, saturation, if (light) DEEP else BRIGHT))
+        val glyph = if (contrast(luminance(cell, cell, 0f), luminance(PAPER, PAPER, 0f)) >=
+            contrast(luminance(cell, cell, 0f), luminance(INK, INK, 0f))
+        ) {
+            PAPER
+        } else {
+            INK
+        }
+        return WidgetAccent(cell, glyph)
     }
 
     /**
@@ -169,6 +214,17 @@ object WidgetArt {
 
     private fun contrast(a: Double, b: Double): Double = (maxOf(a, b) + 0.05) / (minOf(a, b) + 0.05)
 
+    private const val HUES = 12
+    private const val MIN_SATURATION = 0.3f
+    private const val MIN_VALUE = 0.2f
+    private const val MAX_VALUE = 0.97f
+
+    /** Below this share of coloured pixels a cover is grey, and play keeps the tone's own cell. */
+    private const val MIN_COLOURED = 0.08
+    private const val ACCENT_SATURATION_MIN = 0.35f
+    private const val ACCENT_SATURATION_MAX = 0.8f
+    private const val DEEP = 0.5f
+    private const val BRIGHT = 0.88f
     private const val BLUR_RADIUS = 5
     private const val BLUR_PASSES = 3
     private const val INK = 0xFF191A17.toInt()

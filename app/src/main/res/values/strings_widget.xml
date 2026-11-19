@@ -4,7 +4,7 @@
     <string name="widget_name_buttons">Buttons</string>
     <string name="widget_name_now_playing">Now playing</string>
     <string name="widget_description_button">One button, as large as an app\'s icon</string>
-    <string name="widget_description_buttons">Up to three buttons in a row</string>
+    <string name="widget_description_buttons">Buttons in a row, as many as fit</string>
     <string name="widget_description">What plays where, with the buttons you choose</string>
     <string name="widget_setup_title">Widget</string>
     <string name="widget_setup_done">Done</string>
@@ -35,4 +35,23 @@
     <string name="widget_pick_title">Play something</string>
     <string name="widget_sign_in">Sign in to Amsel</string>
     <string name="widget_nothing_to_continue">No book or episode to continue</string>
+    <string name="widget_slot_5">Fifth button</string>
+    <string name="widget_slot_6">Sixth button</string>
+    <string name="widget_slot_7">Seventh button</string>
+    <string name="widget_slot_8">Eighth button</string>
+    <string name="widget_cells">Button backgrounds</string>
+    <string name="widget_cells_play">Play only</string>
+    <string name="widget_cells_all">Every button</string>
+    <string name="widget_cells_none">None</string>
+    <plurals name="widget_fits">
+        <item quantity="one">One fits at this size</item>
+        <item quantity="other">%d fit at this size</item>
+    </plurals>
+    <string name="widget_at_limit">At your limit of %1$s</string>
+    <string name="widget_time_left">%1$s left</string>
+    <string name="widget_state">%1$s, %2$s</string>
+    <string name="widget_on">on</string>
+    <string name="widget_off">off</string>
+    <string name="widget_summary_playing">%1$s. Playing on %2$s</string>
+    <string name="widget_summary_paused">%1$s. Paused on %2$s</string>
 </resources>

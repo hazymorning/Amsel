@@ -66,7 +66,7 @@ internal class WidgetRender(private val context: Context, private val images: Im
         clearInk: Boolean? = null,
     ): RemoteViews {
         val faces = faces(setup)
-        val fits = sizes.map { views.fit(it.width, it.height, setup) }
+        val fits = sizes.map { views.fit(it.width, it.height, setup, look) }
         val pictures = pictures(setup, look, fits, faces)
         val ink = setup.style == WidgetStyle.Clear && (clearInk ?: wallpaperWantsInk(context))
         return views.build(id, setup, look, fits, pictures, ink, taps)
@@ -80,11 +80,12 @@ internal class WidgetRender(private val context: Context, private val images: Im
         faces: Map<String, Bitmap>,
     ): WidgetPictures {
         val playing = look.signedIn && look.title != null
-        val covered = fits.filter { it.form == WidgetForm.Bar || it.form == WidgetForm.Player }.map { views.px(it.art) }
+        val covered = fits.filter { it.form in Covered }.map { views.px(it.art) }
         val tiles = fits.filter { it.form == WidgetForm.Tile }
         val bare = tiles.filter { it.buttons == 0 }.map { views.px(minOf(it.width, it.height)) }
         val art = if (!playing) emptyMap() else pictured(look.artLarge ?: look.art, (covered + bare).distinct())
-        val item = setup.slots.firstOrNull()?.takeIf { it.button == WidgetButton.PlayItem }?.item?.art
+        val item = setup.slots.firstOrNull { it.button.availableIn(look) }
+            ?.takeIf { it.button == WidgetButton.PlayItem }?.item?.art
         val buttoned = tiles.filter { it.buttons > 0 }.map { views.px(minOf(it.width, it.height)) }
         val tileArt = pictured(item, buttoned.distinct())
         // The cover's shape: empty where nothing plays, and at night over every cover that fills a side.
@@ -157,3 +158,6 @@ internal class WidgetRender(private val context: Context, private val images: Im
         const val MIN_SOURCE_PX = 128
     }
 }
+
+/** The forms that show what plays sharp, beside or above its words. */
+private val Covered = setOf(WidgetForm.Bar, WidgetForm.Player, WidgetForm.Poster)

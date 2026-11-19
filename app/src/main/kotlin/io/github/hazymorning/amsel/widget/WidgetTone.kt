@@ -35,6 +35,8 @@ internal enum class Tone(
     @DrawableRes val cell: Int,
     @DrawableRes val playCell: Int,
     @ColorRes val cellColor: Int,
+    /** A button without a cell, shaded while pressed. */
+    @DrawableRes val bare: Int,
 ) {
     Light(
         R.color.widget_words_light,
@@ -44,6 +46,7 @@ internal enum class Tone(
         R.drawable.widget_cell_light,
         R.drawable.widget_cell_play_light,
         R.color.widget_cell_light,
+        R.drawable.widget_bare_light,
     ),
     Dark(
         R.color.widget_words_dark,
@@ -53,6 +56,7 @@ internal enum class Tone(
         R.drawable.widget_cell_dark,
         R.drawable.widget_cell_play_dark,
         R.color.widget_cell_dark,
+        R.drawable.widget_bare_dark,
     ),
     Plain(
         R.color.widget_words_plain,
@@ -62,6 +66,7 @@ internal enum class Tone(
         R.drawable.widget_cell_plain,
         R.drawable.widget_cell_play_plain,
         R.color.widget_cell_plain,
+        R.drawable.widget_bare_plain,
     ),
     ClearInk(
         R.color.widget_words_ink,
@@ -71,6 +76,7 @@ internal enum class Tone(
         R.drawable.widget_cell_ink,
         R.drawable.widget_cell_play_ink,
         R.color.widget_cell_ink,
+        R.drawable.widget_bare_ink,
     ),
     ClearPaper(
         R.color.widget_words_paper,
@@ -80,6 +86,7 @@ internal enum class Tone(
         R.drawable.widget_cell_paper,
         R.drawable.widget_cell_play_paper,
         R.color.widget_cell_paper,
+        R.drawable.widget_bare_paper,
     ),
 }
 

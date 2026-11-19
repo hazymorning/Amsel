@@ -13,6 +13,13 @@ enum class WidgetButton(val id: String, @StringRes val label: Int, @DrawableRes 
     PlayPause("play", R.string.dock_play, R.drawable.ic_play),
     Next("next", R.string.dock_next, R.drawable.ic_skip_next),
     Previous("previous", R.string.dock_previous, R.drawable.ic_skip_previous),
+
+    /** The song's heart; gives way where what plays cannot be a favourite. */
+    Favourite("favourite", R.string.dock_favorite, R.drawable.ic_favorite),
+
+    /** Gives way, as Repeat does, where what plays is a book, an episode or a station. */
+    Shuffle("shuffle", R.string.shuffle, R.drawable.ic_shuffle),
+    Repeat("repeat", R.string.player_repeat, R.drawable.ic_repeat),
     Quieter("quieter", R.string.widget_quieter, R.drawable.ic_volume_low),
     Louder("louder", R.string.widget_louder, R.drawable.ic_volume),
     Speakers("speakers", R.string.widget_speakers, R.drawable.ic_speaker),
@@ -35,19 +42,40 @@ data class WidgetItem(val uri: String, val title: String, val art: String? = nul
 @Immutable
 data class WidgetSlot(val button: WidgetButton, val item: WidgetItem? = null)
 
-/** As a widget of two cells or more comes: the transport. */
-val DefaultSlots: List<WidgetSlot> =
-    listOf(WidgetButton.Previous, WidgetButton.PlayPause, WidgetButton.Next).map(::WidgetSlot)
+/** As a widget of two cells or more comes: the transport, and on a wide one the heart and shuffle. */
+val DefaultSlots: List<WidgetSlot> = listOf(
+    WidgetButton.Previous,
+    WidgetButton.PlayPause,
+    WidgetButton.Next,
+    WidgetButton.Favourite,
+    WidgetButton.Shuffle,
+).map(::WidgetSlot)
 
-/** A widget has none to four buttons; those its size cannot hold give way from the end. */
-const val MAX_BUTTONS = 4
+/** A widget has none to eight buttons; those its size cannot hold give way from the end. */
+const val MAX_BUTTONS = 8
 
-/** One widget as its person set it: its look, its speaker (null: the one Amsel plays on), its buttons. */
+/** Which buttons stand on a shaded cell: play and pause alone, every one, or none. */
+enum class WidgetCells(val id: String, @StringRes val label: Int) {
+    Play("play", R.string.widget_cells_play),
+    All("all", R.string.widget_cells_all),
+    None("none", R.string.widget_cells_none),
+    ;
+
+    companion object {
+        fun of(id: String?): WidgetCells = entries.firstOrNull { it.id == id } ?: Play
+    }
+}
+
+/**
+ * One widget as its person set it: its look, its speaker (null: the one Amsel plays on), its
+ * buttons, and which of them stand on a cell.
+ */
 @Immutable
 data class WidgetSetup(
     val style: WidgetStyle = WidgetStyle.Cover,
     val speaker: String? = null,
     val slots: List<WidgetSlot> = DefaultSlots,
+    val cells: WidgetCells = WidgetCells.Play,
 )
 
 /**

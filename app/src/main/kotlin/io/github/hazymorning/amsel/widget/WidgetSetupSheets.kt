@@ -22,9 +22,17 @@ import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** The names of the four buttons, from the start. */
-private val SlotNames =
-    listOf(R.string.widget_slot_1, R.string.widget_slot_2, R.string.widget_slot_3, R.string.widget_slot_4)
+/** The names of the buttons, from the start. */
+private val SlotNames = listOf(
+    R.string.widget_slot_1,
+    R.string.widget_slot_2,
+    R.string.widget_slot_3,
+    R.string.widget_slot_4,
+    R.string.widget_slot_5,
+    R.string.widget_slot_6,
+    R.string.widget_slot_7,
+    R.string.widget_slot_8,
+)
 
 /** What button [slot] does, the [current] one ticked (none for a button to add); Play … goes on to pick its item. */
 @Composable
@@ -72,6 +80,25 @@ internal fun SpeakerChoices(current: String?, speakers: List<WidgetSpeaker>, onC
             })
             speakers.forEach { speaker ->
                 ChoiceRow(speaker.name, selected = current == speaker.id, onClick = { onChoose(speaker.id) })
+            }
+        }
+    }
+}
+
+/** Which buttons stand on a shaded cell: play and pause alone, every one, or none. */
+@Composable
+internal fun CellsChoices(current: WidgetCells, onChoose: (WidgetCells) -> Unit) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = sheetEnd(RowLead.None, twoLines = false)),
+    ) {
+        SheetHeader(stringResource(R.string.widget_cells))
+        Spacer(Modifier.height(Space.HeaderToRows))
+        Column(Modifier.selectableGroup()) {
+            WidgetCells.entries.forEach { cells ->
+                ChoiceRow(stringResource(cells.label), selected = current == cells, onClick = { onChoose(cells) })
             }
         }
     }
