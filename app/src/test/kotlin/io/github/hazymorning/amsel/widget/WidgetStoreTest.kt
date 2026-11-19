@@ -1,12 +1,10 @@
 package io.github.hazymorning.amsel.widget
 
-import android.graphics.Bitmap
-import android.graphics.Color
 import java.io.File
 import java.nio.file.Files
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,54 +16,64 @@ class WidgetStoreTest {
     private val store = WidgetStore(dir)
     private val album = WidgetItem("library://album/1", "Blue Hour", "sample:album/1")
 
-    @Test fun aNewWidgetHasTheDefaults() = runTest {
-        assertEquals(DefaultSlots, store.slots(7))
+    @Test fun aNewWidgetHasNoSetupYet() = runTest {
+        assertNull(store.setup(7))
     }
 
-    @Test fun eachWidgetKeepsItsOwnButtons() = runTest {
-        val chosen = listOf(
-            WidgetSlot(WidgetButton.Quieter),
-            WidgetSlot(WidgetButton.Louder),
-            WidgetSlot(WidgetButton.ContinueListening),
-            WidgetSlot(WidgetButton.PlayItem, album),
+    @Test fun eachWidgetKeepsItsOwnSetup() = runTest {
+        val chosen = WidgetSetup(
+            style = WidgetStyle.Clear,
+            speaker = "kitchen",
+            slots = listOf(WidgetSlot(WidgetButton.Quieter), WidgetSlot(WidgetButton.PlayItem, album)),
         )
-        store.setSlots(7, chosen)
-        assertEquals(chosen, WidgetStore(dir).slots(7))
-        assertEquals(DefaultSlots, store.slots(8))
+        store.setSetup(7, chosen)
+        store.setSetup(8, WidgetSetup(slots = emptyList()))
+        assertEquals(chosen, WidgetStore(dir).setup(7))
+        assertEquals(WidgetSetup(slots = emptyList()), WidgetStore(dir).setup(8))
     }
 
-    @Test fun aRemovedWidgetIsForgottenWithItsCovers() = runTest {
-        store.setSlots(7, DefaultSlots.take(3) + WidgetSlot(WidgetButton.PlayItem, album))
-        store.setThumb(album.art.orEmpty(), Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888))
+    @Test fun aRemovedWidgetIsForgotten() = runTest {
+        store.setSetup(7, WidgetSetup())
         store.forget(listOf(7))
-        assertEquals(DefaultSlots, store.slots(7))
-        assertNull(store.thumb(album.art.orEmpty()))
+        assertNull(store.setup(7))
     }
 
-    @Test fun aButtonALaterAmselDroppedTakesTheDefaultsPlace() = runTest {
+    /** As Amsel 2026.11.50 kept them: four buttons, no look, no speaker. */
+    @Test fun aButtonALaterAmselDroppedIsLeftOut() = runTest {
         File(dir, "setups.json").writeText(
             """[{"id":3,"slots":[{"button":"gone"},{"button":"next"},{"button":"item"},{"button":"louder"}]}]""",
         )
         assertEquals(
-            listOf(DefaultSlots[0], WidgetSlot(WidgetButton.Next), DefaultSlots[2], WidgetSlot(WidgetButton.Louder)),
-            store.slots(3),
+            WidgetSetup(slots = listOf(WidgetSlot(WidgetButton.Next), WidgetSlot(WidgetButton.Louder))),
+            store.setup(3),
         )
     }
 
     @Test fun aBrokenFileStartsOver() = runTest {
         File(dir, "setups.json").writeText("{ not json")
-        assertEquals(DefaultSlots, store.slots(3))
+        assertNull(store.setup(3))
     }
 
-    @Test fun theLookAndItsCoverOutlastTheRun() = runTest {
-        val look = WidgetLook(speaker = "Kitchen", title = "Lanterns", playing = true)
-        store.setLook(look)
-        store.setCover(Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) })
+    @Test fun theLooksOutlastTheRun() = runTest {
+        val looks = mapOf(
+            WidgetStore.AMSELS to WidgetLook(speaker = "Kitchen", title = "Lanterns", playing = true),
+            "bedroom" to WidgetLook(speakerId = "bedroom", speaker = "Bedroom"),
+        )
+        store.setLooks(looks)
         val again = WidgetStore(dir)
-        assertEquals(look, again.look())
-        assertNotNull(again.cover())
-        again.forgetLook()
-        assertNull(again.look())
-        assertNull(again.cover())
+        assertEquals(looks, again.looks())
+        again.forgetLooks()
+        assertEquals(emptyMap<String, WidgetLook>(), again.looks())
+    }
+
+    /** Amsel 2026.11.50 kept one look and its pictures: the look is read once, the pictures go. */
+    @Test fun theEarlierLookIsReadAndItsPicturesGo() = runTest {
+        File(dir, "look.json").writeText("""{"speaker":"Kitchen","title":"Lanterns"}""")
+        File(dir, "cover.png").writeText("png")
+        File(dir, "thumbs").mkdirs()
+        assertEquals("Lanterns", store.looks()[WidgetStore.AMSELS]?.title)
+        store.setLooks(store.looks())
+        assertFalse(File(dir, "cover.png").exists())
+        assertFalse(File(dir, "thumbs").exists())
     }
 }

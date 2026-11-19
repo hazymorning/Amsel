@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One cell, all of it the button: its glyph on a round ground in the middle, or a cover. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_cover"
+    android:clipToOutline="true"
+    tools:targetApi="31">
+
+    <ImageView
+        android:id="@+id/widget_cover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <!-- An ImageView, not a View: a launcher inflates only the classes widgets may use. -->
+    <ImageView
+        android:id="@+id/widget_veil"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/widget_face"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="center"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/widget_face_night"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="center"
+        android:tint="@color/widget_night_tone"
+        android:tintMode="src_in"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/widget_tile_button"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="center"
+        android:background="@drawable/widget_disc_light"
+        android:importantForAccessibility="no"
+        android:padding="12dp"
+        android:src="@drawable/ic_play"
+        android:tint="@color/widget_on_disc_light"
+        android:tintMode="src_in" />
+
+    <!-- Pressed with the tile, over the ground. -->
+    <ImageView
+        android:id="@+id/widget_tile_press"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_gravity="center"
+        android:duplicateParentState="true"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_press_light" />
+</FrameLayout>

@@ -40,8 +40,15 @@ class WidgetArtTest {
 
     /** A button's cover keeps the cover corners: transparent at its very corner, the picture inside. */
     @Test fun aButtonsCoverHasCorners() {
-        val thumb = WidgetArt.thumb(filled(Color.RED), px = 84, density = 3f, sideDp = 28f)
+        val thumb = WidgetArt.shaped(filled(Color.RED), px = 84, density = 3f)
         assertEquals(0, Color.alpha(thumb.getPixel(0, 0)))
         assertEquals(255, Color.alpha(thumb.getPixel(42, 42)))
+    }
+
+    /** An empty cover is the cover's shape in white, for the widget to tint in its tone. */
+    @Test fun anEmptyCoverHasTheCoversShape() {
+        val blank = WidgetArt.blank(px = 144, density = 3f)
+        assertEquals(0, Color.alpha(blank.getPixel(0, 0)))
+        assertEquals(Color.WHITE, blank.getPixel(72, 72))
     }
 }

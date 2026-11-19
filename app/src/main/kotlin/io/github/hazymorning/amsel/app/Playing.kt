@@ -177,6 +177,27 @@ class Playing(
             .distinctUntilChanged()
             .stateIn(scope, SharingStarted.Eagerly, null)
 
+    /**
+     * What plays on speaker [id], whichever speaker Amsel is on: for a widget that keeps to it. A
+     * tap on its play shows at once, as on the current speaker's.
+     */
+    fun nowPlayingOf(id: String): Flow<NowPlayingUi?> =
+        combine(data.speakers.players, data.speakers.queues, speakers, optimistic.wishes) {
+                players,
+                queues,
+                rows,
+                wishes,
+            ->
+            val player = players[id] ?: return@combine null
+            val speakerUi = rows.firstOrNull { it.id == id } ?: mapper.speaker(player, isPhone = false)
+            val media = player.currentMedia?.let { data.speakers.position(it, player.isPlaying) }
+            val snapshot =
+                snapshotOf(player, queues[id], media, false, data.session.images, SystemClock.elapsedRealtime())
+            mapper.nowPlaying(player, queues[id]?.queue, snapshot, speakerUi)?.let {
+                optimistic.overlay(it, wishes[id])
+            }
+        }
+
     /** A tap on that heart, as on Now Playing's. */
     fun toggleHeart() {
         val np = nowPlaying.value ?: return

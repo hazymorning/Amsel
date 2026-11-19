@@ -1,22 +1,19 @@
 package io.github.hazymorning.amsel.widget
 
+import android.util.SizeF
 import android.widget.FrameLayout
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.hazymorning.amsel.testing.ScreenshotTest
@@ -26,10 +23,16 @@ import io.github.hazymorning.amsel.ui.theme.isNight
 import org.junit.Test
 
 class WidgetShots : ScreenshotTest() {
-    /** Four widgets on a home screen: music, a book with buttons of its own, nothing playing, signed out. */
-    @Test fun widgets() = snap("widget", ShotVariant.entries) { HomeScreenOf() }
+    /** Every form over its cover: two tiles and a row, two cards, a bar, a player. */
+    @Test fun forms() = snap("widget", ShotVariant.entries) { HomeScreen { Forms() } }
 
-    @Test fun german() = snap("widget_german", qualifiers = "de") { HomeScreenOf() }
+    @Test fun german() = snap("widget_german", qualifiers = "de") { HomeScreen { Forms() } }
+
+    /** Plain in the system's colours, and clear on the wallpaper, side by side. */
+    @Test fun looks() = snap("widget_looks", listOf(ShotVariant.Light, ShotVariant.Dark)) { HomeScreen { Looks() } }
+
+    /** Nothing playing, and signed out. */
+    @Test fun states() = snap("widget_states") { HomeScreen { States() } }
 
     @Test fun setup() = snap("widget_setup", ShotVariant.entries) { Setup() }
 
@@ -40,60 +43,131 @@ class WidgetShots : ScreenshotTest() {
         }
     }
 
-    @Composable
-    private fun HomeScreenOf() {
-        val night = MaterialTheme.colorScheme.isNight
-        val wallpaper = if (night) NightWallpaper else DayWallpaper
-        Column(
-            Modifier.fillMaxSize().background(Brush.verticalGradient(wallpaper)).padding(top = 72.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row(Modifier.padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                Widget(WidgetSample.music, DefaultSlots, "album_1")
-                Widget(WidgetSample.book, WidgetSample.ownButtons, "audiobook_1")
-            }
-            Row(Modifier.padding(horizontal = 18.dp), horizontalArrangement = Arrangement.spacedBy(15.dp)) {
-                Widget(WidgetSample.idle, DefaultSlots, cover = null)
-                Widget(WidgetSample.signedOut, DefaultSlots, cover = null)
-            }
-        }
+    @Test fun speakers() = snapScreen("widget_speakers") {
+        Setup()
+        AmselSheet(onDismiss = {}) { SpeakerChoices(current = "kitchen", speakers = Rooms, onChoose = {}) }
     }
 
     @Composable
-    private fun Widget(look: WidgetLook, slots: List<WidgetSlot>, cover: String?) {
-        val context = LocalContext.current
-        val density = LocalDensity.current.density
-        val views = WidgetViews(context).build(
-            widgetId = 1,
-            look = look,
-            slots = slots,
-            cover = cover?.let { WidgetArt.cover(WidgetSample.cover(it)) },
-            thumbs = WidgetSample.thumbs(slots, density),
+    private fun Forms() {
+        val play = listOf(WidgetSlot(WidgetButton.PlayPause))
+        val blueHour = listOf(WidgetSlot(WidgetButton.PlayItem, WidgetSample.blueHour))
+        Widget(WidgetSetup(slots = play), WidgetSample.music, WidgetSample.tile, column = 0, row = 0)
+        Widget(WidgetSetup(slots = blueHour), WidgetSample.music, WidgetSample.tile, column = 1, row = 0)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.row, column = 2, row = 0)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.card, column = 0, row = 1)
+        Widget(WidgetSetup(slots = WidgetSample.ownButtons), WidgetSample.book, WidgetSample.card, column = 2, row = 1)
+        Widget(WidgetSetup(), WidgetSample.music, WidgetSample.bar, column = 0, row = 3)
+        Widget(
+            WidgetSetup(slots = WidgetSample.ownButtons),
+            WidgetSample.book,
+            WidgetSample.player,
+            column = 0,
+            row = 4,
         )
-        Box(Modifier.size(WIDGET)) {
+    }
+
+    @Composable
+    private fun Looks() {
+        val plain = WidgetSetup(style = WidgetStyle.Plain)
+        val clear = WidgetSetup(style = WidgetStyle.Clear)
+        val play = listOf(WidgetSlot(WidgetButton.PlayPause))
+        Widget(plain, WidgetSample.music, WidgetSample.row, column = 0, row = 0)
+        Widget(clear, WidgetSample.music, WidgetSample.row, column = 2, row = 0)
+        Widget(plain, WidgetSample.music, WidgetSample.card, column = 0, row = 1)
+        Widget(clear, WidgetSample.music, WidgetSample.card, column = 2, row = 1)
+        Widget(plain, WidgetSample.music, WidgetSample.bar, column = 0, row = 3)
+        Widget(clear, WidgetSample.music, WidgetSample.bar, column = 0, row = 4)
+        Widget(plain.copy(slots = play), WidgetSample.music, WidgetSample.tile, column = 0, row = 5)
+        Widget(clear.copy(slots = play), WidgetSample.music, WidgetSample.tile, column = 1, row = 5)
+        Widget(
+            plain.copy(slots = WidgetSample.ownButtons.take(1)),
+            WidgetSample.music,
+            WidgetSample.tile,
+            column = 2,
+            row = 5,
+        )
+        Widget(
+            clear.copy(slots = WidgetSample.ownButtons.take(1)),
+            WidgetSample.music,
+            WidgetSample.tile,
+            column = 3,
+            row = 5,
+        )
+    }
+
+    @Composable
+    private fun States() {
+        Widget(WidgetSetup(), WidgetSample.idle, WidgetSample.card, column = 0, row = 0)
+        Widget(WidgetSetup(), WidgetSample.signedOut, WidgetSample.card, column = 2, row = 0)
+        Widget(WidgetSetup(), WidgetSample.idle, WidgetSample.player, column = 0, row = 2)
+        Widget(WidgetSetup(), WidgetSample.signedOut, WidgetSample.bar, column = 0, row = 4)
+        Widget(WidgetSetup(slots = emptyList()), WidgetSample.music, WidgetSample.tile, column = 0, row = 5)
+        Widget(WidgetSetup(slots = emptyList()), WidgetSample.music, WidgetSample.row, column = 1, row = 5)
+    }
+
+    /** A home screen's picture behind the widgets, as calm as most, four cells across. */
+    @Composable
+    private fun HomeScreen(content: @Composable () -> Unit) {
+        val wallpaper = if (MaterialTheme.colorScheme.isNight) NightWallpaper else DayWallpaper
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(wallpaper))) { content() }
+    }
+
+    /** [setup] showing [look] at [size], its top left in cell [column], [row]. */
+    @Composable
+    private fun Widget(setup: WidgetSetup, look: WidgetLook, size: SizeF, column: Int, row: Int) {
+        val context = LocalContext.current
+        val night = MaterialTheme.colorScheme.isNight
+        val views =
+            remember(setup, look, size, night) { WidgetSample.drawn(context, setup, look, size, clearInk = !night) }
+        Box(
+            Modifier
+                .offset(x = Margin + Pitch * column, y = Top + RowPitch * row)
+                .size(size.width.dp, size.height.dp),
+        ) {
             AndroidView(factory = { views.apply(it, FrameLayout(it)) }, modifier = Modifier.fillMaxSize())
         }
     }
 
     @Composable
     private fun Setup() {
-        val density = LocalDensity.current.density
+        val context = LocalContext.current
+        val setup = WidgetSetup(slots = WidgetSample.ownButtons)
+        val picture = remember { WidgetSample.drawn(context, setup, WidgetSample.music, WidgetSample.card) }
         val state = WidgetSetupUi(
-            slots = WidgetSample.ownButtons,
+            setup = setup,
             look = WidgetSample.music,
-            cover = WidgetArt.cover(WidgetSample.cover("album_1")),
-            thumbs = WidgetSample.thumbs(WidgetSample.ownButtons, density),
+            picture = picture,
+            size = WidgetSample.card,
+            fits = 3,
+            speakers = Rooms,
             volumeLimit = 70,
         )
-        WidgetSetupScreen(state, widgetId = 1, size = DpSize(WIDGET, WIDGET), onSlot = {}, onDone = {}, onBack = {})
+        WidgetSetupScreen(
+            state,
+            wallpaper = Wallpaper,
+            onStyle = {},
+            onSpeaker = {},
+            onSlot = {},
+            onRemove = {},
+            onDone = {},
+            onBack = {},
+        )
     }
 
     private companion object {
-        /** Two cells by two on a usual phone. */
-        val WIDGET = 180.dp
+        /** Four cells 92 dp apart on a phone 411 dp wide; a widget is 12 dp less than its cells. */
+        val Margin = 27.5.dp
+        val Pitch = 92.dp
+        val Top = 56.dp
+        val RowPitch = 108.dp
 
-        /** A home screen's own picture behind the widgets, as calm as most. */
         val DayWallpaper = listOf(Color(0xFFDDE4DA), Color(0xFFB7C0B2))
         val NightWallpaper = listOf(Color(0xFF283029), Color(0xFF141714))
+
+        /** The wallpaper's main colour, as Android gives it to the widget's page. */
+        val Wallpaper = Color(0xFFC9D2C5)
+
+        val Rooms = listOf(WidgetSpeaker("kitchen", "Kitchen"), WidgetSpeaker("living", "Living room"))
     }
 }

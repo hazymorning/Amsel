@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Shader
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -43,20 +44,20 @@ object WidgetArt {
         return WidgetCover(blurred, inkReads(pixels, SIDE, SIDE))
     }
 
-    /** A Play … button's face: the item's cover [px] square, with the cover corners for [sideDp]. */
-    fun thumb(source: Bitmap, px: Int, density: Float, sideDp: Float): Bitmap {
+    /**
+     * A cover [px] square in Amsel's cover corners for its size at [density], with the hairline every
+     * cover carries just inside its edge: a Play … button's face, a tile's, a bar's or a player's cover.
+     */
+    fun shaped(source: Bitmap, px: Int, density: Float): Bitmap {
         val square = centerSquare(source)
         val out = createBitmap(px, px)
-        val size = Size(px.toFloat(), px.toFloat())
-        val outline = Shapes.cover(sideDp.dp).createOutline(size, LayoutDirection.Ltr, Density(density))
-        val path = (outline as? Outline.Generic)?.path?.asAndroidPath() ?: return out
+        val path = outline(px, density) ?: return out
         val scale = px.toFloat() / square.width
         val shader = BitmapShader(square, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
             setLocalMatrix(Matrix().apply { setScale(scale, scale) })
         }
         val canvas = Canvas(out)
         canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply { this.shader = shader })
-        // Every cover carries a hairline just inside its edge.
         val hairline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = density
@@ -64,6 +65,20 @@ object WidgetArt {
         }
         canvas.withClip(path) { drawPath(path, hairline) }
         return out
+    }
+
+    /** The cover's shape [px] square, empty: white, for the widget to tint in its tone's shade. */
+    fun blank(px: Int, density: Float): Bitmap {
+        val out = createBitmap(px, px)
+        val path = outline(px, density) ?: return out
+        Canvas(out).drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE })
+        return out
+    }
+
+    private fun outline(px: Int, density: Float): Path? {
+        val size = Size(px.toFloat(), px.toFloat())
+        val outline = Shapes.cover((px / density).dp).createOutline(size, LayoutDirection.Ltr, Density(density))
+        return (outline as? Outline.Generic)?.path?.asAndroidPath()
     }
 
     private fun centerSquare(source: Bitmap): Bitmap {

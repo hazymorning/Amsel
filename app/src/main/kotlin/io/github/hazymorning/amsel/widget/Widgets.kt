@@ -3,19 +3,16 @@ package io.github.hazymorning.amsel.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import android.graphics.Bitmap
+import android.util.SizeF
+import android.widget.RemoteViews
 import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.request.allowHardware
-import coil3.toBitmap
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.playback.PhoneNotReadyException
 import io.github.hazymorning.amsel.playback.failureText
-import java.util.concurrent.ConcurrentHashMap
+import io.github.hazymorning.amsel.widget.WidgetStore.Companion.AMSELS
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,118 +21,158 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
+
+/** What the widgets show, from Amsel. */
+interface WidgetSource {
+    /** What plays where Amsel plays. */
+    val looks: Flow<WidgetLook>
+
+    /** What plays on speaker [id], for a widget of its own. */
+    fun lookOf(id: String): Flow<WidgetLook>
+
+    /** Commands that did not reach their speaker, from the app, the notification or a widget: its id, and the sentence. */
+    val failures: Flow<Pair<String, String>>
+}
 
 /**
  * Amsel's widgets: drawn anew whenever what they show changes, while Amsel follows the music and a
  * widget is on the home screen, and never on a timer; and their taps.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class Widgets(
     private val context: Context,
     private val store: WidgetStore,
-    private val images: ImageLoader,
+    images: ImageLoader,
     private val scope: CoroutineScope,
-    private val hands: () -> WidgetHands,
+    /** Hands for a tap: on the speaker Amsel plays on (null), or on a widget's own. */
+    private val hands: (speaker: String?) -> WidgetHands,
     /** The book or episode heard last, from the server. */
     private val lastStarted: suspend () -> WidgetItem?,
-    /**
-     * What the widgets show, and what failed to say on them: a command from the app, the
-     * notification or a widget that did not reach its speaker. Asked for once there is a widget.
-     */
-    private val source: () -> Pair<Flow<WidgetLook>, Flow<String>>,
+    /** Asked for once there is a widget. */
+    private val source: () -> WidgetSource,
 ) {
     private val manager = AppWidgetManager.getInstance(context)
-    private val provider = ComponentName(context, AmselWidget::class.java)
-    private val views = WidgetViews(context)
+    private val render = WidgetRender(context, images)
     private val drawing = Mutex()
     private var following: Job? = null
 
-    private val _look = MutableStateFlow<WidgetLook?>(null)
+    val views: WidgetViews get() = render.views
 
-    /** What the widgets show now; null until Amsel has drawn them in this run. */
-    val look: StateFlow<WidgetLook?> = _look.asStateFlow()
+    private val setups = MutableStateFlow<Map<Int, WidgetSetup>>(emptyMap())
+    private val _looks = MutableStateFlow<Map<String, WidgetLook>?>(null)
 
-    private val _cover = MutableStateFlow<WidgetCover?>(null)
-    val cover: StateFlow<WidgetCover?> = _cover.asStateFlow()
+    /** What the widgets show now, by speaker ([AMSELS] for Amsel's); null until Amsel drew them in this run. */
+    val looks: StateFlow<Map<String, WidgetLook>?> = _looks.asStateFlow()
 
     /** A tap that went wrong, said on the widgets while they show what they showed then. */
     private val said = MutableStateFlow<Pair<WidgetLook, String>?>(null)
 
-    private var coverArt: String? = null
+    /** The widgets on the home screen, of all three kinds. */
+    fun ids(): IntArray = Providers.keys.flatMap {
+        manager.getAppWidgetIds(ComponentName(context, it)).asList()
+    }.toIntArray()
 
-    /** The cover last written to the phone, so a pause does not write it again. */
-    private var storedCover: WidgetCover? = null
-    private val faces = ConcurrentHashMap<String, Bitmap>()
-
-    /** The widgets on the home screen. */
-    fun ids(): IntArray = manager.getAppWidgetIds(provider)
+    fun kindOf(id: Int): WidgetKind =
+        Providers[manager.getAppWidgetInfo(id)?.provider?.className?.let(::classFor)] ?: WidgetKind.NowPlaying
 
     /** Draws what plays on the widgets from now on, while there are any. */
     @Synchronized
     fun follow() {
         if (following?.isActive == true || ids().isEmpty()) return
-        val (looks, failures) = source()
+        val source = source()
         following = scope.launch {
+            loadSetups()
             launch {
-                failures.collect { text -> _look.value?.let { said.value = it.withoutFailure() to text } }
+                source.failures.collect { (speaker, text) ->
+                    _looks.value?.values?.firstOrNull { it.speakerId == speaker }?.let {
+                        said.value =
+                            it.withoutFailure() to text
+                    }
+                }
             }
-            combine(looks, said) { look, failure -> look.copy(failure = failure?.takeIf { it.first == look }?.second) }
+            setups.map { all -> all.values.mapNotNull { it.speaker }.toSet() }
+                .distinctUntilChanged()
+                .flatMapLatest { fixed -> looksOf(source, fixed) }
+                .combine(said) { looks, failure ->
+                    looks.mapValues { (_, look) ->
+                        if (failure?.first ==
+                            look
+                        ) {
+                            look.copy(failure = failure.second)
+                        } else {
+                            look
+                        }
+                    }
+                }
                 .distinctUntilChanged()
                 .collectLatest { draw(it) }
         }
     }
 
+    private fun looksOf(source: WidgetSource, fixed: Set<String>): Flow<Map<String, WidgetLook>> {
+        val flows = listOf(source.looks.map { AMSELS to it }) + fixed.map { id -> source.lookOf(id).map { id to it } }
+        return combine(flows) { it.toMap() }
+    }
+
+    /** What plays on [speaker], or where Amsel plays: for a widget's page, before its speaker is saved. */
+    fun lookFor(speaker: String?): Flow<WidgetLook> = if (speaker == null) source().looks else source().lookOf(speaker)
+
     /** The last widget left the home screen. */
     @Synchronized
     fun removed() {
+        if (ids().isNotEmpty()) return
         following?.cancel()
         following = null
     }
 
-    /** Widgets [ids] need drawing, Amsel just started: as they showed, at rest, if Amsel follows no music yet. */
+    /** Widgets [ids] need drawing (Amsel started, or a widget changed size): as they showed, at rest, if Amsel follows no music yet. */
     suspend fun redraw(ids: IntArray) {
-        val shown = _look.value
-        if (shown != null) return draw(shown, ids)
-        val stored = store.look()?.copy(playing = false, failure = null) ?: WidgetLook()
-        val cover = store.cover()?.let(::rested)
-        draw(stored, ids, cover)
+        loadSetups()
+        val looks = _looks.value ?: store.looks().mapValues { (_, look) -> look.copy(playing = false, failure = null) }
+        drawing.withLock { for (id in ids) drawOne(id, looks) }
     }
 
-    /** Widget [id]'s buttons are set: it is drawn with them at once. */
-    suspend fun setUp(id: Int, slots: List<WidgetSlot>) {
-        store.setSlots(id, slots)
+    /** Widget [id] is set up: it is drawn so at once. */
+    suspend fun setUp(id: Int, setup: WidgetSetup) {
+        store.setSetup(id, setup)
+        setups.update { it + (id to setup) }
         redraw(intArrayOf(id))
         follow()
     }
 
-    suspend fun slots(id: Int): List<WidgetSlot> = store.slots(id)
+    suspend fun setup(id: Int): WidgetSetup = store.setup(id) ?: kindOf(id).setup
 
-    /** For the setup page's picture, before Amsel has drawn the widgets in this run: what they showed last, at rest. */
-    suspend fun showStored() {
-        if (_look.value != null) return
-        _cover.value = store.cover()?.let(::rested)
-        _look.value = store.look()?.copy(playing = false, failure = null) ?: WidgetLook()
+    /** Widget [id]'s size in portrait, as the launcher gives it. */
+    fun size(id: Int): SizeF = render.sizes(id, kindOf(id)).first()
+
+    /** Widget [id] as it would show [look] with [setup] at [size], for its page: nothing on it acts. */
+    suspend fun picture(id: Int, setup: WidgetSetup, look: WidgetLook, size: SizeF): RemoteViews =
+        render.draw(id, setup, look, listOf(size), taps = false)
+
+    suspend fun forget(ids: IntArray) {
+        store.forget(ids.toList())
+        setups.update { it - ids.toSet() }
     }
-
-    suspend fun forget(ids: IntArray): Unit = store.forget(ids.toList())
 
     /** Signing out: the widgets show none of what the last person played. */
     suspend fun forgetLook() = drawing.withLock {
-        store.forgetLook()
-        _cover.value = null
-        coverArt = null
-        storedCover = null
+        store.forgetLooks()
+        render.forget()
     }
 
     /** Button [slot] of widget [widgetId] was tapped while it showed [shownPlaying]. Main thread. */
     suspend fun tap(widgetId: Int, slot: Int, shownPlaying: Boolean) {
-        val button = store.slots(widgetId).getOrNull(slot) ?: return
+        val setup = setup(widgetId)
+        val button = setup.slots.getOrNull(slot) ?: return
         // Amsel may have been closed: from now on the widgets show what the speaker reports.
         follow()
-        val hands = hands()
+        val hands = hands(setup.speaker)
         hands.wake()
         try {
             when (button.button) {
@@ -150,7 +187,7 @@ class Widgets(
                 WidgetButton.Louder -> hands.volume(up = true)
 
                 WidgetButton.ContinueListening -> lastStarted()?.let { hands.play(it) }
-                    ?: say(context.getString(R.string.widget_nothing_to_continue))
+                    ?: say(setup, context.getString(R.string.widget_nothing_to_continue))
 
                 WidgetButton.PlayItem -> button.item?.let { hands.play(it) }
 
@@ -158,91 +195,70 @@ class Widgets(
                 WidgetButton.Speakers -> Unit
             }
         } catch (e: MaException) {
-            say(context.getString(failureText(e, play = true)))
+            say(setup, context.getString(failureText(e, play = true)))
         } catch (e: PhoneNotReadyException) {
-            say(context.getString(failureText(e, play = true)))
+            say(setup, context.getString(failureText(e, play = true)))
         }
     }
 
-    private fun say(text: String) {
-        val shown = _look.value ?: return
+    private fun say(setup: WidgetSetup, text: String) {
+        val looks = _looks.value ?: return
+        val shown = looks[setup.speaker ?: AMSELS] ?: return
         said.value = shown.withoutFailure() to text
-        scope.launch { draw(shown.copy(failure = text)) }
-    }
-
-    private suspend fun draw(look: WidgetLook): Unit = draw(look, ids(), coverFor(look.art))
-
-    private suspend fun draw(look: WidgetLook, ids: IntArray, cover: WidgetCover?): Unit = drawing.withLock {
-        _look.value = look
-        _cover.value = cover
-        for (id in ids) {
-            val slots = store.slots(id)
-            val drawn = views.build(id, look, slots, cover, thumbs(slots))
-            try {
-                manager.updateAppWidget(id, drawn)
-            } catch (e: RuntimeException) {
-                // A launcher gone or an update Android refuses costs the widget one picture, never
-                // the music: this runs in the app's own scope.
+        if (following?.isActive != true) {
+            scope.launch {
+                draw(
+                    looks.mapValues { (_, look) ->
+                        if (look ==
+                            shown
+                        ) {
+                            look.copy(failure = text)
+                        } else {
+                            look
+                        }
+                    },
+                )
             }
         }
-        if (!look.signedIn) {
-            store.forgetLook()
-            storedCover = null
-            return@withLock
+    }
+
+    private suspend fun loadSetups() {
+        setups.value = ids().associateWith { setup(it) }
+    }
+
+    private suspend fun draw(looks: Map<String, WidgetLook>): Unit = drawing.withLock {
+        _looks.value = looks
+        for (id in ids()) drawOne(id, looks)
+        if (looks[AMSELS]?.signedIn == false) {
+            store.forgetLooks()
+            render.forget()
+        } else {
+            store.setLooks(looks.mapValues { (_, look) -> look.withoutFailure() })
         }
-        store.setLook(look.withoutFailure())
-        if (cover !== storedCover) {
-            store.setCover(cover?.bitmap)
-            storedCover = cover
+    }
+
+    private suspend fun drawOne(id: Int, looks: Map<String, WidgetLook>) {
+        val setup = setups.value[id] ?: setup(id)
+        val look = looks[setup.speaker ?: AMSELS] ?: looks[AMSELS] ?: WidgetLook()
+        val drawn = render.draw(id, setup, look, render.sizes(id, kindOf(id)))
+        try {
+            manager.updateAppWidget(id, drawn)
+        } catch (e: RuntimeException) {
+            // A launcher gone or an update Android refuses costs the widget one picture, never
+            // the music: this runs in the app's own scope.
         }
-    }
-
-    private suspend fun draw(look: WidgetLook, ids: IntArray): Unit = draw(look, ids, coverFor(look.art))
-
-    /** The blurred cover for [art], kept while it stays; null when there is none or it cannot be read. */
-    private suspend fun coverFor(art: String?): WidgetCover? {
-        if (art == null) return null
-        if (art == coverArt) _cover.value?.let { return it }
-        val bitmap = load(art, COVER_PX) ?: return null
-        return withContext(Dispatchers.Default) { WidgetArt.cover(bitmap) }.also { coverArt = art }
-    }
-
-    /** The faces of [slots]' Play … buttons, by their cover's address. */
-    suspend fun thumbs(slots: List<WidgetSlot>): Map<String, Bitmap> = slots
-        .mapNotNull { it.item?.art }
-        .distinct()
-        .mapNotNull { art -> thumb(art)?.let { art to it } }
-        .toMap()
-
-    private suspend fun thumb(art: String): Bitmap? {
-        faces[art]?.let { return it }
-        val made = store.thumb(art) ?: load(art, THUMB_LOAD_PX)?.let { source ->
-            val density = context.resources.displayMetrics.density
-            val px = (THUMB_DP * density).toInt()
-            withContext(Dispatchers.Default) { WidgetArt.thumb(source, px, density, THUMB_DP) }.also {
-                store.setThumb(art, it)
-            }
-        }
-        return made?.also { faces[art] = it }
-    }
-
-    private suspend fun load(url: String, px: Int): Bitmap? {
-        val request = ImageRequest.Builder(context).data(url).size(px).allowHardware(false).build()
-        return (images.execute(request) as? SuccessResult)?.image?.toBitmap()
-    }
-
-    /** A cover kept from an earlier run, with its tone worked out again. */
-    private fun rested(bitmap: Bitmap): WidgetCover {
-        val pixels = IntArray(bitmap.width * bitmap.height)
-        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-        return WidgetCover(bitmap, WidgetArt.inkReads(pixels, bitmap.width, bitmap.height))
     }
 
     private fun WidgetLook.withoutFailure() = copy(failure = null)
 
     private companion object {
-        /** A Play … button's cover, as the layout sizes it. */
-        const val THUMB_DP = 28f
-        const val THUMB_LOAD_PX = 128
+        /** Each kind's provider, as the launcher names it. */
+        val Providers: Map<Class<*>, WidgetKind> = mapOf(
+            AmselButtonWidget::class.java to WidgetKind.Button,
+            AmselButtonsWidget::class.java to WidgetKind.Buttons,
+            AmselWidget::class.java to WidgetKind.NowPlaying,
+        )
+
+        fun classFor(name: String): Class<*>? = Providers.keys.firstOrNull { it.name == name }
     }
 }
