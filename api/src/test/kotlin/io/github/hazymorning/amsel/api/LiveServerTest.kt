@@ -49,7 +49,7 @@ class LiveServerTest {
         api.recentlyPlayed(13, queueId = kitchen.playerId)
     }
 
-    @Test fun `play an album on a speaker, move it, change the volume by a level and a step`() = live { api, _ ->
+    @Test fun `play an album on a speaker, move it, change the volume`() = live { api, _ ->
         val speakers = waitForSpeakers(api)
         val kitchen = speakers.first { it.shownName == "Kitchen" }
         val living = speakers.first { it.shownName == "Living Room" }
