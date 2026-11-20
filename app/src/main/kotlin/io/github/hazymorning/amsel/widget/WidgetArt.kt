@@ -102,24 +102,22 @@ object WidgetArt {
     }
 
     /**
-     * A cover [px] square in Amsel's cover corners for its size at [density], with the hairline every
-     * cover carries just inside its edge: a tile's, a bar's, a player's or a poster's cover.
+     * A cover [px] wide and [height] high in Amsel's cover corners for its size at [density], with the
+     * hairline every cover carries just inside its edge, cut from the picture's middle: a tile's, a
+     * bar's, a player's or a poster's cover, square, and a Play … button's, as large as its cell.
      */
-    fun shaped(source: Bitmap, px: Int, density: Float): Bitmap =
-        outline(px, density)?.let { cut(source, px, density, it) } ?: createBitmap(px, px)
-
-    /**
-     * A cover [px] across, cut round, with the same hairline: a Play … button, which starts what it
-     * shows, is round wherever it stands; rule 7's one exception, as the owner asked.
-     */
-    fun round(source: Bitmap, px: Int, density: Float): Bitmap = cut(source, px, density, circle(px))
-
-    private fun cut(source: Bitmap, px: Int, density: Float, path: Path): Bitmap {
+    fun shaped(source: Bitmap, px: Int, density: Float, height: Int = px): Bitmap {
+        val out = createBitmap(px, height)
+        val path = outline(px, height, density) ?: return out
         val square = centerSquare(source)
-        val out = createBitmap(px, px)
-        val scale = px.toFloat() / square.width
+        val scale = maxOf(px, height).toFloat() / square.width
         val shader = BitmapShader(square, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
-            setLocalMatrix(Matrix().apply { setScale(scale, scale) })
+            setLocalMatrix(
+                Matrix().apply {
+                    setScale(scale, scale)
+                    postTranslate((px - square.width * scale) / 2, (height - square.height * scale) / 2)
+                },
+            )
         }
         val canvas = Canvas(out)
         canvas.drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply { this.shader = shader })
@@ -132,19 +130,19 @@ object WidgetArt {
         return out
     }
 
-    /** The cover's shape [px] square, or [round], empty: white, for the widget to tint in its tone's shade. */
-    fun blank(px: Int, density: Float, round: Boolean = false): Bitmap {
+    /** The cover's shape [px] square, empty: white, for the widget to tint in its tone's shade. */
+    fun blank(px: Int, density: Float): Bitmap {
         val out = createBitmap(px, px)
-        val path = (if (round) circle(px) else outline(px, density)) ?: return out
+        val path = outline(px, px, density) ?: return out
         Canvas(out).drawPath(path, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE })
         return out
     }
 
-    private fun circle(px: Int) = Path().apply { addCircle(px / 2f, px / 2f, px / 2f, Path.Direction.CW) }
-
-    private fun outline(px: Int, density: Float): Path? {
-        val size = Size(px.toFloat(), px.toFloat())
-        val outline = Shapes.cover((px / density).dp).createOutline(size, LayoutDirection.Ltr, Density(density))
+    /** A cover's corners at its shorter side, as Amsel rounds a cover of that size. */
+    private fun outline(width: Int, height: Int, density: Float): Path? {
+        val side = (minOf(width, height) / density).dp
+        val size = Size(width.toFloat(), height.toFloat())
+        val outline = Shapes.cover(side).createOutline(size, LayoutDirection.Ltr, Density(density))
         return (outline as? Outline.Generic)?.path?.asAndroidPath()
     }
 

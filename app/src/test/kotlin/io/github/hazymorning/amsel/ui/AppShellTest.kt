@@ -49,6 +49,7 @@ class AppShellTest {
     @get:Rule val compose = createComposeRule()
 
     private var speakerTaps = 0
+    private var groupTaps = 0
     private val controls = mutableListOf<PlayerControl>()
     private val opening = mutableStateOf<Opening?>(null)
     private var opened = 0
@@ -66,6 +67,7 @@ class AppShellTest {
                 nowPlaying = nowPlaying.value,
                 speaker = nowPlaying.value?.speaker ?: SampleData.speakers[0],
                 onSpeaker = { speakerTaps++ },
+                onGroup = { groupTaps++ },
                 onControl = { controls += it },
                 opening = opening.value,
                 bar = bar.value,
@@ -87,9 +89,12 @@ class AppShellTest {
                         }
                     },
                     nowPlaying = { _, _ ->
+                        // As Now Playing answers: its own layer for Up next, opened in full.
+                        val upNext = rememberPlayerLayerState()
+                        AnswerUpNext { upNext.open() }
                         Column {
                             Text("now playing layer")
-                            if (LocalUpNextAsked.current.value) Text("up next asked")
+                            if (upNext.fraction == 1f) Text("up next open")
                         }
                     },
                     sheets = {},
@@ -325,17 +330,27 @@ class AppShellTest {
         compose.onNodeWithText("page Home").assertExists()
     }
 
-    /** A widget's Up next button: Now Playing opens, and is asked to open Up next over itself. */
+    /** A widget's Up next button: Now Playing opens, and Up next over it, all the way. */
     @Test fun anUpNextLinkOpensNowPlayingAndAsksForUpNext() {
         val playing = mutableStateOf<NowPlayingUi?>(null)
         shell(playing)
         opening.value = Opening.UpNext
         compose.waitForIdle()
-        compose.onNodeWithText("up next asked").assertDoesNotExist()
+        compose.onNodeWithText("up next open").assertDoesNotExist()
         playing.value = SampleData.nowPlaying
         compose.waitForIdle()
         compose.onNodeWithText("now playing layer").assertExists()
-        compose.onNodeWithText("up next asked").assertExists()
+        compose.onNodeWithText("up next open").assertExists()
+        assertEquals(1, opened)
+    }
+
+    /** A widget's Group button: the speaker picker at its group step. */
+    @Test fun aGroupLinkOpensThePickerToGroup() {
+        shell()
+        opening.value = Opening.Group
+        compose.waitForIdle()
+        assertEquals(1, groupTaps)
+        assertEquals(0, speakerTaps)
         assertEquals(1, opened)
     }
 

@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonObject
@@ -77,7 +78,9 @@ class PageSourceTest {
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             // No server id: the memory keeps nothing.
             val memory = PageMemory(File(checkNotNull(System.getProperty("java.io.tmpdir")))) { null }
-            val source = ServerPageSource(MaApi(client), { error("The library index is not needed here") }, memory)
+            val connected = client.state.map { it is ConnectionState.Connected }
+            val source =
+                ServerPageSource(MaApi(client), { error("The library index is not needed here") }, memory, connected)
             val key = "filesystem_local--x://album/Aurora Tone/First Light (2021)"
             assertEquals("library://album/4", source.item(key)?.uri)
             assertEquals(3, source.albumTracks(key).size)

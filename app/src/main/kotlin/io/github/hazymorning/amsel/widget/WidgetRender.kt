@@ -28,7 +28,7 @@ internal class WidgetRender(private val context: Context, private val images: Im
     private val shaped = object : LruCache<String, Bitmap>(SHAPED_BYTES) {
         override fun sizeOf(key: String, value: Bitmap) = value.byteCount
     }
-    private val blanks = HashMap<Pair<Int, Boolean>, Bitmap>()
+    private val blanks = HashMap<Int, Bitmap>()
 
     /** The grounds of the covers shown, blurred or darkened, kept while they stay. */
     private val grounds = LruCache<String, WidgetCover>(GROUNDS)
@@ -67,9 +67,8 @@ internal class WidgetRender(private val context: Context, private val images: Im
         taps: Boolean = true,
         clearInk: Boolean? = null,
     ): RemoteViews {
-        val faces = faces(setup)
         val fits = sizes.map { views.fit(it.width, it.height, setup, look) }
-        val pictures = pictures(setup, look, fits, faces)
+        val pictures = pictures(setup, look, fits, faces(setup, fits))
         val ink = setup.style == WidgetStyle.Clear && (clearInk ?: wallpaperWantsInk(context))
         return views.build(id, setup, look, fits, pictures, ink, taps)
     }
@@ -89,9 +88,9 @@ internal class WidgetRender(private val context: Context, private val images: Im
         val item = setup.shown(look, 1).firstOrNull()?.value
             ?.takeIf { it.button == WidgetButton.PlayItem }?.item?.art
         val buttoned = tiles.filter { it.buttons > 0 }.map { views.px(minOf(it.width, it.height)) }
-        val tileArt = pictured(item, buttoned.distinct(), round = true)
+        val tileArt = pictured(item, buttoned.distinct())
         // The cover's shape: empty where nothing plays, and at night over every cover that fills a side.
-        val shapes = covered + art.keys
+        val shapes = covered + art.keys + tileArt.keys
         val ground = when {
             !playing -> null
             setup.style == WidgetStyle.Cover -> ground(look.art, COVER_PX, WidgetArt::cover)
@@ -103,41 +102,39 @@ internal class WidgetRender(private val context: Context, private val images: Im
             art = art,
             faces = faces,
             tiles = tileArt,
-            blanks = shapes.distinct().associateWith { blank(it, round = false) },
-            rounds = tileArt.keys.associateWith { blank(it, round = true) },
+            blanks = shapes.distinct().associateWith(::blank),
         )
     }
 
-    /** The faces of [setup]'s Play … buttons, round, by their cover's address. */
-    private suspend fun faces(setup: WidgetSetup): Map<String, Bitmap> {
-        val side = views.px(WidgetSizes.FACE)
-        return setup.slots
-            .filter { it.button == WidgetButton.PlayItem }
-            .mapNotNull { it.item?.art }
-            .distinct()
-            .mapNotNull { art -> shaped(art, side, round = true)?.let { art to it } }
-            .toMap()
-    }
-
-    private suspend fun pictured(url: String?, sides: List<Int>, round: Boolean = false): Map<Int, Bitmap> {
-        if (url == null) return emptyMap()
-        return sides.mapNotNull { side -> shaped(url, side, round)?.let { side to it } }.toMap()
-    }
-
-    /** The cover at [url], [side] px square in Amsel's cover corners, or [round]; null when it cannot be read. */
-    private suspend fun shaped(url: String, side: Int, round: Boolean = false): Bitmap? {
-        val key = "$url@$side${if (round) " round" else ""}"
-        shaped.get(key)?.let { return it }
-        val source = load(url, maxOf(side, MIN_SOURCE_PX)) ?: return null
-        val made = withContext(Dispatchers.Default) {
-            if (round) WidgetArt.round(source, side, density) else WidgetArt.shaped(source, side, density)
+    /** [setup]'s Play … buttons' covers, as large as their cells at each of [fits], by [faceKey]. */
+    private suspend fun faces(setup: WidgetSetup, fits: List<WidgetFit>): Map<String, Bitmap> {
+        val bare = setup.cells == WidgetCells.None
+        val cells = fits.mapNotNull { cellSize(it, bare) }.map { (w, h) -> views.px(w) to views.px(h) }.distinct()
+        val arts = setup.slots.filter { it.button == WidgetButton.PlayItem }.mapNotNull { it.item?.art }.distinct()
+        return buildMap {
+            for (art in arts) {
+                for ((width, height) in cells) shaped(art, width, height)?.let { put(faceKey(art, width, height), it) }
+            }
         }
+    }
+
+    private suspend fun pictured(url: String?, sides: List<Int>): Map<Int, Bitmap> {
+        if (url == null) return emptyMap()
+        return sides.mapNotNull { side -> shaped(url, side)?.let { side to it } }.toMap()
+    }
+
+    /** The cover at [url], [width] by [height] px in Amsel's cover corners; null when it cannot be read. */
+    private suspend fun shaped(url: String, width: Int, height: Int = width): Bitmap? {
+        val key = faceKey(url, width, height)
+        shaped.get(key)?.let { return it }
+        val source = load(url, maxOf(width, height, MIN_SOURCE_PX)) ?: return null
+        val made = withContext(Dispatchers.Default) { WidgetArt.shaped(source, width, density, height) }
         shaped.put(key, made)
         return made
     }
 
-    private fun blank(side: Int, round: Boolean): Bitmap = synchronized(blanks) {
-        blanks.getOrPut(side to round) { WidgetArt.blank(side, density, round) }
+    private fun blank(side: Int): Bitmap = synchronized(blanks) {
+        blanks.getOrPut(side) { WidgetArt.blank(side, density) }
     }
 
     /** The cover at [url], [px] square, laid down by [make]; null when there is none or it cannot be read. */

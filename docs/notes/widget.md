@@ -78,9 +78,10 @@ them, and a row gave up room at its ends to keep a third button. Google's own wi
   whenever the launcher lays the widget out anew and runs on (AOSP `Chronometer`).
 - **Covers:** a bar's and a player's are as high as their place and as wide as high; a poster's as
   wide as the frame.
-- **The speaker's line** is set regular under the bold title, and its volume stands at its end,
-  wherever the speaker reports one (not This phone): the volume's glyph and its number, as Now
-  Playing has them, the last ink on the frame. It stays whole; the speaker's glyph gives way before
+- **The speaker's line** is set regular under the bold title, and the speaker's volume stands after
+  its name, wherever the speaker reports one (not This phone): the volume's glyph and its number, as
+  Now Playing has them. Compared with the line's end and the widget's top corner, beside the name it
+  reads as the speaker's, alike in every form. It stays whole; the speaker's glyph gives way before
   the name is cut, then the name is.
 - Buttons that a size cannot hold give way whole: play and pause last, the others from the start, so
   the end stays, where play and next stand as a widget comes; at a large text size a bar gives a
@@ -106,8 +107,8 @@ Under the cover looks, from Android 12, play and pause take the cover's own colo
 (the hue most of its coloured pixels share, deep on a light ground, bright on a dark one), its glyph
 in ink or paper, whichever reads (`WidgetArt.accent`).
 Covers shown sharp keep Amsel's cover corners (rule 7) and at night the night's range, as in the
-app; a Play … button alone is round, wherever it stands, as the owner asked: it starts what it
-shows. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
+app; a Play … button's cover fills its cell, cut from the picture's middle where the cell is not
+square. The corners of the widget are the launcher's; the words are in the phone's sans-serif with
 Amsel's weights, the one font a widget can count on.
 
 ## Buttons
@@ -121,9 +122,10 @@ Amsel's weights, the one font a widget can count on.
 | Shuffle, Repeat | as Now Playing's; repeat goes off, all, one | quieter while off; repeat one's own glyph |
 | Quieter, Louder | the server's own step, as its volume up and down take it: its Volume step setting, else 1 near silence and near full, 2, and 3 in the middle; Louder stops at the volume limit and says so | speaker low, high |
 | Speakers | opens Play on (`amsel://speakers`) | the speaker |
+| Group | opens Play on at its group step (`amsel://group`) | a link |
 | Up next | opens Up next over Now Playing (`amsel://up-next`); in a book or an episode, its chapters, as Now Playing's last button | the list; the chapters' list |
 | Continue listening | the book or episode heard last (`Catalog.inProgress(1)`) | a book |
-| Play … | one album, playlist, artist, station, book or podcast, picked once | its cover, round |
+| Play … | one album, playlist, artist, station, book or podcast, picked once | its cover, as large as its cell, a cover's corners; darker while pressed |
 
 None to eight, in the person's order; the widget's page says how many fit at its size and which. As they
 come, as the owner sets theirs: Button, play and pause; Buttons and Now playing, shuffle, the heart,

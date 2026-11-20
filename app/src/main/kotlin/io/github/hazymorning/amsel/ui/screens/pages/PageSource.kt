@@ -1,9 +1,11 @@
 package io.github.hazymorning.amsel.ui.screens.pages
 
 import io.github.hazymorning.amsel.AppGraph
+import io.github.hazymorning.amsel.api.ConnectionState
 import io.github.hazymorning.amsel.api.ItemPage
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
+import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaType
@@ -24,8 +26,11 @@ import io.github.hazymorning.amsel.data.library.LibraryRepository
 import io.github.hazymorning.amsel.data.library.ProgressUpdate
 import io.github.hazymorning.amsel.playback.failureText
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.dropWhile
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 /**
  * What the pages load, by item uri: the library index's row for the first paint (and a book's or
@@ -72,6 +77,9 @@ interface PageSource {
 
     /** The index's album covers of each of the artists [keys] that has no picture; none it does not hold. */
     suspend fun albumCovers(keys: List<String>): Map<String, List<String>>
+
+    /** Returns once the server is connected anew: after the connection in use ends, or at the first one. */
+    suspend fun connectedAgain()
 }
 
 /** The real [PageSource]: the server, and the library index and the pages last shown for the first paint. */
@@ -79,6 +87,8 @@ class ServerPageSource(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
     private val memory: PageMemory,
+    /** Whether the server is connected, as it changes. */
+    private val connected: Flow<Boolean>,
 ) : PageSource {
     override fun row(key: String): Flow<LibraryItemEntity?> = flow { emitAll(library().observeRow(key)) }
 
@@ -131,6 +141,10 @@ class ServerPageSource(
 
     override suspend fun albumCovers(keys: List<String>): Map<String, List<String>> = library().albumCovers(keys)
 
+    override suspend fun connectedAgain() {
+        connected.dropWhile { it }.first { it }
+    }
+
     private inline fun <T> ids(key: String, load: (id: String, provider: String) -> T): T {
         val uri = requireNotNull(ItemUri.parse(key)) { "Not an item uri: $key" }
         return load(uri.itemId, uri.provider)
@@ -138,7 +152,12 @@ class ServerPageSource(
 }
 
 /** The pages' [PageSource] on the app's session and library index. */
-internal fun AppGraph.pageSource(): PageSource = ServerPageSource(data.session.api, { data.library }, data.pages)
+internal fun AppGraph.pageSource(): PageSource = ServerPageSource(
+    data.session.api,
+    { data.library },
+    data.pages,
+    data.session.client.state.map { it is ConnectionState.Connected },
+)
 
 /**
  * The server's similar items as a page lists them: without the item [key] they were asked for,
@@ -161,6 +180,16 @@ internal class Load {
         failure = failure ?: e
         null
     }
+}
+
+/**
+ * Where [load] could not reach the server, [again] once it is connected anew: a page opened while
+ * Amsel connects, as it does coming back to the front, fills in by itself, as Home and the Library do.
+ */
+internal suspend fun PageSource.againOnceConnected(load: Load, again: () -> Unit) {
+    if (load.failure !is MaConnectionException) return
+    connectedAgain()
+    again()
 }
 
 /**

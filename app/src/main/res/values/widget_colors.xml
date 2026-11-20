@@ -48,6 +48,7 @@
     <color name="widget_cell_plain">#1F191A17</color>
     <color name="widget_cell_ink">#1F191A17</color>
     <color name="widget_cell_paper">#33F2F1EC</color>
+    <color name="widget_face_press">#33000000</color>
     <color name="widget_press_disc_light">#29F2F1EC</color>
     <color name="widget_press_disc_dark">#29191A17</color>
     <color name="widget_press_disc_plain">#29F2F1EC</color>

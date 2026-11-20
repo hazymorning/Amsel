@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -107,6 +108,11 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
     }
 
     override suspend fun albumCovers(keys: List<String>) = covers.filterKeys { it in keys }
+
+    /** Each one a connection made anew. */
+    val connections = MutableSharedFlow<Unit>()
+
+    override suspend fun connectedAgain() = connections.first()
 
     override suspend fun similarArtists(key: String) = similar()
 

@@ -1,14 +1,15 @@
-# Night roost
+# Flock together
 
 ## New
 
-- **Darkened cover:** a widget can wear the cover of what plays sharp and darkened, its words light over any picture.
-- **Up next on the home screen:** a widget button opens Up next straight away, or a book's chapters.
-- **More rows of buttons:** a tall widget puts the buttons one row cannot hold in a second row.
-- **Play from your library:** choosing what a Play button starts now shows your playlists, stations, albums and more, played lately first, with Search above.
+- **Group from the home screen:** a widget button opens Play on, ready to group speakers so they play together.
 
 ## Better
 
-- **The volume at a glance:** every widget shows the speaker's volume at the end of its line.
-- **Buttons in a sensible order:** a new widget comes with shuffle, the heart, the speakers, play and next. Where fewer fit, play and next stay.
-- **Round Play buttons:** a button that starts an album or a playlist is round, and the speaker's line is lighter.
+- **Play buttons wear their cover:** a button that starts an album, a playlist or a station fills its whole cell with the cover, in a cover's corners, instead of a tiny round picture.
+- **The volume beside its speaker:** on every widget the volume stands right after the speaker's name, where it reads as that speaker's.
+
+## Fixed
+
+- **Up next from a widget:** its button opens Up next, or a book's chapters, instead of stopping at Now Playing.
+- **Pages that stayed empty:** an artist, album or playlist opened while Amsel was reconnecting stayed empty until it was opened again. Now it fills in by itself as soon as the connection is back.

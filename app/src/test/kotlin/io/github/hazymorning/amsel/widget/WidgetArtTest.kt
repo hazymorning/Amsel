@@ -48,14 +48,19 @@ class WidgetArtTest {
         assertEquals(255, Color.alpha(thumb.getPixel(42, 42)))
     }
 
-    /** A Play … button is round: clear where a cover's corner would still show the picture. */
-    @Test fun aPlayButtonIsRound() {
-        val face = WidgetArt.round(filled(Color.RED), px = 84, density = 3f)
-        val square = WidgetArt.shaped(filled(Color.RED), px = 84, density = 3f)
-        assertEquals(255, Color.alpha(square.getPixel(8, 8)))
-        assertEquals(0, Color.alpha(face.getPixel(8, 8)))
-        assertEquals(255, Color.alpha(face.getPixel(42, 2)))
-        assertEquals(255, Color.alpha(face.getPixel(42, 42)))
+    /** A Play … button's cover fills its cell, taller than wide, in a cover's corners, cut from the middle. */
+    @Test fun aPlayButtonsCoverFillsItsCell() {
+        val stripes = filled(Color.RED).apply {
+            for (x in 0 until 30) for (y in 0 until height) setPixel(x, y, Color.BLUE)
+        }
+        val face = WidgetArt.shaped(stripes, px = 132, density = 3f, height = 168)
+        assertEquals(132, face.width)
+        assertEquals(168, face.height)
+        assertEquals(0, Color.alpha(face.getPixel(0, 0)))
+        assertEquals(255, Color.alpha(face.getPixel(66, 2)))
+        assertEquals(255, Color.alpha(face.getPixel(2, 84)))
+        // The picture's sides go, not its middle: the blue edge is cut away.
+        assertEquals(Color.RED, face.getPixel(4, 84))
     }
 
     /** Darkened, the cover lies sharp and whole; play takes its colour bright, as on a dark ground. */

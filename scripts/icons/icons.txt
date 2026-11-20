@@ -89,6 +89,7 @@ dj                  microphone-stage
 speaker             room                   custom
 queue               queue                  custom
 phone               device-mobile
+group               link-simple
 volume              speaker-high
 volume_low          speaker-low
 

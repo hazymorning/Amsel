@@ -3,7 +3,7 @@
      pressed shade, half a gap in at the sides (widget_cell_*, widget_bare_*), so the layout keeps
      the cells and their gaps even at any size the launcher gives. In a row lower than a target, the
      target reaches past the frame above and below and the cell stays in it (WidgetCellsViews). Its
-     glyph, or its item's cover, in the middle. -->
+     glyph in the middle, or its item's cover filling it. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_cell"
@@ -29,12 +29,17 @@
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
 
+        <!-- A Play … button's cover, as large as the cell's shape; darker while pressed. -->
         <ImageView
             android:id="@+id/widget_face"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/widget_cell_inset"
+            android:layout_marginEnd="@dimen/widget_cell_inset"
+            android:duplicateParentState="true"
+            android:foreground="@drawable/widget_face_press"
             android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
             android:visibility="gone" />
     </FrameLayout>
 </FrameLayout>
