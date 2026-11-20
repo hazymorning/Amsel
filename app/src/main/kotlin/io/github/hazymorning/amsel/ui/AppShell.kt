@@ -92,9 +92,9 @@ fun AppShell(
     speaker: SpeakerUi,
     onSpeaker: () -> Unit,
     slots: ShellSlots,
+    modifier: Modifier = Modifier,
     /** The speaker picker at its group step: a widget's Group button. */
     onGroup: () -> Unit = onSpeaker,
-    modifier: Modifier = Modifier,
     onControl: (PlayerControl) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     layer: PlayerLayerState = rememberPlayerLayerState(),

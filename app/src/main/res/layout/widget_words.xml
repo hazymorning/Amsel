@@ -5,6 +5,7 @@
      (WidgetWordsViews). The level, the speaker's volume, stands after the speaker's name, which
      is cut before it where the row runs out; the time under all. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_words"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -30,11 +31,14 @@
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
 
+        <!-- As wide as the name, the level right after it; the weight only cuts it where the row
+             runs out, which a width of none would not do. -->
         <TextView
             android:id="@+id/widget_speaker"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            tools:ignore="InefficientWeight"
             android:ellipsize="end"
             android:fontFamily="sans-serif"
             android:includeFontPadding="false"
