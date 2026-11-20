@@ -129,6 +129,7 @@ class PodcastViewModel(
             }
             messages.loadFailed(load, shown(page.value, source.row(key).first(), null).showUnavailable, retryLoad)
             if (item != null && episodes != null) source.keep(key, ShownPage(item, episodes.items))
+            source.againOnceConnected(load, ::retry)
         }
     }
 

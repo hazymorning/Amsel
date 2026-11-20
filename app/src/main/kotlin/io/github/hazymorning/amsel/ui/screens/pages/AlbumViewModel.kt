@@ -79,6 +79,7 @@ class AlbumViewModel(
             page.update { it.loaded(album, served) }
             messages.loadFailed(load, shown(page.value, source.row(key).first(), null).showUnavailable, retryLoad)
             if (album != null && served != null) source.keep(key, ShownPage(album, served))
+            source.againOnceConnected(load, ::retry)
         }
     }
 

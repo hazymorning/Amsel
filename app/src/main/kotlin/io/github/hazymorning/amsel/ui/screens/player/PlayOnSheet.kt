@@ -68,8 +68,10 @@ fun PlayOnSheetContent(
     onMove: (SpeakerUi) -> Unit = {},
     onSwitch: (SpeakerUi) -> Unit = {},
     onBack: () -> Unit = {},
+    /** Opens at the group step, where there are speakers to group. */
+    startGrouping: Boolean = false,
 ) {
-    var grouping by rememberSaveable { mutableStateOf(false) }
+    var grouping by rememberSaveable { mutableStateOf(startGrouping) }
     BackHandler(enabled = state.question != null, onBack = onBack)
     BackHandler(enabled = grouping && state.question == null) { grouping = false }
     val step = when {
@@ -270,9 +272,9 @@ data class PlayOnUiState(
 @Immutable
 data class PlayOnQuestion(val target: SpeakerUi, val title: String, val from: SpeakerUi)
 
-/** The "Play on" sheet. [onDone] closes it. */
+/** The "Play on" sheet, at its group step where [grouping]. [onDone] closes it. */
 @Composable
-fun PlayOnRoute(onDone: () -> Unit) {
+fun PlayOnRoute(onDone: () -> Unit, grouping: Boolean = false) {
     val graph = LocalContext.current.graph
     val scope = rememberCoroutineScope()
     val current by graph.playing.speaker.collectAsStateWithLifecycle()
@@ -303,6 +305,7 @@ fun PlayOnRoute(onDone: () -> Unit) {
             }
         },
         onBack = { question = null },
+        startGrouping = grouping,
     )
 }
 

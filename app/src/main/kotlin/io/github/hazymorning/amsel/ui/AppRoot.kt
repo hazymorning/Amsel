@@ -109,6 +109,8 @@ class AppActions(
 
     fun playOn() = open(AppSheet.PlayOn)
 
+    fun group() = open(AppSheet.Group)
+
     /** Opens Music Assistant's web UI in the browser. */
     fun openWebUi() {
         val url = graph.data.session.address.value?.toString() ?: return
@@ -191,7 +193,9 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
     // What helps around playing listens from the start: headphones, coming back, a queue that ends.
     LaunchedEffect(graph) { graph.hints }
     // Search, Now Playing and Up next come up in front of whatever sheet was open; the speaker picker is one.
-    LaunchedEffect(opening) { if (opening != null && opening != Opening.Speakers) sheet.value = null }
+    LaunchedEffect(opening) {
+        if (opening == Opening.Search || opening == Opening.NowPlaying || opening == Opening.UpNext) sheet.value = null
+    }
     // On Android 17 a server on the local network is out of reach until the person allows it,
     // also for a phone set up before the update (Setup asked only then). Unreachable with the
     // permission missing: ask, once per launch; Retry asks again, or reconnects at once.
@@ -253,6 +257,7 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
             nowPlaying = nowPlaying,
             speaker = speaker,
             onSpeaker = actions::playOn,
+            onGroup = actions::group,
             onControl = graph.playback::control,
             snackbarHostState = snackbar,
             opening = opening,

@@ -127,6 +127,7 @@ class PlaylistViewModel(
                 }
             }
             messages.loadFailed(load, shown(page.value, source.row(key).first(), null).showUnavailable, retryLoad)
+            source.againOnceConnected(load, ::retry)
         }
     }
 

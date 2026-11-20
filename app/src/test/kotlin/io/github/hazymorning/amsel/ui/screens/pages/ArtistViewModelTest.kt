@@ -73,6 +73,34 @@ class ArtistViewModelTest {
         assertFalse(state.showUnavailable)
     }
 
+    /** Opened while Amsel connects, coming back to the front: the page fills in once it is connected. */
+    @Test fun `an artist opened before the server could be reached loads once it is connected`() = runTest {
+        val source = FakeSource().apply {
+            failure = MaConnectionException("Not connected")
+            item = one("music_artists_get")
+            tracks = list("music_artists_artist_tracks").take(5)
+            albums = list("music_artists_artist_albums")
+        }
+        val state = watch(ArtistViewModel(ARTIST, source, mapper, playing, messages).state)
+        assertTrue(state.value.showUnavailable)
+
+        source.failure = null
+        source.connections.emit(Unit)
+        assertFalse(state.value.showUnavailable)
+        assertEquals("Aurora Tone", state.value.artist?.title)
+        assertEquals(listOf("Second Wind", "First Light"), state.value.albums.map { it.title })
+    }
+
+    /** A server that answered, if only with a refusal, is not asked again by itself. */
+    @Test fun `an artist the server refused waits for Retry`() = runTest {
+        val source = FakeSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
+        val state = watch(ArtistViewModel(ARTIST, source, mapper, playing, messages).state)
+        val asked = source.itemCalls
+        source.connections.emit(Unit)
+        assertEquals(asked, source.itemCalls)
+        assertTrue(state.value.showUnavailable)
+    }
+
     @Test fun `an artist the server cannot find is unavailable`() = runTest {
         val source = FakeSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
         val state = watch(ArtistViewModel("library://artist/99", source, mapper, playing, messages).state)

@@ -132,6 +132,7 @@ class ArtistViewModel(
             if (served != null && servedPopular != null && servedAlbums != null) {
                 source.keep(key, ShownPage(served, servedPopular, servedAlbums))
             }
+            source.againOnceConnected(load, ::retry)
         }
     }
 

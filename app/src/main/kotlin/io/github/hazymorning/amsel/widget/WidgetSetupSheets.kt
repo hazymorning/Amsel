@@ -185,6 +185,8 @@ private fun note(button: WidgetButton, current: WidgetSlot?, volumeLimit: Int): 
 
     WidgetButton.UpNext -> stringResource(R.string.widget_up_next_note)
 
+    WidgetButton.Group -> stringResource(R.string.widget_group_note)
+
     WidgetButton.ContinueListening -> stringResource(R.string.widget_continue_note)
 
     WidgetButton.PlayItem -> current?.item?.title ?: stringResource(R.string.widget_something_note)

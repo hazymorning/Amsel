@@ -156,7 +156,7 @@ class WidgetShots : ScreenshotTest() {
 
     @Composable
     private fun Rows() {
-        val more = listOf(WidgetButton.Previous, WidgetButton.UpNext, WidgetButton.Repeat)
+        val more = listOf(WidgetButton.Group, WidgetButton.UpNext, WidgetButton.Repeat)
         val eight = DefaultSlots + more.map(::WidgetSlot)
         Widget(WidgetSetup(slots = eight), WidgetSample.music, WidgetSample.tallPlayer, column = 0, row = 0)
         Widget(WidgetSetup(), WidgetSample.music, WidgetSample.tallCard, column = 0, row = 3)
