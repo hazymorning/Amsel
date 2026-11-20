@@ -41,7 +41,7 @@ internal class WidgetWordsViews(
         val (glyphStart, glyphEnd) = text.speakerSides()
         val nameStart = text.sideBearing(name, WidgetLine.Speaker)
         val glyphGap = text.speakerGlyph * GLYPH_GAP - glyphEnd - nameStart
-        // The level shows whole at the row's end; where the name beside it would be cut, the
+        // The level shows whole after the name; where the name before it would be cut, the
         // speaker's glyph gives way first, then the name is cut.
         val level = level()?.takeIf { words.speaker }
         val nameRoom = text.speakerGlyph - glyphStart + glyphGap + text.width(name, WidgetLine.Speaker)
@@ -90,8 +90,8 @@ internal class WidgetWordsViews(
                 }
             }
             val speakerStart = if (glyph) glyphStart else nameStart
-            // The level's number keeps its glyph as far as the name keeps the speaker's, and its last
-            // ink stands on the frame at the end.
+            // The level's number keeps its glyph as far as the name keeps the speaker's; where the row
+            // runs out, its last ink stands on the frame at the end.
             val levelEnd = level?.let { text.endBearing(it, WidgetLine.Speaker) } ?: 0f
             setViewPadding(R.id.widget_speaker_row, px(LEAD - speakerStart), 0, px(LEAD - levelEnd), 0)
             setViewPadding(R.id.widget_speaker, px(afterGlyph), 0, 0, 0)
@@ -135,7 +135,7 @@ internal class WidgetWordsViews(
     private fun afterLevelGlyph(text: WidgetText, level: String): Float =
         text.speakerGlyph * GLYPH_GAP - text.levelSides().second - text.sideBearing(level, WidgetLine.Speaker)
 
-    /** What [level] takes at the speaker's row's end, from the name to the frame: its gap, its glyph, its number. */
+    /** What [level] takes after the speaker's name: its gap, its glyph, its number. */
     private fun levelRoom(text: WidgetText, level: String): Float =
         text.dp(LEVEL_GAP * text.size.scale) + text.speakerGlyph + afterLevelGlyph(text, level) +
             text.width(level, WidgetLine.Speaker) - text.endBearing(level, WidgetLine.Speaker)

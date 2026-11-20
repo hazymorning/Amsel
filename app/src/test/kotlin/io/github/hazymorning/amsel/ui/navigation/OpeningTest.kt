@@ -16,6 +16,7 @@ class OpeningTest {
         assertEquals(Opening.NowPlaying, of("amsel://now-playing"))
         assertEquals(Opening.Speakers, of("amsel://speakers"))
         assertEquals(Opening.UpNext, of("amsel://up-next"))
+        assertEquals(Opening.Group, of("amsel://group"))
         // As a widget may write them.
         assertEquals(Opening.Search, of("AMSEL://Search/"))
     }

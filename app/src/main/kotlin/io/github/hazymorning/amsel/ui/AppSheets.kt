@@ -32,6 +32,9 @@ sealed interface AppSheet {
 
     data object PlayOn : AppSheet
 
+    /** Play on at its group step. */
+    data object Group : AppSheet
+
     data object SleepTimer : AppSheet
 
     data object Volume : AppSheet
@@ -67,6 +70,8 @@ internal fun AppSheets(sheet: MutableState<AppSheet?>, navigator: Navigator) {
                 is AppSheet.RemoveFromPlaylist -> RemoveFromPlaylistRoute(shown.target, navigator) { close() }
 
                 AppSheet.PlayOn -> PlayOnRoute(onDone = { close() })
+
+                AppSheet.Group -> PlayOnRoute(onDone = { close() }, grouping = true)
 
                 AppSheet.SleepTimer -> SleepRoute()
 

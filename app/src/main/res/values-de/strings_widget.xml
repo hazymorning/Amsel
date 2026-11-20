@@ -31,6 +31,7 @@
     <string name="widget_louder_note">Nur bis zu deiner Lautstärkegrenze von %1$s</string>
     <string name="widget_speakers_note">Wählen, wo die Musik läuft</string>
     <string name="widget_up_next_note">Öffnet, was als Nächstes läuft, bei Hörbüchern und Folgen die Kapitel</string>
+    <string name="widget_group_note">Wählen, welche Lautsprecher zusammen spielen</string>
     <string name="widget_continue_note">Das Hörbuch oder die Folge, die du zuletzt gehört hast</string>
     <string name="widget_something_note">Album, Playlist, Sender oder Hörbuch</string>
     <string name="widget_pick_title">Etwas abspielen</string>

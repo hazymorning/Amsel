@@ -120,9 +120,6 @@ object WidgetSizes {
 
     const val GLYPH = 24f
 
-    /** A Play … button's round cover, inside its cell: as much to the eye as a glyph's square of 28. */
-    const val FACE = 32f
-
     const val TITLE_TO_SUBTITLE = 4f
 
     /**
@@ -233,6 +230,25 @@ internal fun buttonRows(fit: WidgetFit): Int =
 /** The height [rows] of cells take, [WidgetSizes.GAP] apart. */
 internal fun rowsHeight(rows: Int): Float =
     if (rows == 0) 0f else rows * WidgetSizes.CELL_HEIGHT + (rows - 1) * WidgetSizes.GAP
+
+/**
+ * A button cell's width and height in [fit], in dp, as its row lays it out, [bare] or not: what a
+ * Play … button's cover fills. Null where no row of cells stands.
+ */
+internal fun cellSize(fit: WidgetFit, bare: Boolean): Pair<Float, Float>? {
+    val s = WidgetSizes
+    if (fit.buttons == 0 || fit.columns == 0) return null
+    return when (fit.form) {
+        WidgetForm.Bar -> s.BAR_CELL - s.GAP to minOf(fit.height - 2 * s.PADDING, s.CELL_HEIGHT)
+
+        WidgetForm.Pad -> span(fit.width, bare) / fit.columns - s.GAP to fit.cell
+
+        WidgetForm.Card, WidgetForm.Player, WidgetForm.Poster ->
+            span(fit.width, bare) / fit.columns - s.GAP to s.CELL_HEIGHT
+
+        WidgetForm.Tile, WidgetForm.Line -> null
+    }
+}
 
 /** The width a row of targets spans: the frame and the half gaps its ends reach, or bare, nearly all. */
 internal fun span(width: Float, bare: Boolean): Float =

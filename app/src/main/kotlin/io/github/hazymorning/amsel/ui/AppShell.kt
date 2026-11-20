@@ -92,6 +92,8 @@ fun AppShell(
     speaker: SpeakerUi,
     onSpeaker: () -> Unit,
     slots: ShellSlots,
+    /** The speaker picker at its group step: a widget's Group button. */
+    onGroup: () -> Unit = onSpeaker,
     modifier: Modifier = Modifier,
     onControl: (PlayerControl) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -134,6 +136,8 @@ fun AppShell(
             }
 
             Opening.Speakers -> onSpeaker()
+
+            Opening.Group -> onGroup()
         }
         onOpened()
     }
@@ -297,9 +301,26 @@ val LocalStartSearch = staticCompositionLocalOf<() -> Unit> { {} }
 
 /**
  * Set once a link to Up next (a widget's button) has opened Now Playing, which then opens Up next, or
- * the chapters, and clears it.
+ * the chapters ([AnswerUpNext]), and clears it.
  */
 val LocalUpNextAsked = staticCompositionLocalOf<MutableState<Boolean>> { mutableStateOf(false) }
+
+/**
+ * Now Playing's answer to a link that asked for Up next: [open], once per ask. It runs in the
+ * screen's own scope: clearing the ask restarts the effect that saw it, which would cut the opening
+ * short and leave Up next closed.
+ */
+@Composable
+fun AnswerUpNext(open: suspend () -> Unit) {
+    val asked = LocalUpNextAsked.current
+    val scope = rememberCoroutineScope()
+    val answer by rememberUpdatedState(open)
+    LaunchedEffect(asked.value) {
+        if (!asked.value) return@LaunchedEffect
+        asked.value = false
+        scope.launch { answer() }
+    }
+}
 
 /** How long a Now Playing link waits for the speaker to say what plays. */
 private const val NOW_PLAYING_WAIT_MS = 5_000L

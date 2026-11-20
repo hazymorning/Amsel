@@ -24,12 +24,17 @@
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
 
+        <!-- A Play … button's cover, as large as the cell's shape; darker while pressed. -->
         <ImageView
             android:id="@+id/widget_face"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/widget_cell_inset"
+            android:layout_marginEnd="@dimen/widget_cell_inset"
+            android:duplicateParentState="true"
+            android:foreground="@drawable/widget_face_press"
             android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
             android:visibility="gone" />
     </FrameLayout>
 </FrameLayout>
