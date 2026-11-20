@@ -17,9 +17,8 @@ Plan: `docs/PLAN.md`. Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.
 - Commit messages: short imperative subject; a body only when it adds information.
 - Docs stay short and factual. The README is the owner's: the header (`docs/design/readme`, drawn
   by `scripts/design/readme-header.py`), what Amsel is, four screens in GitHub's light or dark
-  theme (laid out by `scripts/design/readme-screens.py`), its widgets in one picture under the ideas
-  (`scripts/design/readme-widgets.py`), and small at its foot the blackbird's line and the owner's
-  note that Amsel is developed with the help of AI tools.
+  theme (laid out by `scripts/design/readme-screens.py`), the ideas behind it, and small at its foot
+  the blackbird's line and the owner's note that Amsel is developed with the help of AI tools.
 - Every release has a short name of its own with some character, from a bird's life, the heading of
   `release/NOTES.md`, a calendar version, and is titled "Nesting luck • 2026.11.0"; its notes have
   100 to 150 words under New, Better and Fixed (`docs/RELEASING.md`).
@@ -62,8 +61,7 @@ owner's explicit wishes override the plan.
 6. Budgets fail the build: APK <= 15 MB, permission and dependency allowlists
    (`:app:checkBudgets`).
 7. One corner rule for every cover, artists included (continuous corners by size, `Shapes.cover`):
-   no artwork is ever a circle (`CoverShapeTest`); the one exception, as the owner asked, is a
-   widget's Play … button, round as it starts what it shows.
+   no artwork is ever a circle (`CoverShapeTest`).
 
 Words in the UI: "speaker" not "player", "Play on" not "transfer", "Up next" not "queue",
 "music service" not "provider". German and English strings stay in step.

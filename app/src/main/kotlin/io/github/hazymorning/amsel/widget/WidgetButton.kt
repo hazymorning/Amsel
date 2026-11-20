@@ -24,11 +24,14 @@ enum class WidgetButton(val id: String, @StringRes val label: Int, @DrawableRes 
     Louder("louder", R.string.widget_louder, R.drawable.ic_volume),
     Speakers("speakers", R.string.widget_speakers, R.drawable.ic_speaker),
 
+    /** Opens Play on at its group step. */
+    Group("group", R.string.group, R.drawable.ic_group),
+
     /** Opens Up next, or a book's or an episode's chapters, as Now Playing's last button does. */
     UpNext("up-next", R.string.player_up_next, R.drawable.ic_queue),
     ContinueListening("continue", PlaybackR.string.continue_listening, R.drawable.ic_audiobook),
 
-    /** One item, picked once: its cover, round, is the button. */
+    /** One item, picked once: its cover is the button, as large as its cell. */
     PlayItem("item", R.string.widget_play_something, R.drawable.ic_album),
     ;
 

@@ -2,9 +2,10 @@
 <!-- The speaker and what plays, in the phone's own sans-serif, which WidgetText measures: sizes and
      lines as WidgetLine has them. The view stands the words' lead outside its box at either side,
      and each line's padding puts its first ink, and the level's last, on the box's edge
-     (WidgetWordsViews). The level, the speaker's volume, stands at the end of the speaker's row,
-     the name taking what it leaves; the time under all. -->
+     (WidgetWordsViews). The level, the speaker's volume, stands after the speaker's name, which
+     is cut before it where the row runs out; the time under all. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_words"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -14,7 +15,7 @@
 
     <LinearLayout
         android:id="@+id/widget_speaker_row"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -30,11 +31,14 @@
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
 
+        <!-- As wide as the name, the level right after it; the weight only cuts it where the row
+             runs out, which a width of none would not do. -->
         <TextView
             android:id="@+id/widget_speaker"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            tools:ignore="InefficientWeight"
             android:ellipsize="end"
             android:fontFamily="sans-serif"
             android:includeFontPadding="false"

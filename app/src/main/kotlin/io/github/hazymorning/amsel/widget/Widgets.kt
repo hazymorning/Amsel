@@ -224,7 +224,7 @@ class Widgets(
                 WidgetButton.PlayItem -> button.item?.let { hands.play(it) }
 
                 // Open Amsel itself (WidgetCellsViews.press).
-                WidgetButton.Speakers, WidgetButton.UpNext -> Unit
+                WidgetButton.Speakers, WidgetButton.UpNext, WidgetButton.Group -> Unit
             }
         } catch (e: MaException) {
             say(setup, context.getString(failureText(e, play = true)))

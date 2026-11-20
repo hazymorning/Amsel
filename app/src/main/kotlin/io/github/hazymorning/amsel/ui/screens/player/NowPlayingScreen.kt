@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -24,9 +23,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.ActionTarget
 import io.github.hazymorning.amsel.graph
+import io.github.hazymorning.amsel.ui.AnswerUpNext
 import io.github.hazymorning.amsel.ui.AppSheet
 import io.github.hazymorning.amsel.ui.LocalAppActions
-import io.github.hazymorning.amsel.ui.LocalUpNextAsked
 import io.github.hazymorning.amsel.ui.PlayerLayer
 import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.BarTitleInset
@@ -179,14 +178,9 @@ fun NowPlayingRoute(onClose: () -> Unit, navigator: Navigator, modifier: Modifie
     val canWrite = permissions.canWriteLibrary
     val upNext = rememberPlayerLayerState()
     val scope = rememberCoroutineScope()
-    val upNextAsked = LocalUpNextAsked.current
     val np = state ?: return
     val closeUpNext: () -> Unit = { scope.launch { upNext.close() } }
-    LaunchedEffect(upNextAsked.value) {
-        if (!upNextAsked.value) return@LaunchedEffect
-        upNextAsked.value = false
-        if (np.spoken) actions.open(AppSheet.Chapters) else upNext.open()
-    }
+    AnswerUpNext { if (np.spoken) actions.open(AppSheet.Chapters) else upNext.open() }
     Box(modifier.fillMaxSize()) {
         NowPlayingScreen(
             state = np,

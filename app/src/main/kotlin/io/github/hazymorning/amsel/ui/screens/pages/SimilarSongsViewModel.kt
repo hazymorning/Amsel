@@ -55,7 +55,9 @@ class SimilarSongsViewModel(
                 emptyList()
             } catch (e: MaConnectionException) {
                 page.value = SimilarSongsUiState(failure = failureText(e))
-                return@launch
+                // As every page, it fills in once the server is connected anew.
+                source.connectedAgain()
+                return@launch retry()
             }
             page.value = SimilarSongsUiState(found.similarTo(key, seed.await()).map(mapper::track))
         }

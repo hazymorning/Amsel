@@ -3,7 +3,6 @@ package io.github.hazymorning.amsel.ui.screens.pages
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.hazymorning.amsel.api.orNullOnFailure
 import io.github.hazymorning.amsel.app.ItemDownload
 import io.github.hazymorning.amsel.app.art
 import io.github.hazymorning.amsel.app.chapterList
@@ -100,7 +99,8 @@ class AudiobookViewModel(
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
         loading = viewModelScope.launch {
-            val served = async { orNullOnFailure { source.item(key) } }
+            val load = Load()
+            val served = async { load.attempt { source.item(key) } }
             if (first) {
                 source.shown(key)?.let { last ->
                     page.update {
@@ -121,6 +121,7 @@ class AudiobookViewModel(
                 )
             }
             if (item != null) source.keep(key, ShownPage(item))
+            source.againOnceConnected(load, ::retry)
         }
     }
 }

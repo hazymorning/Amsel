@@ -88,7 +88,7 @@ internal class WidgetDrawing(
         shows(R.id.widget_art_box, poster)
         if (poster) art(fit, cap = false)
         words(fit, align, fit.width - 2 * PADDING)
-        cellRows(shown, after, fit.columns)
+        cellRows(shown, after, fit)
     }
 
     /** The cover beside what plays, in its middle, above the cells or below them; the room between. */
@@ -99,7 +99,7 @@ internal class WidgetDrawing(
         val spare = px(fit.height - 2 * PADDING - rowsHeight(buttonRows(fit)) - fit.art)
         setViewPadding(R.id.widget_top, 0, if (after) spare else 0, 0, if (after) 0 else spare)
         words(fit, WordsAlign.Middle, fit.width - 2 * PADDING - fit.art - ART_TO_WORDS)
-        cellRows(shown, after, fit.columns)
+        cellRows(shown, after, fit)
     }
 
     /** The cover and what plays, the cells after them or before them, as high as beside words. */
@@ -121,7 +121,7 @@ internal class WidgetDrawing(
         val (row, other) = rowsBy(after)
         clear(other)
         shows(row, shown.isNotEmpty())
-        cells.row(this, row, shown, R.layout.widget_cell_bar, inset = px((target - cell) / 2))
+        cells.row(this, row, shown, R.layout.widget_cell_bar, inset = px((target - cell) / 2), face(fit))
     }
 
     /** Buttons alone, in rows in the frame's middle. */
@@ -132,7 +132,7 @@ internal class WidgetDrawing(
         // Each row holds half a gap above and below its targets.
         val upright = px((fit.height - rows * (target + GAP)) / 2)
         setViewPadding(R.id.widget_pad, px(side), upright, px(side), upright)
-        cells.pad(this, R.id.widget_pad, shown, fit.columns, inset = px((target - fit.cell) / 2))
+        cells.pad(this, R.id.widget_pad, shown, fit.columns, inset = px((target - fit.cell) / 2), face(fit))
     }
 
     /** [layout] on the widget's ground: its colour or the cover of what plays, and what a tap on it opens. */
@@ -163,16 +163,20 @@ internal class WidgetDrawing(
     }
 
     /**
-     * [shown] in rows of [columns] before what plays where it comes [after] them, else after it; the
-     * other place gone. The rows as wide as the widget keep the cells in the frame.
+     * [shown] in [fit]'s rows before what plays where it comes [after] them, else after it; the other
+     * place gone. The rows as wide as the widget keep the cells in the frame.
      */
-    private fun RemoteViews.cellRows(shown: List<PlacedSlot>, after: Boolean, columns: Int) {
+    private fun RemoteViews.cellRows(shown: List<PlacedSlot>, after: Boolean, fit: WidgetFit) {
         val (rows, other) = rowsBy(after)
         clear(other)
         shows(rows, shown.isNotEmpty())
         setViewPadding(rows, px(side), 0, px(side), 0)
-        cells.rows(this, rows, shown, columns)
+        cells.rows(this, rows, shown, fit.columns, face(fit))
     }
+
+    /** The size of [fit]'s cells in px, which a Play … button's cover fills. */
+    private fun face(fit: WidgetFit): Pair<Int, Int>? =
+        cellSize(fit, setup.cells == WidgetCells.None)?.let { (width, height) -> px(width) to px(height) }
 
     /** The place for the cells, before what plays where it comes [after] them, and the other one. */
     private fun rowsBy(after: Boolean): Pair<Int, Int> {
@@ -221,7 +225,7 @@ internal class WidgetDrawing(
 
     /**
      * One cell: the whole tile is the button, its cell in the frame as every form's. A Play … button
-     * is its item's cover, round; a tile without buttons the cover of what plays.
+     * is its item's cover, a tile without buttons the cover of what plays.
      */
     private fun tile(fit: WidgetFit) = RemoteViews(context.packageName, R.layout.widget_tile).apply {
         val first = setup.shown(look, 1).firstOrNull()
@@ -232,8 +236,7 @@ internal class WidgetDrawing(
             slot == null && playing -> pictures.art[side]
             else -> null
         }
-        val shape = if (slot?.button == WidgetButton.PlayItem) pictures.rounds else pictures.blanks
-        val night = shape[side]?.takeIf { face != null }
+        val night = pictures.blanks[side]?.takeIf { face != null }
         ground(clear = face != null)
         shows(R.id.widget_face, face != null)
         shows(R.id.widget_face_night, night != null)
