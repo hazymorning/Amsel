@@ -1,12 +1,16 @@
 name: Cleanup
 
-# By hand only: Actions → Cleanup → Run workflow. Keeps the newest five releases and deletes the
-# older ones with their tags, every tag no release keeps, every branch but main and signing (which
-# holds the release key; a branch with an open pull request stays, so no work in progress is lost),
-# the Actions caches, and every workflow run but the newest of each workflow.
+# By hand only: Actions → Cleanup → Run workflow. Keeps the newest release and deletes the older
+# ones with their tags, every tag no release keeps, every branch but main and signing (which holds
+# the release key; a branch with an open pull request stays, so no work in progress is lost), the
+# Actions caches, and every workflow run but the newest of each workflow.
 
 on:
   workflow_dispatch:
+    inputs:
+      keep:
+        description: Releases to keep, the newest; 0 clears them all, for one published anew under its name
+        default: '1'
 
 permissions:
   actions: write
@@ -25,10 +29,14 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
-      - name: Releases but the newest five
+      - name: Releases but the newest
+        env:
+          KEEP: ${{ inputs.keep }}
         run: |
+          case "$KEEP" in ''|*[!0-9]*) echo "::error::keep must be a number, got '$KEEP'"; exit 1 ;; esac
           # Read first: piped straight into the loop, a failed listing would read as "nothing to do".
-          tags=$(gh release list --limit 1000 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[5:] | .[].tagName')
+          tags=$(gh release list --limit 1000 --json tagName,createdAt \
+            --jq "sort_by(.createdAt) | reverse | .[$KEEP:] | .[].tagName")
           while read -r tag; do
             [ -n "$tag" ] || continue
             gh release delete "$tag" --cleanup-tag --yes

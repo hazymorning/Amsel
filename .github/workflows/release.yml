@@ -2,7 +2,7 @@ name: Release
 
 # A release starts when release/VERSION changes on main, or by hand (Actions → Release → Run
 # workflow), which publishes the version in release/VERSION if it is not released yet. This
-# workflow builds, signs and publishes it here, titled "Name • 2026.11.0": the name is the first
+# workflow builds, signs and publishes it here, titled "Name • 1.1": the name is the first
 # line of release/NOTES.md, and the release carries the rest of it. Then it fills the Gradle cache
 # the next pull request's CI starts from.
 #
@@ -40,7 +40,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           version=$(tr -d '[:space:]' < release/VERSION)
-          case "$version" in v[0-9]*) ;; *) echo "::error::release/VERSION must look like v2026.11.0, got '$version'"; exit 1 ;; esac
+          case "$version" in v[0-9]*) ;; *) echo "::error::release/VERSION must look like v1.1, got '$version'"; exit 1 ;; esac
           echo "VERSION=$version" >> "$GITHUB_ENV"
           if gh release view "$version" >/dev/null 2>&1; then
             echo "Release $version already exists; nothing to do."

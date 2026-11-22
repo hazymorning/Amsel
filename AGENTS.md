@@ -20,8 +20,8 @@ Plan: `docs/PLAN.md`. Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.
   theme (laid out by `scripts/design/readme-screens.py`), the ideas behind it, and small at its foot
   the blackbird's line and the owner's note that Amsel is developed with the help of AI tools.
 - Every release has a short name of its own with some character, from a bird's life, the heading of
-  `release/NOTES.md`, a calendar version, and is titled "Nesting luck • 2026.11.0"; its notes have
-  100 to 150 words under New, Better and Fixed (`docs/RELEASING.md`).
+  `release/NOTES.md`, a version counted from 1.0 (1.1, 1.2, …), and is titled "Nesting luck • 1.1";
+  its notes have 100 to 150 words under New, Better and Fixed (`docs/RELEASING.md`).
 
 ## How decisions are made
 
