@@ -1,6 +1,6 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/design/readme/header-dark.svg">
-  <img src="docs/design/readme/header-light.svg" alt="Amsel. Black feathers. Golden song.">
+  <img src="docs/design/readme/header-light.svg" alt="Amsel. pli-pli-pli-pli-pli">
 </picture>
 
 <br>
