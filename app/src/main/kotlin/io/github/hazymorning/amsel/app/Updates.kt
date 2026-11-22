@@ -211,11 +211,14 @@ class Updates(
 /**
  * Whether [candidate] comes after [current], as versions such as `0.9.0-beta.14` are ordered:
  * numbers first, then a version without a suffix after one with, then the suffix part by part,
- * numbers by value.
+ * numbers by value. The versions counted by the calendar before 1.0 (`2026.11.57`) come before
+ * every one since.
  */
 internal fun isNewer(candidate: String, current: String): Boolean = compareVersions(candidate, current) > 0
 
 private fun compareVersions(a: String, b: String): Int {
+    val byCalendar = byCalendar(b).compareTo(byCalendar(a))
+    if (byCalendar != 0) return byCalendar
     val (aMain, aPre) = a.split('-', limit = 2).let { it[0] to it.getOrNull(1) }
     val (bMain, bPre) = b.split('-', limit = 2).let { it[0] to it.getOrNull(1) }
     val main = compareParts(aMain.split('.'), bMain.split('.'))
@@ -227,6 +230,12 @@ private fun compareVersions(a: String, b: String): Int {
         else -> compareParts(aPre.split('.'), bPre.split('.'))
     }
 }
+
+/** Counted by the calendar, as versions were before 1.0: its first number a year. */
+private fun byCalendar(version: String): Boolean =
+    (version.substringBefore('.').toIntOrNull() ?: 0) >= FIRST_CALENDAR_YEAR
+
+private const val FIRST_CALENDAR_YEAR = 2000
 
 private fun compareParts(a: List<String>, b: List<String>): Int {
     for (i in 0 until maxOf(a.size, b.size)) {
