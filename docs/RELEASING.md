@@ -8,11 +8,12 @@
    language under the headings `## New`, `## Better` and `## Fixed` (only those with something in
    them), one line each: `- **Name:** what it does for the people using the app.`
 3. Set `release/VERSION` to the new version, through the pull request, so it reaches `main`.
-   Versions follow the calendar: the year, the month (3 for March) and a count within the month
-   from 0, `v2026.11.0`, then `v2026.11.1`, `v2026.12.0`. Every version is published as a regular
-   release and marked the latest.
+   Versions count from `v1.0`: each release the next, `v1.1`, `v1.2`, and a new first number only
+   when the owner says. Until 1.0 they followed the calendar (`v2026.11.57`); the update check puts
+   those before every version since. Every version is published as a regular release and marked
+   the latest.
 4. The Release workflow builds the signed APK (the pull request's CI tested that code) and publishes it
-   here, https://github.com/hazymorning/Amsel, as "Nesting luck • 2026.11.0", with the notes as
+   here, https://github.com/hazymorning/Amsel, as "Nesting luck • 1.1", with the notes as
    written and the APK as its one file. A name an earlier release already has stops it, and fails
    the pull request's CI before that (`scripts/release/check-name.sh`). Actions → Release → Run
    workflow publishes the version in `release/VERSION` if it is not released yet.
@@ -25,7 +26,8 @@ Amsel's source is public here, under the GNU General Public License, version 3 (
 app's update check and Obtainium read the releases.
 
 Cleanup (https://github.com/hazymorning/Amsel/actions/workflows/cleanup.yml, Run workflow) keeps
-the newest five releases and deletes the older ones with their tags, every tag no release keeps,
+the newest release and deletes the older ones with their tags (`keep` 0 clears them all, for a
+release published anew under its name), every tag no release keeps,
 every branch but `main` and `signing` (a branch with an open pull request stays), the Actions
 caches, and every workflow run but the newest of each workflow.
 

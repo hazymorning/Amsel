@@ -169,4 +169,14 @@ class UpdatesTest {
         val APK = "application/vnd.android.package-archive".toMediaType()
         val JSON = "application/json".toMediaType()
     }
+
+    /** Counted from 1.0 now: the versions counted by the calendar before come before every one since. */
+    @Test fun numbersSince1Point0ComeAfterTheCalendarsVersions() {
+        assertTrue(isNewer("1.0", "2026.11.57"))
+        assertFalse(isNewer("2026.11.57", "1.0"))
+        assertTrue(isNewer("1.1", "1.0"))
+        assertTrue(isNewer("1.10", "1.9"))
+        assertTrue(isNewer("2026.11.57", "2026.11.9"))
+        assertFalse(isNewer("1.0", "1.0"))
+    }
 }
