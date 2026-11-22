@@ -858,3 +858,4 @@ E evidence). Decisions already made in the plan's "Already decided" table are no
 | 2026-11-20 | A Group button for widgets: Play on at its group step (`amsel://group`), with a link glyph | Owner |
 | 2026-11-20 | A page whose load could not reach the server loads again by itself once the server is connected anew, as Home and the Library do: opened while Amsel reconnects, coming back to the front, an artist stayed empty until opened again | Owner (artist page empty until reopened); Q1 |
 | 2026-11-20 | The README lists the widgets among the ideas, without a picture | Owner |
+| 2026-11-22 | Releases are named by their bird words and a version counted from 1.0 (1.1, 1.2, …), no longer by the date; the current one is published anew as "Flock together • 1.0". The update check puts the calendar's versions before every one since; copies on 2026.11.x install 1.0 once by hand, as their own check cannot see it as newer. Cleanup keeps the newest release alone | Owner |
