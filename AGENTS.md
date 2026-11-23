@@ -96,5 +96,6 @@ scripts/check.sh                         # all CI runs, live servers too
 
 Done means: unit tests and the kept screenshots pass, changed screens are looked at in light, dark
 and 200% and pass `scripts/design/measure.py`, TalkBack labels and 48 dp targets are in place, no
-new warnings. A fix runs only the tests for what it touched; every pull request first passes
-`scripts/check.sh`, all CI runs.
+new warnings. A fix runs only the tests for what it touched; every pull request that changes the
+app first passes `scripts/check.sh`, all CI runs. One that changes only the README, docs or their
+pictures is merged without tests.
