@@ -184,6 +184,8 @@ class LocalPlayback(
         .setWakeMode(C.WAKE_MODE_LOCAL)
         .setSeekBackIncrementMs(SKIP_BACK_MS)
         .setSeekForwardIncrementMs(SKIP_FORWARD_MS)
+        // Media3 would report each playback to Android's media metrics; Amsel reports nothing.
+        .setUsePlatformDiagnostics(false)
         .build()
         .also { player ->
             exo = player
