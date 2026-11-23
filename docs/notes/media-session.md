@@ -8,13 +8,13 @@ For that surface only, the plan's fallback applies (controls in the app and the 
 headphone buttons); it fixes itself once "This phone" has played (M3), because the platform session
 stays the same across player swaps.
 
-Prototype: `/tmp/media3-spike` (outside the repo), module `:remote`, AGP 9.5.0, Kotlin 2.4.21,
+Prototype: a scratch project outside the repo, module `:remote`, AGP 9.5.0, Kotlin 2.4.21,
 Gradle 9.8.2, compileSdk 37, minSdk 28, media3 1.11.1. `compileDebugKotlin` with no warnings,
 `lintDebug` clean (opt-ins satisfied), 11 Robolectric tests (SDK 36) green.
 
 **Evidence markers.** [src] read in source: `m3/` = Media3 1.11.1 sources jars from Google Maven
 (`androidx/media3/{common,session}/`), `aosp/` = `frameworks/base` `main` on android.googlesource.com
-(fetched 2026-11-01; shipped releases can differ), `ma/` = `/home/user/ref/server` @ `acea6207`.
+(fetched 2026-11-01; shipped releases can differ), `ma/` = `music-assistant/server` @ `acea6207`.
 [doc] developer.android.com, 2026-11-01. [test] proven by the spike's tests. [inf] inferred, check
 on a device (checklist at the end). D1-D13 are the proposed decisions in
 `docs/notes/official-app-lessons.md` §4.
@@ -167,7 +167,7 @@ proxied picture, not the app's two by two. A track row's
 `play_media(media=parent, start_item=track)`. `onAddMediaItems` must pass items through: the default
 fails for items without a URI (`m3/MediaSession.java:1958-1966`).
 
-## 6. Code sketch (condensed from the compiled `/tmp/media3-spike/remote/src/main/kotlin/io/github/hazymorning/amsel/playback/RemotePlayer.kt`)
+## 6. Code sketch (condensed from the prototype's compiled `RemotePlayer.kt`)
 
 ```kotlin
 @OptIn(UnstableApi::class)

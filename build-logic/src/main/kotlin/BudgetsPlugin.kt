@@ -104,7 +104,7 @@ abstract class CheckPermissionsTask : DefaultTask() {
             .toSortedSet()
         val extra = used - allowed.get()
         if (extra.isNotEmpty()) {
-            throw GradleException("Permissions outside the budget: $extra. See docs/PLAN.md rule 5.")
+            throw GradleException("Permissions outside the budget: $extra. See AGENTS.md rule 5.")
         }
         logger.lifecycle("Permissions OK: $used")
     }

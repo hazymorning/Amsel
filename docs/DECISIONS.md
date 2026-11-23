@@ -1,8 +1,8 @@
 # Decisions
 
 One line per decision: what was chosen, and which question from "How decisions are made" in
-`docs/PLAN.md` settled it (Q1 first-time user, Q2 fewest elements, Q3 calmer, Q4 faster/lighter,
-E evidence). Decisions already made in the plan's "Already decided" table are not repeated.
+`AGENTS.md` settled it (Q1 first-time user, Q2 fewest elements, Q3 calmer, Q4 faster/lighter,
+E evidence).
 
 | Date | Decision | Settled by |
 | --- | --- | --- |

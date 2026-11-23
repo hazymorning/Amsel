@@ -5,11 +5,11 @@ protocol and Android platform areas Amsel shares with it, what to copy in spirit
 Written for the M1 (remote, media session) and M4 (Android Auto) work. Protocol details that
 `docs/API-NOTES.md` already covers are only referenced here.
 
-**Source.** `/home/user/ref/mobile-app` at commit `d4a7256c` (2026-10-31, shallow). Abbreviations:
+**Source.** `music-assistant/mobile-app` at commit `d4a7256c` (2026-10-31, shallow). Abbreviations:
 `ca/` = `composeApp/src/commonMain/kotlin/io/music_assistant/client/`,
 `aa/` = `androidApp/src/main/kotlin/io/music_assistant/client/`,
 `sk/` = `sendspin-kmp/src/androidMain/kotlin/io/music_assistant/sendspin/android/`,
-`.claude/` = the app's own notes, `srv/` = `/home/user/ref/server` at `dev` `acea6207` (checked
+`.claude/` = the app's own notes, `srv/` = `music-assistant/server` at `dev` `acea6207` (checked
 against tag `2.10.8` where stated), `m3/` = Media3 1.11.1 `media3-session-1.11.1-sources.jar` from
 Google Maven, package `androidx/media3/session/`.
 **Markers.** Plain statements were read in source, with file:line. **[inf]** = inferred; check it
@@ -35,7 +35,7 @@ before relying on it.
 6. **Their OAuth return scheme cannot be ours.** The server accepts no custom scheme except
    `musicassistant://` (`srv/music_assistant/helpers/redirect_validation.py:19-26`, same at 2.10.8),
    and that scheme belongs to their app. Use the WebView flow in `docs/API-NOTES.md` §3.4.
-7. **Correction to PLAN.md:** the Android decoder and `AudioTrack` sink no longer live in `player/local/`.
+7. The Android decoder and `AudioTrack` sink no longer live in `player/local/`.
    They are inside the module now: `sk/AudioTrackSink.kt`, `sk/AndroidDecoders.kt` (§2.12).
 
 ## 1. The two questions
@@ -82,7 +82,7 @@ must measure this on a device.
 
 | Hard thing | Evidence | Lesson for Amsel |
 | --- | --- | --- |
-| `play_media` answers only after playback starts (3-5 s, over 30 s for a large artist). Users tap again, and every tap is a full server play action. | `.claude/play-request-feedback-plan.md:59-70` | `PlayDispatcher` (§2.7). Already in PLAN. |
+| `play_media` answers only after playback starts (3-5 s, over 30 s for a large artist). Users tap again, and every tap is a full server play action. | `.claude/play-request-feedback-plan.md:59-70` | `PlayDispatcher` (§2.7). Already planned. |
 | Reconnect and re-auth races: RPCs fired before `auth` landed, auth lost when sent before `server/hello`, sessions wedged in `Connecting`, a stale "ready" socket. | `ca/api/KtorServiceClient.kt:547-586`, `:158-162`, `:678-696`, `:1069-1081` | Gate every non-auth command on "authenticated", and fail every pending call on transport loss (§2.1). |
 | SystemUI binds the browser service just to draw the notification. Treating that as a car "zombified the notification on remote players" (their issue #519). | `aa/services/AndroidAutoPlaybackService.kt:134-155` | In Media3 `onConnect`, never treat `com.android.systemui` as Android Auto. |
 | Two services share one session, and whichever the OS bound used to overwrite the other's state. | `SharedMediaSessionManager.kt:141-152` | One `MediaLibraryService`, one session, one writer (decision D1). |
@@ -93,7 +93,7 @@ must measure this on a device.
 | `startForegroundService` must be followed by `startForeground` before `stopSelf`, or the process dies; started from the shell without a type it throws `ForegroundServiceDidNotStartInTimeException`. | `MainMediaPlaybackService.kt:104-122`, `docs/ANDROID-AUTO.md:216` | Let Media3 own the foreground transitions. Never start the service by hand. |
 | Android Auto: `onGetRoot` must always return a root, or the car shows a loading screen forever. At most 4 root tabs ("More" holds the rest). | `AndroidAutoPlaybackService.kt:197-224`, `docs/ANDROID-AUTO.md:37` | At most 4 root tabs, no refusals (§2.11). |
 | Gemini ignores App Actions, so phone-side "play X on Music Assistant" no longer works. | `docs/ANDROID-AUTO.md:127-140` | Skip App Actions and `shortcuts.xml` entirely. |
-| Sendspin: monotonic time base, the wire change at 2.10.7, clock re-seed, buffer sizing. | `.claude/sendspin-status.md:419-465`, `.claude/architecture.md:328-343` | Vendor, do not rewrite (PLAN already says so). |
+| Sendspin: monotonic time base, the wire change at 2.10.7, clock re-seed, buffer sizing. | `.claude/sendspin-status.md:419-465`, `.claude/architecture.md:328-343` | Vendor, do not rewrite. |
 | Background restriction ("Allow background usage" off) kills the media foreground service whatever the app does. | `ca/utils/BackgroundUsageGuard.kt:3-17` | Known risk for M3's two-hour test (see §5). |
 
 ## 2. Area by area
@@ -142,7 +142,7 @@ Their JSON config is `ignoreUnknownKeys` and `coerceInputValues` (`ca/utils/myJs
 completion point, partial joining, `failAll`, no generic timeout, and lenient decoding that never
 crashes the collector.
 **Avoid.** `prettyPrint = true` on the wire (`myJson.kt:6`), and raw server `details` strings shown to
-users (PLAN wants plain sentences).
+users (errors are plain sentences).
 
 ### 2.3 Login, auth and token storage
 **They do.** `auth/login {username, password, device_name}`, then `auth {token, device_name, locale?}`
@@ -167,8 +167,8 @@ rejection. On logout, let the server close the socket.
 "Amsel on <device model>", not a UUID. Delete the token only on `InvalidToken` (23) or
 `AuthenticationFailed` (21) (`music_assistant_models/errors.py`: 20 `AuthenticationRequired`, 21, 22
 `InsufficientPermissions`, 23, 24 `ResourceBusyError`), never on a timeout or a server error (D9).
-Custom Tabs and a custom scheme: not possible for us (§0.6). The token store is Keystore-encrypted per
-PLAN, so backup of it is useless; set `allowBackup="false"` instead of maintaining two rule files (D12).
+Custom Tabs and a custom scheme: not possible for us (§0.6). The token store is Keystore-encrypted,
+so backup of it is useless; set `allowBackup="false"` instead of maintaining two rule files (D12).
 
 ### 2.4 Server discovery
 **They do.** None. Host, port, TLS and a base path are typed by hand
@@ -276,7 +276,7 @@ sink's focus handling as vendored.
 **Avoid.** The switch-player action (D5). Avoid the hand-built notification and receivers:
 `DefaultMediaNotificationProvider` does this. **[inf]** `WIFI_MODE_FULL_HIGH_PERF` is documented as
 non-functional from API 34; check `WIFI_MODE_FULL_LOW_LATENCY` behaviour with the screen off in M3.
-Add the partial wake lock PLAN asks for: theirs relies on `AudioTrack` keeping the CPU up **[inf]**.
+Add a partial wake lock: theirs relies on `AudioTrack` keeping the CPU up **[inf]**.
 
 ### 2.11 Android Auto browse tree
 **They do.** A second service, `AndroidAutoPlaybackService : MediaBrowserServiceCompat`, exported with
@@ -337,7 +337,7 @@ Theirs come from `androidApp/src/main/AndroidManifest.xml` (line numbers) and
 `androidApp/src/main/res/xml/network_security_config.xml`. They target SDK 36 and set minSdk 28
 (`gradle/libs.versions.toml:3-5`).
 
-| Entry | Official app | Verdict for Amsel (permission budget, PLAN rule 5) |
+| Entry | Official app | Verdict for Amsel (permission budget, AGENTS.md rule 5) |
 | --- | --- | --- |
 | `INTERNET` | yes (`:4`) | Keep. |
 | `ACCESS_NETWORK_STATE` | merged from the sendspin module manifest | Keep (in the budget, and the vendored module needs it). |
@@ -346,10 +346,10 @@ Theirs come from `androidApp/src/main/AndroidManifest.xml` (line numbers) and
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | yes (`:6-7`) | Keep. Media3's AAR does not add them, so declare them ourselves. |
 | `CAMERA` + `uses-feature camera` (required, no `required="false"`) | yes (`:8-10`) | Never. Outside the budget; it serves a WebRTC remote-ID feature we do not build. |
 | `RECORD_AUDIO` + `uses-feature microphone` | yes, for announcements (`:11-13`) | Never. |
-| `POST_NOTIFICATIONS` | absent | Absent. Media-session notifications are exempt (PLAN). |
-| `<base-config cleartextTrafficPermitted="true">` | yes | Copy (PLAN Risks): home servers are plain http on 8095. |
+| `POST_NOTIFICATIONS` | absent | Absent. Media-session notifications are exempt. |
+| `<base-config cleartextTrafficPermitted="true">` | yes | Copy: home servers are plain http on 8095. |
 | Trust anchors `system` + `user` | yes | Copy: covers self-signed home CAs, and OkHttp and Coil both honour it. |
-| mTLS client certificate via `KeyChain` | yes (`.claude/architecture.md:246-248`) | Out of scope for v1 (PLAN). |
+| mTLS client certificate via `KeyChain` | yes (`.claude/architecture.md:246-248`) | Out of scope for v1. |
 | `allowBackup="true"` + `backup_rules.xml` + `data_extraction_rules.xml` excluding `AppSecrets.xml` | yes (`:17-19`) | `allowBackup="false"` (D12). |
 | `<meta-data android.app.category = MEDIA>` | yes (`:28-30`) | Use `android:appCategory="audio"` on `<application>` instead **[inf]**. |
 | `com.google.android.gms.car.application` → `<automotiveApp><uses name="media"/>` | yes (`:31-33`) | Copy in M4. |
@@ -378,9 +378,9 @@ Theirs come from `androidApp/src/main/AndroidManifest.xml` (line numbers) and
 | D12 | `android:allowBackup="false"`: no backup rule files to keep in sync, and the Keystore token cannot be restored anyway. | Q2 |
 | D13 | Android Auto browse artwork starts as plain `artworkUri`s; a `proxy_id`-keyed content provider is added only if the Desktop Head Unit shows missing art. | Q2, then evidence |
 
-## 5. Facts the lead must know
+## 5. Facts to keep in mind
 
-- PLAN.md says the decoder and sink live outside the module, in `player/local/`. That is outdated:
+- The decoder and sink do not live outside the module, in `player/local/`:
   they are in `sendspin-kmp/src/androidMain/.../sendspin/android/`, so vendoring the module brings
   them along. The module also drags in Ktor, kermit, cryptography-kotlin, BouncyCastle and Concentus.
   The dependency allowlist must take them, or the M0 spike must replace Ktor.
