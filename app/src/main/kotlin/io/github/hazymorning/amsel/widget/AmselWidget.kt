@@ -13,7 +13,10 @@ import kotlinx.coroutines.launch
  */
 open class WidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        work(context) { redraw(ids) }
+        work(context) {
+            redraw(ids)
+            lookSoon()
+        }
     }
 
     override fun onAppWidgetOptionsChanged(context: Context, manager: AppWidgetManager, id: Int, options: Bundle) {

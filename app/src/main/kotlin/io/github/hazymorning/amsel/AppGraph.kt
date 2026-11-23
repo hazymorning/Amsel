@@ -14,6 +14,7 @@ import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import io.github.hazymorning.amsel.api.ConnectionState
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.Schema
@@ -60,6 +61,7 @@ import io.github.hazymorning.amsel.widget.SessionHands
 import io.github.hazymorning.amsel.widget.SpeakerHands
 import io.github.hazymorning.amsel.widget.WidgetCommands
 import io.github.hazymorning.amsel.widget.WidgetItem
+import io.github.hazymorning.amsel.widget.WidgetPlan
 import io.github.hazymorning.amsel.widget.WidgetSource
 import io.github.hazymorning.amsel.widget.WidgetStore
 import io.github.hazymorning.amsel.widget.Widgets
@@ -70,8 +72,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Call
@@ -212,30 +216,37 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             source = { widgetSource() },
             live = playingOnce::isInitialized,
             actions = WidgetCommands(app, data, playbackGraph.commands, playing.optimistic, favorites, scope),
+            connected = data.session.client.state.map { it is ConnectionState.Connected }
+                .stateIn(scope, SharingStarted.Eagerly, false),
+            lookAtSpeakers = data::lookAtSpeakers,
+            plan = WidgetPlan(app),
         )
     }
 
     private fun widgetSource() = object : WidgetSource {
+        /** Where the session stands, and whether what the server last said of the speakers holds. */
+        private val heard = combine(data.session.state, data.session.upToDate, ::Pair)
+
         override val looks =
-            combine(playing.speaker, playing.nowPlaying, data.session.state, data.permissions) {
+            combine(playing.speaker, playing.nowPlaying, heard, data.permissions) {
                     speaker,
                     np,
-                    session,
+                    (session, current),
                     may,
                 ->
-                widgetLook(speaker, playing.nameOf(speaker), np, session, may.canWriteLibrary)
+                widgetLook(speaker, playing.nameOf(speaker), np, session, may.canWriteLibrary, current)
             }
 
         override fun lookOf(id: String) = combine(
             playing.speakers,
             playing.nowPlayingOf(id),
-            data.session.state,
+            heard,
             data.permissions,
             favorites.known,
-        ) { speakers, np, session, may, liked ->
+        ) { speakers, np, (session, current), may, liked ->
             val speaker = speakers.firstOrNull { it.id == id } ?: SpeakerUi(id, "", available = false)
             val heart = np?.key?.let(liked::get)?.let { np.copy(favorite = it) } ?: np
-            widgetLook(speaker, playing.nameOf(id), heart, session, may.canWriteLibrary)
+            widgetLook(speaker, playing.nameOf(id), heart, session, may.canWriteLibrary, current)
         }
 
         override val failures =

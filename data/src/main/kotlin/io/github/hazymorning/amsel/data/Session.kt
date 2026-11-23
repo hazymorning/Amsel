@@ -27,8 +27,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -37,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 
 /** Where the app stands with its server, in the words the UI needs. */
@@ -64,12 +67,12 @@ sealed interface SessionState {
  * or library read from outside the app (the notification, a headset, the car) [wake]s it: it opens
  * if closed and stays open for 60 s after the last such use. What only the server can say, that a
  * speaker plays or This phone holds music, keeps it open only until the server has been out of
- * reach for two minutes ([stale]).
+ * reach for two minutes ([stale]); a new network, or the screen coming on ([tryAgain]), tries again.
  */
 class Session(
     private val prefs: AppPrefs,
     private val vault: TokenVault,
-    http: OkHttpClient,
+    private val http: OkHttpClient,
     private val scope: CoroutineScope,
     private val deviceName: String,
     network: PhoneNetwork,
@@ -113,8 +116,21 @@ class Session(
     private val active: Boolean
         get() = _foreground.value || audible || inCall || (!stale.value && (playing || holding))
 
+    /** Whether something would keep the socket if the server answered. Read with [lock] held. */
+    private val wanted: Boolean
+        get() = _foreground.value || audible || inCall || playing || holding
+
     /** The app is in front: what only its screens show loads then. */
     val foreground: StateFlow<Boolean> = _foreground.asStateFlow()
+
+    private val _upToDate = MutableStateFlow(false)
+
+    /**
+     * What the server last said of the speakers still holds as far as the phone can tell: the
+     * socket is connected, or was closed on purpose since, or a [glance] read them since. False
+     * before either, and once the socket or a glance could not reach the server.
+     */
+    val upToDate: StateFlow<Boolean> = _upToDate.asStateFlow()
 
     /** The remembered server's address; null while there is none. */
     val address: StateFlow<ServerAddress?> = stored.map { it?.address }.stateIn(scope, SharingStarted.Eagerly, null)
@@ -191,6 +207,20 @@ class Session(
             }
         }
         scope.launch { stale.collect { synchronized(lock) { reconcile() } } }
+        scope.launch {
+            client.state.collect { state ->
+                when (state) {
+                    is ConnectionState.Connected -> _upToDate.value = true
+
+                    ConnectionState.Offline, ConnectionState.SignedOut, ConnectionState.Unsupported ->
+                        _upToDate.value = false
+
+                    ConnectionState.Idle, ConnectionState.Connecting -> Unit
+                }
+            }
+        }
+        // A socket that gave up, or waits out its backoff, may reach the server from the new network.
+        scope.launch { network.current.drop(1).filterNotNull().collect { tryAgain() } }
     }
 
     /** The address and token of the current session, for the Sendspin socket ("This phone"). */
@@ -279,6 +309,42 @@ class Session(
             // A network that keeps coming and going must not put off the close for ever.
             if (!active && idleJob == null) armIdleClose()
         }
+    }
+
+    /**
+     * A look at the server from outside the app while its socket is closed, for a widget: on a
+     * socket of its own, so nothing the app does on a connect (the library, Home, a new token) comes
+     * with it, closed again after [block]. Null when nobody is signed in or the server does not
+     * answer in time, which [upToDate] then says.
+     */
+    suspend fun <T : Any> glance(block: suspend (MaApi) -> T): T? {
+        restored.first { it }
+        val session = stored.value ?: return null
+        val own = MaClient(http, scope)
+        own.start(session.address, session.token, session.serverId)
+        val result = try {
+            // One try: a glance does not wait out the backoff of a server that is not there.
+            val answer = withTimeoutOrNull(GLANCE_WAIT_MS) {
+                own.state.first { it != ConnectionState.Idle && it != ConnectionState.Connecting }
+            }
+            if (answer is ConnectionState.Connected) block(MaApi(own)) else null
+        } catch (e: MaException) {
+            null
+        } finally {
+            own.stop()
+        }
+        // The app's own socket, connected meanwhile, knows better.
+        if (client.state.value !is ConnectionState.Connected) _upToDate.value = result != null
+        return result
+    }
+
+    /**
+     * The screen came on or a network came: a socket something wants (a speaker heard playing, This
+     * phone's music) that gave up or waits out its backoff tries at once. Wanted by nothing, it
+     * stays closed, away from home too; a widget's look finds out what plays.
+     */
+    fun tryAgain() {
+        if (synchronized(lock) { wanted }) reconnect()
     }
 
     /**
@@ -440,6 +506,9 @@ class Session(
 
         /** Well past a Wi-Fi blip, through which This phone's Sendspin keeps its server. */
         const val STALE_AFTER_MS = 120_000L
+
+        /** A server at home answers within a second; one that is away is not waited for long. */
+        const val GLANCE_WAIT_MS = 10_000L
         const val ROTATE_WITHIN_S = 30L * 24 * 3600
     }
 }

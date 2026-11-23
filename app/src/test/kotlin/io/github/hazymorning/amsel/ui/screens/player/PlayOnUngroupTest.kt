@@ -1,6 +1,9 @@
 package io.github.hazymorning.amsel.ui.screens.player
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -81,6 +84,17 @@ class PlayOnUngroupTest {
         compose.onNodeWithText("This phone").performClick()
         compose.onNodeWithText("Done").performClick()
         assertEquals(listOf(Triple("kitchen", listOf(phone.id), listOf("bedroom"))), asked)
+    }
+
+    /** A widget's Group while Amsel still connects: the group step comes, never the list before it. */
+    @Test fun openedToGroupItWaitsForTheSpeakersAndOpensAtTheGroupStep() {
+        val alone = listOf(GroupChoice("living", "Living room", isPhone = false, member = false))
+        var state by mutableStateOf(PlayOnUiState(listOf(phone), phone.id, known = false))
+        show { PlayOnSheetContent(state, onSelect = {}, startGrouping = true) }
+        compose.onNodeWithText("Group").assertIsDisplayed()
+        compose.onNodeWithText("Play on").assertDoesNotExist()
+        state = PlayOnUiState(PlayerSample.speakers, phone.id, kitchen, alone)
+        compose.onNodeWithText("Group with Kitchen").assertIsDisplayed()
     }
 
     @Test fun aSpeakerThatCannotLeadHasNoGroupAndNoUngroup() {

@@ -1,6 +1,11 @@
 package io.github.hazymorning.amsel
 
 import android.app.Application
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -39,6 +44,16 @@ open class AmselApp :
                     graph.messages.dropUnread()
                 }
             },
+        )
+        // While music plays the socket may have given up in the phone's sleep: the notification and
+        // the widgets catch up as the screen comes on, not when Amsel is opened next.
+        ContextCompat.registerReceiver(
+            this,
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) = graph.data.session.tryAgain()
+            },
+            IntentFilter(Intent.ACTION_SCREEN_ON),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
         )
     }
 

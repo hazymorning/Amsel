@@ -13,11 +13,14 @@ import coil3.ImageLoader
 import io.github.hazymorning.amsel.R
 import java.nio.file.Files
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -51,17 +54,27 @@ class WidgetsTest {
     }
 
     /** Widgets working in a scope of the test's own, which ends with it. */
-    private fun TestScope.widgets(): Widgets {
+    private fun TestScope.widgets(
+        connected: StateFlow<Boolean> = MutableStateFlow(false),
+        lookAtSpeakers: suspend () -> Boolean = { true },
+        plan: WidgetLookPlan = WidgetLookPlan.None,
+    ): Widgets {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
         ended += scope
-        return widgets(scope)
+        return widgets(scope, connected = connected, lookAtSpeakers = lookAtSpeakers, plan = plan)
     }
 
     private val ended = mutableListOf<CoroutineScope>()
 
     @After fun end() = ended.forEach { it.cancel() }
 
-    private fun widgets(scope: CoroutineScope, live: Boolean = false) = Widgets(
+    private fun widgets(
+        scope: CoroutineScope,
+        live: Boolean = false,
+        connected: StateFlow<Boolean> = MutableStateFlow(false),
+        lookAtSpeakers: suspend () -> Boolean = { true },
+        plan: WidgetLookPlan = WidgetLookPlan.None,
+    ) = Widgets(
         context,
         store,
         ImageLoader(context),
@@ -70,7 +83,40 @@ class WidgetsTest {
         lastStarted = { null },
         source = { source },
         live = { live },
+        connected = connected,
+        lookAtSpeakers = lookAtSpeakers,
+        plan = plan,
+        elapsedRealtime = { NOW },
     )
+
+    /** The looks asked of Android. */
+    private class Plans : WidgetLookPlan {
+        var kept = 0
+        var stopped = 0
+        val next = mutableListOf<Long?>()
+
+        override fun keep() {
+            kept++
+        }
+
+        override fun next(ms: Long?) {
+            next += ms
+        }
+
+        override fun stop() {
+            stopped++
+        }
+    }
+
+    /** A song 150 s into its 200, as the speaker reports it. */
+    private val playingSong =
+        WidgetSample.music.copy(
+            art = null,
+            artLarge = null,
+            restMs = null,
+            clockMs = NOW - 150_000,
+            durationMs = 200_000,
+        )
 
     /** A widget of [provider] placed at [width] by [height] dp. */
     private fun place(provider: Class<*>, width: Float, height: Float): Int {
@@ -92,6 +138,17 @@ class WidgetsTest {
     private fun TestScope.settle(done: () -> Boolean) {
         repeat(SETTLE_TRIES) {
             testScheduler.advanceUntilIdle()
+            if (done()) return
+            Thread.sleep(SETTLE_STEP_MS)
+        }
+    }
+
+    /** As [settle], with the test's time passing slowly, so the store's thread keeps up with a timeout. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun TestScope.settleSlowly(done: () -> Boolean) {
+        repeat(SETTLE_TRIES) {
+            testScheduler.advanceTimeBy(SLOW_STEP_MS)
+            testScheduler.runCurrent()
             if (done()) return
             Thread.sleep(SETTLE_STEP_MS)
         }
@@ -153,8 +210,59 @@ class WidgetsTest {
         assertEquals(WidgetSetup(speaker = "bedroom"), store.setup(id))
     }
 
+    /** Amsel's socket closed, a look reads the speakers, draws them and looks again as the song ends. */
+    @Test fun aLookWhileTheSocketIsClosedLooksAgainAsTheSongEnds() = runTest {
+        source.looks.value = playingSong
+        var glances = 0
+        val plans = Plans()
+        val widgets = widgets(lookAtSpeakers = { glances++ == 0 }, plan = plans)
+        val id = place(AmselWidget::class.java, 172f, 204f)
+        val looking = launch { widgets.look() }
+        settleSlowly { looking.isCompleted }
+        assertEquals(1, glances)
+        assertEquals("Lanterns", text(id, R.id.widget_title))
+        assertEquals(1, plans.kept)
+        assertEquals(listOf<Long?>(55_000), plans.next)
+    }
+
+    @Test fun whileTheSocketIsConnectedTheWidgetsFollowItWithoutLooking() = runTest {
+        var glances = 0
+        val plans = Plans()
+        val widgets = widgets(connected = MutableStateFlow(true), lookAtSpeakers = { glances++ == 0 }, plan = plans)
+        place(AmselWidget::class.java, 172f, 204f)
+        val looking = launch { widgets.look() }
+        settleSlowly { looking.isCompleted }
+        assertEquals(0, glances)
+        assertEquals(emptyList<Long?>(), plans.next)
+    }
+
+    /** Amsel let its socket go while the speaker plays on: the widgets look again when the song ends. */
+    @Test fun theSocketLettingGoPlansALook() = runTest {
+        source.looks.value = playingSong
+        val connected = MutableStateFlow(true)
+        val plans = Plans()
+        val widgets = widgets(connected = connected, plan = plans)
+        val id = place(AmselWidget::class.java, 172f, 204f)
+        widgets.follow()
+        settle { text(id, R.id.widget_title) == "Lanterns" }
+        connected.value = false
+        settle { plans.next.isNotEmpty() }
+        assertEquals(listOf<Long?>(55_000), plans.next)
+    }
+
+    @Test fun withoutWidgetsNothingIsLookedAt() = runTest {
+        var glances = 0
+        val plans = Plans()
+        val widgets = widgets(lookAtSpeakers = { glances++ == 0 }, plan = plans)
+        widgets.look()
+        assertEquals(0, glances)
+        assertEquals(1, plans.stopped)
+    }
+
     private companion object {
         const val SETTLE_TRIES = 1000
         const val SETTLE_STEP_MS = 10L
+        const val SLOW_STEP_MS = 50L
+        const val NOW = 5_000_000L
     }
 }

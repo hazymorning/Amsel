@@ -65,8 +65,9 @@ const val COVER_PX = 128
 const val ART_PX = 512
 
 /**
- * What the widgets show for [speaker], named [name], and what plays there ([nowPlaying]). Unless the
- * connection is up the music rests as last heard: nothing says it still plays.
+ * What the widgets show for [speaker], named [name], and what plays there ([nowPlaying]). Unless
+ * what the server last said still holds ([current]: connected, closed on purpose since, or read on
+ * a glance since) the music rests as last heard: nothing says it still plays.
  */
 fun widgetLook(
     speaker: SpeakerUi,
@@ -74,9 +75,10 @@ fun widgetLook(
     nowPlaying: NowPlayingUi?,
     session: SessionState,
     canWrite: Boolean = false,
+    current: Boolean = session is SessionState.Ready,
 ): WidgetLook {
     val signedIn = session != SessionState.NeedsSetup && session != SessionState.Unsupported
-    val connected = session is SessionState.Ready
+    val connected = signedIn && current
     val label = if (speaker.others > 0) "$name +${speaker.others}" else name
     val runs = connected && nowPlaying?.runs == true
     val music = nowPlaying?.takeIf { it.canShuffle && !it.spoken && it.durationMs > 0 }

@@ -89,12 +89,15 @@ class Speakers(
     /** Lists the speakers unless that was done since the last [clear]: what each holds is known then. */
     suspend fun ensureListed() = reloading.withLock { if (_loads.value == 0) load() }
 
-    private suspend fun load() {
+    /** Reads the lists over [glance], a socket of its own: no events follow them, so the next read does. */
+    suspend fun read(glance: MaApi) = reloading.withLock { load(glance) }
+
+    private suspend fun load(from: MaApi = api) {
         synchronized(this) { heard = mutableListOf() }
         try {
-            skew = orNullOnFailure { serverTime() - epochSeconds() } ?: 0.0
-            val players = api.players()
-            val queues = api.queues()
+            skew = orNullOnFailure { (from.serverTime() ?: epochSeconds()) - epochSeconds() } ?: 0.0
+            val players = from.players()
+            val queues = from.queues()
             synchronized(this) {
                 _players.value = players.associate { it.playerId to it.asShown() }
                 // The reload is the server's own list: whatever it holds is there.
@@ -297,8 +300,6 @@ class Speakers(
         val drift = if (playing && updated != null) epochSeconds() + skew - updated else 0.0
         return PositionAnchor(seconds + drift.coerceIn(0.0, MAX_DRIFT_S) * speed, elapsedRealtime())
     }
-
-    private suspend fun serverTime(): Double = (api.serverTime() ?: epochSeconds())
 
     private fun epochSeconds(): Double = System.currentTimeMillis() / MS_PER_SECOND
 

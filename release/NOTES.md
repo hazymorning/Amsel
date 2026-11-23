@@ -1,16 +1,14 @@
-# Flock together
+# On the lookout
 
 ## New
 
-- **Group from the home screen:** a widget button opens Play on, ready to group speakers so they play together.
+- **Widgets that keep up:** music started in Music Assistant, in Home Assistant or on another phone now shows on the widgets without opening Amsel. They look at the speakers by themselves: as a song ends, and every quarter of an hour otherwise. While the phone sleeps they wait, and catch up as the screen comes on.
 
 ## Better
 
-- **Plain version numbers:** Amsel counts 1.0, 1.1 and on, no longer by the date. Install this one by hand once; after it, updates come as before.
-- **Play buttons wear their cover:** a button that starts an album or a playlist fills its whole cell with the cover.
-- **The volume beside its speaker:** on every widget the volume stands right after the speaker's name.
+- **Back after a nap:** while music plays, a connection lost in the phone's sleep comes back as the screen comes on or the Wi-Fi returns, so the notification no longer freezes.
+- **Light on the battery:** each look is one short connection, only with a network and never on a low battery. No permanent notification, no new permission.
 
 ## Fixed
 
-- **Up next from a widget:** its button opens Up next, or a book's chapters, instead of stopping at Now Playing.
-- **Pages that stayed empty:** an artist or album opened while Amsel was reconnecting stayed empty until opened again. Now it fills in once the connection is back.
+- **Group from a widget:** it opens the group step straight away, for a speaker that can lead one, also while you listen on this phone.
