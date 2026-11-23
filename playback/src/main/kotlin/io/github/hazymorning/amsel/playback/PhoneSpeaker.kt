@@ -2,6 +2,7 @@ package io.github.hazymorning.amsel.playback
 
 import android.content.Context
 import android.media.AudioManager
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.HandlerThread
 import androidx.annotation.OptIn
@@ -304,7 +305,8 @@ class PhoneSpeaker(
 
     private fun configFor(server: ServerInfo): LocalPlayerConfig? {
         val (address, token) = data.session.credentials() ?: return null
-        return sendspinConfig(address, token, server, deviceName(app))
+        val metered = app.getSystemService(ConnectivityManager::class.java)?.isActiveNetworkMetered == true
+        return sendspinConfig(address, token, server, deviceName(app), metered)
     }
 
     companion object {

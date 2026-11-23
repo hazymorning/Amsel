@@ -77,16 +77,27 @@ internal fun sendspinPlayer(
     )
 }
 
-/** The client's configuration for [server] at [address] with [token]: FLAC, else Opus, 16 bit. */
-internal fun sendspinConfig(address: ServerAddress, token: String, server: ServerInfo, deviceName: String) =
-    LocalPlayerConfig(
-        endpoint = Endpoint.WebSocket(address.sendspinUrl, wireFor(server), token),
-        deviceName = deviceName,
-        codecPreference = listOf(AudioCodec.FLAC, AudioCodec.OPUS),
-        bitDepth = 16,
-        bufferSeconds = 10,
-        userDelayMs = 0,
-    )
+/**
+ * The client's configuration for [server] at [address] with [token], 16 bit: FLAC, else Opus; on a
+ * [metered] network Opus first, a fraction of FLAC's data.
+ */
+internal fun sendspinConfig(
+    address: ServerAddress,
+    token: String,
+    server: ServerInfo,
+    deviceName: String,
+    metered: Boolean,
+) = LocalPlayerConfig(
+    endpoint = Endpoint.WebSocket(address.sendspinUrl, wireFor(server), token),
+    deviceName = deviceName,
+    codecPreference = if (metered) OPUS_FIRST else FLAC_FIRST,
+    bitDepth = 16,
+    bufferSeconds = 10,
+    userDelayMs = 0,
+)
+
+private val FLAC_FIRST = listOf(AudioCodec.FLAC, AudioCodec.OPUS)
+private val OPUS_FIRST = listOf(AudioCodec.OPUS, AudioCodec.FLAC)
 
 /** The name the phone has in Android's settings, which the server shows for it. */
 internal fun deviceName(app: Context): String =
