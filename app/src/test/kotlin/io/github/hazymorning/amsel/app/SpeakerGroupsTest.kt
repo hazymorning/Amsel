@@ -61,13 +61,21 @@ class SpeakerGroupsTest {
     )
 
     /** The server says this now; the list of speakers follows it as Playing makes it. */
-    private fun server(vararg all: Player) {
-        val map = (all.toList() + speaker("phone", with = all.map { it.playerId })).associateBy { it.playerId }
+    private fun server(vararg all: Player, phoneLeads: Boolean = true, plays: Set<String> = emptySet()) {
+        val phone = speaker("phone", with = if (phoneLeads) all.map { it.playerId } else emptyList())
+        val map = (all.toList() + phone).associateBy { it.playerId }
         players.value = map
         listed.value = listOf(SpeakerUi("phone", "", isPhone = true)) + map.values
             .filter { it.playerId != "phone" && it.isShownSpeaker("phone") }
             .sortedBy { it.shownName.lowercase() }
-            .map { SpeakerUi(it.playerId, it.shownName, others = map.membersOf(it.playerId).size) }
+            .map {
+                SpeakerUi(
+                    it.playerId,
+                    it.shownName,
+                    others = map.membersOf(it.playerId).size,
+                    isPlaying = it.playerId in plays,
+                )
+            }
     }
 
     private val everyone = listOf("kitchen", "living", "bath", "office")
@@ -275,6 +283,23 @@ class SpeakerGroupsTest {
         )
         assertEquals("office", groups.playOnNow("office").leader?.id)
         assertEquals("kitchen", groups.playOnNow("phone").leader?.id)
+    }
+
+    /** A widget's Group on This phone, which cannot lead a group: the step is for a speaker that can. */
+    @Test fun whereTheSpeakerInUseCannotLeadTheStepIsForOneThatCan() = runTest {
+        val three = listOf("bath", "kitchen", "living")
+        server(*three.map { speaker(it, with = three) }.toTypedArray(), phoneLeads = false)
+        val groups = groups()
+        val first = groups.playOnNow("phone")
+        assertEquals("bath", first.leader?.id)
+        assertEquals(listOf("Kitchen", "Living"), first.choices.map { it.name })
+
+        server(*three.map { speaker(it, with = three) }.toTypedArray(), phoneLeads = false, plays = setOf("living"))
+        assertEquals("living", groups.playOnNow("phone").leader?.id)
+
+        // None of them can lead: the list it is.
+        server(*three.map { speaker(it) }.toTypedArray(), phoneLeads = false)
+        assertTrue(groups.playOnNow("phone").choices.isEmpty())
     }
 
     @Test fun whatAGroupPlayerRunsIsNoGroupToLetGoOrChange() = runTest {

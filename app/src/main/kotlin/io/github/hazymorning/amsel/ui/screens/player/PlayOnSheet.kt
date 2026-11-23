@@ -76,7 +76,12 @@ fun PlayOnSheetContent(
     BackHandler(enabled = grouping && state.question == null) { grouping = false }
     val step = when {
         state.question != null -> PlayOnStep.Question
+
         grouping && state.group.isNotEmpty() -> PlayOnStep.Group
+
+        // Opened to group while Amsel still connects: the group step follows, not the list first.
+        grouping && !state.known -> PlayOnStep.Waiting
+
         else -> PlayOnStep.List
     }
     AnimatedContent(
@@ -99,11 +104,15 @@ fun PlayOnSheetContent(
             }
 
             PlayOnStep.Question -> state.question?.let { MoveQuestion(it, onMove, onSwitch) }
+
+            PlayOnStep.Waiting -> Column(Modifier.fillMaxWidth().padding(bottom = Space.SheetEdge)) {
+                SheetHeader(stringResource(R.string.group))
+            }
         }
     }
 }
 
-private enum class PlayOnStep { List, Group, Question }
+private enum class PlayOnStep { List, Group, Question, Waiting }
 
 /**
  * Asked before music that plays would stop: on the speaker tapped, which plays something itself,
@@ -266,6 +275,8 @@ data class PlayOnUiState(
     /** Speakers play along with another, the one in use or not: Ungroup lets them all go. */
     val grouped: Boolean = false,
     val question: PlayOnQuestion? = null,
+    /** False while Amsel has not read the server's speakers yet. */
+    val known: Boolean = true,
 )
 
 /** Whether [title], which plays on [from], goes to [target] or stays. */
@@ -282,7 +293,15 @@ fun PlayOnRoute(onDone: () -> Unit, grouping: Boolean = false) {
         .collectAsStateWithLifecycle(remember(current.id) { graph.groups.playOnNow(current.id) })
     var question by remember { mutableStateOf<PlayOnQuestion?>(null) }
     PlayOnSheetContent(
-        state = PlayOnUiState(groups.speakers, current.id, groups.leader, groups.choices, groups.grouped, question),
+        state = PlayOnUiState(
+            groups.speakers,
+            current.id,
+            groups.leader,
+            groups.choices,
+            groups.grouped,
+            question,
+            groups.known,
+        ),
         onSelect = { target ->
             scope.launch {
                 if (graph.playOn.choose(target) == Choice.Ask) {

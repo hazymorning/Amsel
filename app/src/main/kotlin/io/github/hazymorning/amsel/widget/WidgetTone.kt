@@ -4,6 +4,8 @@ import android.app.WallpaperColors
 import android.app.WallpaperManager
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.graphics.ColorUtils
@@ -158,3 +160,23 @@ private fun wallpaperColors(context: Context): WallpaperColors? = try {
 
 /** Above this the words read better in ink, as Android's own hint judges a wallpaper. */
 private const val LIGHT_WALLPAPER = 0.5
+
+/** Tells [changed] when the home screen's wallpaper takes other colours, while it [listen]s. */
+internal class WallpaperWatch(private val context: Context, changed: () -> Unit) {
+    private val listener = WallpaperManager.OnColorsChangedListener { _, which ->
+        if (which and WallpaperManager.FLAG_SYSTEM != 0) changed()
+    }
+
+    fun listen(on: Boolean) {
+        val wallpapers = WallpaperManager.getInstance(context)
+        try {
+            if (on) {
+                wallpapers.addOnColorsChangedListener(listener, Handler(Looper.getMainLooper()))
+            } else {
+                wallpapers.removeOnColorsChangedListener(listener)
+            }
+        } catch (e: RuntimeException) {
+            // A phone without a wallpaper service: a clear widget follows its wallpaper at the next song.
+        }
+    }
+}

@@ -110,6 +110,11 @@
         <receiver
             android:name=".widget.WidgetTaps"
             android:exported="false" />
+        <!-- The widgets' looks at the speakers while Amsel's socket is closed (JobScheduler binds it). -->
+        <service
+            android:name=".widget.WidgetLooks"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
         <!-- The car's artwork: not exported, the car is granted reading it when it connects. -->
         <provider
             android:name=".app.ArtworkProvider"

@@ -122,7 +122,7 @@ Amsel's weights, the one font a widget can count on.
 | Shuffle, Repeat | as Now Playing's; repeat goes off, all, one | quieter while off; repeat one's own glyph |
 | Quieter, Louder | the server's own step, as its volume up and down take it: its Volume step setting, else 1 near silence and near full, 2, and 3 in the middle; Louder stops at the volume limit and says so | speaker low, high |
 | Speakers | opens Play on (`amsel://speakers`) | the speaker |
-| Group | opens Play on at its group step (`amsel://group`) | a link |
+| Group | opens Play on at its group step (`amsel://group`): the speaker in use's, or where it cannot lead a group (This phone) the first speaker that can, one that plays first | a link |
 | Up next | opens Up next over Now Playing (`amsel://up-next`); in a book or an episode, its chapters, as Now Playing's last button | the list; the chapters' list |
 | Continue listening | the book or episode heard last (`Catalog.inProgress(1)`) | a book |
 | Play … | one album, playlist, artist, station, book or podcast, picked once | its cover, as large as its cell, a cover's corners; darker while pressed |
@@ -194,10 +194,38 @@ and the buttons is not possible; parked with what is (`docs/PARKING-LOT.md`).
 
 ## Staying current
 
-Amsel draws the widgets anew whenever what they show changes, while it is connected: in front, or
-while music goes through it. When the connection closes they rest as last heard. No polling and no
-periodic update (`updatePeriodMillis` 0). Each widget's setup and what they showed last on each
-speaker are kept on the phone (`files/widget`); their covers come from Amsel's own cover cache.
+What plays on the speakers changes on the server, which cannot wake the phone (Music Assistant has
+no push), so the widgets keep up three ways:
+
+- **Live while Amsel follows the music:** in front, or while music goes through its player (the
+  notification), its socket is open and the widgets are drawn anew whenever what they show changes.
+  A socket that gave up in the phone's sleep (two minutes out of reach) opens again as the screen
+  comes on or the phone joins a network, not when Amsel is opened next.
+- **Looks while the socket is closed** (`WidgetLooks`, a JobScheduler job: no library, no
+  permission): every 15 minutes while there are widgets, Android's shortest period, and while a
+  widget's speaker plays, again as its song ends (a book or an episode after 10 minutes, a station
+  after 3; never sooner than 30 s or later than 10 minutes). A look opens a socket of its own
+  (`Session.glance`), reads the speakers and their queues, draws the widgets and closes it; nothing
+  else a connect does (the library, Home, a new token) comes with it. Only with a network and not on
+  a low battery; while the phone sleeps (Doze) Android holds looks back, and one that is due runs as
+  soon as it wakes, so the widgets are right when the screen comes on. Jobs are not kept over a
+  restart, which takes a permission: the widgets' update after it plans them again and looks at once.
+- **At every tap,** which opens Amsel's socket for a minute.
+
+Closed on purpose, the socket leaves the widgets as they were: the speaker plays on, and they say so
+until a look says otherwise (`Session.upToDate`). Only where the server could not be reached do they
+rest as last heard. `updatePeriodMillis` stays 0: a job waits for a network and a battery that is not
+low. Each widget's setup and what they showed last on each speaker are kept on the phone
+(`files/widget`); their covers come from Amsel's own cover cache.
+
+How others keep up (November 2026): calendar and note widgets show what is on the phone, which
+changes there or through their maker's push; Spotify keeps its notification and connection while a
+speaker plays, and its servers wake the app when one starts elsewhere; Home Assistant's widgets look
+every 30 minutes while the screen is on, and live only with a permanent notification or notification
+access. Android itself: 30 minutes at the least for a widget's own updates, 15 for a periodic job,
+cached apps get the screen coming on only once they run again (Android 14), and an app with a widget
+stands in the active standby bucket, where jobs are hardly limited. Live widgets while nothing plays
+through Amsel are parked (`docs/PARKING-LOT.md`).
 
 ## Survey (November 2026)
 
@@ -212,7 +240,7 @@ ones, stale widgets, too much image memory. Home Assistant actions stay out
 ## Code
 
 `:app`, package `widget`: the providers (`AmselWidget`, `AmselButtonWidget`, `AmselButtonsWidget`),
-`Widgets` (following, drawing and taps, in `AppGraph`), `WidgetRender` (sizes and pictures),
+`Widgets` (following, drawing and taps, in `AppGraph`), `WidgetLooks` and `WidgetPlan` (looks while the socket is closed), `WidgetRender` (sizes and pictures),
 `WidgetFit` (forms and counts), `WidgetViews`, `WidgetDrawing`, `WidgetCellsViews` and
 `WidgetWordsViews` (the views),
 `WidgetText` (type and glyph ink), `WidgetTone` (looks), `WidgetArt` (blur, cover corners, the
@@ -220,7 +248,7 @@ cover's colour), `WidgetTaps`, `SessionHands` and `SpeakerHands` (taps), `Widget
 `StateTaps` and `WidgetCommands` (volume, shuffle, repeat, heart), `WidgetPreviews`, `WidgetStore`,
 and the page (`WidgetSetupActivity`, `WidgetSetupScreen`, `WidgetSetupParts`, `WidgetSetupSheets`,
 `WidgetSetupViewModel`, `WidgetPicker`); `res/layout/widget_*.xml`, `res/xml/widget_*info.xml`.
-Tests: `WidgetFitTest`, `WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`,
+Tests: `WidgetLooksTest`, `WidgetFitTest`, `WidgetInsetsTest`, `WidgetViewsTest`, `WidgetsTest`, `WidgetStoreTest`,
 `WidgetArtTest`, `WidgetLookTest`, `StateTapsTest`, and `WidgetShots` (every form, the cells, wide
 and tall widgets, what plays after the buttons or left out, a low strip, the looks, the states, the
 page and its sheets; light, dark, 200 % and German).

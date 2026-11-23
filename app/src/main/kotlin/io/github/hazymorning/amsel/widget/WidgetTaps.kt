@@ -6,7 +6,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
+import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.graph
+import io.github.hazymorning.amsel.playback.PhoneNotReadyException
+import io.github.hazymorning.amsel.playback.failureText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -60,4 +64,55 @@ class WidgetTaps : BroadcastReceiver() {
             )
         }
     }
+}
+
+/** What a widget's button does on its speaker. */
+internal class WidgetTapActions(
+    private val context: Context,
+    private val states: StateTaps,
+    /** The book or episode heard last, from the server. */
+    private val lastStarted: suspend () -> WidgetItem?,
+) {
+    /**
+     * [button] was tapped while its widget showed [shownPlaying] and [shown]; it acts through
+     * [hands], and [say] puts a sentence on the widget where it went wrong.
+     */
+    suspend fun tap(
+        button: WidgetSlot,
+        hands: WidgetHands,
+        shownPlaying: Boolean,
+        shown: suspend () -> WidgetLook?,
+        say: (String) -> Unit,
+    ) {
+        hands.wake()
+        try {
+            when (button.button) {
+                WidgetButton.PlayPause -> if (shownPlaying) hands.pause() else hands.play()
+
+                WidgetButton.Next -> hands.next()
+
+                WidgetButton.Previous -> hands.previous()
+
+                WidgetButton.Quieter, WidgetButton.Louder, WidgetButton.Shuffle, WidgetButton.Repeat,
+                WidgetButton.Favourite,
+                -> (shown()?.let { states.tap(button.button, it) } as? StateTaps.Refusal.AtLimit)
+                    ?.let { say(limitText(it.limit)) }
+
+                WidgetButton.ContinueListening -> lastStarted()?.let { hands.play(it) }
+                    ?: say(context.getString(R.string.widget_nothing_to_continue))
+
+                WidgetButton.PlayItem -> button.item?.let { hands.play(it) }
+
+                // Open Amsel itself (WidgetCellsViews.press).
+                WidgetButton.Speakers, WidgetButton.UpNext, WidgetButton.Group -> Unit
+            }
+        } catch (e: MaException) {
+            say(context.getString(failureText(e, play = true)))
+        } catch (e: PhoneNotReadyException) {
+            say(context.getString(failureText(e, play = true)))
+        }
+    }
+
+    private fun limitText(limit: Int): String =
+        context.getString(R.string.widget_at_limit, context.getString(R.string.player_volume_percent, limit))
 }

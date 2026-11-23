@@ -10,6 +10,7 @@ import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
+import io.github.hazymorning.amsel.api.ConnectionState
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaEvent
 import io.github.hazymorning.amsel.api.MaException
@@ -143,6 +144,14 @@ class DataGraph(
     fun reloadSpeakers() {
         follow { loadSpeakers() }
     }
+
+    /**
+     * What the speakers do now, for a widget's look: read on a glance while the app's socket is
+     * closed; while it is connected, events keep them current already. False when the server did
+     * not answer.
+     */
+    suspend fun lookAtSpeakers(): Boolean =
+        session.client.state.value is ConnectionState.Connected || session.glance { speakers.read(it) } != null
 
     /** Restores the session and starts following the server. Call from Application.onCreate's first use. */
     fun start() {

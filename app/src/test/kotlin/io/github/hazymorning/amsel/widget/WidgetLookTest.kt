@@ -25,11 +25,18 @@ class WidgetLookTest {
         assertEquals(SampleData.nowPlaying.art?.sized(COVER_PX), look.art)
     }
 
-    @Test fun restsAsLastHeardOnceTheConnectionCloses() {
-        val look = widgetLook(kitchen, "Kitchen", SampleData.nowPlaying, SessionState.Waiting("Home"))
+    @Test fun restsAsLastHeardOnceTheServerIsOutOfReach() {
+        val look = widgetLook(kitchen, "Kitchen", SampleData.nowPlaying, SessionState.Waiting("Home"), current = false)
         assertFalse(look.playing)
+        assertNull(look.clockMs)
         assertEquals("Lanterns", look.title)
         assertTrue(look.signedIn)
+    }
+
+    /** Closed on purpose, or read on a glance since: the speaker plays on, and the widget says so. */
+    @Test fun playsOnWhileWhatTheServerSaidHolds() {
+        val look = widgetLook(kitchen, "Kitchen", SampleData.nowPlaying, SessionState.Waiting("Home"), current = true)
+        assertTrue(look.playing)
     }
 
     @Test fun signedOutSaysSo() {

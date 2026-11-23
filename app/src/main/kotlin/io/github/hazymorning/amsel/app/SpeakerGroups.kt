@@ -33,6 +33,8 @@ class SpeakerGroups internal constructor(
     private val nameOf: (String) -> String,
     private val messages: Messages,
     private val scope: CoroutineScope,
+    /** How often the server's speakers were read since signing in: none yet while Amsel connects. */
+    private val loads: StateFlow<Int> = MutableStateFlow(1),
     private val setMembers: suspend (leaderId: String, add: List<String>, remove: List<String>) -> Unit,
 ) {
     constructor(
@@ -48,6 +50,7 @@ class SpeakerGroups internal constructor(
         playing::nameOf,
         messages,
         scope,
+        data.speakers.loads,
         { leaderId, add, remove -> data.session.api.setMembers(leaderId, add, remove) },
     )
 
@@ -59,13 +62,13 @@ class SpeakerGroups internal constructor(
 
     /** What Play on shows while [currentId] is the speaker in use. */
     fun playOn(currentId: String): Flow<PlayOnGroups> =
-        combine(players, asked, phoneId, listed) { players, asked, phoneId, listed ->
-            playOnGroups(players, asked.members(), phoneId, listed, currentId)
+        combine(players, asked, phoneId, listed, loads) { players, asked, phoneId, listed, loads ->
+            playOnGroups(players, asked.members(), phoneId, listed, currentId, known = loads > 0)
         }
 
     /** [playOn] as it stands, for the sheet's first frame. */
     fun playOnNow(currentId: String): PlayOnGroups =
-        playOnGroups(players.value, asked.value.members(), phoneId.value, listed.value, currentId)
+        playOnGroups(players.value, asked.value.members(), phoneId.value, listed.value, currentId, loads.value > 0)
 
     /** Lets [add] join [leaderId]'s group and [remove] leave it. */
     fun set(leaderId: String, add: List<String>, remove: List<String>) {
@@ -168,7 +171,9 @@ data class GroupChoice(val id: String, val name: String, val isPhone: Boolean, v
 /**
  * Play on's speakers, a group as one, and what its header and group step need. [leader] is whom
  * the group step is for: the leader of the group that exists (the speaker in use's, else the first
- * in the list), else the speaker in use. [choices] can play along with it; none when it cannot lead.
+ * in the list), else the speaker in use, or where it cannot lead one (This phone, mostly) the first
+ * speaker that can, one that plays first. [choices] can play along with it; none when none can lead.
+ * [known] is false while Amsel has not read the server's speakers yet.
  */
 @Immutable
 data class PlayOnGroups(
@@ -176,6 +181,7 @@ data class PlayOnGroups(
     val leader: SpeakerUi? = null,
     val choices: List<GroupChoice> = emptyList(),
     val grouped: Boolean = false,
+    val known: Boolean = true,
 )
 
 /** The server's groups with what was [asked] for in their place; an empty asking is no group. */
@@ -188,6 +194,7 @@ internal fun playOnGroups(
     phoneId: String?,
     listed: List<SpeakerUi>,
     currentId: String,
+    known: Boolean = true,
 ): PlayOnGroups {
     val groups = players.syncGroups().with(asked)
     val members = groups.values.flatten().toSet()
@@ -200,13 +207,17 @@ internal fun playOnGroups(
     val speakers = (phone + if (freed.isEmpty()) others else (others + freed).sortedBy { it.name.lowercase() })
         .filter { it.id !in members }
         .map { if (it.id in groups || it.id in asked) it.copy(others = groups[it.id].orEmpty().size) else it }
+    fun leads(id: String) = choices(players, groups, phoneId, id).isNotEmpty()
     val leaderId = currentId.takeIf { it in groups }
         ?: speakers.firstOrNull { it.id in groups }?.id
         ?: groups.keys.firstOrNull()
+        ?: currentId.takeIf(::leads)
+        ?: speakers.filterNot { it.isPhone }.sortedByDescending { it.isPlaying }.firstOrNull { leads(it.id) }?.id
         ?: currentId
     val leader = speakers.firstOrNull { it.id == leaderId }
         ?: players[leaderId]?.let { SpeakerUi(it.playerId, it.shownName, isPhone = it.playerId == phoneId) }
-    return PlayOnGroups(speakers, leader, choices(players, groups, phoneId, leaderId), grouped = groups.isNotEmpty())
+    val choices = choices(players, groups, phoneId, leaderId)
+    return PlayOnGroups(speakers, leader, choices, grouped = groups.isNotEmpty(), known = known)
 }
 
 /**

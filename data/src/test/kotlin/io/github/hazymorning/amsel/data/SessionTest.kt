@@ -224,6 +224,65 @@ class SessionTest {
             assertEquals(requests, fake.server.requestCount)
         }
 
+    @Test fun `a socket that gave up on a speaker playing opens again on a new network by itself`() {
+        val network = FakePhoneNetwork()
+        withSession(network = network, staleAfterMs = STALE_MS) { session, _, fake ->
+            session.restore()
+            session.setPlaying(true)
+            session.awaitState { it is ConnectionState.Connected }
+            val home = leaveHome(fake)
+            session.awaitState { it == ConnectionState.Idle }
+            assertFalse(session.upToDate.value)
+            fake.server.dispatcher = home
+            network.current.value = FakePhoneNetwork.CAFE
+            session.awaitState { it is ConnectionState.Connected }
+            assertTrue(session.upToDate.value)
+        }
+    }
+
+    @Test fun `a socket nothing wants stays closed when a network comes, away from home too`() {
+        val network = FakePhoneNetwork()
+        withSession(network = network, staleAfterMs = STALE_MS) { session, _, fake ->
+            session.restore()
+            session.setHolding(true)
+            session.awaitState { it is ConnectionState.Connected }
+            leaveHome(fake)
+            session.awaitState { it == ConnectionState.Idle }
+            session.setHolding(false)
+            val tries = fake.server.requestCount
+            network.current.value = FakePhoneNetwork.CAFE
+            session.tryAgain()
+            delay(IDLE_MS)
+            assertEquals(ConnectionState.Idle, session.client.state.value)
+            assertEquals(tries, fake.server.requestCount)
+        }
+    }
+
+    /** A widget's look: the server is read and let go, and nothing the app does on a connect comes with it. */
+    @Test fun `a glance reads the server on a socket of its own and leaves the app's closed`() =
+        withSession { session, _, fake ->
+            session.restore()
+            assertFalse(session.upToDate.value)
+            assertEquals(true, session.glance { api -> api.serverTime() == null })
+            assertEquals(listOf("auth", "time"), fake.received.map { it["command"]?.jsonPrimitive?.content })
+            assertEquals(ConnectionState.Idle, session.client.state.value)
+            assertTrue(session.upToDate.value)
+        }
+
+    @Test fun `a glance that cannot reach the server says what it last said no longer holds`() =
+        withSession { session, _, fake ->
+            session.restore()
+            session.setForeground(true)
+            session.awaitState { it is ConnectionState.Connected }
+            session.setForeground(false)
+            session.awaitState { it == ConnectionState.Idle }
+            // Closed on purpose: what the server said still holds.
+            assertTrue(session.upToDate.value)
+            leaveHome(fake)
+            assertEquals(null, session.glance { true })
+            assertFalse(session.upToDate.value)
+        }
+
     @Test fun `a network that keeps coming and going does not put off the close`() =
         withSession(staleAfterMs = STALE_MS) { session, _, fake ->
             session.restore()

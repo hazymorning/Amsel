@@ -1,23 +1,17 @@
 package io.github.hazymorning.amsel.widget
 
-import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import android.util.SizeF
 import android.widget.RemoteViews
 import coil3.ImageLoader
-import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.api.MaException
-import io.github.hazymorning.amsel.playback.PhoneNotReadyException
-import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.widget.WidgetStore.Companion.AMSELS
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,12 +19,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the widgets show, from Amsel. */
 interface WidgetSource {
@@ -46,7 +44,8 @@ interface WidgetSource {
 
 /**
  * Amsel's widgets: drawn anew whenever what they show changes, while Amsel follows the music and a
- * widget is on the home screen, and never on a timer; and their taps.
+ * widget is on the home screen; while its socket is closed they look at the speakers now and then
+ * ([look]); and their taps.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class Widgets(
@@ -63,8 +62,14 @@ class Widgets(
     /** Amsel follows the music in this run: a widget placed now follows it at once. */
     private val live: () -> Boolean = { false },
     actions: WidgetActions = WidgetActions.None,
+    /** Amsel's own socket is connected: the widgets follow what it hears. */
+    private val connected: StateFlow<Boolean> = MutableStateFlow(false),
+    /** Reads what the speakers do on a glance while the socket is closed; false when the server did not answer. */
+    private val lookAtSpeakers: suspend () -> Boolean = { false },
+    private val plan: WidgetLookPlan = WidgetLookPlan.None,
+    private val elapsedRealtime: () -> Long = SystemClock::elapsedRealtime,
 ) {
-    private val states = StateTaps(actions, SystemClock::elapsedRealtime)
+    private val taps = WidgetTapActions(context, StateTaps(actions, elapsedRealtime), lastStarted)
     private val previews =
         WidgetPreviews(context) { kind, look -> render.draw(0, kind.setup, look, listOf(kind.start), false) }
     private val manager = AppWidgetManager.getInstance(context)
@@ -83,6 +88,12 @@ class Widgets(
     /** A tap that went wrong, said on the widgets while they show what they showed then. */
     private val said = MutableStateFlow<Pair<WidgetLook, String>?>(null)
 
+    /** Draws asked for and not done yet. */
+    private val pending = MutableStateFlow(0)
+
+    /** Android may run both looks at once; one is enough. */
+    private val looking = Mutex()
+
     /** The widgets on the home screen, of all three kinds. */
     fun ids(): IntArray = Providers.keys.flatMap {
         manager.getAppWidgetIds(ComponentName(context, it)).asList()
@@ -96,19 +107,60 @@ class Widgets(
     fun follow() {
         if (following?.isActive == true || ids().isEmpty()) return
         val source = source()
+        plan.keep()
         following = scope.launch {
             loadSetups()
             launch { source.failures.collect(::sayFailure) }
+            // The socket let go: the speakers may play on, and the widgets look again when that shows.
+            launch { connected.drop(1).filter { !it }.collect { planNext() } }
             setups.map { all -> all.values.mapNotNull { it.speaker }.toSet() }
                 .distinctUntilChanged()
                 .flatMapLatest { fixed -> looksOf(source, fixed) }
                 .combine(said, ::withFailure)
                 .map { steadyClocks(it, _looks.value) }
                 .distinctUntilChanged()
-                .collectLatest { draw(it) }
+                .collectLatest { looks ->
+                    pending.update { it + 1 }
+                    try {
+                        draw(looks)
+                    } finally {
+                        pending.update { it - 1 }
+                    }
+                }
         }
-        listenToWallpaper(true)
+        wallpaper.listen(true)
     }
+
+    /**
+     * A look at the speakers while Amsel's socket is closed ([WidgetLooks]): read on a glance, drawn,
+     * and the next look planned for when what plays will have changed.
+     */
+    suspend fun look() {
+        if (ids().isEmpty()) return plan.stop()
+        follow()
+        if (connected.value || !looking.tryLock()) return
+        try {
+            lookAtSpeakers()
+            // What was read passes through the flows first; then every draw it asked for finishes,
+            // the first in this run of Amsel too.
+            delay(PASS_ON_MS)
+            withTimeoutOrNull(DRAWN_WITHIN_MS) {
+                looks.first { it != null }
+                pending.first { it == 0 }
+            }
+            planNext()
+        } finally {
+            looking.unlock()
+        }
+    }
+
+    /** Drawn at rest from what they showed (the phone or Amsel started anew, a widget placed): look at once. */
+    fun lookSoon() {
+        plan.keep()
+        if (!connected.value) plan.next(0)
+    }
+
+    private fun planNext() = plan.next(nextLookIn(_looks.value?.values.orEmpty(), elapsedRealtime()))
 
     private fun sayFailure(failure: Pair<String, String>) {
         val (speaker, text) = failure
@@ -121,23 +173,9 @@ class Widgets(
         looks.mapValues { (_, look) -> if (look == failure?.first) look.copy(failure = failure.second) else look }
 
     /** A clear widget's words take ink or paper by the wallpaper: they are drawn again when it changes. */
-    private val wallpaperChanged = WallpaperManager.OnColorsChangedListener { _, which ->
-        val clear = setups.value.values.any { it.style == WidgetStyle.Clear }
-        if (clear && which and WallpaperManager.FLAG_SYSTEM != 0) {
+    private val wallpaper = WallpaperWatch(context) {
+        if (setups.value.values.any { it.style == WidgetStyle.Clear }) {
             scope.launch { drawing.withLock { _looks.value?.let { drawLocked(it) } } }
-        }
-    }
-
-    private fun listenToWallpaper(on: Boolean) {
-        val wallpapers = WallpaperManager.getInstance(context)
-        try {
-            if (on) {
-                wallpapers.addOnColorsChangedListener(wallpaperChanged, Handler(Looper.getMainLooper()))
-            } else {
-                wallpapers.removeOnColorsChangedListener(wallpaperChanged)
-            }
-        } catch (e: RuntimeException) {
-            // A phone without a wallpaper service: a clear widget follows its wallpaper at the next song.
         }
     }
 
@@ -155,7 +193,8 @@ class Widgets(
         if (ids().isNotEmpty()) return
         following?.cancel()
         following = null
-        listenToWallpaper(false)
+        plan.stop()
+        wallpaper.listen(false)
     }
 
     /** Widgets [ids] need drawing (Amsel started, or a widget changed size): as they showed, at rest, if Amsel follows no music yet. */
@@ -203,42 +242,10 @@ class Widgets(
         val button = setup.slots.getOrNull(slot) ?: return
         // Amsel may have been closed: from now on the widgets show what the speaker reports.
         follow()
-        val hands = hands(setup.speaker)
-        hands.wake()
-        try {
-            when (button.button) {
-                WidgetButton.PlayPause -> if (shownPlaying) hands.pause() else hands.play()
-
-                WidgetButton.Next -> hands.next()
-
-                WidgetButton.Previous -> hands.previous()
-
-                WidgetButton.Quieter, WidgetButton.Louder, WidgetButton.Shuffle, WidgetButton.Repeat,
-                WidgetButton.Favourite,
-                -> (shown(setup)?.let { states.tap(button.button, it) } as? StateTaps.Refusal.AtLimit)
-                    ?.let { say(setup, limitText(it.limit)) }
-
-                WidgetButton.ContinueListening -> lastStarted()?.let { hands.play(it) }
-                    ?: say(setup, context.getString(R.string.widget_nothing_to_continue))
-
-                WidgetButton.PlayItem -> button.item?.let { hands.play(it) }
-
-                // Open Amsel itself (WidgetCellsViews.press).
-                WidgetButton.Speakers, WidgetButton.UpNext, WidgetButton.Group -> Unit
-            }
-        } catch (e: MaException) {
-            say(setup, context.getString(failureText(e, play = true)))
-        } catch (e: PhoneNotReadyException) {
-            say(setup, context.getString(failureText(e, play = true)))
-        }
+        // What the widget shows now, or showed when Amsel last drew it.
+        val shown = suspend { (_looks.value ?: store.looks())[setup.speaker ?: AMSELS] }
+        taps.tap(button, hands(setup.speaker), shownPlaying, shown) { say(setup, it) }
     }
-
-    /** What [setup]'s widget shows now, or showed when Amsel last drew it. */
-    private suspend fun shown(setup: WidgetSetup): WidgetLook? =
-        (_looks.value ?: store.looks())[setup.speaker ?: AMSELS]
-
-    private fun limitText(limit: Int): String =
-        context.getString(R.string.widget_at_limit, context.getString(R.string.player_volume_percent, limit))
 
     private fun say(setup: WidgetSetup, text: String) {
         val looks = _looks.value ?: return
@@ -281,6 +288,11 @@ class Widgets(
     private fun WidgetLook.withoutFailure() = copy(failure = null)
 
     private companion object {
+        const val PASS_ON_MS = 300L
+
+        /** A cover still on its way after this is drawn the next time. */
+        const val DRAWN_WITHIN_MS = 10_000L
+
         fun classFor(name: String): Class<*>? = Providers.keys.firstOrNull { it.name == name }
     }
 }
