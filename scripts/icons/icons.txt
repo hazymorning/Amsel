@@ -48,6 +48,7 @@ more                dots-three             bold
 settings            gear-six
 palette             palette
 updates             arrow-circle-up
+licences            info
 browser             browser
 sign_out            sign-out               mirrored
 open_external       arrow-square-out       mirrored

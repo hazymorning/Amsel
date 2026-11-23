@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="licences">Licences and privacy</string>
+    <string name="licences_short">Licences</string>
+    <string name="licences_detail">Free software, no tracking</string>
+    <string name="licences_gpl">GNU General Public License, version 3</string>
+    <string name="licences_gpl_detail">Amsel is free software: you may use, share and change it under this licence. It comes with no warranty.</string>
+    <string name="licences_source">Source code</string>
+    <string name="licences_others">Software by others</string>
+
+    <!-- The privacy notice; PRIVACY.md says the same. -->
+    <string name="privacy">Privacy</string>
+    <string name="privacy_music_assistant">Your own server. Amsel sends it your sign-in, the phone’s name and model, what you browse, search and play, and what you do with your speakers, and loads artwork and This phone’s music from it. With a widget on the home screen, Amsel also asks it every 30 minutes what plays.</string>
+    <string name="audiobookshelf" translatable="false">Audiobookshelf</string>
+    <string name="privacy_audiobookshelf">Only once you sign in to it for downloads: your sign-in, the books and episodes you download, and how far you are in them.</string>
+    <string name="home_assistant" translatable="false">Home Assistant</string>
+    <string name="privacy_home_assistant">Only if you sign in with it: its sign-in page opens in Amsel, and what you type there goes to that page.</string>
+    <string name="github" translatable="false">GitHub</string>
+    <string name="privacy_github">Only when you look for updates, or at each start if you turned that on: Amsel asks for the newest version and downloads it if you choose. Nothing about you or your phone goes with it.</string>
+    <string name="privacy_tracking">No tracking</string>
+    <string name="privacy_tracking_detail">Amsel has no analytics, no advertising and no crash reports, and reads no advertising or device ID.</string>
+    <string name="privacy_phone">On the phone</string>
+    <string name="privacy_phone_detail">The server’s address, your sign-ins (encrypted with a key in Android’s keystore), your settings, a copy of your library’s index and of the pages you opened, recent searches, bookmarks, the widgets’ buttons and what they show, artwork and your downloads. None of it goes into Android’s backups.</string>
+    <string name="privacy_sign_out">When you sign out</string>
+    <string name="privacy_sign_out_detail">Amsel deletes your sign-in, the library’s index, the pages it kept, recent searches, bookmarks, what the widgets showed, artwork, your downloads and your Audiobookshelf sign-in, and signs you out on the server while it is connected. Your settings, Home’s layout, the widgets’ buttons and the server’s address stay for the next time.</string>
+
+    <!-- Software by others, as NOTICE lists it, and its licence. -->
+    <string name="licence_sendspin">Sendspin, from the Music Assistant app</string>
+    <string name="licence_commissioner">Commissioner, the typeface</string>
+    <string name="licence_phosphor">Phosphor, the icons</string>
+    <string name="licence_concentus">Concentus, This phone’s Opus decoder</string>
+    <string name="licence_slf4j">SLF4J</string>
+    <string name="licence_bouncy_castle">Bouncy Castle</string>
+    <string name="licence_libraries">AndroidX, Media3, OkHttp, Coil, Ktor and the Kotlin libraries</string>
+    <string name="licence_protobuf">Protocol Buffers</string>
+    <string name="licence_apache">Apache License 2.0</string>
+    <string name="licence_ofl">SIL Open Font License 1.1</string>
+    <string name="licence_mit">MIT License</string>
+    <string name="licence_bsd">BSD 3-Clause License</string>
+</resources>

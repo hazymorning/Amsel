@@ -80,6 +80,9 @@ sealed interface Route : NavKey {
     /** How the sleep timer ends and when it starts by itself. */
     @Serializable data object SleepTimer : Route
 
+    /** Amsel's licence and source code, the privacy notice, and the licences of software by others. */
+    @Serializable data object Licences : Route
+
     /**
      * [route] opened again above itself (an artist, a similar one, the first again), for the
      * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps
