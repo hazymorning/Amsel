@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Draws the README's header, docs/design/readme/header-{light,dark}.svg: the name and the slogan in
-the app's typeface beside the icon's blackbird in a tree, on the app's stone. Dev tool: needs
+"""Draws the README's header, docs/design/readme/header-{light,dark}.svg: the name and the blackbird's
+call in the app's typeface beside the icon's blackbird in a tree, on the app's stone. Dev tool: needs
 `pip install fonttools uharfbuzz`.
 
 GitHub shows a README's pictures without CSS or fonts, so the letters are outlines. The bird is read
@@ -25,11 +25,12 @@ OUT = ROOT / "docs/design/readme"
 W, H = 1200, 450
 MARGIN = 100  # left of the name, above the disc and right of it
 CORNER, SMOOTHING = 72, 0.6  # continuous corners, as ui/theme/SmoothShape.kt draws them
-NAME, SLOGAN = "Amsel", "Black feathers. Golden song."
-# Screen titles in the app: the title voice at 650, tracked -0.015 em. The slogan is body text.
+# The blackbird's warning call, as NABU writes it.
+NAME, CALL = "Amsel", "pli-pli-pli-pli-pli"
+# Screen titles in the app: the title voice at 650, tracked -0.015 em. The call is body text.
 NAME_FACE, NAME_SIZE, NAME_TRACKING = "commissioner_title_650.ttf", 127, -0.015
-SLOGAN_FACE = "commissioner_440.ttf"
-NAME_TO_SLOGAN = 42  # the name's baseline to the slogan's capitals
+CALL_FACE = "commissioner_440.ttf"
+NAME_TO_CALL = 42  # the name's baseline to the call's cap height
 DISC = 150
 BIRD_SCALE, BIRD_HEAD = 4.4, (46.5, 62.0)  # the head's middle in the icon's 108 dp
 
@@ -126,7 +127,7 @@ def bird(x, y):
             f'translate({-BIRD_HEAD[0]} {-BIRD_HEAD[1]})">{paths}</g>')
 
 
-def header(theme, name_face, slogan_face):
+def header(theme, name_face, call_face):
     cx, cy = W - MARGIN - DISC, MARGIN + DISC
     back, behind, front = theme["tree"]
     art = (f'<circle cx="{cx}" cy="{cy}" r="{DISC}" fill="{theme["disc"]}"/>'
@@ -134,25 +135,25 @@ def header(theme, name_face, slogan_face):
            f'<circle cx="{cx + 161}" cy="{cy + 255}" r="175" fill="{behind}"/>'
            + bird(cx + 6, cy - 12)
            + f'<circle cx="{cx + 1}" cy="{cy + 270}" r="200" fill="{front}"/>')
-    # The slogan's ink is as wide as the name's; the two stand in the middle of the height.
-    slogan_size = 100 * name_face.ink(NAME, NAME_SIZE, NAME_TRACKING) / slogan_face.ink(SLOGAN, 100)
-    name_cap, slogan_cap = name_face.cap * NAME_SIZE, slogan_face.cap * slogan_size
-    top = (H - name_cap - NAME_TO_SLOGAN - slogan_cap) / 2
+    # The call's ink is as wide as the name's; the two stand in the middle of the height.
+    call_size = 100 * name_face.ink(NAME, NAME_SIZE, NAME_TRACKING) / call_face.ink(CALL, 100)
+    name_cap, call_cap = name_face.cap * NAME_SIZE, call_face.cap * call_size
+    top = (H - name_cap - NAME_TO_CALL - call_cap) / 2
     words = (name_face.outline(NAME, NAME_SIZE, MARGIN, top + name_cap, theme["ink"], NAME_TRACKING)
-             + slogan_face.outline(SLOGAN, slogan_size, MARGIN, top + name_cap + NAME_TO_SLOGAN + slogan_cap,
-                                   theme["soft"]))
+             + call_face.outline(CALL, call_size, MARGIN, top + name_cap + NAME_TO_CALL + call_cap,
+                                 theme["soft"]))
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" '
-            f'aria-label="{NAME}. {SLOGAN}">'
+            f'aria-label="{NAME}. {CALL}">'
             f'<defs><clipPath id="card"><path d="{smooth_rect(W, H, CORNER)}"/></clipPath></defs>'
             f'<g clip-path="url(#card)"><rect width="{W}" height="{H}" fill="{theme["field"]}"/>{art}{words}</g>'
             "</svg>\n")
 
 
 def main() -> int:
-    name_face, slogan_face = Face(NAME_FACE), Face(SLOGAN_FACE)
+    name_face, call_face = Face(NAME_FACE), Face(CALL_FACE)
     OUT.mkdir(parents=True, exist_ok=True)
     for name, theme in THEMES.items():
-        (OUT / f"header-{name}.svg").write_text(header(theme, name_face, slogan_face))
+        (OUT / f"header-{name}.svg").write_text(header(theme, name_face, call_face))
     print("wrote the header, light and dark")
     return 0
 
