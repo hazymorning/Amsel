@@ -56,7 +56,7 @@ class PlayDispatcher(
     private val scope: CoroutineScope,
     /** Told where a book started at a chapter begins, before the play goes out. */
     private val seeks: Seeks = Seeks.None,
-    /** Sends a queue that is starting a book to a place in it ([MaSpeakerCommands.seekIn]). */
+    /** Sends a queue that is starting a book to a place in it ([SeekLanes.seekIn]). */
     private val seekIn: (queueId: String, place: Place) -> Unit = { _, _ -> },
     /** Told of every play asked that starts playback, a double tap too ([SpeakerCommands.starting]). */
     private val starting: (queueId: String) -> Unit = {},

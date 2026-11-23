@@ -66,7 +66,7 @@ private val Context.homeStore: DataStore<Preferences> by preferencesDataStore(
 
 /**
  * The data layer's singletons and the one loop that turns server events into state. Built once
- * by the app's AppGraph; nothing heavy happens until [start].
+ * by the app's AppGraph; nothing heavy happens until it calls [start].
  */
 class DataGraph(
     context: Context,
@@ -153,7 +153,7 @@ class DataGraph(
     suspend fun lookAtSpeakers(): Boolean =
         session.client.state.value is ConnectionState.Connected || session.glance { speakers.read(it) } != null
 
-    /** Restores the session and starts following the server. Call from Application.onCreate's first use. */
+    /** Restores the session and starts following the server. Call once, as the app starts. */
     fun start() {
         // Apart: a car starting the app needs the connection, not Home's snapshot, and a refresh
         // that lands first is not overwritten by the older snapshot.

@@ -7,13 +7,13 @@ import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.api.membersOf
 import io.github.hazymorning.amsel.data.DataGraph
 import io.github.hazymorning.amsel.data.SessionState
-import io.github.hazymorning.amsel.playback.DataPlaybackGraph
 import io.github.hazymorning.amsel.playback.LocalPlayback
 import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
 import io.github.hazymorning.amsel.playback.PlayRequest
 import io.github.hazymorning.amsel.playback.RemotePlayer
 import io.github.hazymorning.amsel.playback.SpeakerSnapshot
+import io.github.hazymorning.amsel.playback.Target
 import io.github.hazymorning.amsel.playback.snapshotOf
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
@@ -41,7 +41,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 class Playing(
     private val context: Context,
     private val data: DataGraph,
-    graph: DataPlaybackGraph,
+    /** The speaker the person picked, or This phone. */
+    selected: StateFlow<Target>,
     phone: PhoneSpeaker,
     dispatcher: PlayDispatcher,
     private val local: LocalPlayback,
@@ -70,7 +71,7 @@ class Playing(
      * list it (before it answers, or once the speaker joined a group).
      */
     val speaker: StateFlow<SpeakerUi> =
-        combine(graph.target, data.speakers.players, data.prefs.prefs) { target, players, prefs ->
+        combine(selected, data.speakers.players, data.prefs.prefs) { target, players, prefs ->
             val player = target.playerId?.let { players[it] }
             when {
                 player != null -> mapper.speaker(
@@ -94,7 +95,7 @@ class Playing(
 
     /** What the current speaker reports, and what a list marks as playing there. */
     private val fromSpeaker: StateFlow<Reported?> = combine(
-        graph.target,
+        selected,
         data.speakers.players,
         data.speakers.queues,
         dispatcher.pending,
@@ -135,7 +136,7 @@ class Playing(
 
     /** A download playing on this phone, which the session holds instead of the phone's stream. */
     private val reported: StateFlow<Reported?> =
-        combine(fromSpeaker, local.now, graph.target, speaker) { fromSpeaker, downloaded, target, speakerUi ->
+        combine(fromSpeaker, local.now, selected, speaker) { fromSpeaker, downloaded, target, speakerUi ->
             if (downloaded == null || !target.isPhone) return@combine fromSpeaker
             val np = downloaded.nowPlaying(speakerUi)
             Reported(target.playerId ?: PHONE, np, np.key, setOfNotNull(np.key), next = null)

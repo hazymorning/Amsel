@@ -74,7 +74,9 @@ class LiveSeekTest {
                 }
             }
             val dispatcher = PlayDispatcher(api, NoPhone, scope, elapsedRealtime = ::now)
-            val commands = MaSpeakerCommands(api, dispatcher, {}, counted, NoPhone, scope, ::now)
+            val commands =
+                MaSpeakerCommands(api, dispatcher, {
+                }, counted, SeekLanes(api, {}, counted, NoPhone, scope, ::now), scope)
             val rig = Rig(api, speakers, commands, sent)
             rig.kitchen = waitFor(60_000) {
                 api.players().firstOrNull { it.shownName == "Kitchen" && it.available }?.playerId

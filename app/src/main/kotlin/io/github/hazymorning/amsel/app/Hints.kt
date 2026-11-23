@@ -46,10 +46,10 @@ class Hints(
     private val offers: Offers,
     private val messages: Messages,
     private val favorites: Favorites,
-    private val playlists: () -> PlaylistEditor,
+    private val playlists: PlaylistEditor,
     private val playing: Playing,
-    private val playOn: () -> PlayOn,
-    private val playback: () -> Playback,
+    private val playOn: PlayOn,
+    private val playback: Playback,
     private val sleepTimer: SleepTimer,
     private val scope: CoroutineScope,
 ) {
@@ -66,9 +66,16 @@ class Hints(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(AudioDeviceInfo.TYPE_BLE_HEADSET)
     }
 
-    // After the fields its listeners read: built off the main thread, the Main coroutines below may
-    // run before the constructor has ended.
-    init {
+    private var started = false
+
+    /**
+     * Listens from now on: to the plays and adds asked in the app, to the app coming back to the
+     * front, to a queue running out, to headphones and Wi-Fi. On the main thread, as the app's main
+     * screen first starts; later calls do nothing.
+     */
+    fun start() {
+        if (started) return
+        started = true
         // The speaker to go back to at home: the last one picked other than This phone.
         scope.launch {
             playing.speaker.map { it.id.takeUnless { _ -> it.isPhone } }.distinctUntilChanged().collect { id ->
@@ -83,10 +90,16 @@ class Hints(
             }
         }
         scope.launch { followQueueEnds() }
-        scope.launch(Dispatchers.Main) {
-            listenForHeadphones()
-            listenForWifi()
-        }
+        scope.launch(Dispatchers.Main) { playback.events.collect(::answer) }
+        scope.launch(Dispatchers.Main) { playlists.added.collect { addedTo(it.playlist, it.open) } }
+        listenForHeadphones()
+        listenForWifi()
+    }
+
+    private fun answer(event: PlaybackEvent) = when (event) {
+        is PlaybackEvent.Unreachable -> unreachable(event.speaker, event.again)
+        is PlaybackEvent.Started -> started(event.speaker)
+        is PlaybackEvent.SpokenStarted -> spokenStarted(event.title, event.speakerId)
     }
 
     /** [song] was just liked here: it can go into a playlist too, the last one used at one tap. */
@@ -94,7 +107,7 @@ class Hints(
         if (song.kind != MediaKind.Track) return
         scope.launch {
             val prefs = data.prefs.current()
-            val editable = playlists().editable()
+            val editable = playlists.editable()
             if (editable.isEmpty()) return@launch
             val last = editable.firstOrNull { it.key == prefs.lastPlaylistKey }
             val offer = if (last != null) {
@@ -106,7 +119,7 @@ class Hints(
                     lineArg = last.title,
                     button = R.string.hint_add,
                     hint = HINT_LIKED,
-                    take = { playlists().add(song.key, last) },
+                    take = { playlists.add(song.key, last) },
                 )
             } else {
                 Offer(
@@ -129,7 +142,7 @@ class Hints(
     }
 
     /** A song went into [playlist]: said with its cover, and a way there where [open] leads. */
-    fun addedTo(playlist: MediaUi, open: (() -> Unit)?) {
+    private fun addedTo(playlist: MediaUi, open: (() -> Unit)?) {
         scope.launch { data.prefs.setLastPlaylist(playlist.key) }
         if (open == null) return messages.show(R.string.added_to_playlist, playlist.title)
         offers.offer(
@@ -146,15 +159,12 @@ class Hints(
     }
 
     /**
-     * Something is about to play on [speaker], which cannot be reached: it plays on This phone
-     * instead, at one tap ([replay] once the phone is the speaker). Never passed up for good, as it
-     * stands in for the play. False where it can be reached, or nothing could be shown: the play
-     * goes ahead then, and the server says why it fails.
+     * A play was held back: [speaker] cannot be reached. It plays on This phone instead, at one tap
+     * ([again] once the phone is the speaker). Never passed up for good, as it stands in for the play.
      */
-    fun unreachable(speaker: SpeakerUi, replay: () -> Unit): Boolean {
-        if (speaker.isPhone || speaker.available) return false
-        val phone = playing.speakers.value.firstOrNull { it.isPhone } ?: return false
-        return offers.offer(
+    private fun unreachable(speaker: SpeakerUi, again: () -> Unit) {
+        val phone = playing.speakers.value.firstOrNull { it.isPhone } ?: return
+        offers.offer(
             Offer(
                 about = "unreachable:${speaker.id}",
                 title = playing.nameOf(speaker),
@@ -163,17 +173,16 @@ class Hints(
                 button = R.string.hint_play_here,
                 take = {
                     scope.launch {
-                        playOn().select(phone)
-                        withContext(Dispatchers.Main) { replay() }
+                        playOn.select(phone)
+                        withContext(Dispatchers.Main) { again() }
                     }
                 },
             ),
         )
     }
 
-    /** Something just started on the speaker in use: one that is all the way down is offered louder. */
-    fun started() {
-        val speaker = playing.speaker.value
+    /** Something just started on [speaker]: one that is all the way down is offered louder. */
+    private fun started(speaker: SpeakerUi) {
         val silent = if (speaker.isPhone) phoneVolume() == 0 else speaker.volume == 0
         if (!silent) return
         offers.offer(
@@ -185,16 +194,15 @@ class Hints(
                 button = R.string.hint_louder,
                 hint = HINT_SILENT,
                 take = {
-                    if (speaker.isPhone) raisePhone() else playback().control(PlayerControl.SetVolume(LOUDER))
+                    if (speaker.isPhone) raisePhone() else playback.control(PlayerControl.SetVolume(LOUDER))
                 },
             ),
         )
     }
 
-    /** A book or an episode, [title], just started: late in the evening a sleep timer is a tap away. */
-    fun spokenStarted(title: String) {
+    /** A book or an episode, [title], just started on [speakerId]: late in the evening a sleep timer is a tap away. */
+    private fun spokenStarted(title: String, speakerId: String) {
         if (!atNight(LocalTime.now().hour)) return
-        val speakerId = playing.speaker.value.id
         scope.launch {
             val prefs = data.prefs.current()
             val now = System.currentTimeMillis()
@@ -243,7 +251,7 @@ class Hints(
                         lineArg = playing.nameOf(speaker),
                         button = R.string.hint_play_here,
                         hint = HINT_AWAY,
-                        take = { playOn().moveTo(phone, speaker) },
+                        take = { playOn.moveTo(phone, speaker) },
                     ),
                 )
             }
@@ -262,7 +270,7 @@ class Hints(
                         lineArg = playing.nameOf(home),
                         button = R.string.resume,
                         hint = HINT_HOME,
-                        take = { playOn().moveTo(home, speaker) },
+                        take = { playOn.moveTo(home, speaker) },
                     ),
                 )
             }
@@ -272,12 +280,17 @@ class Hints(
     /** Headphones plugged in or paired while a speaker plays: the music can come to the phone. */
     private fun listenForHeadphones() {
         val audio = context.getSystemService(AudioManager::class.java) ?: return
-        // Android names the devices already there at once: those were not just connected.
-        val since = SystemClock.elapsedRealtime()
         audio.registerAudioDeviceCallback(
             object : AudioDeviceCallback() {
+                // Android's first call names the devices already there, however long the main thread
+                // keeps it waiting: those were not just connected.
+                private var listed = false
+
                 override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) {
-                    if (SystemClock.elapsedRealtime() - since < ALREADY_THERE_MS) return
+                    if (!listed) {
+                        listed = true
+                        return
+                    }
                     if (added.none { it.isSink && it.type in headphones }) return
                     headphonesIn()
                 }
@@ -299,7 +312,7 @@ class Hints(
                 line = R.string.hint_headphones,
                 button = R.string.hint_play_here,
                 hint = HINT_HEADPHONES,
-                take = { playOn().moveTo(phone, speaker) },
+                take = { playOn.moveTo(phone, speaker) },
             ),
         )
     }
@@ -331,7 +344,7 @@ class Hints(
                             button = R.string.hint_go_on,
                             hint = HINT_ENDED,
                             take = {
-                                playback().play(
+                                playback.play(
                                     listOf(endlessMixUri(song.uri)),
                                     title = context.getString(R.string.endless_mix_of, title),
                                 )
@@ -397,7 +410,7 @@ class Hints(
         /** The speaker and what plays are known again this long after the app comes back. */
         private const val SETTLE_MS = 1_500L
 
-        /** Devices named this soon after listening began were there already. */
+        /** Networks named this soon after listening began were there already. */
         private const val ALREADY_THERE_MS = 1_000L
 
         /** Wi-Fi that came up within this long before the app came back: the person just got home. */

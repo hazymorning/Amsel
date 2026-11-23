@@ -58,10 +58,10 @@ class Widgets(
     /** Asked for once there is a widget. */
     private val source: () -> WidgetSource,
     /** Amsel follows the music in this run: a widget placed now follows it at once. */
-    private val live: () -> Boolean = { false },
+    private val live: Boolean = false,
     actions: WidgetActions = WidgetActions.None,
-    /** Amsel's own socket is connected: the widgets follow what it hears. */
-    private val connected: StateFlow<Boolean> = MutableStateFlow(false),
+    /** Whether Amsel's own socket is connected: the widgets follow what it hears. */
+    private val connected: () -> Boolean = { false },
     /** Reads what the speakers do on a glance while the socket is closed; false when the server did not answer. */
     private val lookAtSpeakers: suspend () -> Boolean = { false },
     private val plan: WidgetLookPlan = WidgetLookPlan.None,
@@ -131,7 +131,7 @@ class Widgets(
     suspend fun look() {
         if (ids().isEmpty()) return plan.stop()
         follow()
-        if (connected.value || !looking.tryLock()) return
+        if (connected() || !looking.tryLock()) return
         try {
             lookAtSpeakers()
             // What was read passes through the flows first; then every draw it asked for finishes,
@@ -149,7 +149,7 @@ class Widgets(
     /** Drawn at rest from what they showed (the phone or Amsel started anew, a widget placed): look once. */
     fun lookSoon() {
         plan.keep()
-        if (!connected.value) plan.once()
+        if (!connected()) plan.once()
     }
 
     private fun sayFailure(failure: Pair<String, String>) {
@@ -195,7 +195,7 @@ class Widgets(
             val looks = _looks.value ?: store.looks().mapValues { (_, look) -> look.atRest() }
             for (id in ids) drawOne(id, looks)
         }
-        if (live()) follow()
+        if (live) follow()
     }
 
     /** Widget [id] is set up: it is drawn so at once. */

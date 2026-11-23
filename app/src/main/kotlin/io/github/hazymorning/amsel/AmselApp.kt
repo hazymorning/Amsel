@@ -12,7 +12,6 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import io.github.hazymorning.amsel.playback.PlaybackGraph
 import kotlinx.coroutines.launch
 
 open class AmselApp :
@@ -25,14 +24,12 @@ open class AmselApp :
 
     override fun onCreate() {
         super.onCreate()
-        // Sleep timers follow playback however it started: from the app, a car, a headset.
-        PlaybackGraph.provider = { graph.playbackGraph.also { graph.sleepTimer.start() } }
+        startGraph()
         // The socket stays open while the app is in front (or something plays; see PlaybackService).
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             object : DefaultLifecycleObserver {
                 override fun onStart(owner: LifecycleOwner) {
                     graph.data.session.setForeground(true)
-                    graph.sleepTimer.start()
                     // Each time Amsel comes to the front, it can follow the music to the speaker that plays.
                     graph.scope.launch { if (graph.data.prefs.current().followPlaying) graph.playOn.followPlaying() }
                     // The first time only: a start of the app, never a return to it.
@@ -56,6 +53,9 @@ open class AmselApp :
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
     }
+
+    /** Unit tests start nothing: each builds what it uses. */
+    protected open fun startGraph() = graph.start()
 
     override fun newImageLoader(context: PlatformContext): ImageLoader = graph.imageLoader
 }

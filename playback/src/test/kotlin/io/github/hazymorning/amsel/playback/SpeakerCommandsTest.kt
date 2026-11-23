@@ -72,10 +72,9 @@ class SpeakerCommandsTest {
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val now = { System.nanoTime() / 1_000_000 }
-            lateinit var commands: MaSpeakerCommands
-            val starting = { queueId: String -> commands.starting(queueId) }
-            val dispatcher = PlayDispatcher(api, phone, scope, starting = starting, elapsedRealtime = now)
-            commands = MaSpeakerCommands(api, dispatcher, {}, seeks, phone, scope, now)
+            val lanes = SeekLanes(api, {}, seeks, phone, scope, now)
+            val dispatcher = PlayDispatcher(api, phone, scope, starting = lanes::starting, elapsedRealtime = now)
+            val commands = MaSpeakerCommands(api, dispatcher, {}, seeks, lanes, scope)
             block(commands) { fake.received.mapNotNull(::sentAs) }
         } finally {
             client.stop()

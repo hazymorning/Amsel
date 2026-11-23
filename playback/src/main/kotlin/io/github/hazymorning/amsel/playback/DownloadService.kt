@@ -54,6 +54,7 @@ class DownloadService : Service() {
     override fun onCreate() {
         super.onCreate()
         channel()
+        PlaybackGraph.instance.onServiceCreated()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

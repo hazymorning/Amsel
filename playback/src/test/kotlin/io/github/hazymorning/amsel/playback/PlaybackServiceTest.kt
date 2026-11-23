@@ -182,7 +182,7 @@ class PlaybackServiceTest {
     private fun idle() = shadowOf(Looper.getMainLooper()).idle()
 
     @Before fun setUp() {
-        PlaybackGraph.provider = { TestGraph }
+        PlaybackGraph.instance = TestGraph
         TestGraph.reset()
         shadowOf(app.packageManager).addActivityIfNotPresent(launcher)
         shadowOf(app.packageManager).addIntentFilterForActivity(

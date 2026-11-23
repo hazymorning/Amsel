@@ -17,7 +17,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -55,7 +54,7 @@ class WidgetsTest {
 
     /** Widgets working in a scope of the test's own, which ends with it. */
     private fun TestScope.widgets(
-        connected: StateFlow<Boolean> = MutableStateFlow(false),
+        connected: () -> Boolean = { false },
         lookAtSpeakers: suspend () -> Boolean = { true },
         plan: WidgetLookPlan = WidgetLookPlan.None,
     ): Widgets {
@@ -71,7 +70,7 @@ class WidgetsTest {
     private fun widgets(
         scope: CoroutineScope,
         live: Boolean = false,
-        connected: StateFlow<Boolean> = MutableStateFlow(false),
+        connected: () -> Boolean = { false },
         lookAtSpeakers: suspend () -> Boolean = { true },
         plan: WidgetLookPlan = WidgetLookPlan.None,
     ) = Widgets(
@@ -82,7 +81,7 @@ class WidgetsTest {
         hands = { error("No taps here") },
         lastStarted = { null },
         source = { source },
-        live = { live },
+        live = live,
         connected = connected,
         lookAtSpeakers = lookAtSpeakers,
         plan = plan,
@@ -228,7 +227,7 @@ class WidgetsTest {
     @Test fun whileTheSocketIsConnectedTheWidgetsFollowItWithoutLooking() = runTest {
         var glances = 0
         val plans = Plans()
-        val widgets = widgets(connected = MutableStateFlow(true), lookAtSpeakers = { glances++ == 0 }, plan = plans)
+        val widgets = widgets(connected = { true }, lookAtSpeakers = { glances++ == 0 }, plan = plans)
         place(AmselWidget::class.java, 172f, 204f)
         val looking = launch { widgets.look() }
         settleSlowly { looking.isCompleted }

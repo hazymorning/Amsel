@@ -24,18 +24,34 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
+import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.positionAt
 import java.util.concurrent.ExecutionException
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+
+/** What became of a play, for what answers it ([Hints]). */
+sealed interface PlaybackEvent {
+    /** It was held back: [speaker] cannot be reached; [again] asks for it anew. */
+    class Unreachable(val speaker: SpeakerUi, val again: () -> Unit) : PlaybackEvent
+
+    /** It went out to [speaker]. */
+    class Started(val speaker: SpeakerUi) : PlaybackEvent
+
+    /** A book or an episode, [title], was asked for on speaker [speakerId]. */
+    class SpokenStarted(val title: String, val speakerId: String) : PlaybackEvent
+}
 
 /**
  * What a screen may do with playback, wherever it is; what plays is [Playing]'s. Transport goes
@@ -52,9 +68,12 @@ class Playback(
     private val messages: Messages,
     private val local: LocalPlayback,
     private val scope: CoroutineScope,
-    /** What helps around a play: a speaker that cannot be reached or is all the way down. */
-    private val hints: () -> Hints,
 ) {
+    private val _events = Channel<PlaybackEvent>(EVENTS_BUFFER, BufferOverflow.DROP_OLDEST)
+
+    /** What became of the plays asked here, for the hints to answer ([Hints]). */
+    val events: Flow<PlaybackEvent> = _events.receiveAsFlow()
+
     private var connection: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
 
@@ -161,15 +180,20 @@ class Playback(
     ) {
         val target = graph.target.value
         val speaker = playing.speaker.value
-        val replay = { play(uris, startItem, shuffle, option, title, startPositionMs) }
-        if (speaker.id == target.playerId && hints().unreachable(speaker, replay)) return
+        // In front, a speaker out of reach is not sent the play: This phone is offered in its place.
+        // Behind the app's back it goes out, and the server says why it fails.
+        if (speaker.id == target.playerId && !speaker.isPhone && !speaker.available && data.session.foreground.value) {
+            val again = { play(uris, startItem, shuffle, option, title, startPositionMs) }
+            _events.trySend(PlaybackEvent.Unreachable(speaker, again))
+            return
+        }
         val downloaded = uris.singleOrNull()?.takeIf { option == QueueOption.Replace && target.isPhone }
             ?.takeIf { data.downloads.manifest(it) != null }
         if (downloaded != null) return playDownload(downloaded, startPositionMs)
         // Anything else on this phone comes from the server: the download lets go of the session.
         // For a mix only once the server has songs for it, which the dispatcher learns.
         val mix = option == QueueOption.Replace && uris.singleOrNull()?.let(::isEndlessMix) == true
-        if (target.isPhone && !mix) stopDownload()
+        if (target.isPhone && !mix) local.giveWay()
         dispatcher.play(
             PlayRequest(
                 target.playerId ?: Playing.PHONE,
@@ -182,12 +206,7 @@ class Playback(
                 startPositionMs,
             ),
         )
-        hints().started()
-    }
-
-    /** Ends what This phone plays from its own files, if anything: the server's stream takes its place. */
-    fun stopDownload() {
-        if (local.now.value != null) scope.launch(Dispatchers.Main) { local.stop() }
+        _events.trySend(PlaybackEvent.Started(speaker))
     }
 
     /**
@@ -218,7 +237,7 @@ class Playback(
         val now = playing.nowPlaying.value
         if (now?.key == uri && now.isPlaying) return true
         if (parkedHere(uri)) control(PlayerControl.PlayPause) else play(listOf(uri), title = title)
-        title?.let { hints().spokenStarted(it) }
+        title?.let(::spokenStarted)
         return false
     }
 
@@ -231,7 +250,11 @@ class Playback(
         } else {
             play(listOf(uri), title = title)
         }
-        if (!pauses) title?.let { hints().spokenStarted(it) }
+        if (!pauses) title?.let(::spokenStarted)
+    }
+
+    private fun spokenStarted(title: String) {
+        _events.trySend(PlaybackEvent.SpokenStarted(title, playing.speaker.value.id))
     }
 
     /**
@@ -351,3 +374,6 @@ private fun NowPlayingUi?.hasNextChapter(): Boolean {
 }
 
 private const val VOLUME_EVERY_MS = 150L
+
+/** Plays asked in a burst: the hints answer the latest. */
+private const val EVENTS_BUFFER = 8

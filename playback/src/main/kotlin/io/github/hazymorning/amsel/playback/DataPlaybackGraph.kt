@@ -17,9 +17,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -35,17 +35,18 @@ import kotlinx.coroutines.flow.stateIn
 class DataPlaybackGraph(
     private val data: DataGraph,
     private val dispatcher: PlayDispatcher,
+    lanes: SeekLanes,
+    /** The speaker the person picked, or This phone ([SpeakerSelection]). */
+    override val target: StateFlow<Target>,
     override val scope: CoroutineScope,
     override val phone: PhoneSpeaker,
     override val local: LocalPlayback,
     override val artwork: BitmapLoader,
-    private val nameOf: (playerId: String) -> String,
-    /** Now Playing's heart, which the app holds: asked for when the service starts, not before. */
-    private val heartOf: () -> StateFlow<Boolean?>,
+    /** Now Playing's heart, which the app holds. */
+    override val heart: StateFlow<Boolean?>,
     private val onHeart: () -> Unit,
+    private val nameOf: (playerId: String) -> String,
 ) : PlaybackGraph {
-    override val heart: StateFlow<Boolean?> get() = heartOf()
-
     override fun toggleHeart() = onHeart()
 
     override fun volumeLimit(): Int = data.prefs.prefs.value?.volumeLimit ?: 0
@@ -54,19 +55,6 @@ class DataPlaybackGraph(
 
     override val downloads: Downloads get() = data.downloads
     private val snapshotFlows = mutableMapOf<String, StateFlow<SpeakerSnapshot?>>()
-
-    /** Prefs hold the picked speaker; null means "This phone", the default. */
-    override val target: StateFlow<Target> =
-        combine(data.prefs.prefs.filterNotNull().map { it.speakerId }, phone.playerId) { selected, phoneId ->
-            if (selected == null ||
-                selected == phoneId
-            ) {
-                Target(phoneId, isPhone = true)
-            } else {
-                Target(selected, isPhone = false)
-            }
-        }.onEach { phone.setWanted(it.isPhone) }
-            .stateIn(scope, SharingStarted.Eagerly, Target(null, isPhone = true))
 
     override val sessionTarget: StateFlow<Target> =
         combine(target, phone.playerId, data.speakers.players, data.speakers.gone) { selected, phoneId, players, gone ->
@@ -81,6 +69,11 @@ class DataPlaybackGraph(
 
     /** Whether the session's speaker plays, as the service reports it. */
     private val sessionPlaying = MutableStateFlow(false)
+
+    private val _serviceCreated = MutableStateFlow(false)
+
+    /** Whether one of the app's services ran in this process, which its screens need not have. */
+    val serviceCreated: StateFlow<Boolean> = _serviceCreated.asStateFlow()
 
     init {
         sessionPlaying.onEach(data.session::setPlaying).launchIn(scope)
@@ -105,7 +98,7 @@ class DataPlaybackGraph(
             .stateIn(scope, SharingStarted.Eagerly, null)
 
     override val commands: MaSpeakerCommands =
-        MaSpeakerCommands(api, dispatcher, data.session::wake, data.speakers, phone, scope, elapsedRealtime)
+        MaSpeakerCommands(api, dispatcher, data.session::wake, data.speakers, lanes, scope)
     override val catalog: Catalog = DataCatalog(
         api,
         data.session::wake,
@@ -121,6 +114,10 @@ class DataPlaybackGraph(
 
     override fun onPlayingChanged(playing: Boolean) {
         sessionPlaying.value = playing
+    }
+
+    override fun onServiceCreated() {
+        _serviceCreated.value = true
     }
 
     override fun onCommandFailed(failure: CommandFailure) {
