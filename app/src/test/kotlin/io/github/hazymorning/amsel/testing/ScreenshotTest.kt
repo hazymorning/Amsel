@@ -38,11 +38,11 @@ enum class ShotVariant(val mode: ThemeMode, val fontScale: Float) {
 /**
  * Base class for screenshot tests; each test records one shot in the variants it names. Images
  * land in app/src/test/screenshots/<class name without "Shots">/<name>_<variant>.png, phone size
- * 411x891 dp.
+ * 411x891 dp, at half the phone's resolution.
  *
- * `-Plook=de` (or `de-w360dp`, `w360dp`) records every shot under those qualifiers into
- * app/build/look/<look>/ instead: a way to look at a screen in German or on a narrow phone without
- * keeping the images.
+ * `-Plook=de` (or `de-w360dp`, `w360dp`) records every shot in light, dark and 200 % under those
+ * qualifiers into app/build/look/<look>/ instead, at full resolution for scripts/design/measure.py: a
+ * way to look at a screen in German or on a narrow phone without keeping the images.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -100,9 +100,8 @@ abstract class ScreenshotTest {
         capture: ComposeUiTest.(path: String) -> Unit,
     ) {
         val group = javaClass.simpleName.removeSuffix("Shots")
-        val look = System.getProperty(LOOK).orEmpty()
         val folder = if (look.isEmpty()) "src/test/screenshots" else "build/look/$look"
-        for (variant in variants) {
+        for (variant in if (look.isEmpty()) variants else ShotVariant.entries) {
             // Each variant gets its own activity, started after its configuration is set.
             RuntimeEnvironment.setQualifiers(if (variant.mode == ThemeMode.Dark) "+night" else "+notnight")
             // One at a time: Android wants a language before a width, and a look may hold both.
@@ -122,9 +121,15 @@ abstract class ScreenshotTest {
         }
     }
 
+    private val look = System.getProperty(LOOK).orEmpty()
+
     private val options = RoborazziOptions(
+        recordOptions = RoborazziOptions.RecordOptions(resizeScale = if (look.isEmpty()) GOLDEN_SCALE else 1.0),
         compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.002f),
     )
 }
+
+/** Goldens are compared at half size: a layout change still shows, at a quarter of the bytes. */
+private const val GOLDEN_SCALE = 0.5
 
 private const val LOOK = "amsel.look"

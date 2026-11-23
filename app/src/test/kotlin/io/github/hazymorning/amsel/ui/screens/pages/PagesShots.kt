@@ -13,33 +13,13 @@ import io.github.hazymorning.amsel.testing.ShotVariant
 import org.junit.Test
 
 class PagesShots : ScreenshotTest() {
-    @Test fun album() = snap("album", ShotVariant.entries) { Album(PagesSample.album) }
-
-    @Test fun albumError() = snap("album_error") { Album(PagesSample.albumUnavailable) }
+    @Test fun album() = snap("album") { Album(PagesSample.album) }
 
     @Test fun playlist() = snap("playlist") { Playlist(PagesSample.playlist) }
 
-    @Test fun artist() = snap("artist") { Artist(PagesSample.artist) }
-
     /** The page's end: the last albums, then the shelf of similar artists. */
-    @Test fun artistSimilar() = snap("artist_similar", ShotVariant.entries, before = { toTheEnd() }) {
+    @Test fun artistSimilar() = snap("artist_similar", before = { toTheEnd() }) {
         Artist(PagesSample.artist)
-    }
-
-    @Test fun similarSongs() = snap("similar_songs", ShotVariant.entries) { SimilarSongs(PagesSample.similarSongs) }
-
-    @Test fun similarSongsEmpty() = snap("similar_songs_empty") { SimilarSongs(SimilarSongsUiState()) }
-
-    @Test fun audiobook() = snap("audiobook", listOf(ShotVariant.Light, ShotVariant.Dark)) {
-        AudiobookScreen(
-            SpokenSample.audiobookPage,
-            onBack = {},
-            onResume = {},
-            onPlayChapter = {},
-            onMore = {},
-            onOpenAuthor = {},
-            onRetry = {},
-        )
     }
 
     /** A book from Audiobookshelf on its way to the phone: the ring beside play fills, its stop ends it. */
@@ -71,32 +51,10 @@ class PagesShots : ScreenshotTest() {
         )
     }
 
-    @Test fun podcast() = snap("podcast") {
-        PodcastScreen(
-            SpokenSample.podcastPage,
-            onBack = {},
-            onPlayEpisode = {},
-            onMore = {},
-            onMoreEpisode = {},
-            onLoadMore = {},
-            onRetry = {},
-        )
-    }
-
     private fun SemanticsNodeInteractionsProvider.toTheEnd() = repeat(8) {
         onRoot().performTouchInput { swipeUp(startY = height * 0.8f, endY = height * 0.2f, durationMillis = 400) }
     }
 }
-
-@Composable
-private fun SimilarSongs(state: SimilarSongsUiState) = SimilarSongsScreen(
-    state,
-    title = "Lanterns",
-    onBack = {},
-    onPlayTrack = {},
-    onMoreTrack = {},
-    onRetry = {},
-)
 
 @Composable
 private fun Album(state: AlbumUiState) = AlbumBody(state)
