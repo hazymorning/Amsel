@@ -64,6 +64,7 @@ import io.github.hazymorning.amsel.ui.screens.settings.DockRoute
 import io.github.hazymorning.amsel.ui.screens.settings.FollowRoute
 import io.github.hazymorning.amsel.ui.screens.settings.HintsRoute
 import io.github.hazymorning.amsel.ui.screens.settings.LibraryKindsRoute
+import io.github.hazymorning.amsel.ui.screens.settings.LicencesRoute
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsRoute
 import io.github.hazymorning.amsel.ui.screens.settings.SleepTimerRoute
 import io.github.hazymorning.amsel.ui.screens.setup.SetupRoute
@@ -113,7 +114,11 @@ class AppActions(
 
     /** Opens Music Assistant's web UI in the browser. */
     fun openWebUi() {
-        val url = graph.data.session.address.value?.toString() ?: return
+        graph.data.session.address.value?.let { openLink(it.toString()) }
+    }
+
+    /** Opens [url] in the browser. */
+    fun openLink(url: String) {
         try {
             context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         } catch (e: ActivityNotFoundException) {
@@ -308,6 +313,7 @@ private fun RouteContent(route: Route, navigator: Navigator) {
         Route.HomeEdit -> HomeRoute(navigator, editOnly = true)
         Route.Appearance -> AppearanceRoute(navigator)
         Route.SleepTimer -> SleepTimerRoute(navigator)
+        Route.Licences -> LicencesRoute(navigator)
         is Route.Again -> RouteContent(route.route, navigator)
     }
 }

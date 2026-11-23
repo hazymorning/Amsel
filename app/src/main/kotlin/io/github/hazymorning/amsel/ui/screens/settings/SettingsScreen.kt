@@ -74,6 +74,8 @@ fun SettingsScreen(
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignIn = { _, _, _ -> null },
     onAbsSignOut: () -> Unit = {},
+    /** The page of Amsel's licence, the privacy notice and the licences of software by others. */
+    onLicences: () -> Unit = {},
 ) {
     val title = stringResource(R.string.settings)
     val scroll = rememberScrollState()
@@ -198,6 +200,15 @@ fun SettingsScreen(
                         mark = if (waiting) ({ MossDot() }) else null,
                     )
                 }
+                row { shape ->
+                    SettingRow(
+                        stringResource(R.string.licences),
+                        shape,
+                        subtitle = stringResource(R.string.licences_detail),
+                        onClick = onLicences,
+                        glyph = R.drawable.ic_licences,
+                    )
+                }
             }
             LicenceNote()
         }
@@ -294,6 +305,7 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier, asPlace: 
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,
         onAbsSignIn = graph.downloading::signIn,
         onAbsSignOut = graph.downloading::signOut,
+        onLicences = { navigator.open(Route.Licences) },
         modifier = modifier,
     )
 }
