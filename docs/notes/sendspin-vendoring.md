@@ -378,7 +378,7 @@ The spike compiled this shape through R8 (`consumer/.../SpikeApplication.kt`). N
 config.value = LocalPlayerConfig(
     endpoint = endpoint,                         // keep the same instance while it is unchanged
     deviceName = deviceName,                      // shown as the player name in MA
-    codecPreference = listOf(AudioCodec.FLAC, AudioCodec.OPUS),
+    codecPreference = listOf(AudioCodec.FLAC, AudioCodec.OPUS),  // Opus first on a metered network
     bitDepth = 16,
     bufferSeconds = 10,                           // official app default (SettingsRepository.kt:849)
     userDelayMs = 0,
@@ -388,7 +388,9 @@ config.value = LocalPlayerConfig(
 `api/LocalPlayerConfig.kt:12-26`. A change to `endpoint`, `deviceName`, `codecPreference`,
 `bitDepth` or `bufferSeconds` reconnects; `userDelayMs` applies live. No setting is exposed for
 any of these (settings budget): FLAC first with Opus as the fallback is the module README's quick
-start; the official app defaults to FLAC alone, 16-bit, 10 s. `deviceName`: **inferred
+start; the official app defaults to FLAC alone, 16-bit, 10 s. On a metered network
+(`ConnectivityManager.isActiveNetworkMetered`, read as the config is built) Amsel asks for Opus first;
+a new network reconnects the control socket, which builds the config again. `deviceName`: **inferred
 proposal**, the phone's own name (`Settings.Global.DEVICE_NAME`, falling back to `Build.MODEL`),
 capped by the module at 64 UTF-8 bytes (`wire/Messages.kt:106`); check the read on API 37 in M3.
 

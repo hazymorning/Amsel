@@ -44,10 +44,10 @@ import kotlin.math.abs
 import kotlinx.coroutines.delay
 
 /**
- * The playback position, moving on with the frame clock while playing, but only as often as it
- * shows: about once a pixel of the cover's line, and a few times a second at least for the times,
- * so the screen is not drawn anew every frame for a line that has not moved. The clock runs as an
- * infinite animation, which Compose pauses in tests, so screenshots stay still at [NowPlayingUi.positionMs].
+ * The playback position, moved on while playing only as often as it shows: about once a pixel of
+ * the cover's line, and a few times a second at least for the times. Between those steps it sleeps
+ * instead of waking every frame. Each step lands on a frame of an infinite animation, which Compose
+ * pauses in tests, so screenshots stay still at [NowPlayingUi.positionMs].
  */
 @Composable
 internal fun rememberPlaybackPosition(state: NowPlayingUi): State<Long> {
@@ -55,10 +55,14 @@ internal fun rememberPlaybackPosition(state: NowPlayingUi): State<Long> {
     LaunchedEffect(state.positionMs, state.positionAtMs, state.runs, state.durationMs) {
         position.longValue = state.positionMs
         val step = (state.durationMs / LINE_STEPS).coerceIn(MIN_STEP_MS, MAX_STEP_MS)
+        val pace = state.speed.toDouble().takeIf { it > 0 } ?: 1.0
         while (state.runs) {
             withInfiniteAnimationFrameMillis { }
             val now = state.positionAt(SystemClock.elapsedRealtime())
             if (abs(now - position.longValue) >= step) position.longValue = now
+            // At its end the position stands still until the next report.
+            if (state.durationMs in 1..now) break
+            delay(((position.longValue + step - now) / pace).toLong().coerceAtLeast(1))
         }
     }
     return position
