@@ -8,7 +8,7 @@ ic_<name>_bold, ic_<name>_light), and InkGlyph draws the cut whose line is neare
 it is drawn (Ink.kt, `weighted`). Fill and Bold glyphs that icons.txt names come in that one cut.
 Every cut is one filled path, one path at 24 dp; a glyph drawn smaller than 16 dp is stroked from
 Phosphor's own line drawing (raw/regular) at the width it needs. Only the icons the app uses are
-copied in; no icon library is added (docs/PLAN.md, "Not allowed"). The licence is copied to
+copied in; no icon library is added (AGENTS.md, rule 6). The licence is copied to
 app/src/main/assets/licences/.
 
 The ink table (ui/components/IconInk.kt) holds each drawable's measured ink bounds, so glyphs line up

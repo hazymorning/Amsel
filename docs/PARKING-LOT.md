@@ -1,8 +1,8 @@
 # Parking lot
 
-Ideas that failed the feature test in `docs/PLAN.md` ("Six rules", rule 3), kept here so they
+Ideas that failed the feature test in `AGENTS.md` (rule 3), kept here so they
 stop coming back. Each line: the idea, the date, and which part of the test it failed.
-Post-beta candidates from the plan (lyrics) live here until they pass the test.
+Post-beta candidates (lyrics) live here until they pass the test.
 
 | Idea | Date | Failed because |
 | --- | --- | --- |

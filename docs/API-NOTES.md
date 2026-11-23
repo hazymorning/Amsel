@@ -2,7 +2,7 @@
 
 Every Music Assistant (MA) command and event Amsel v1 uses, with arguments, return shapes,
 schema gates and quirks. Add an entry whenever the app uses a new command, after checking
-`/api-docs` on the test server (`docs/PLAN.md`, rules in `AGENTS.md`).
+`/api-docs` on the test server.
 
 **Verified against** (2026-11-01): server `dev` @ `acea6207` (API schema **100**), Docker
 `ghcr.io/music-assistant/server:beta` = **2.11.0b7** (schema **99**), tag and Docker image **2.10.8**
@@ -12,8 +12,8 @@ Command signatures for both releases come from each running server's `/api-docs/
 **Markers.** **[live]** seen on a running 2.10.8 *and* 2.11.0b7 server through a WebSocket probe
 (local-files library, Snapcast player). **[src]** read in source. **[inf]** inferred, check it
 before relying on it. Paths are server-repo paths at `dev` unless marked `@2.10.8`; `models:` paths
-are in `music-assistant/models@1.1.232`; `client:` is `/home/user/ref/client/music_assistant_client/`;
-`mobile-app` files are under `/home/user/ref/mobile-app/composeApp/src/commonMain/kotlin/io/music_assistant/client/`.
+are in `music-assistant/models@1.1.232`; `client:` is `music_assistant_client/` in `music-assistant/client`;
+`mobile-app` files are under `composeApp/src/commonMain/kotlin/io/music_assistant/client/` in `music-assistant/mobile-app`.
 
 ## How a session works
 
@@ -725,7 +725,7 @@ A personal playlist the user can no longer see arrives once as `media_item_delet
 
 ## Sources
 
-Server (`/home/user/ref/server`, dev @ acea6207, tag 2.10.8): `music_assistant/constants.py`,
+Server (`music-assistant/server`, dev @ acea6207, tag 2.10.8): `music_assistant/constants.py`,
 `mass.py`, `helpers/api.py`, `helpers/uri.py`, `helpers/redirect_validation.py`,
 `helpers/resources/oauth_callback.html`, `controllers/webserver/{controller.py, websocket_client.py, auth.py, README.md, helpers/auth_middleware.py, helpers/auth_providers.py}`,
 `controllers/discovery/controller.py`, `controllers/players/{controller.py, constants.py}`,
@@ -734,7 +734,7 @@ Server (`/home/user/ref/server`, dev @ acea6207, tag 2.10.8): `music_assistant/c
 `controllers/metadata/{images.py, constants.py}`. Models (`music-assistant/models` 1.1.232 and
 1.1.205): `api.py`, `event.py`, `enums.py`, `errors.py`, `auth.py`, `player.py`,
 `player_queue.py`, `queue_item.py`, `favorite_update.py`, `media_items/{media_item.py, metadata.py, summary.py}`.
-Clients: `/home/user/ref/client/music_assistant_client/{client.py, connection.py, auth_helpers.py, constants.py}`;
-`/home/user/ref/frontend/src/{plugins/api/index.ts, helpers/utils.ts, helpers/players.ts}`;
-`/home/user/ref/mobile-app/{.claude/architecture.md, composeApp/src/commonMain/kotlin/io/music_assistant/client/auth/, .../api/Request.kt, .../data/model/server/}`.
+Clients: `music-assistant/client` (`music_assistant_client/{client.py, connection.py, auth_helpers.py, constants.py}`);
+`music-assistant/frontend` (`src/{plugins/api/index.ts, helpers/utils.ts, helpers/players.ts}`);
+`music-assistant/mobile-app` (`.claude/architecture.md`, `composeApp/src/commonMain/kotlin/io/music_assistant/client/{auth/, api/Request.kt, data/model/server/}`).
 Live probes: `/api-docs/commands.json` of both servers, WebSocket scripts against both, mDNS browse from inside the containers.

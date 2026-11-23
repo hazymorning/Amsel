@@ -1,9 +1,8 @@
 # Sendspin vendoring (M0 spike)
 
-Nov 1, 2026. Result of the M0 spike that `docs/PLAN.md` asks for ("lists the module's build
-plugins and dependencies and decides whether to turn it into a plain Kotlin module"). Everything
-below was checked against source or proved in a scratch build (`/tmp/sendspin-spike`), unless it
-says **inferred**. M3 still has to prove it plays on a phone; nothing here ran on a device.
+Nov 1, 2026. Result of the M0 spike: it lists the module's build plugins and dependencies and
+decides whether to turn it into a plain Kotlin module. Everything below was checked against source
+or proved in a scratch build, unless it says **inferred**. M3 still has to prove it plays on a phone; nothing here ran on a device.
 
 ## Decision
 
@@ -39,7 +38,7 @@ Q4 is a tie.
 
 ## What the spike proved
 
-Scratch build `/tmp/sendspin-spike`: Gradle 9.8.2 wrapper, AGP 9.5.0, Kotlin 2.4.21,
+Scratch build: Gradle 9.8.2 wrapper, AGP 9.5.0, Kotlin 2.4.21,
 compileSdk 37, minSdk 28, JDK 21 host, Amsel's `gradle.properties` (configuration cache on),
 Amsel's version catalog plus the entries below, `FAIL_ON_PROJECT_REPOS`, and an Amsel-like root
 build (ktlint on every module but `:sendspin`). The module was produced by running
@@ -64,7 +63,7 @@ there is no `assembleRelease`, `compileDebugKotlin`, `test` or `testDebugUnitTes
 `:sendspin`. Use `:sendspin:assembleAndroidMain`, `:sendspin:compileAndroidMain` and
 `:sendspin:testAndroidHostTest` (or `:sendspin:allTests`).
 
-## Changes the lead makes in the repo
+## Changes in the repo
 
 1. Run `scripts/vendor-sendspin.sh` once from the repo root (no arguments). It creates
    `sendspin/` with `src/{commonMain,androidMain,commonTest,androidHostTest}`,

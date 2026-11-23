@@ -2,7 +2,7 @@
 
 Native Android player for Music Assistant: find something in your library and play it, on the
 phone or on any speaker. Simple, light, beautiful; usable by anyone at home without explanation.
-Plan: `docs/PLAN.md`. Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.md`.
+Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.md`.
 
 ## Writing style (owner's rules, strict)
 
@@ -29,7 +29,7 @@ Decide without asking the owner, using these questions in order, and add one lin
 `docs/DECISIONS.md` (what, and which question settled it):
 1. What would a first-time user expect? 2. Fewest elements, steps and rules? 3. Calmer and better
 looking? 4. Faster and lighter? Evidence (household tests, owner feedback) beats reasoning, and the
-owner's explicit wishes override the plan.
+owner's explicit wishes come first.
 
 ## How to work here
 
