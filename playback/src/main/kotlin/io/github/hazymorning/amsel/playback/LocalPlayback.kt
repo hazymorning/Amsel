@@ -163,6 +163,11 @@ class LocalPlayback(
         release()
     }
 
+    /** Ends what plays from the phone's files, if anything, from any thread: the server's stream takes its place. */
+    fun giveWay() {
+        if (now.value != null) scope.launch(Dispatchers.Main) { stop() }
+    }
+
     private fun release() {
         resuming?.cancel()
         resuming = null

@@ -195,8 +195,6 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
     val actions = remember(graph, context, askNotifications) { AppActions(context, graph, sheet, askNotifications) }
 
     ShowMessages(graph.messages, snackbar)
-    // What helps around playing listens from the start: headphones, coming back, a queue that ends.
-    LaunchedEffect(graph) { graph.hints }
     // Search, Now Playing and Up next come up in front of whatever sheet was open; the speaker picker is one.
     LaunchedEffect(opening) {
         if (opening == Opening.Search || opening == Opening.NowPlaying || opening == Opening.UpNext) sheet.value = null

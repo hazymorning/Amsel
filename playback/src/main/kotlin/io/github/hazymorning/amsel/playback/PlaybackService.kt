@@ -92,6 +92,9 @@ interface PlaybackGraph {
      */
     fun onPlayingChanged(playing: Boolean)
 
+    /** The playback service was created: playback may run with none of the app's screens shown. */
+    fun onServiceCreated() {}
+
     /** A transport command did not reach its speaker: it joins [failures]. */
     fun onCommandFailed(failure: CommandFailure)
 
@@ -124,9 +127,8 @@ interface PlaybackGraph {
     )
 
     companion object {
-        /** Set by the Application in onCreate (plain constructor DI); built on first use. */
-        lateinit var provider: () -> PlaybackGraph
-        val instance: PlaybackGraph by lazy { provider() }
+        /** The app's, set as it starts, before Android creates a service. */
+        lateinit var instance: PlaybackGraph
         private val NoSpeaker = MutableStateFlow<SpeakerSnapshot?>(null)
         private val Quiet = MutableStateFlow(false)
     }
@@ -164,6 +166,7 @@ class PlaybackService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
         val graph = PlaybackGraph.instance
+        graph.onServiceCreated()
         val first = graph.sessionTarget.value
         // Tapping the notification, the lock-screen card or the Quick Settings player opens Amsel.
         val openApp = sessionActivity()

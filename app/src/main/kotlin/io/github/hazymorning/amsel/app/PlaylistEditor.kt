@@ -1,6 +1,5 @@
 package io.github.hazymorning.amsel.app
 
-import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.ItemUri
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaCommandException
@@ -15,9 +14,12 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,6 +38,9 @@ sealed interface PlaylistEdit {
     data class Added(override val playlistKey: String) : PlaylistEdit
 }
 
+/** A song went into [playlist]; [open] leads to it, where the sheet that added it can go there. */
+class AddedTo(val playlist: MediaUi, val open: (() -> Unit)?)
+
 /** The ⋮ sheet's changes to playlists: adding to one, and removing a track from one. */
 class PlaylistEditor(
     private val api: MaApi,
@@ -43,11 +48,12 @@ class PlaylistEditor(
     private val mapper: UiMapper,
     private val messages: Messages,
     private val scope: CoroutineScope,
-    /** A song went into the playlist; [open] leads to it, where the sheet that added it can go there. */
-    private val added: (playlist: MediaUi, open: (() -> Unit)?) -> Unit = { playlist, _ ->
-        messages.show(R.string.added_to_playlist, playlist.title)
-    },
 ) {
+    private val _added = Channel<AddedTo>(ADDED_BUFFER, BufferOverflow.DROP_OLDEST)
+
+    /** Songs that went into a playlist from here, for the hints to say so ([Hints]). */
+    val added: Flow<AddedTo> = _added.receiveAsFlow()
+
     private val _edits =
         MutableSharedFlow<PlaylistEdit>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
@@ -72,7 +78,8 @@ class PlaylistEditor(
             val error = try {
                 api.addToPlaylist(id, listOf(uri))
                 _edits.emit(PlaylistEdit.Added(playlist.key))
-                return@launch added(playlist, open)
+                _added.trySend(AddedTo(playlist, open))
+                return@launch
             } catch (e: MaException) {
                 e
             }
@@ -109,3 +116,6 @@ class PlaylistEditor(
         }
     }
 }
+
+/** Adds made in a burst: the hints say the latest. */
+private const val ADDED_BUFFER = 8

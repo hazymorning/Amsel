@@ -53,6 +53,9 @@ import io.github.hazymorning.amsel.playback.DownloadService
 import io.github.hazymorning.amsel.playback.LocalPlayback
 import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
+import io.github.hazymorning.amsel.playback.PlaybackGraph
+import io.github.hazymorning.amsel.playback.SeekLanes
+import io.github.hazymorning.amsel.playback.SpeakerSelection
 import io.github.hazymorning.amsel.playback.Target
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
@@ -68,23 +71,25 @@ import io.github.hazymorning.amsel.widget.Widgets
 import io.github.hazymorning.amsel.widget.widgetLook
 import java.io.File
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.OkHttpClient
 
 /**
- * Every app-wide singleton, built by hand (plain constructor injection, no DI framework). One
- * OkHttpClient serves the WebSocket, discovery and artwork. Everything is lazy: nothing heavy runs
- * in Application.onCreate.
+ * Every app-wide singleton, built by hand (plain constructor injection, no DI framework), each
+ * when first used; [start] starts what runs for as long as the app does. One OkHttpClient serves
+ * the WebSocket, discovery and artwork.
  */
 class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVault()) {
     private val app = context.applicationContext
@@ -107,9 +112,30 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     val data: DataGraph by lazy {
-        DataGraph(app, http, scope, vault, network, startDownloads = { DownloadService.start(app) }).also {
-            it.start()
-            scope.launch { it.ended.collect { forgetSession() } }
+        DataGraph(app, http, scope, vault, network, startDownloads = { DownloadService.start(app) })
+    }
+
+    private val started = AtomicBoolean(false)
+
+    /**
+     * Starts what runs for as long as the app does, once and in this order: forgetting what a
+     * session that ends leaves behind, the connection, the playback service's graph, the widgets
+     * following the music; the sleep timer once the app is in front or the service runs, and the
+     * hints once the app is in front.
+     */
+    fun start() {
+        if (!started.compareAndSet(false, true)) return
+        scope.launch(start = CoroutineStart.UNDISPATCHED) { data.ended.collect { forgetSession() } }
+        data.start()
+        PlaybackGraph.instance = playbackGraph
+        scope.launch { widgets.follow() }
+        scope.launch {
+            merge(data.session.foreground, playbackGraph.serviceCreated).first { it }
+            sleepTimer.start()
+        }
+        scope.launch {
+            data.session.foreground.first { it }
+            withContext(Dispatchers.Main) { hints.start() }
         }
     }
 
@@ -125,15 +151,19 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     /** Downloads playing on this phone, built on first use. */
     val local: LocalPlayback by lazy { LocalPlayback(app, data.downloads, data.abs, network.current, scope) }
 
+    private val lanes: SeekLanes by lazy {
+        SeekLanes(data.session.api, data.session::wake, data.speakers, phone, scope, SystemClock::elapsedRealtime)
+    }
+
     val dispatcher: PlayDispatcher by lazy {
         PlayDispatcher(
             data.session.api,
             phone,
             scope,
             data.speakers,
-            seekIn = { queueId, place -> playbackGraph.commands.seekIn(queueId, place) },
-            starting = { queueId -> playbackGraph.commands.starting(queueId) },
-            phoneMixStarts = { playback.stopDownload() },
+            seekIn = lanes::seekIn,
+            starting = lanes::starting,
+            phoneMixStarts = local::giveWay,
             elapsedRealtime = SystemClock::elapsedRealtime,
         )
     }
@@ -143,17 +173,21 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         PhoneSpeaker(app, data, http, BuildConfig.VERSION_NAME, BuildConfig.DEBUG, scope)
     }
 
+    private val selection: SpeakerSelection by lazy { SpeakerSelection(data, phone, scope) }
+
     val playbackGraph: DataPlaybackGraph by lazy {
         DataPlaybackGraph(
             data,
             dispatcher,
+            lanes,
+            selection.target,
             scope,
             phone,
             local,
             ArtworkLoader(app, imageLoader, scope),
-            nameOf = { playing.nameOf(it) },
-            heartOf = { playing.heart },
-            onHeart = { playing.toggleHeart() },
+            heart = playing.heart,
+            onHeart = playing::toggleHeart,
+            nameOf = playing::nameOf,
         )
     }
 
@@ -170,23 +204,16 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     val hints: Hints by lazy {
-        Hints(app, data, offers, messages, favorites, {
-            playlists
-        }, playing, { playOn }, { playback }, sleepTimer, scope)
+        Hints(app, data, offers, messages, favorites, playlists, playing, playOn, playback, sleepTimer, scope)
     }
 
     val favorites: Favorites by lazy {
         Favorites(data.session.api, data.library, messages, data.session.state, data.session.client.events, scope)
     }
 
-    private val playingOnce = lazy {
-        Playing(app, data, playbackGraph, phone, dispatcher, local, mapper, favorites, scope).also {
-            // Once built: the widgets read what plays from it.
-            scope.launch { widgets.follow() }
-        }
+    val playing: Playing by lazy {
+        Playing(app, data, selection.target, phone, dispatcher, local, mapper, favorites, scope)
     }
-
-    val playing: Playing by playingOnce
 
     /** The home screen's widgets: what plays where, and the buttons each person set. */
     val widgets: Widgets by lazy {
@@ -214,10 +241,9 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             },
             lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
             source = { widgetSource() },
-            live = playingOnce::isInitialized,
+            live = true,
             actions = WidgetCommands(app, data, playbackGraph.commands, playing.optimistic, favorites, scope),
-            connected = data.session.client.state.map { it is ConnectionState.Connected }
-                .stateIn(scope, SharingStarted.Eagerly, false),
+            connected = { data.session.client.state.value is ConnectionState.Connected },
             lookAtSpeakers = data::lookAtSpeakers,
             plan = WidgetPlan(app),
         )
@@ -254,7 +280,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     }
 
     val playback: Playback by lazy {
-        Playback(app, data, playbackGraph, playing, phone, dispatcher, messages, local, scope) { hints }
+        Playback(app, data, playbackGraph, playing, phone, dispatcher, messages, local, scope)
     }
 
     val playOn: PlayOn by lazy {
@@ -265,11 +291,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
 
     val speakerVolumes: SpeakerVolumes by lazy { SpeakerVolumes(data, messages, scope) }
 
-    val playlists: PlaylistEditor by lazy {
-        PlaylistEditor(data.session.api, data.library, mapper, messages, scope) { playlist, open ->
-            hints.addedTo(playlist, open)
-        }
-    }
+    val playlists: PlaylistEditor by lazy { PlaylistEditor(data.session.api, data.library, mapper, messages, scope) }
 
     val actions: ItemActions by lazy {
         ItemActions(
@@ -294,7 +316,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         )
     }
 
-    val djs: QueueDjs by lazy { QueueDjs(data.extras, messages, scope, nameOf = { playing.nameOf(it) }) }
+    val djs: QueueDjs by lazy { QueueDjs(data.extras, messages, scope, nameOf = playing::nameOf) }
 
     val mapper: UiMapper by lazy { UiMapper { data.session.images } }
 
