@@ -10,7 +10,9 @@ Plan: `docs/PLAN.md`. Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.
   workaround. Never restate the code, never narrate, no banner or decorative comments. KDoc only
   where a public API would be misread without it.
 - No AI or assistant branding anywhere: code, comments, commit messages, pull requests, release
-  notes, docs. No `Co-Authored-By`, session links or "generated with" lines.
+  notes, docs. No `Co-Authored-By`, session links or "generated with" lines; a footer a tool adds
+  to a pull request is taken out. Commit as the owner, `hazymorning
+  <302314336+hazymorning@users.noreply.github.com>`, so no assistant shows among the contributors.
 - If a name for the assistant or its tooling is unavoidable, use German bird words:
   **Kiebitz** (the assistant), **Nest** (its working branch or session), **Schwarm** (several
   agents at once), **Gezwitscher** (drafts and working notes).
