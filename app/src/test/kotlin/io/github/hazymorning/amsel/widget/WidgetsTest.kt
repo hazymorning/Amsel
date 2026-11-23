@@ -93,14 +93,14 @@ class WidgetsTest {
     private class Plans : WidgetLookPlan {
         var kept = 0
         var stopped = 0
-        val next = mutableListOf<Long?>()
+        var once = 0
 
         override fun keep() {
             kept++
         }
 
-        override fun next(ms: Long?) {
-            next += ms
+        override fun once() {
+            once++
         }
 
         override fun stop() {
@@ -210,8 +210,8 @@ class WidgetsTest {
         assertEquals(WidgetSetup(speaker = "bedroom"), store.setup(id))
     }
 
-    /** Amsel's socket closed, a look reads the speakers, draws them and looks again as the song ends. */
-    @Test fun aLookWhileTheSocketIsClosedLooksAgainAsTheSongEnds() = runTest {
+    /** Amsel's socket closed, a look reads the speakers and draws them; the next is the half-hourly one. */
+    @Test fun aLookWhileTheSocketIsClosedDrawsWhatPlays() = runTest {
         source.looks.value = playingSong
         var glances = 0
         val plans = Plans()
@@ -222,7 +222,7 @@ class WidgetsTest {
         assertEquals(1, glances)
         assertEquals("Lanterns", text(id, R.id.widget_title))
         assertEquals(1, plans.kept)
-        assertEquals(listOf<Long?>(55_000), plans.next)
+        assertEquals(0, plans.once)
     }
 
     @Test fun whileTheSocketIsConnectedTheWidgetsFollowItWithoutLooking() = runTest {
@@ -233,21 +233,7 @@ class WidgetsTest {
         val looking = launch { widgets.look() }
         settleSlowly { looking.isCompleted }
         assertEquals(0, glances)
-        assertEquals(emptyList<Long?>(), plans.next)
-    }
-
-    /** Amsel let its socket go while the speaker plays on: the widgets look again when the song ends. */
-    @Test fun theSocketLettingGoPlansALook() = runTest {
-        source.looks.value = playingSong
-        val connected = MutableStateFlow(true)
-        val plans = Plans()
-        val widgets = widgets(connected = connected, plan = plans)
-        val id = place(AmselWidget::class.java, 172f, 204f)
-        widgets.follow()
-        settle { text(id, R.id.widget_title) == "Lanterns" }
-        connected.value = false
-        settle { plans.next.isNotEmpty() }
-        assertEquals(listOf<Long?>(55_000), plans.next)
+        assertEquals(0, plans.once)
     }
 
     @Test fun withoutWidgetsNothingIsLookedAt() = runTest {

@@ -202,9 +202,8 @@ no push), so the widgets keep up three ways:
   A socket that gave up in the phone's sleep (two minutes out of reach) opens again as the screen
   comes on or the phone joins a network, not when Amsel is opened next.
 - **Looks while the socket is closed** (`WidgetLooks`, a JobScheduler job: no library, no
-  permission): every 15 minutes while there are widgets, Android's shortest period, and while a
-  widget's speaker plays, again as its song ends (a book or an episode after 10 minutes, a station
-  after 3; never sooner than 30 s or later than 10 minutes). A look opens a socket of its own
+  permission): every 30 minutes while there are widgets, and once when Android asks for them anew
+  (`onUpdate`); never timed to what plays. A look opens a socket of its own
   (`Session.glance`), reads the speakers and their queues, draws the widgets and closes it; nothing
   else a connect does (the library, Home, a new token) comes with it. Only with a network and not on
   a low battery; while the phone sleeps (Doze) Android holds looks back, and one that is due runs as

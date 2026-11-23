@@ -41,11 +41,11 @@ class WidgetLooks : JobService() {
 
 /** When the widgets look at the speakers while Amsel's socket is closed. */
 interface WidgetLookPlan {
-    /** Every quarter of an hour from now on, while there are widgets. */
+    /** Every half hour from now on, while there are widgets. */
     fun keep()
 
-    /** Once more in [ms], in place of one planned before; null takes it back. */
-    fun next(ms: Long?)
+    /** Once, as soon as Android lets it run. */
+    fun once()
 
     /** No more looks: the last widget left the home screen. */
     fun stop()
@@ -54,7 +54,7 @@ interface WidgetLookPlan {
         val None = object : WidgetLookPlan {
             override fun keep() = Unit
 
-            override fun next(ms: Long?) = Unit
+            override fun once() = Unit
 
             override fun stop() = Unit
         }
@@ -62,24 +62,23 @@ interface WidgetLookPlan {
 }
 
 /**
- * The looks as Android's jobs: every 15 minutes, its shortest period, and once more where a widget's
- * speaker plays. Both wait for a network and leave a low battery alone; while the phone sleeps
- * Android holds them back, and one that is due runs as soon as it wakes, so the widgets are right
- * when the screen comes on. Not kept over a restart, which would take a permission: the widgets'
- * own update after it plans them again.
+ * The looks as Android's jobs: every 30 minutes, and once when Android asks for the widgets anew.
+ * Both wait for a network and leave a low battery alone; while the phone sleeps Android holds them
+ * back, and one that is due runs as soon as it wakes. Not kept over a restart, which would take a
+ * permission: the widgets' own update after it plans them again.
  */
 class WidgetPlan(private val context: Context) : WidgetLookPlan {
     private val jobs: JobScheduler? get() = context.getSystemService(JobScheduler::class.java)
 
     override fun keep() {
         val jobs = jobs ?: return
-        if (jobs.getPendingJob(EVERY) != null) return
+        // A job planned by an earlier version keeps its shorter period until replaced.
+        if (jobs.getPendingJob(EVERY)?.intervalMillis == PERIOD_MS) return
         jobs.schedule(job(EVERY).setPeriodic(PERIOD_MS, FLEX_MS).build())
     }
 
-    override fun next(ms: Long?) {
-        val jobs = jobs ?: return
-        if (ms == null) jobs.cancel(ONCE) else jobs.schedule(job(ONCE).setMinimumLatency(ms).build())
+    override fun once() {
+        jobs?.schedule(job(ONCE).build())
     }
 
     override fun stop() {
@@ -95,29 +94,7 @@ class WidgetPlan(private val context: Context) : WidgetLookPlan {
         // Amsel's only jobs.
         const val EVERY = 1
         const val ONCE = 2
-        const val PERIOD_MS = 15 * 60_000L
+        const val PERIOD_MS = 30 * 60_000L
         const val FLEX_MS = 5 * 60_000L
     }
 }
-
-/**
- * How long until a widget's speaker shows something new, at [nowMs] on the clock the looks' times
- * stand on: its song ends; a book or an episode plays on for long, a station's title changes now
- * and then. Null while none plays: the quarter-hourly look is enough.
- */
-internal fun nextLookIn(looks: Collection<WidgetLook>, nowMs: Long): Long? =
-    looks.filter { it.playing }.minOfOrNull { look ->
-        val start = look.clockMs
-        when {
-            look.spoken -> SPOKEN_LOOK_MS
-            start != null && look.durationMs > 0 -> start + look.durationMs + SONG_CHANGE_MS - nowMs
-            else -> STREAM_LOOK_MS
-        }.coerceIn(SOONEST_LOOK_MS, LATEST_LOOK_MS)
-    }
-
-/** The server moves on to the next song a moment after the last one ends. */
-private const val SONG_CHANGE_MS = 5_000L
-private const val STREAM_LOOK_MS = 3 * 60_000L
-private const val SPOKEN_LOOK_MS = 10 * 60_000L
-private const val SOONEST_LOOK_MS = 30_000L
-private const val LATEST_LOOK_MS = 10 * 60_000L
