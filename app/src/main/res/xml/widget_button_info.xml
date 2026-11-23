@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One button: one cell, as large as an app's icon. Drawn by Amsel whenever what plays changes, never on a timer; any size, its form follows. -->
+<!-- One button: one cell, as large as an app's icon. Any size, its form follows. Not on Android's update timer (updatePeriodMillis 0): Amsel draws it when what plays changes. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:configure="io.github.hazymorning.amsel.widget.WidgetSetupActivity"

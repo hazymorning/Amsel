@@ -19,8 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -67,7 +65,7 @@ class Widgets(
     /** Reads what the speakers do on a glance while the socket is closed; false when the server did not answer. */
     private val lookAtSpeakers: suspend () -> Boolean = { false },
     private val plan: WidgetLookPlan = WidgetLookPlan.None,
-    private val elapsedRealtime: () -> Long = SystemClock::elapsedRealtime,
+    elapsedRealtime: () -> Long = SystemClock::elapsedRealtime,
 ) {
     private val taps = WidgetTapActions(context, StateTaps(actions, elapsedRealtime), lastStarted)
     private val previews =
@@ -111,8 +109,6 @@ class Widgets(
         following = scope.launch {
             loadSetups()
             launch { source.failures.collect(::sayFailure) }
-            // The socket let go: the speakers may play on, and the widgets look again when that shows.
-            launch { connected.drop(1).filter { !it }.collect { planNext() } }
             setups.map { all -> all.values.mapNotNull { it.speaker }.toSet() }
                 .distinctUntilChanged()
                 .flatMapLatest { fixed -> looksOf(source, fixed) }
@@ -131,10 +127,7 @@ class Widgets(
         wallpaper.listen(true)
     }
 
-    /**
-     * A look at the speakers while Amsel's socket is closed ([WidgetLooks]): read on a glance, drawn,
-     * and the next look planned for when what plays will have changed.
-     */
+    /** A look at the speakers while Amsel's socket is closed ([WidgetLooks]): read on a glance and drawn. */
     suspend fun look() {
         if (ids().isEmpty()) return plan.stop()
         follow()
@@ -148,19 +141,16 @@ class Widgets(
                 looks.first { it != null }
                 pending.first { it == 0 }
             }
-            planNext()
         } finally {
             looking.unlock()
         }
     }
 
-    /** Drawn at rest from what they showed (the phone or Amsel started anew, a widget placed): look at once. */
+    /** Drawn at rest from what they showed (the phone or Amsel started anew, a widget placed): look once. */
     fun lookSoon() {
         plan.keep()
-        if (!connected.value) plan.next(0)
+        if (!connected.value) plan.once()
     }
-
-    private fun planNext() = plan.next(nextLookIn(_looks.value?.values.orEmpty(), elapsedRealtime()))
 
     private fun sayFailure(failure: Pair<String, String>) {
         val (speaker, text) = failure
