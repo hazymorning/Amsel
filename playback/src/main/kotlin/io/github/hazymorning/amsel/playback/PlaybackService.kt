@@ -92,7 +92,7 @@ interface PlaybackGraph {
      */
     fun onPlayingChanged(playing: Boolean)
 
-    /** The playback service was created: playback may run with none of the app's screens shown. */
+    /** One of the app's services was created: playback may run with none of its screens shown. */
     fun onServiceCreated() {}
 
     /** A transport command did not reach its speaker: it joins [failures]. */

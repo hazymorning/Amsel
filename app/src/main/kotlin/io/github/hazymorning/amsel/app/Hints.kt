@@ -66,12 +66,16 @@ class Hints(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) add(AudioDeviceInfo.TYPE_BLE_HEADSET)
     }
 
+    private var started = false
+
     /**
      * Listens from now on: to the plays and adds asked in the app, to the app coming back to the
-     * front, to a queue running out, to headphones and Wi-Fi. Once, on the main thread, as the app
-     * first comes to the front.
+     * front, to a queue running out, to headphones and Wi-Fi. On the main thread, as the app's main
+     * screen first starts; later calls do nothing.
      */
     fun start() {
+        if (started) return
+        started = true
         // The speaker to go back to at home: the last one picked other than This phone.
         scope.launch {
             playing.speaker.map { it.id.takeUnless { _ -> it.isPhone } }.distinctUntilChanged().collect { id ->
@@ -276,12 +280,17 @@ class Hints(
     /** Headphones plugged in or paired while a speaker plays: the music can come to the phone. */
     private fun listenForHeadphones() {
         val audio = context.getSystemService(AudioManager::class.java) ?: return
-        // Android names the devices already there at once: those were not just connected.
-        val since = SystemClock.elapsedRealtime()
         audio.registerAudioDeviceCallback(
             object : AudioDeviceCallback() {
+                // Android's first call names the devices already there, however long the main thread
+                // keeps it waiting: those were not just connected.
+                private var listed = false
+
                 override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) {
-                    if (SystemClock.elapsedRealtime() - since < ALREADY_THERE_MS) return
+                    if (!listed) {
+                        listed = true
+                        return
+                    }
                     if (added.none { it.isSink && it.type in headphones }) return
                     headphonesIn()
                 }
@@ -401,7 +410,7 @@ class Hints(
         /** The speaker and what plays are known again this long after the app comes back. */
         private const val SETTLE_MS = 1_500L
 
-        /** Devices named this soon after listening began were there already. */
+        /** Networks named this soon after listening began were there already. */
         private const val ALREADY_THERE_MS = 1_000L
 
         /** Wi-Fi that came up within this long before the app came back: the person just got home. */

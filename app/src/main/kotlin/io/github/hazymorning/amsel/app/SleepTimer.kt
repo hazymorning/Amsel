@@ -90,7 +90,7 @@ class SleepTimer(
     private var listening = false
     private val shake = ShakeListener { onShake() }
 
-    /** Follows the speakers from now on; the app in front and the playback service both start it. */
+    /** Follows the speakers from now on; the app in front and its services start it. */
     fun start() {
         if (!started.compareAndSet(false, true)) return
         scope.launch {

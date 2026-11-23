@@ -72,7 +72,7 @@ class DataPlaybackGraph(
 
     private val _serviceCreated = MutableStateFlow(false)
 
-    /** Whether the playback service ran in this process, which the app's own screens need not have. */
+    /** Whether one of the app's services ran in this process, which its screens need not have. */
     val serviceCreated: StateFlow<Boolean> = _serviceCreated.asStateFlow()
 
     init {

@@ -120,8 +120,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     /**
      * Starts what runs for as long as the app does, once and in this order: forgetting what a
      * session that ends leaves behind, the connection, the playback service's graph, the widgets
-     * following the music; the sleep timer once the app is in front or the service runs, and the
-     * hints once the app is in front.
+     * following the music, and the sleep timer once the app is in front or one of its services runs.
      */
     fun start() {
         if (!started.compareAndSet(false, true)) return
@@ -132,10 +131,6 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         scope.launch {
             merge(data.session.foreground, playbackGraph.serviceCreated).first { it }
             sleepTimer.start()
-        }
-        scope.launch {
-            data.session.foreground.first { it }
-            withContext(Dispatchers.Main) { hints.start() }
         }
     }
 

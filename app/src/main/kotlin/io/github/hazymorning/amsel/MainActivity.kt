@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 try {
+                    graph.hints.start()
                     graph.playback.connect()
                     playSearch()
                     // While Amsel is in front, the volume keys move the speaker even when it is paused: the
