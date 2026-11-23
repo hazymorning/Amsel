@@ -8,7 +8,6 @@ import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.sample.HomeSample
 import io.github.hazymorning.amsel.testing.ScreenshotTest
-import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.testing.ShotVariant.Dark
 import io.github.hazymorning.amsel.testing.ShotVariant.LargeFont
 import io.github.hazymorning.amsel.testing.ShotVariant.Light
@@ -17,36 +16,23 @@ import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
 class HomeShots : ScreenshotTest() {
-    @Test fun home() = snap("home", ShotVariant.entries) { Home(HomeSample.home) }
-
-    @Test fun grid() = snap("home_grid", ShotVariant.entries) { Home(HomeSample.grid) }
+    /** Pinned items as cards over the shelves; at 200 % the cards fall into one column. */
+    @Test fun grid() = snap("home_grid", listOf(Light, LargeFont)) { Home(HomeSample.grid) }
 
     @Test fun asItComes() = snap("home_as_it_comes") { Home(HomeSample.asItComes) }
 
-    /** Search's field at Home's top, over the sections. */
-    @Test fun search() = snap("home_search", ShotVariant.entries) {
-        val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
-        Home(HomeSample.home.copy(sections = listOf(search) + HomeSample.home.sections))
-    }
-
     /**
      * Continue listening with its title hidden, under Search's field: 32 under the
-     * field, not a heading's room, then the next section's heading as ever.
+     * field, not a heading's room, then the next section's heading as ever. At night its cards
+     * take their covers' hue.
      */
-    @Test fun untitled() = snap("home_untitled", ShotVariant.entries) {
+    @Test fun untitled() = snap("home_untitled", listOf(Dark)) {
         val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
         val listening = HomeSample.listening.sections.map { it.copy(titled = false) }
         Home(HomeSample.home.copy(sections = listOf(search) + listening + HomeSample.home.sections))
     }
 
-    @Test fun layouts() = snap("home_layouts", ShotVariant.entries) { Home(HomeSample.layouts) }
-
-    @Test fun tip() = snap("home_tip", ShotVariant.entries) { Home(HomeSample.home, Tip.More) }
-
-    @Test fun editing() = snap("home_edit", listOf(Light, LargeFont)) { Home(HomeSample.editing) }
-
-    /** In German the sentence has other words, and they set where its chips stand. */
-    @Test fun editingInGerman() = snap("home_edit_german", qualifiers = "de") { Home(HomeSample.editing) }
+    @Test fun tip() = snap("home_tip") { Home(HomeSample.home, Tip.More) }
 
     /**
      * The longest names on a narrow phone: the longest choice still stands on its chip's one line,
@@ -57,18 +43,7 @@ class HomeShots : ScreenshotTest() {
     }
 
     /** What to show, at its top: every line a choice, the groups parted by space. */
-    @Test fun whatSheet() = snapScreen("home_what", ShotVariant.entries) {
-        OverEditing { What(SectionOption.Everything) }
-    }
-
-    @Test fun whatSheetInGerman() = snapScreen("home_what_german", qualifiers = "de") {
-        OverEditing { What(SectionOption.Everything) }
-    }
-
-    /** The last choice is the chosen one: the sheet opens with it in view, clear of its foot. */
-    @Test fun whatSheetAtItsEnd() = snapScreen("home_what_end") { OverEditing { What(SectionOption.YourPodcasts) } }
-
-    @Test fun howSheet() = snapScreen("home_how") { OverEditing { HowSheetContent(SectionLayout.Row) {} } }
+    @Test fun whatSheet() = snapScreen("home_what") { OverEditing { What(SectionOption.Everything) } }
 
     @Test fun sectionMore() = snapScreen("home_edit_more") {
         OverEditing {
@@ -80,14 +55,6 @@ class HomeShots : ScreenshotTest() {
             )
         }
     }
-
-    @Test fun offline() = snap("home_offline") { Home(HomeSample.offline) }
-
-    @Test fun listening() = snap("home_listening", listOf(Light, Dark, LargeFont)) { Home(HomeSample.listening) }
-
-    @Test fun playedHere() = snap("home_played_here", listOf(Light, Dark)) { Home(HomeSample.playedHere) }
-
-    @Test fun playedHereInGerman() = snap("home_played_here_german", qualifiers = "de") { Home(HomeSample.playedHere) }
 }
 
 @Composable

@@ -49,8 +49,6 @@ object PagesSample {
         currentTrackKey = "library://track/1",
     )
 
-    val albumUnavailable = AlbumUiState(unavailable = true)
-
     val playlist = PlaylistUiState(
         playlist = PlaylistUi("library://playlist/1", "Sunday Morning", art("playlist/1"), owner = "Anna"),
         complete = true,

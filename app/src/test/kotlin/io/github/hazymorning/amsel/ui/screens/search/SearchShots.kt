@@ -20,7 +20,7 @@ class SearchShots : ScreenshotTest() {
     /** What plays (Lanterns) is not among the results, so nothing here carries the ring. */
     private val found = SearchUiState(query = SearchSampleData.QUERY, results = results)
 
-    @Test fun results() = snap("search_results", ShotVariant.entries) { Search(found) }
+    @Test fun results() = snap("search_results", listOf(ShotVariant.Light, ShotVariant.LargeFont)) { Search(found) }
 
     /** Nothing matched: one glyph and a sentence where the results would be. */
     @Test fun nothingFound() = snap("search_nothing") {

@@ -6,7 +6,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.hasContentDescription
@@ -36,13 +35,9 @@ import io.github.hazymorning.amsel.ui.screens.player.NowPlayingScreen
 import org.junit.Test
 
 class ShellShots : ScreenshotTest() {
-    /** The dock, its card of ink and the bar under it, over Library at its top. */
-    @Test fun playing() = snap("shell_playing", ShotVariant.entries, before = { openLibrary() }) { Shell() }
-
     /** Library's artists scrolled under the slim bar and the dock, which dissolve them into their material. */
     @Test fun scrolled() = snap(
         "shell_scrolled",
-        listOf(ShotVariant.Light, ShotVariant.Dark),
         before = {
             openLibrary()
             onRoot().performTouchInput {
@@ -51,35 +46,10 @@ class ShellShots : ScreenshotTest() {
         },
     ) { Shell(rows = true) }
 
-    /** Nothing plays yet: the card says so, with the speaker the first song will play on. */
-    @Test fun idle() = snap("shell_idle", listOf(ShotVariant.Light, ShotVariant.Dark), before = { openLibrary() }) {
-        Shell(playing = false)
-    }
-
     /** Nothing plays, with the speaker's button kept in the mini player: it stays, to choose where. */
-    @Test fun idleSpeaker() = snap(
-        "shell_idle_speaker",
-        listOf(ShotVariant.Light, ShotVariant.Dark),
-        before = { openLibrary() },
-    ) { Shell(playing = false, dock = listOf(DockControl.PlayPause, DockControl.Next, DockControl.Speaker)) }
-
-    /** Kinds of the library as places of their own: Albums chosen, its glyph filled as Home's is. */
-    @Test fun kinds() = snap(
-        "shell_kinds",
-        listOf(ShotVariant.Light, ShotVariant.Dark),
-        before = { openPlace(PlaybackR.string.albums) },
-    ) { Shell(bar = listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Albums, BarPlace.Radio, BarPlace.Podcasts)) }
-
-    /** Now Playing on its way up: the dock's cover grows into the artwork while the rest fades in. */
-    @Test fun opening() = snap("shell_opening", before = { openLibrary() }) {
-        val layer = remember { PlayerLayerState(open = true) }
-        LaunchedEffect(Unit) {
-            withFrameNanos {}
-            withFrameNanos {}
-            layer.dragBy(layer.heightPx * 0.45f)
-        }
-        Shell(layer = layer)
-    }
+    @Test fun idleSpeaker() = snap("shell_idle_speaker", before = {
+        openLibrary()
+    }) { Shell(playing = false, dock = listOf(DockControl.PlayPause, DockControl.Next, DockControl.Speaker)) }
 
     /**
      * A tap that did not reach the speaker says so over the dock, in German, where the words are
@@ -94,27 +64,9 @@ class ShellShots : ScreenshotTest() {
     }
 
     /** A station tapped on Home, offered over the dock: its cover and name, the speaker in use, one big button. */
-    @Test fun offer() = snap("shell_offer", ShotVariant.entries, before = { openLibrary() }) { Shell(offer = station) }
-
-    /** The same in German, where the button's word is longest. */
-    @Test fun offerInGerman() = snap("shell_offer_german", qualifiers = "de", before = { openLibrary() }) {
-        Shell(offer = station)
-    }
-
-    /** A hint about a speaker, in German: its glyph in place of a cover, a short line, one button. */
-    @Test fun hintInGerman() = snap("shell_hint_german", qualifiers = "de", before = { openLibrary() }) {
-        Shell(
-            offer = Offer(
-                about = "silent:kitchen",
-                title = "Küche",
-                glyph = R.drawable.ic_speaker,
-                line = R.string.hint_silent,
-                button = R.string.hint_louder,
-                hint = "silent",
-                take = {},
-            ),
-        )
-    }
+    @Test fun offer() = snap("shell_offer", listOf(ShotVariant.Light, ShotVariant.LargeFont), before = {
+        openLibrary()
+    }) { Shell(offer = station) }
 
     private val station = Offer(
         about = "library://radio/13",

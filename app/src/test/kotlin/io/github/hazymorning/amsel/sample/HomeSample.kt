@@ -6,7 +6,6 @@ import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.ui.screens.home.HomeUiState
 import io.github.hazymorning.amsel.ui.screens.home.SectionUi
@@ -102,16 +101,6 @@ object HomeSample {
             SectionUi(section.id, section.option, section.layout, items, more = true, titled = section.showsTitle)
         },
         spoken = SpokenWord(books = true, podcasts = true),
-    )
-
-    /** What last played on the speaker in use, named after the title. */
-    val playedHere = HomeUiState(
-        listOf(
-            noPins,
-            recent.copy(option = SectionOption.PlayedHere, heardOn = SpeakerUi("living-room", "Wohnzimmer")),
-            smart,
-            newAlbums,
-        ),
     )
 
     /** The other layouts: big covers, small covers of every kind, and a list. */

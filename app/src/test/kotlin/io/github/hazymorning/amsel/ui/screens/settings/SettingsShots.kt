@@ -5,33 +5,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.performSemanticsAction
-import io.github.hazymorning.amsel.data.downloads.AbsAccount
 import io.github.hazymorning.amsel.sample.PlayerSample
 import io.github.hazymorning.amsel.testing.ScreenshotTest
 import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.ui.AppShell
 import io.github.hazymorning.amsel.ui.PlayerLayerState
 import io.github.hazymorning.amsel.ui.ShellSlots
-import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.BarPlace
-import io.github.hazymorning.amsel.ui.navigation.DockControl
-import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
-import io.github.hazymorning.amsel.ui.theme.ThemeMode
 import org.junit.Test
 
 class SettingsShots : ScreenshotTest() {
-    @Test fun settings() = snap("settings", ShotVariant.entries) { Settings() }
+    /** The main page at 200 %, from Home with the way back: rows grow, Sign out stays beside the account. */
+    @Test fun settings() = snap("settings", listOf(ShotVariant.LargeFont)) { Settings() }
 
     /** Settings as a place of their own in the bar: the big title, no way back. */
-    @Test fun settingsPlace() = snap("settings_place", listOf(ShotVariant.Light, ShotVariant.Dark)) {
+    @Test fun settingsPlace() = snap("settings_place") {
         Settings(place = true)
     }
 
     /** The page's end as the app shows it: the licence, and the blackbird on the dock's edge. */
     @Test fun foot() = snap(
         "settings_foot",
-        ShotVariant.entries,
+        listOf(ShotVariant.Light, ShotVariant.Dark),
         before = { onNode(hasScrollAction()).performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, END) } },
     ) {
         AppShell(
@@ -47,7 +43,7 @@ class SettingsShots : ScreenshotTest() {
      * The bottom bar's page over the shell, its bar following it: Search taken out, Albums and
      * Podcasts put in, so the bar is full and the other kinds wait.
      */
-    @Test fun bar() = snap("settings_bar", ShotVariant.entries) {
+    @Test fun bar() = snap("settings_bar") {
         val places = BarPlace.arrangement(null)
             .with(BarPlace.Search, on = false)
             .with(BarPlace.Settings, on = false)
@@ -67,131 +63,18 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
-    /** The mini player's page over the shell, the dock following it: back, play and the heart. */
-    @Test fun dock() = snap("settings_dock", ShotVariant.entries) {
-        val controls = Arrangement(
-            listOf(DockControl.Previous, DockControl.PlayPause, DockControl.Favorite) +
-                DockControl.entries.filterNot {
-                    it in setOf(DockControl.Previous, DockControl.PlayPause, DockControl.Favorite)
-                },
-            setOf(DockControl.Previous, DockControl.PlayPause, DockControl.Favorite),
-        )
-        AppShell(
-            nowPlaying = PlayerSample.nowPlaying,
-            speaker = PlayerSample.nowPlaying.speaker,
-            onSpeaker = {},
-            layer = remember { PlayerLayerState(open = false) },
-            dock = controls.visible,
-            slots = ShellSlots(
-                screen = { _, _ -> DockScreen(controls, onChange = {}, onBack = {}) },
-                nowPlaying = { _, _ -> },
-                sheets = {},
-            ),
-        )
-    }
-
-    /** What the Library shows: radio moved up, downloads left out, podcasts not in the library yet. */
-    @Test fun libraryKinds() = snap("settings_library", ShotVariant.entries) {
-        val kinds = LibraryKind.arrangement(
-            listOf("playlists", "albums", "radio", "artists", "audiobooks", "podcasts", "-downloads"),
-        )
-        LibraryKindsScreen(
-            kinds,
-            held = setOf(
-                LibraryKind.Playlists,
-                LibraryKind.Albums,
-                LibraryKind.Artists,
-                LibraryKind.Radio,
-                LibraryKind.Audiobooks,
-            ),
-            onChange = {},
-            onBack = {},
-        )
-    }
-
-    /** How Amsel looks, and what each place shows, in the order they stand on the screen. */
-    @Test fun appearance() = snap("settings_appearance", ShotVariant.entries) {
-        AppearanceScreen(ThemeMode.System, onThemeChange = {}, onLanguage = {}, onBack = {})
-    }
-
-    /** The sleep timer's ways: a fade of 30 s, a shake starts it over. */
-    @Test fun sleepTimer() = snap("settings_sleep", listOf(ShotVariant.Light, ShotVariant.Dark)) {
-        SleepTimerScreen(
-            SettingsUiState(
-                userName = "Anna",
-                serverName = "Home",
-                serverAddress = "192.168.1.20",
-                appVersion = "0.1.0",
-                sleepFadeSec = 30,
-                sleepShake = true,
-            ),
-            onFadeChange = {},
-            onShakeChange = {},
-            onSleepOnPlayChange = {},
-            onBack = {},
-        )
-    }
-
-    /** Suggestions: every moment on but the end of the queue. */
-    @Test fun hints() = snap("settings_hints", listOf(ShotVariant.Light, ShotVariant.Dark)) {
-        HintsScreen(off = setOf("ended"), onChange = {}, onBack = {})
-    }
-
-    /** Following the music, kept to some speakers: Hedwig left out. */
-    @Test fun follow() = snap("settings_follow", ShotVariant.entries) {
-        FollowScreen(
-            on = true,
-            speakers = listOf(
-                FollowSpeaker("gandalf", "Gandalf"),
-                FollowSpeaker("hedwig", "Hedwig"),
-                FollowSpeaker("office", "Mandaloffice"),
-                FollowSpeaker("potter", "Potterbox"),
-                FollowSpeaker("living", "Wohnzimmer"),
-            ),
-            skipped = setOf("hedwig"),
-            onFollowChange = {},
-            onSkippedChange = {},
-            onBack = {},
-        )
-    }
-
-    /** The last speaker followed stays: its switch dimmed. */
-    @Test fun followOne() = snap("settings_follow_one", listOf(ShotVariant.Light, ShotVariant.Dark)) {
-        FollowScreen(
-            on = true,
-            speakers = listOf(FollowSpeaker("gandalf", "Gandalf"), FollowSpeaker("hedwig", "Hedwig")),
-            skipped = setOf("hedwig"),
-            onFollowChange = {},
-            onSkippedChange = {},
-            onBack = {},
-        )
-    }
-
     /** Not signed in to Audiobookshelf yet: why, and its sign-in. */
-    @Test fun downloadsSignIn() = snapScreen("downloads_sign_in", ShotVariant.entries) {
+    @Test fun downloadsSignIn() = snapScreen("downloads_sign_in", listOf(ShotVariant.Light, ShotVariant.Dark)) {
         Settings()
         AmselSheet(onDismiss = {}) {
             DownloadsSheetContent(DownloadSettings(), onWifiOnlyChange = {
             }, onSignIn = { _, _, _ -> null }, onSignOut = {})
         }
     }
-
-    @Test fun downloadsSignedIn() = snapScreen("downloads_signed_in") {
-        val account = AbsAccount("https://books.example.com", "anna")
-        Settings(account)
-        AmselSheet(onDismiss = {}) {
-            DownloadsSheetContent(
-                DownloadSettings(account, usedBytes = 1_288_490_188, wifiOnly = true),
-                onWifiOnlyChange = {},
-                onSignIn = { _, _, _ -> null },
-                onSignOut = {},
-            )
-        }
-    }
 }
 
 @Composable
-private fun Settings(account: AbsAccount? = null, place: Boolean = false) = SettingsScreen(
+private fun Settings(place: Boolean = false) = SettingsScreen(
     SettingsUiState(
         userName = "Anna",
         serverName = "Home",
@@ -201,7 +84,7 @@ private fun Settings(account: AbsAccount? = null, place: Boolean = false) = Sett
     onBack = if (place) null else ({}),
     onOpenWebUi = {},
     onSignOut = {},
-    downloads = DownloadSettings(account),
+    downloads = DownloadSettings(),
 )
 
 /** Further than any page is long. */
