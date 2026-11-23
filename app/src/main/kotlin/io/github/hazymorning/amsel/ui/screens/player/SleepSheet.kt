@@ -36,15 +36,15 @@ import androidx.compose.ui.text.style.TextAlign
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.SleepMode
 import io.github.hazymorning.amsel.app.SleepTimerState
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.formatDuration
-import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.sheetEnd
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -148,8 +148,8 @@ private fun SleepLine(length: String?, left: String?) {
         shorter = left,
         modifier = Modifier
             .padding(start = Keyline.Margin, top = above, end = Keyline.Margin)
-            .textInk(style)
-            .inkStart(line, style),
+            .capToBaseline(style)
+            .trimStartBearing(line, style),
     )
 }
 
@@ -183,7 +183,7 @@ private fun Preset(
         contentAlignment = Alignment.Center,
     ) {
         if (minutes == null) {
-            InkGlyph(R.drawable.ic_close, tint = ink, size = Sizes.IconSmall)
+            AlignedGlyph(R.drawable.ic_close, tint = ink, size = Sizes.IconSmall)
         } else {
             Text(
                 minutes.toString(),

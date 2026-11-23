@@ -99,16 +99,16 @@ internal class MaSocket(
                 parseIncoming(text)
             } catch (e: IllegalArgumentException) {
                 // Not JSON, or not shaped as a frame (SerializationException is one too).
-                Incoming.Unknown
+                IncomingMessage.Unknown
             }
             when (msg) {
-                is Incoming.ServerInfoFrame -> serverInfo.complete(msg.info)
+                is IncomingMessage.ServerInfoFrame -> serverInfo.complete(msg.info)
 
-                is Incoming.Event -> onEvent(msg.event)
+                is IncomingMessage.Event -> onEvent(msg.event)
 
                 // Sent right after server_info when the server has no users yet ("Setup required").
                 // Before it, nothing has said who answers: a refusal then ends this try, never a session.
-                is Incoming.Error -> if (msg.messageId == CONNECTION) {
+                is IncomingMessage.Error -> if (msg.messageId == CONNECTION) {
                     end(
                         if (serverInfo.isCompleted) {
                             MaCommandException(CONNECTION, msg.code, msg.details)
@@ -122,9 +122,9 @@ internal class MaSocket(
                     }
                 }
 
-                is Incoming.Result -> pending[msg.messageId]?.accept(msg.result, msg.partial)
+                is IncomingMessage.Result -> pending[msg.messageId]?.accept(msg.result, msg.partial)
 
-                Incoming.Unknown -> Unit
+                IncomingMessage.Unknown -> Unit
             }
         }
 

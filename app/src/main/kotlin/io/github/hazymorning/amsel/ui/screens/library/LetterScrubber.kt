@@ -44,7 +44,7 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntOffset
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.inkCentre
+import io.github.hazymorning.amsel.ui.components.centreOnGlyphs
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Shapes
@@ -199,7 +199,7 @@ private fun LetterScrubber(
                     .background(colors.surfaceContainerHigh, Shapes.Circle),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(letter, style = style, color = colors.onSurface, modifier = Modifier.inkCentre(letter, style))
+                Text(letter, style = style, color = colors.onSurface, modifier = Modifier.centreOnGlyphs(letter, style))
             }
         }
     }

@@ -10,13 +10,14 @@ import io.github.hazymorning.amsel.api.LibrarySort
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.MediaType
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.retryWhileOpen
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.MediaUi
+import io.github.hazymorning.amsel.ui.model.ServerStatus
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +59,7 @@ class LibraryViewModel(
     private val mapper: UiMapper,
     /** Syncs one kind of the library index with the server again; throws when that fails. */
     private val resync: suspend (MediaType) -> Unit,
-    private val messages: Messages,
+    private val messages: MessageController,
     work: CoroutineDispatcher = Dispatchers.Default,
     /** The kinds the index holds any of: the Audiobooks, Podcasts and Radio chips show only then. */
     held: Flow<Set<MediaType>>,
@@ -140,7 +141,7 @@ class LibraryViewModel(
         }
     }
 
-    private val reach: Flow<Reach> = session.map(::reachOf).distinctUntilChanged()
+    private val serverStatus: Flow<ServerStatus> = session.map(::serverStatusOf).distinctUntilChanged()
 
     /** The kind a pull is syncing: its chip spins, the others do not. */
     private val refreshing = MutableStateFlow<LibraryKind?>(null)
@@ -149,16 +150,16 @@ class LibraryViewModel(
     // A pull's own spinner says the list is on its way; the sync it starts is not a first load.
     val state: StateFlow<LibraryUiState> =
         combine(
-            combine(pages, combine(syncing, synced, ::Pair), reach, refreshing, kinds) {
+            combine(pages, combine(syncing, synced, ::Pair), serverStatus, refreshing, kinds) {
                     page,
                     (sync, done),
-                    reach,
+                    status,
                     pulledKind,
                     shown,
                 ->
                 val pulled = pulledKind == page.selection.kind
                 val synced = page.selection.kind.type?.let { it in done } ?: true
-                libraryState(page, sync && !pulled, reach, synced)
+                libraryState(page, sync && !pulled, status, synced)
                     .copy(refreshing = pulled, kinds = shown, single = only != null)
             },
             failures,
@@ -240,12 +241,10 @@ internal data class LibraryPage(
 )
 
 /** What the screen believes about the server while a list is empty. */
-internal enum class Reach { Connecting, Online, Offline }
-
-internal fun reachOf(state: SessionState): Reach = when (state) {
-    is SessionState.Offline -> Reach.Offline
-    is SessionState.Waiting -> Reach.Connecting
-    else -> Reach.Online
+internal fun serverStatusOf(state: SessionState): ServerStatus = when (state) {
+    is SessionState.Offline -> ServerStatus.Offline
+    is SessionState.Waiting -> ServerStatus.Connecting
+    else -> ServerStatus.Connected
 }
 
 internal fun selectionOf(kind: String?, sort: String?) = LibrarySelection(
@@ -275,7 +274,7 @@ internal fun pageOf(
  * Skeletons while the list is unknown, or empty on its kind's first sync ([synced] once one has
  * finished); "Can't reach" only for an empty list.
  */
-internal fun libraryState(page: LibraryPage, syncing: Boolean, reach: Reach, synced: Boolean): LibraryUiState {
+internal fun libraryState(page: LibraryPage, syncing: Boolean, status: ServerStatus, synced: Boolean): LibraryUiState {
     val items = page.items
     val empty = items != null && items.isEmpty()
     return LibraryUiState(
@@ -283,8 +282,9 @@ internal fun libraryState(page: LibraryPage, syncing: Boolean, reach: Reach, syn
         sort = page.selection.sort,
         items = items.orEmpty(),
         loading =
-            items == null || (empty && !synced && reach != Reach.Offline && (syncing || reach == Reach.Connecting)),
-        offline = empty && reach == Reach.Offline,
+            items == null ||
+                (empty && !synced && status != ServerStatus.Offline && (syncing || status == ServerStatus.Connecting)),
+        offline = empty && status == ServerStatus.Offline,
         letters = page.letters,
     )
 }

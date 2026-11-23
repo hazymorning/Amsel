@@ -31,8 +31,8 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.zIndex
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.IconAction
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.Reorderable
 import io.github.hazymorning.amsel.ui.components.holdToMove
 import io.github.hazymorning.amsel.ui.components.reorderHandle
@@ -287,7 +287,7 @@ private fun Handle(reorder: Reorderable, key: String) {
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
-        InkGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        AlignedGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

@@ -24,7 +24,7 @@ class WidgetViewsTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
     private fun drawn(
-        look: WidgetLook,
+        look: WidgetContent,
         slots: List<WidgetSlot> = DefaultSlots,
         size: SizeF = WidgetSample.card,
         setup: WidgetSetup = WidgetSetup(slots = slots),
@@ -169,7 +169,7 @@ class WidgetViewsTest {
 
     /** A book has no heart and no shuffle: the transport stands alone and evenly where they were. */
     @Test fun buttonsWithNothingToActOnGiveWay() {
-        val shown = { look: WidgetLook -> drawn(look, size = WidgetSample.player).cells().size }
+        val shown = { look: WidgetContent -> drawn(look, size = WidgetSample.player).cells().size }
         assertEquals(5, shown(WidgetSample.music))
         assertEquals(3, shown(WidgetSample.book))
     }

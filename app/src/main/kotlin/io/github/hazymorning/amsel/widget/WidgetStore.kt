@@ -32,25 +32,25 @@ class WidgetStore(private val dir: File) {
     suspend fun forget(ids: Collection<Int>): Unit = lock.withLock { writeAll(readAll() - ids.toSet()) }
 
     /** What the widgets showed last, by speaker: [AMSELS] for the one Amsel plays on. */
-    suspend fun looks(): Map<String, WidgetLook> = lock.withLock {
+    suspend fun contents(): Map<String, WidgetContent> = lock.withLock {
         withContext(Dispatchers.IO) {
-            read(looksFile)?.let { text -> decode { json.decodeFromString(LooksSerializer, text) } }
+            read(looksFile)?.let { text -> decode { json.decodeFromString(ContentsSerializer, text) } }
                 ?: read(lastLookFile)?.let { text ->
-                    decode { mapOf(AMSELS to json.decodeFromString(WidgetLook.serializer(), text)) }
+                    decode { mapOf(AMSELS to json.decodeFromString(WidgetContent.serializer(), text)) }
                 }
                 ?: emptyMap()
         }
     }
 
-    suspend fun setLooks(looks: Map<String, WidgetLook>): Unit = lock.withLock {
+    suspend fun setContents(looks: Map<String, WidgetContent>): Unit = lock.withLock {
         withContext(Dispatchers.IO) {
-            write(looksFile) { it.writeText(json.encodeToString(LooksSerializer, looks)) }
+            write(looksFile) { it.writeText(json.encodeToString(ContentsSerializer, looks)) }
             forgetEarlier()
         }
     }
 
     /** Signing out: what the last person played is not left on the home screen. */
-    suspend fun forgetLooks(): Unit = lock.withLock {
+    suspend fun forgetContents(): Unit = lock.withLock {
         withContext(Dispatchers.IO) {
             looksFile.delete()
             forgetEarlier()
@@ -121,7 +121,7 @@ class WidgetStore(private val dir: File) {
         /** The looks' key for the speaker Amsel plays on. */
         const val AMSELS = ""
 
-        private val LooksSerializer = MapSerializer(String.serializer(), WidgetLook.serializer())
+        private val ContentsSerializer = MapSerializer(String.serializer(), WidgetContent.serializer())
     }
 }
 

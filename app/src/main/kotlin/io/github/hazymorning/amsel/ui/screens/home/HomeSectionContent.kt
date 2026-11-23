@@ -30,12 +30,12 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.RowPlaceholder
 import io.github.hazymorning.amsel.ui.components.ShelfRow
 import io.github.hazymorning.amsel.ui.components.TilePlaceholder
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.headerToRow
-import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.overhang
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.components.shelfTileWidth
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.secondLine
 import io.github.hazymorning.amsel.ui.model.twoLines
@@ -81,7 +81,7 @@ internal fun SectionContent(
             modifier = modifier,
         )
 
-        SectionLayout.List -> Column(modifier.overhang(bottom = rowInkBottom(RowLead.Cover, twoLines = true))) {
+        SectionLayout.List -> Column(modifier.overhang(bottom = rowGlyphBottom(RowLead.Cover, twoLines = true))) {
             val twoLines = items.twoLines()
             items.forEach { item ->
                 key(item.key) {
@@ -116,7 +116,7 @@ internal fun SectionSkeleton(section: SectionUi, modifier: Modifier = Modifier) 
             modifier,
         )
 
-        SectionLayout.List -> Column(modifier.overhang(bottom = rowInkBottom(RowLead.Cover, twoLines = true))) {
+        SectionLayout.List -> Column(modifier.overhang(bottom = rowGlyphBottom(RowLead.Cover, twoLines = true))) {
             repeat(SKELETON_ROWS) { RowPlaceholder(it) }
         }
     }
@@ -157,8 +157,8 @@ internal fun EmptySectionNote(option: SectionOption, modifier: Modifier = Modifi
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Keyline.Margin)
-            .textInk(style)
-            .inkStart(text, style),
+            .capToBaseline(style)
+            .trimStartBearing(text, style),
     )
 }
 

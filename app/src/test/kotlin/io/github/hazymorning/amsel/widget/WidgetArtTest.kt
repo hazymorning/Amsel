@@ -77,10 +77,14 @@ class WidgetArtTest {
 
     /** Darkened, the words are paper over any cover, a white one too; with nothing playing, the empty ground's. */
     @Test fun theDarkenedLookTakesPaperOverAnyCover() {
-        val ground = WidgetGround.of(WidgetStyle.Darkened, WidgetArt.darkened(filled(Color.WHITE)), clearInk = false)
-        assertEquals(Tone.Dark, ground.tone)
+        val ground = WidgetBackground.of(
+            WidgetStyle.Darkened,
+            WidgetArt.darkened(filled(Color.WHITE)),
+            clearInk = false,
+        )
+        assertEquals(WidgetColors.Dark, ground.tone)
         assertEquals(R.drawable.widget_veil_darkened, ground.veil)
-        assertEquals(Tone.Light, WidgetGround.of(WidgetStyle.Darkened, null, clearInk = false).tone)
+        assertEquals(WidgetColors.Light, WidgetBackground.of(WidgetStyle.Darkened, null, clearInk = false).tone)
     }
 
     /** An empty cover is the cover's shape in white, for the widget to tint in its tone. */

@@ -10,7 +10,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.MessageAction
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 
 /**
  * Puts [messages] into [host] one at a time, for a `MessageHost` to show. A message with Retry,
@@ -18,7 +18,7 @@ import io.github.hazymorning.amsel.app.Messages
  * moment it belongs to.
  */
 @Composable
-fun ShowMessages(messages: Messages, host: SnackbarHostState) {
+fun ShowMessages(messages: MessageController, host: SnackbarHostState) {
     val resources = LocalResources.current
     val pending by messages.pending.collectAsStateWithLifecycle()
     val message = pending.firstOrNull() ?: return

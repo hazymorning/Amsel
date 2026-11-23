@@ -151,12 +151,12 @@ fun RowScope.NavBarItem(
         contentAlignment = Alignment.TopCenter,
     ) {
         Box(Modifier.height(TabGlyph), contentAlignment = Alignment.Center) {
-            InkGlyph(
+            AlignedGlyph(
                 if (selected) selectedIcon else icon,
                 tint = tint,
                 size = TabGlyph,
                 contentDescription = label,
-                inkHeight = true,
+                trimHeight = true,
             )
         }
     }
@@ -200,7 +200,7 @@ fun RowScope.NavBarSpeaker(
         contentAlignment = Alignment.TopCenter,
     ) {
         Box(Modifier.height(TabGlyph), contentAlignment = Alignment.Center) {
-            InkGlyph(
+            AlignedGlyph(
                 SpeakerButtonGlyph,
                 Modifier.drawWithContent {
                     drawContent()
@@ -208,7 +208,8 @@ fun RowScope.NavBarSpeaker(
                         // At the end side; the glyph is the same both ways round.
                         val ltr = layoutDirection == LayoutDirection.Ltr
                         val end = if (ltr) HALF_WAY else -HALF_WAY
-                        val on = inkPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, inkHeight = true)
+                        val on =
+                            glyphPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, trimHeight = true)
                         // A little out along the same line, so its ring leaves the glyph's inner circle whole.
                         val out = Outward.toPx() * DIAGONAL
                         val at = on + Offset(if (ltr) out else -out, -out)
@@ -218,7 +219,7 @@ fun RowScope.NavBarSpeaker(
                 },
                 tint = colors.onSurfaceVariant,
                 size = TabGlyph,
-                inkHeight = true,
+                trimHeight = true,
             )
         }
     }

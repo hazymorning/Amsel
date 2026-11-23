@@ -42,10 +42,10 @@ import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.LocalDownloadMarks
 import io.github.hazymorning.amsel.ui.components.LocalMusicPlays
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
-import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.screens.home.HomeRoute
 import io.github.hazymorning.amsel.ui.screens.home.SeeAllRoute
@@ -135,7 +135,7 @@ val LocalAppActions = staticCompositionLocalOf<AppActions> { error("AppActions n
  * cannot go (no one signed in).
  */
 @Composable
-fun AppRoot(graph: AppGraph, opening: Opening? = null, onOpened: () -> Unit = {}) {
+fun AppRoot(graph: AppGraph, opening: DeepLink? = null, onOpened: () -> Unit = {}) {
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     val stored = prefs?.theme
     val context = LocalContext.current
@@ -183,7 +183,7 @@ private fun SystemBarsFollowTheme() {
 }
 
 @Composable
-private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
+private fun Main(graph: AppGraph, opening: DeepLink?, onOpened: () -> Unit) {
     val context = LocalContext.current
     val nowPlaying by graph.playing.nowPlaying.collectAsStateWithLifecycle()
     val speaker by graph.playing.speaker.collectAsStateWithLifecycle()
@@ -197,7 +197,11 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
     ShowMessages(graph.messages, snackbar)
     // Search, Now Playing and Up next come up in front of whatever sheet was open; the speaker picker is one.
     LaunchedEffect(opening) {
-        if (opening == Opening.Search || opening == Opening.NowPlaying || opening == Opening.UpNext) sheet.value = null
+        if (opening == DeepLink.Search || opening == DeepLink.NowPlaying ||
+            opening == DeepLink.UpNext
+        ) {
+            sheet.value = null
+        }
     }
     // On Android 17 a server on the local network is out of reach until the person allows it,
     // also for a phone set up before the update (Setup asked only then). Unreachable with the
@@ -249,7 +253,7 @@ private fun Main(graph: AppGraph, opening: Opening?, onOpened: () -> Unit) {
     val downloads = graph.downloading.marks.collectAsStateWithLifecycle()
     val plays = remember { derivedStateOf { nowPlaying?.isPlaying == true } }
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
-    val bar = remember(prefs?.barPlaces) { BarPlace.of(prefs?.barPlaces) }
+    val bar = remember(prefs?.barPlaces) { BarItem.of(prefs?.barPlaces) }
     val dock = remember(prefs?.dockControls) { DockControl.arrangement(prefs?.dockControls).visible }
     CompositionLocalProvider(
         LocalAppActions provides actions,

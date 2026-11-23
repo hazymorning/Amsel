@@ -70,7 +70,7 @@ fun MessageBar(message: String, modifier: Modifier = Modifier, action: String? =
                     message,
                     style = style,
                     color = colors.onSurface,
-                    modifier = Modifier.textInk(style).inkStart(message, style),
+                    modifier = Modifier.capToBaseline(style).trimStartBearing(message, style),
                 )
                 if (action != null) TextAction(action, onAction, color = colors.onSurface)
             },

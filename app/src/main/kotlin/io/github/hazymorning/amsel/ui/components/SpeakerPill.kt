@@ -70,19 +70,19 @@ fun SpeakerPill(
             .padding(start = PillStart, end = PillEnd),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InkGlyph(SpeakerButtonGlyph, tint = colors.controls, size = wordGlyph(style))
+        AlignedGlyph(SpeakerButtonGlyph, tint = colors.controls, size = wordGlyph(style))
         if (named) {
             Spacer(Modifier.width(GlyphGap))
             SpeakerName(
                 speaker,
                 style,
                 colors.controls,
-                Modifier.weight(1f, fill = false).clearAndSetSemantics {}.textInk(style),
+                Modifier.weight(1f, fill = false).clearAndSetSemantics {}.capToBaseline(style),
             )
         }
         if (caret) {
             Spacer(Modifier.width(CaretGap))
-            InkGlyph(R.drawable.ic_dropdown, tint = colors.onSurfaceVariant, size = wordCaret(style))
+            AlignedGlyph(R.drawable.ic_dropdown, tint = colors.onSurfaceVariant, size = wordCaret(style))
         }
     }
 }
@@ -128,7 +128,7 @@ internal fun SpeakerName(
             name,
             style,
             color = color,
-            modifier = Modifier.weight(1f, fill = false).alignByBaseline().inkStart(name, style),
+            modifier = Modifier.weight(1f, fill = false).alignByBaseline().trimStartBearing(name, style),
         )
         val tail = buildString {
             if (speaker.others > 0) append("\u00A0+").append(speaker.others)

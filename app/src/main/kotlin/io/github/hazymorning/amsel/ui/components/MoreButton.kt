@@ -14,7 +14,7 @@ fun MoreButton(itemTitle: String, onClick: () -> Unit, modifier: Modifier = Modi
         contentDescription = stringResource(R.string.more_options_for, itemTitle),
         onClick = onClick,
         modifier = modifier,
-        edge = InkEdge.End,
+        edge = GlyphEdge.End,
         tint = MaterialTheme.colorScheme.controls,
     )
 }

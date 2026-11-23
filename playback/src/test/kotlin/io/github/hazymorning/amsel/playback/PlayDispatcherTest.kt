@@ -8,8 +8,8 @@ import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.fixture
-import io.github.hazymorning.amsel.data.Place
-import io.github.hazymorning.amsel.data.Seeks
+import io.github.hazymorning.amsel.data.ItemPosition
+import io.github.hazymorning.amsel.data.SeekTracker
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CompletableDeferred
@@ -49,13 +49,13 @@ class PlayDispatcherTest {
     private var phoneMixes = 0
 
     /** The seeks the dispatcher handed on, for a book started at a chapter no start item leads to. */
-    private val soughtIn = mutableListOf<Pair<String, Place>>()
+    private val soughtIn = mutableListOf<Pair<String, ItemPosition>>()
 
     private fun withDispatcher(
         release: CountDownLatch,
         error: Int? = null,
         phone: LocalOutput = FakePhone(),
-        seeks: Seeks = Seeks.None,
+        seeks: SeekTracker = SeekTracker.None,
         /** How many songs the server's sample of a mix holds. */
         mixSongs: Int = 0,
         block: suspend CoroutineScope.(PlayDispatcher, FakeMaServer) -> Unit,
@@ -80,7 +80,7 @@ class PlayDispatcherTest {
         try {
             client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
-            val seekIn = { queueId: String, place: Place -> soughtIn += queueId to place }
+            val seekIn = { queueId: String, place: ItemPosition -> soughtIn += queueId to place }
             val dispatcher = PlayDispatcher(
                 MaApi(client),
                 phone,
@@ -224,7 +224,7 @@ class PlayDispatcherTest {
 
     @Test fun `a book started at a chapter tells where it lands, on the id the phone joined with`() {
         val phone = FakePhone().apply { joined.complete("phone-2") }
-        val told = FakeSeeks()
+        val told = FakeSeekTracker()
         withDispatcher(CountDownLatch(0), phone = phone, seeks = told) { dispatcher, fake ->
             val chapter25 = PlayRequest(
                 "phone-1",
@@ -235,13 +235,13 @@ class PlayDispatcherTest {
             )
             dispatcher.play(chapter25)
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
-            val landed = listOf("fly 1 phone-2 960.0 library://audiobook/1", "sent 1", "answered 1")
-            assertEquals(landed, told.calls)
+            val streamStarted = listOf("startSeek 1 phone-2 960.0 library://audiobook/1", "sent 1", "answered 1")
+            assertEquals(streamStarted, told.calls)
             assertEquals("24", fake.playArgs().single()["start_item"]!!.jsonPrimitive.content)
             // A play from the bookmark has no place of its own to land.
             dispatcher.play(PlayRequest("phone-1", listOf("library://audiobook/1"), onPhone = true))
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
-            assertEquals(landed, told.calls)
+            assertEquals(streamStarted, told.calls)
         }
     }
 
@@ -251,12 +251,12 @@ class PlayDispatcherTest {
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
             assertEquals(null, fake.playArgs().single()["start_item"])
             // Into the chapter's first second; the seek itself is the speaker's lane's to send.
-            assertEquals(listOf("kitchen" to Place("library://audiobook/1", 961.0)), soughtIn)
+            assertEquals(listOf("kitchen" to ItemPosition("library://audiobook/1", 961.0)), soughtIn)
         }
     }
 
     @Test fun `a chapter play that fails takes its place back`() {
-        val told = FakeSeeks()
+        val told = FakeSeekTracker()
         withDispatcher(CountDownLatch(0), error = MaCommandException.ERROR_BUSY, seeks = told) { dispatcher, _ ->
             val failure = async { dispatcher.failures.first() }
             delay(50)
@@ -264,7 +264,7 @@ class PlayDispatcherTest {
                 PlayRequest("kitchen", listOf("library://audiobook/1"), startItem = "3", startPositionMs = 120_000),
             )
             withTimeout(5000) { failure.await() }
-            assertEquals(listOf("fly 1 kitchen 120.0 library://audiobook/1", "sent 1", "failed 1"), told.calls)
+            assertEquals(listOf("startSeek 1 kitchen 120.0 library://audiobook/1", "sent 1", "failed 1"), told.calls)
         }
     }
 

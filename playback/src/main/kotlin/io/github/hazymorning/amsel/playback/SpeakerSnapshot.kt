@@ -1,6 +1,6 @@
 package io.github.hazymorning.amsel.playback
 
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.api.PlayerMedia
@@ -119,7 +119,7 @@ fun snapshotOf(
     state: QueueState?,
     mediaPosition: PositionAnchor?,
     pending: Boolean,
-    images: Images?,
+    images: ImageUrls?,
     nowMs: Long,
 ): SpeakerSnapshot {
     val queue = state?.queue
@@ -155,18 +155,18 @@ fun snapshotOf(
 }
 
 /** Another source plays (an external input, AirPlay, Spotify Connect): only what it reports. */
-private fun entryOf(media: PlayerMedia, images: Images?) = QueueEntry(
+private fun entryOf(media: PlayerMedia, images: ImageUrls?) = QueueEntry(
     queueItemId = media.queueItemId ?: media.uri ?: media.title.orEmpty(),
     uri = media.uri.orEmpty(),
     title = media.title.orEmpty(),
     artist = media.artist,
     album = media.album,
     durationSeconds = media.duration?.toInt(),
-    artworkUrl = images?.rebase(media.imageUrl)?.let { Images.sized(it, 512) },
+    artworkUrl = images?.rebase(media.imageUrl)?.let { ImageUrls.sized(it, 512) },
     mediaType = media.mediaType ?: MediaType.Track.api,
 )
 
-private fun entryOf(item: QueueItem, images: Images?): QueueEntry {
+private fun entryOf(item: QueueItem, images: ImageUrls?): QueueEntry {
     val media = item.mediaItem
     return QueueEntry(
         queueItemId = item.queueItemId,
@@ -175,7 +175,7 @@ private fun entryOf(item: QueueItem, images: Images?): QueueEntry {
         artist = media?.subtitle,
         album = media?.album?.name,
         durationSeconds = media?.duration ?: item.duration,
-        artworkUrl = images?.url(media?.cover ?: item.image)?.let { Images.sized(it, 512) },
+        artworkUrl = images?.url(media?.cover ?: item.image)?.let { ImageUrls.sized(it, 512) },
         mediaType = media?.mediaType ?: MediaType.Track.api,
         chapterStartsMs = media?.chapters.orEmpty().map { (it.start * 1000).roundToLong() }.sorted(),
     )

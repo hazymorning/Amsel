@@ -10,11 +10,12 @@ import io.github.hazymorning.amsel.BuildConfig
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.ServerAddress
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.retryWhileOpen
 import io.github.hazymorning.amsel.data.Prefs
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.graph
+import io.github.hazymorning.amsel.ui.model.ServerStatus
 import io.github.hazymorning.amsel.ui.screens.setup.hostOf
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
 import java.io.IOException
@@ -47,7 +48,7 @@ class SettingsViewModel(
     private val saveDownloadOnWifi: suspend (Boolean) -> Unit = {},
     /** Signs out and forgets the server's data (Session.signOut, then DataGraph.clear). */
     private val signOutAndForget: suspend () -> Unit,
-    private val messages: Messages,
+    private val messages: MessageController,
     private val appScope: CoroutineScope,
     private val appVersion: String,
 ) : ViewModel() {
@@ -139,9 +140,9 @@ internal fun settingsState(
         serverName = serverNameOf(session),
         serverAddress = address?.let(::hostOf).orEmpty(),
         connection = when (session) {
-            is SessionState.Ready -> Connection.Connected
-            is SessionState.Offline -> Connection.Offline
-            else -> Connection.Connecting
+            is SessionState.Ready -> ServerStatus.Connected
+            is SessionState.Offline -> ServerStatus.Offline
+            else -> ServerStatus.Connecting
         },
         theme = chosenTheme ?: ThemeMode.of(prefs?.theme),
         appVersion = appVersion,
@@ -155,9 +156,6 @@ internal fun settingsState(
         downloadOnWifi = stored.downloadOnWifi,
     )
 }
-
-/** Whether Music Assistant answers: connected, still connecting, or out of reach. */
-enum class Connection { Connected, Connecting, Offline }
 
 /** Settings fit one phone screen: account, theme, Open Music Assistant, the app. All of it is local. */
 @Immutable
@@ -183,7 +181,7 @@ data class SettingsUiState(
     /** Downloads wait for Wi-Fi rather than use mobile data. */
     val downloadOnWifi: Boolean = true,
     /** Whether the server answers now, said after where it is. */
-    val connection: Connection = Connection.Connected,
+    val connection: ServerStatus = ServerStatus.Connected,
 )
 
 /** The settings wired to the session and the stored preferences, for Settings and its pages. */

@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 
 /** The pictures a widget shows, made beforehand off the main thread; bitmaps by their side in px. */
 @Immutable
-class WidgetPictures(
+class WidgetBitmaps(
     /** The blurred cover of what plays, under the Cover look. */
     val cover: WidgetCover? = null,
     /** What plays, sharp, in Amsel's cover corners: a bar's or a player's cover, or a tile's without buttons. */
@@ -32,12 +32,12 @@ internal fun faceKey(art: String, width: Int, height: Int): String = "$art@${wid
  * their boxes. Colours go by resource, so the launcher switches day and night itself.
  */
 class WidgetViews(private val context: Context) {
-    internal val text = WidgetText(context)
+    internal val text = WidgetTextMetrics(context)
     private val slots = WidgetSlots(context)
     private val density get() = context.resources.displayMetrics.density
 
     /** What TalkBack says for a button, and what the widget's page calls it. */
-    fun label(slot: WidgetSlot, look: WidgetLook): String = slots.label(slot, look)
+    fun label(slot: WidgetSlot, look: WidgetContent): String = slots.label(slot, look)
 
     /** How a widget [width] by [height] dp lays out [setup], every button of it, as its page counts them. */
     fun fit(width: Float, height: Float, setup: WidgetSetup): WidgetFit = fit(width, height, setup, setup.slots.size)
@@ -46,7 +46,7 @@ class WidgetViews(private val context: Context) {
      * How it lays out what [look] shows: a button with nothing to act on there gives way, and signed
      * out none stands, as what plays asks to sign in; its time shows.
      */
-    fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetLook): WidgetFit {
+    fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetContent): WidgetFit {
         val buttons = if (look.signedIn) setup.slots.count { it.button.availableIn(look) } else 0
         return fit(width, height, setup, buttons, look.hasTime)
     }
@@ -61,9 +61,9 @@ class WidgetViews(private val context: Context) {
     fun build(
         id: Int,
         setup: WidgetSetup,
-        look: WidgetLook,
+        look: WidgetContent,
         fits: List<WidgetFit>,
-        pictures: WidgetPictures,
+        pictures: WidgetBitmaps,
         clearInk: Boolean,
         taps: Boolean = true,
     ): RemoteViews {

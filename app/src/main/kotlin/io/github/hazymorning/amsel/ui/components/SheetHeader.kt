@@ -50,8 +50,8 @@ fun SheetHeader(
             modifier = Modifier
                 .weight(1f)
                 .alignBy(LastBaseline)
-                .textInk(type.titleLarge)
-                .inkStart(title, type.titleLarge)
+                .capToBaseline(type.titleLarge)
+                .trimStartBearing(title, type.titleLarge)
                 .semantics { heading() },
         )
         if (value != null) {
@@ -71,7 +71,7 @@ private const val TITLE_LINES = 2
  */
 @Composable
 fun sheetEnd(lead: RowLead, twoLines: Boolean): Dp =
-    (Space.SheetEdge - rowInkBottom(lead, twoLines)).coerceAtLeast(0.dp)
+    (Space.SheetEdge - rowGlyphBottom(lead, twoLines)).coerceAtLeast(0.dp)
 
 /**
  * A value at a line's end, in the secondary tone, on the baseline of what it belongs to. It keeps
@@ -93,6 +93,6 @@ internal fun EndValue(value: String, widest: String, modifier: Modifier = Modifi
         maxLines = 1,
         softWrap = false,
         textAlign = TextAlign.End,
-        modifier = modifier.widthIn(min = room).textInk(style),
+        modifier = modifier.widthIn(min = room).capToBaseline(style),
     )
 }

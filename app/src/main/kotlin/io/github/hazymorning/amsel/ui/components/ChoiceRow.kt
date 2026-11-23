@@ -31,6 +31,6 @@ fun ActionRow(@DrawableRes icon: Int, label: String, onClick: () -> Unit, lead: 
         lead = lead,
         titleLines = 2,
         onClick = onClick,
-        leading = { InkGlyph(icon, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+        leading = { AlignedGlyph(icon, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
     )
 }

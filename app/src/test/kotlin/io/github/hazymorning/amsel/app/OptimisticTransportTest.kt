@@ -34,7 +34,7 @@ class OptimisticTransportTest {
         volumeTimeoutMs = 1_500,
     )
 
-    private fun OptimisticTransport.shown(np: NowPlayingUi = reported) = overlay(np, wishes.value[id])
+    private fun OptimisticTransport.shown(np: NowPlayingUi = reported) = overlay(np, pending.value[id])
 
     @Test fun everyTapShowsBeforeTheSpeakerAnswers() = runTest {
         val t = transport()
@@ -56,7 +56,7 @@ class OptimisticTransportTest {
         t.settle(id, reported)
         assertTrue(t.shown().shuffle)
         t.settle(id, reported.copy(shuffle = true))
-        assertTrue(t.wishes.value.isEmpty())
+        assertTrue(t.pending.value.isEmpty())
         // From then on the speaker's own state shows, whatever changes it next.
         assertFalse(t.shown().shuffle)
     }
@@ -134,7 +134,7 @@ class OptimisticTransportTest {
         t.settle(id, reported)
         assertEquals("Undertow", t.shown().title)
         t.settle(id, next)
-        assertTrue(t.wishes.value.isEmpty())
+        assertTrue(t.pending.value.isEmpty())
     }
 
     /** Where a seek goes comes with what the speaker reports (its position, standing): a pause keeps it. */

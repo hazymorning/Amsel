@@ -5,8 +5,8 @@ import io.github.hazymorning.amsel.api.FakeMaServer
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaClient
 import io.github.hazymorning.amsel.api.fixture
-import io.github.hazymorning.amsel.data.Holding
-import io.github.hazymorning.amsel.data.Place
+import io.github.hazymorning.amsel.data.ItemPosition
+import io.github.hazymorning.amsel.data.QueueStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +28,7 @@ import org.junit.Test
 
 /** What a speaker's commands send to the server, from the app, the notification, a headset or the car. */
 class SpeakerCommandsTest {
-    private val seeks = FakeSeeks(Holding(BOOK, playing = true))
+    private val seeks = FakeSeekTracker(QueueStatus(BOOK, playing = true))
 
     private class Phone(override val id: String?) : LocalOutput {
         val joined = CompletableDeferred<String>()
@@ -72,9 +72,10 @@ class SpeakerCommandsTest {
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
             val now = { System.nanoTime() / 1_000_000 }
-            val lanes = SeekLanes(api, {}, seeks, phone, scope, now)
-            val dispatcher = PlayDispatcher(api, phone, scope, starting = lanes::starting, elapsedRealtime = now)
-            val commands = MaSpeakerCommands(api, dispatcher, {}, seeks, lanes, scope)
+            val seekDispatcher = SeekDispatcher(api, {}, seeks, phone, scope, now)
+            val dispatcher =
+                PlayDispatcher(api, phone, scope, starting = seekDispatcher::starting, elapsedRealtime = now)
+            val commands = MaSpeakerCommands(api, dispatcher, {}, seeks, seekDispatcher, scope)
             block(commands) { fake.received.mapNotNull(::sentAs) }
         } finally {
             client.stop()
@@ -104,7 +105,7 @@ class SpeakerCommandsTest {
 
     @Test fun aSeekGoesToTheSpeakerAndSaysWhereItGoesFirst() = withCommands { commands, sent ->
         commands.seek("kitchen", 985)
-        assertEquals("fly 1 kitchen 985.0 $BOOK", seeks.calls.first())
+        assertEquals("startSeek 1 kitchen 985.0 $BOOK", seeks.calls.first())
         assertEquals(listOf("seek kitchen 985"), sent.await(1))
     }
 
@@ -116,8 +117,8 @@ class SpeakerCommandsTest {
 
     /** Except where the queue was put somewhere the server does not know of: there the play is a seek. */
     @Test fun aPlayStartsAParkedQueueWhereItWasPut() = withCommands { commands, sent ->
-        seeks.holding = Holding(BOOK, playing = false)
-        seeks.parked = Place(BOOK, 7230.6)
+        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+        seeks.pausedPosition = ItemPosition(BOOK, 7230.6)
         commands.play("kitchen")
         assertEquals(listOf("seek kitchen 7230"), sent())
     }
@@ -126,9 +127,9 @@ class SpeakerCommandsTest {
         commands.pause("kitchen")
         commands.seek("kitchen", 300)
         commands.seek("kitchen", 330, step = true)
-        delay(SeekLane.SETTLE_MS + 300)
+        delay(SeekController.SETTLE_MS + 300)
         assertEquals(listOf("pause kitchen"), sent())
-        assertEquals(Place(BOOK, 330.0), seeks.parked)
+        assertEquals(ItemPosition(BOOK, 330.0), seeks.pausedPosition)
     }
 
     /**
@@ -180,7 +181,7 @@ class SpeakerCommandsTest {
     /** A play someone else asked for, or one from Up next: the server says that it starts one. */
     @Test fun aPauseWhileTheServerSaysItStartsAPlayIsSentAgainOnceThatIsOver() = withCommands { commands, sent ->
         val starting = CompletableDeferred<Unit>()
-        seeks.holding = Holding(BOOK, playing = true, starting = true)
+        seeks.queueStatus = QueueStatus(BOOK, playing = true, starting = true)
         seeks.starting = starting
         commands.pause("kitchen")
         delay(300)

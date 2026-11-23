@@ -10,8 +10,8 @@ import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.SignInResult
 import io.github.hazymorning.amsel.api.allLibraryItems
 import io.github.hazymorning.amsel.data.QueueState
-import io.github.hazymorning.amsel.data.Seeks
-import io.github.hazymorning.amsel.data.Speakers
+import io.github.hazymorning.amsel.data.SeekTracker
+import io.github.hazymorning.amsel.data.SpeakerRepository
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +42,12 @@ class LiveSeekTest {
     private val url = System.getenv("MA_URL")
     private val http = OkHttpClient()
 
-    private class Rig(val api: MaApi, val speakers: Speakers, val commands: SpeakerCommands, val sent: AtomicInteger) {
+    private class Rig(
+        val api: MaApi,
+        val speakers: SpeakerRepository,
+        val commands: SpeakerCommands,
+        val sent: AtomicInteger,
+    ) {
         lateinit var kitchen: String
         var length = 0
 
@@ -63,11 +68,11 @@ class LiveSeekTest {
             client.start(address, (signIn as SignInResult.Success).token, id)
             withTimeout(15_000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
-            val speakers = Speakers(api, ::now, scope)
+            val speakers = SpeakerRepository(api, ::now, scope)
             scope.launch { client.events.collect(speakers::onEvent) }
             // Counts the seeks that go out, where the lane tells of each.
             val sent = AtomicInteger()
-            val counted = object : Seeks by speakers {
+            val counted = object : SeekTracker by speakers {
                 override fun sent(queueId: String, ticket: Long) {
                     sent.incrementAndGet()
                     speakers.sent(queueId, ticket)
@@ -76,7 +81,7 @@ class LiveSeekTest {
             val dispatcher = PlayDispatcher(api, NoPhone, scope, elapsedRealtime = ::now)
             val commands =
                 MaSpeakerCommands(api, dispatcher, {
-                }, counted, SeekLanes(api, {}, counted, NoPhone, scope, ::now), scope)
+                }, counted, SeekDispatcher(api, {}, counted, NoPhone, scope, ::now), scope)
             val rig = Rig(api, speakers, commands, sent)
             rig.kitchen = waitFor(60_000) {
                 api.players().firstOrNull { it.shownName == "Kitchen" && it.available }?.playerId
@@ -154,7 +159,7 @@ class LiveSeekTest {
         val target = (rig.length / 2).coerceAtMost(900)
         rig.commands.seek(rig.kitchen, target - 2)
         rig.commands.seek(rig.kitchen, target, step = true)
-        delay(SeekLane.SETTLE_MS + 1_500)
+        delay(SeekController.SETTLE_MS + 1_500)
         assertEquals(0, rig.sent.get())
         assertFalse(rig.state()?.queue?.isPlaying == true)
         assertEquals(target.toDouble(), rig.shown(), 0.0)

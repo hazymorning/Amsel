@@ -21,12 +21,12 @@ import io.github.hazymorning.amsel.api.itemByUri
 import io.github.hazymorning.amsel.api.orNullOnFailure
 import io.github.hazymorning.amsel.data.downloads.AbsClient
 import io.github.hazymorning.amsel.data.downloads.AndroidNetworkState
+import io.github.hazymorning.amsel.data.downloads.DownloadRepository
 import io.github.hazymorning.amsel.data.downloads.DownloadStore
-import io.github.hazymorning.amsel.data.downloads.Downloads
 import io.github.hazymorning.amsel.data.downloads.PrefsAbsAccountStore
 import io.github.hazymorning.amsel.data.home.HomeLayoutStore
 import io.github.hazymorning.amsel.data.home.HomeRepository
-import io.github.hazymorning.amsel.data.home.SectionSources
+import io.github.hazymorning.amsel.data.home.ServerSectionLoader
 import io.github.hazymorning.amsel.data.library.LibraryRepository
 import io.github.hazymorning.amsel.data.library.openLibraryDb
 import java.io.File
@@ -72,28 +72,28 @@ class DataGraph(
     context: Context,
     http: OkHttpClient,
     private val scope: CoroutineScope,
-    vault: TokenVault,
+    vault: TokenCipher,
     /** The networks the phone is on; the app's, as its http client follows [PhoneNetwork.plainHttpAllowed] too. */
     network: PhoneNetwork,
-    /** Starts the service that runs [Downloads.work]; the app's, as the service is not this module's. */
+    /** Starts the service that runs [DownloadRepository.work]; the app's, as the service is not this module's. */
     startDownloads: () -> Unit,
 ) {
     private val app = context.applicationContext
-    val prefs = AppPrefs(app, scope)
+    val prefs = PrefsStore(app, scope)
     val session = Session(prefs, vault, http, scope, deviceName = "Amsel (${Build.MODEL})", network = network)
-    val discovery = Discovery(app, http)
+    val discovery = ServerDiscovery(app, http)
     private val db by lazy { openLibraryDb(app) }
     val library by lazy {
         LibraryRepository(db.dao(), session.api, userId = { session.user.value?.userId })
     }
-    val speakers = Speakers(session.api, SystemClock::elapsedRealtime, scope)
-    val extras = Extras(session.api)
+    val speakers = SpeakerRepository(session.api, SystemClock::elapsedRealtime, scope)
+    val extras = ExtrasRepository(session.api)
 
     /** The Audiobookshelf account downloads come from. */
     val abs = AbsClient(http, PrefsAbsAccountStore(prefs, vault, scope), reachesHome = session::reachesHome)
 
     val downloads by lazy {
-        Downloads(
+        DownloadRepository(
             abs,
             DownloadStore(File(app.noBackupFilesDir, "downloads")),
             AndroidNetworkState(app),
@@ -104,14 +104,14 @@ class DataGraph(
     }
 
     /** What each page last showed, for its next first paint. */
-    val pages = PageMemory(File(app.cacheDir, "pages")) { prefs.current().serverId }
+    val pages = PageCache(File(app.cacheDir, "pages")) { prefs.current().serverId }
 
     /** The speaker music plays on, by player id: the one picked, else This phone. */
     private val speakerInUse =
         prefs.prefs.map { it?.speakerId ?: it?.phonePlayerId }.stateIn(scope, SharingStarted.Eagerly, null)
 
     val home = HomeRepository(
-        SectionSources(session.api, { library }, { speakerInUse.value }),
+        ServerSectionLoader(session.api, { library }, { speakerInUse.value }),
         HomeLayoutStore(app.homeStore),
         File(app.filesDir, "home.json"),
         serverIds = prefs.prefs.filterNotNull().map { it.serverId },
@@ -133,7 +133,7 @@ class DataGraph(
     private val _permissions = MutableStateFlow(EVERYTHING)
 
     /** What the user may change; everything until the server says otherwise, so nothing flickers. */
-    val permissions: StateFlow<Permissions> = _permissions.asStateFlow()
+    val permissions: StateFlow<UserPermissions> = _permissions.asStateFlow()
 
     private val _speakersFailure = MutableStateFlow<Exception?>(null)
 
@@ -150,8 +150,8 @@ class DataGraph(
      * closed; while it is connected, events keep them current already. False when the server did
      * not answer.
      */
-    suspend fun lookAtSpeakers(): Boolean =
-        session.client.state.value is ConnectionState.Connected || session.glance { speakers.read(it) } != null
+    suspend fun refreshSpeakers(): Boolean =
+        session.client.state.value is ConnectionState.Connected || session.readOnOwnSocket { speakers.read(it) } != null
 
     /** Restores the session and starts following the server. Call once, as the app starts. */
     fun start() {
@@ -198,7 +198,7 @@ class DataGraph(
                 }
                 inFront()
                 follow {
-                    _permissions.value = Permissions.of(ready.user?.role, session.api.scopes())
+                    _permissions.value = UserPermissions.of(ready.user?.role, session.api.scopes())
                 }
                 follow { extras.load() }
             }
@@ -327,7 +327,7 @@ class DataGraph(
         const val EVENT_DEBOUNCE_MS = 2_000L
 
         /** Before the server names the person's scopes. */
-        val EVERYTHING = Permissions(setOf("*"))
+        val EVERYTHING = UserPermissions(setOf("*"))
 
         /** Item changes the index-backed Home sections show; 2.10 sends a favorite only this way. */
         val INDEX_CHANGES = setOf("media_item_updated", "media_item_deleted")

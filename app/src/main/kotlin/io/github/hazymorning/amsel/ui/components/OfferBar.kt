@@ -194,11 +194,11 @@ fun OfferBar(
                     title,
                     type.titleSmall,
                     color = colors.onSurface,
-                    modifier = Modifier.inkStart(title, type.titleSmall),
+                    modifier = Modifier.trimStartBearing(title, type.titleSmall),
                 )
                 if (speaker != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        InkGlyph(speaker.glyph, tint = colors.onSurfaceVariant, size = Sizes.IconSmall)
+                        AlignedGlyph(speaker.glyph, tint = colors.onSurfaceVariant, size = Sizes.IconSmall)
                         Spacer(Modifier.width(Space.S1))
                         SpeakerName(speaker, type.bodyMedium, colors.onSurfaceVariant)
                     }
@@ -208,7 +208,7 @@ fun OfferBar(
                         type.bodyMedium,
                         color = colors.onSurfaceVariant,
                         maxLines = 2,
-                        modifier = Modifier.inkStart(line, type.bodyMedium),
+                        modifier = Modifier.trimStartBearing(line, type.bodyMedium),
                     )
                 }
             }

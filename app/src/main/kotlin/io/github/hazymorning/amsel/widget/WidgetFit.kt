@@ -30,9 +30,9 @@ enum class WidgetForm {
 
 /** The words' line heights in dp at the phone's text size, which grows large text less than small. */
 @Immutable
-data class WidgetType(val speaker: Float = 16f, val title: Float = 20f, val subtitle: Float = 16f) {
+data class WidgetLineHeights(val speaker: Float = 16f, val title: Float = 20f, val subtitle: Float = 16f) {
     /** The same type [factor] times as large. */
-    fun scaled(factor: Float) = WidgetType(speaker * factor, title * factor, subtitle * factor)
+    fun scaled(factor: Float) = WidgetLineHeights(speaker * factor, title * factor, subtitle * factor)
 }
 
 /**
@@ -48,7 +48,7 @@ enum class WordSize(val scale: Float, val speakerToTitle: Float) {
 /** How much of what plays shows: the speaker's line, the title's lines, the line under it, its time. */
 @Immutable
 data class WidgetWords(val speaker: Boolean, val titleLines: Int, val subtitle: Boolean, val time: Boolean = false) {
-    fun needs(type: WidgetType, size: WordSize = WordSize.Regular): Float {
+    fun needs(type: WidgetLineHeights, size: WordSize = WordSize.Regular): Float {
         val set = type.scaled(size.scale)
         return (if (speaker) set.speaker + size.speakerToTitle else 0f) +
             set.title * titleLines +
@@ -145,7 +145,7 @@ fun widgetFit(
     width: Float,
     height: Float,
     buttons: Int,
-    type: WidgetType = WidgetType(),
+    type: WidgetLineHeights = WidgetLineHeights(),
     time: Boolean = false,
     words: Boolean = true,
     bare: Boolean = false,
@@ -192,7 +192,7 @@ fun widgetFit(
         WidgetForm.Bar -> {
             val art = innerHeight
             // Larger type keeps a bar's words their room: a button gives way first.
-            val least = s.WORDS_MIN * type.title / WidgetType().title
+            val least = s.WORDS_MIN * type.title / WidgetLineHeights().title
             val room = inner - art - s.ART_TO_WORDS - least - s.WORDS_TO_CELLS
             val shown = floor((room + s.GAP + EPSILON) / s.BAR_CELL).toInt().coerceIn(0, buttons)
             said(WidgetFit(form, width, height, shown, art), innerHeight, type, shown == 0, strip = true)
@@ -302,7 +302,7 @@ private val TITLE = WidgetWords(speaker = false, titleLines = 1, subtitle = fals
 private fun said(
     fit: WidgetFit,
     room: Float,
-    type: WidgetType,
+    type: WidgetLineHeights,
     alone: Boolean,
     time: Boolean = false,
     strip: Boolean = false,

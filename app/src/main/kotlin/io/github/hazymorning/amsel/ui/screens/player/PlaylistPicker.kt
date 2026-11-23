@@ -19,9 +19,9 @@ import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
-import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.sheetEnd
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Sizes
@@ -45,8 +45,8 @@ fun PlaylistPicker(playlists: List<MediaUi>?, onPick: (MediaUi) -> Unit, modifie
                 modifier = Modifier
                     .padding(horizontal = Keyline.Margin)
                     .widthIn(max = Sizes.Measure)
-                    .textInk(style)
-                    .inkStart(text, style),
+                    .capToBaseline(style)
+                    .trimStartBearing(text, style),
             )
             return@Column
         }

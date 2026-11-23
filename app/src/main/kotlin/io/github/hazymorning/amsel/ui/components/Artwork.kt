@@ -48,13 +48,13 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.theme.DIM_ALPHA
+import io.github.hazymorning.amsel.ui.theme.Elevation
 import io.github.hazymorning.amsel.ui.theme.HAIRLINE_ALPHA
-import io.github.hazymorning.amsel.ui.theme.Lift
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
+import io.github.hazymorning.amsel.ui.theme.elevationShadow
 import io.github.hazymorning.amsel.ui.theme.isNight
-import io.github.hazymorning.amsel.ui.theme.lift
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
 private val LargeGlyphFrom = 128.dp
@@ -76,7 +76,7 @@ fun Artwork(
     interactionSource: MutableInteractionSource? = null,
     shape: Shape? = null,
     /** A page's or Now Playing's one large cover stands off the page on a soft shade. */
-    lifted: Boolean = false,
+    elevated: Boolean = false,
     /** What it is called: without a picture, the cover is set in type ([TypeCover]). */
     name: String? = null,
     /** Without a picture or a [name], this glyph rather than its kind's. */
@@ -91,7 +91,7 @@ fun Artwork(
         Box(
             Modifier
                 .fillMaxSize()
-                .then(if (lifted) Modifier.lift(shape, Lift.Cover) else Modifier)
+                .then(if (elevated) Modifier.elevationShadow(shape, Elevation.Cover) else Modifier)
                 .coverFrame(shape)
                 .background(colors.surfaceContainerLow)
                 .then(if (interactionSource != null) Modifier.indication(interactionSource, press) else Modifier),
@@ -102,7 +102,7 @@ fun Artwork(
                 if (name != null && monogramOf(name) != null) {
                     TypeCover(name, side)
                 } else {
-                    InkGlyph(glyph ?: fallbackIcon(kind), tint = colors.outline, size = fallbackGlyph(side))
+                    AlignedGlyph(glyph ?: fallbackIcon(kind), tint = colors.outline, size = fallbackGlyph(side))
                 }
             }
             val tone = if (night) nightTone(colors.surfaceContainerLow, colors.onSurface) else null

@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.playback.R as PlaybackR
-import io.github.hazymorning.amsel.ui.navigation.Arrangement
+import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import kotlinx.serialization.Serializable
 
 /**
@@ -25,11 +25,11 @@ enum class LibraryKind(val id: String) {
 
     companion object {
         /** The Library as it comes: every kind, in this order. */
-        val Default: Arrangement<LibraryKind> = Arrangement(entries, entries.toSet())
+        val Default: OrderedToggles<LibraryKind> = OrderedToggles(entries, entries.toSet())
 
         /** The kinds in the person's order, one at least among those shown. */
-        fun arrangement(tokens: List<String>?): Arrangement<LibraryKind> {
-            val stored = Arrangement.of(tokens, entries, LibraryKind::id, Default)
+        fun arrangement(tokens: List<String>?): OrderedToggles<LibraryKind> {
+            val stored = OrderedToggles.of(tokens, entries, LibraryKind::id, Default)
             return if (stored.shown.isEmpty()) stored.copy(shown = setOf(stored.order.first())) else stored
         }
     }

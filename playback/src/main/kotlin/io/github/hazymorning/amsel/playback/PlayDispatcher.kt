@@ -6,8 +6,8 @@ import io.github.hazymorning.amsel.api.NothingToMixException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.endlessMixSeed
 import io.github.hazymorning.amsel.api.playEndlessMix
-import io.github.hazymorning.amsel.data.Place
-import io.github.hazymorning.amsel.data.Seeks
+import io.github.hazymorning.amsel.data.ItemPosition
+import io.github.hazymorning.amsel.data.SeekTracker
 import kotlin.math.ceil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
@@ -55,9 +55,9 @@ class PlayDispatcher(
     private val phone: LocalOutput,
     private val scope: CoroutineScope,
     /** Told where a book started at a chapter begins, before the play goes out. */
-    private val seeks: Seeks = Seeks.None,
-    /** Sends a queue that is starting a book to a place in it ([SeekLanes.seekIn]). */
-    private val seekIn: (queueId: String, place: Place) -> Unit = { _, _ -> },
+    private val seeks: SeekTracker = SeekTracker.None,
+    /** Sends a queue that is starting a book to a place in it ([SeekDispatcher.seekIn]). */
+    private val seekIn: (queueId: String, place: ItemPosition) -> Unit = { _, _ -> },
     /** Told of every play asked that starts playback, a double tap too ([SpeakerCommands.starting]). */
     private val starting: (queueId: String) -> Unit = {},
     /**
@@ -107,13 +107,13 @@ class PlayDispatcher(
                     landsAt == null || uri == null -> request.send(queueId)
 
                     request.startItem != null ->
-                        seeks.flying(queueId, Place(uri, landsAt / MS_PER_SECOND)) { request.send(queueId) }
+                        seeks.trackSeek(queueId, ItemPosition(uri, landsAt / MS_PER_SECOND)) { request.send(queueId) }
 
                     else -> {
                         request.send(queueId)
                         // Into the chapter's first second, and never 0, which the server takes as "resume".
                         val seconds = ceil(landsAt / MS_PER_SECOND).coerceAtLeast(1.0)
-                        seekIn(queueId, Place(uri, seconds))
+                        seekIn(queueId, ItemPosition(uri, seconds))
                     }
                 }
                 null

@@ -59,8 +59,8 @@ import io.github.hazymorning.amsel.ui.components.GroupLabel
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.label
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -90,7 +90,7 @@ fun VolumeSheetContent(
 ) {
     val main = rememberLevel(level ?: 0)
     val levels = members.associate { member -> member.id to key(member.id) { rememberLevel(member.level) } }
-    var asking by remember { mutableStateOf<Louder?>(null) }
+    var asking by remember { mutableStateOf<OverLimitRequest?>(null) }
     val allowed = remember { mutableStateListOf<String>() }
     BackHandler(enabled = asking != null) { asking = null }
     AnimatedContent(
@@ -127,7 +127,7 @@ fun VolumeSheetContent(
                 enabled = level != null,
                 onLevel = onLevel,
                 limit = if (MAIN in allowed) 0 else limit,
-                onPast = { asking = Louder(MAIN, speaker, it) },
+                onPast = { asking = OverLimitRequest(MAIN, speaker, it) },
             )
             if (members.isNotEmpty()) {
                 // A small heading over the group's speakers, as Settings names its groups.
@@ -145,7 +145,7 @@ fun VolumeSheetContent(
                         enabled = true,
                         onLevel = { onMember(member.id, it) },
                         limit = if (member.id in allowed) 0 else limit,
-                        onPast = { asking = Louder(member.id, member.name, it) },
+                        onPast = { asking = OverLimitRequest(member.id, member.name, it) },
                     )
                 }
             }
@@ -155,7 +155,7 @@ fun VolumeSheetContent(
 
 /** A bar's wish past the limit: which bar ([MAIN] or a speaker's id), its name, and how loud. */
 @Immutable
-private data class Louder(val bar: String, val name: String, val wanted: Int)
+private data class OverLimitRequest(val bar: String, val name: String, val wanted: Int)
 
 private const val MAIN = "main"
 
@@ -180,7 +180,7 @@ internal fun VolumeBar(
 ) {
     val colors = MaterialTheme.colorScheme
     val haptics = LocalHapticFeedback.current
-    val touch = remember { Touch() }
+    val touch = remember { VolumeDrag() }
     val start: () -> Unit = {
         touch.ceiling = if (limit > 0 && level.shown <= limit) limit else MAX_LEVEL
         touch.past = 0
@@ -275,7 +275,7 @@ internal fun VolumeBar(
             style,
             color = colors.onSurface,
             maxLines = 1,
-            modifier = Modifier.weight(1f).clearAndSetSemantics {}.inkStart(name, style),
+            modifier = Modifier.weight(1f).clearAndSetSemantics {}.trimStartBearing(name, style),
         )
         Spacer(Modifier.width(Space.Sibling))
         EndValue(
@@ -287,7 +287,7 @@ internal fun VolumeBar(
 }
 
 /** One touch on a bar: where it stops, and how loud the finger asked past that. */
-private class Touch {
+private class VolumeDrag {
     var ceiling = MAX_LEVEL
     var past = 0
 }

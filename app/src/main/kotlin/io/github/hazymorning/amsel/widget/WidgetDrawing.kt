@@ -5,7 +5,7 @@ import android.view.Gravity
 import android.widget.RemoteViews
 import androidx.annotation.LayoutRes
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.navigation.Opening
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 import io.github.hazymorning.amsel.widget.WidgetSizes.ART_TO_WORDS
 import io.github.hazymorning.amsel.widget.WidgetSizes.BAR_CELL
 import io.github.hazymorning.amsel.widget.WidgetSizes.CELL_HEIGHT
@@ -24,17 +24,17 @@ import kotlin.math.roundToInt
  */
 internal class WidgetDrawing(
     private val context: Context,
-    private val text: WidgetText,
+    private val text: WidgetTextMetrics,
     private val slots: WidgetSlots,
     private val id: Int,
     private val setup: WidgetSetup,
-    private val look: WidgetLook,
-    private val pictures: WidgetPictures,
+    private val look: WidgetContent,
+    private val pictures: WidgetBitmaps,
     clearInk: Boolean,
     private val taps: Boolean,
 ) {
     private val playing = look.signedIn && look.title != null
-    private val ground = WidgetGround.of(setup.style, pictures.cover.takeIf { playing }, clearInk)
+    private val ground = WidgetBackground.of(setup.style, pictures.cover.takeIf { playing }, clearInk)
     private val tone = ground.tone
     private val density = context.resources.displayMetrics.density
     private val cells =
@@ -152,7 +152,7 @@ internal class WidgetDrawing(
         if (taps) {
             setOnClickPendingIntent(
                 android.R.id.background,
-                open(context, if (look.signedIn) Opening.NowPlaying else null),
+                open(context, if (look.signedIn) DeepLink.NowPlaying else null),
             )
         }
     }
@@ -256,7 +256,7 @@ internal class WidgetDrawing(
         if (!taps) return@apply
         val press = when {
             !look.signedIn -> open(context, null)
-            slot == null -> open(context, Opening.NowPlaying)
+            slot == null -> open(context, DeepLink.NowPlaying)
             else -> cells.press(first.index, slot)
         }
         setOnClickPendingIntent(android.R.id.background, press)

@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.MediaType
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.data.home.HomeItem
 import io.github.hazymorning.amsel.data.home.HomeLayout
@@ -86,7 +86,7 @@ class HomeViewModel(
     /** The library index holds nothing (LibraryRepository.isEmpty). */
     libraryEmpty: Flow<Boolean>,
     private val mapper: UiMapper,
-    private val messages: Messages,
+    private val messages: MessageController,
     /** What the library index holds of spoken word: What to show offers its options only then. */
     spokenWord: Flow<SpokenWord> = flowOf(SpokenWord()),
     /** The speakers, to name the one Played here shows. */

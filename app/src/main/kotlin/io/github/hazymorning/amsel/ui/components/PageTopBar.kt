@@ -63,7 +63,7 @@ val LocalDockInset = staticCompositionLocalOf<State<Dp>> { mutableStateOf(0.dp) 
 
 /**
  * A screen whose content scrolls up under the status bar, where a strip of the page's own paper
- * covers it ([statusPaper]) once content runs under it. With a [bar] the strip also lies behind that
+ * covers it ([statusBarBackground]) once content runs under it. With a [bar] the strip also lies behind that
  * slim bar, and the content starts under it. Given [barShown], the content starts under the status
  * bar instead and the bar comes over it, folded away while false: for a screen whose own big title is
  * still in view. [content] gets the room the strip, the bar and the dock take, to keep its items
@@ -86,7 +86,7 @@ fun MaterialScreen(
     val reserved = if (bar != null && !barOverlaps) Sizes.TopBarHeight else 0.dp
     val dock = LocalDockInset.current
     val padding = remember(status, reserved, dock) { ContentPadding(status + reserved, dock) }
-    val edge = remember { EdgeState() }
+    val edge = remember { ScrollEdgeState() }
     Box(modifier.fillMaxSize()) {
         // In landscape a side navigation bar or a cutout would cover the ends of rows.
         Box(
@@ -103,7 +103,7 @@ fun MaterialScreen(
                     val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 }
-                .statusPaper(edge),
+                .statusBarBackground(edge),
         )
         if (bar != null) {
             Box(
@@ -149,8 +149,8 @@ fun TabHeader(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .weight(1f)
-                .textInk(style)
-                .inkStart(title, style)
+                .capToBaseline(style)
+                .trimStartBearing(title, style)
                 .providesBaseline(TitleBaseline)
                 .semantics { heading() },
         )
@@ -165,7 +165,7 @@ fun TabHeader(
  * the secondary tone, and no heading. [inset] sets the glyphs that far in from the margins, where a
  * screen's words stand in from them (Now Playing); [titleInset] keeps the title clear of more than
  * one action, and [shorterTitle] stands in where the title does not fit its line. Actions wider
- * than a glyph (a word) narrow the title's room to what they leave ([barTitleRoom]).
+ * than a glyph (a word) narrow the title's room to what they leave ([barTitleBounds]).
  */
 @Composable
 fun PageTopBar(
@@ -189,7 +189,7 @@ fun PageTopBar(
         content = {
             Box {
                 if (onBack != null) {
-                    IconAction(backIcon, backLabel, onBack, edge = InkEdge.Start, tint = colors.controls)
+                    IconAction(backIcon, backLabel, onBack, edge = GlyphEdge.Start, tint = colors.controls)
                 }
             }
             Box {
@@ -226,7 +226,7 @@ fun PageTopBar(
         val lead = back.measure(loose)
         val acts = trailing.measure(loose)
         val shortest = shorterTitle ?: title.orEmpty()
-        val room = barTitleRoom(
+        val room = barTitleBounds(
             width = width,
             inset = titleInset.roundToPx(),
             taken = Keyline.Margin.roundToPx() + acts.width + gap,

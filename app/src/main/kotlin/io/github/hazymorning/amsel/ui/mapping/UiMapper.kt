@@ -1,7 +1,7 @@
 package io.github.hazymorning.amsel.ui.mapping
 
 import io.github.hazymorning.amsel.api.DJ_PLUGIN
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaItemImage
 import io.github.hazymorning.amsel.api.MediaType
@@ -27,7 +27,7 @@ import io.github.hazymorning.amsel.ui.model.TrackUi
 import kotlin.math.roundToLong
 
 /** Turns server and index data into the UI's immutable models. Pure functions, no I/O. */
-class UiMapper(private val images: () -> Images?) {
+class UiMapper(private val images: () -> ImageUrls?) {
     fun art(image: MediaItemImage?): ArtRef? = images()?.url(image)?.let(::ArtRef)
 
     fun artFromProxyId(proxyId: String?): ArtRef? = proxyId?.let { art(MediaItemImage(proxyId = it)) }

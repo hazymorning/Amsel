@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.LocalDockInset
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.LocalReducedMotion
 import io.github.hazymorning.amsel.ui.theme.Motion
@@ -56,10 +56,10 @@ import kotlin.math.roundToInt
 internal fun SettingsBird(modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val disc = if (colors.isNight) NightMoon else DaySun
-    val crowns = if (colors.isNight) NightCrowns else DayCrowns
+    val trees = if (colors.isNight) NightTrees else DayTrees
     val bird = painterResource(R.drawable.ic_launcher_foreground)
     val still = LocalReducedMotion.current
-    val rise = remember { Rise() }
+    val rise = remember { HeaderAnimation() }
     var inView by remember { mutableStateOf(false) }
     LaunchedEffect(inView, still) {
         when {
@@ -96,21 +96,21 @@ internal fun SettingsBird(modifier: Modifier = Modifier) {
         val below = size.height - (top + ReadmeHeader.ICON_CROWN * unit)
         clipRect {
             drawCircle(disc, ReadmeHeader.DISC * scale * rise.disc.value, centre)
-            crown(ReadmeHeader.Back, crowns.back, centre, scale)
-            crown(ReadmeHeader.Behind, crowns.behind, centre, scale)
+            drawTree(ReadmeHeader.Back, trees.back, centre, scale)
+            drawTree(ReadmeHeader.Behind, trees.behind, centre, scale)
             withTransform({
                 translate(right, (top + below * (1f - rise.bird.value)).roundToInt().toFloat())
                 scale(-1f, 1f, Offset.Zero)
             }) {
                 with(bird) { draw(Size(ICON_SIDE * unit, ICON_SIDE * unit)) }
             }
-            crown(ReadmeHeader.Front, crowns.front, centre, scale)
+            drawTree(ReadmeHeader.Front, trees.front, centre, scale)
         }
     }
 }
 
 /** How far the sun has grown and the bird has risen, from 0 to 1, read only where they are drawn. */
-private class Rise {
+private class HeaderAnimation {
     val disc = Animatable(0f)
     val bird = Animatable(0f)
 
@@ -136,13 +136,13 @@ private const val IN_VIEW = 0.6f
 private const val DISC_MS = 650
 private const val BIRD_MS = 900
 
-private fun DrawScope.crown(crown: Crown, tint: Color, disc: Offset, scale: Float) =
+private fun DrawScope.drawTree(crown: TreeCircle, tint: Color, disc: Offset, scale: Float) =
     drawCircle(tint, crown.radius * scale, disc + Offset(crown.x, crown.y) * scale)
 
 /**
  * The settings and the picture under them. It stands on the page's end, which is the dock's edge once
  * the page is scrolled there; at the screen's foot where everything fits; and not at all where the
- * settings fit as they are and would scroll only for it ([footOf]).
+ * settings fit as they are and would scroll only for it ([picturePlacement]).
  */
 @Composable
 internal fun PageWithBird(modifier: Modifier = Modifier, settings: @Composable ColumnScope.() -> Unit) {
@@ -156,7 +156,7 @@ internal fun PageWithBird(modifier: Modifier = Modifier, settings: @Composable C
         val loose = constraints.copy(minHeight = 0)
         val content = page.measure(loose)
         val bird = picture.measure(loose)
-        val foot = footOf(
+        val foot = picturePlacement(
             settings = content.height,
             bird = bird.height,
             gap = BirdGap.roundToPx(),
@@ -171,19 +171,19 @@ internal fun PageWithBird(modifier: Modifier = Modifier, settings: @Composable C
 }
 
 /** How tall the page is and where the picture's top stands on it; [bird] is null where it is left out. */
-internal data class Foot(val height: Int, val bird: Int?)
+internal data class PicturePlacement(val height: Int, val bird: Int?)
 
 /**
  * Where the picture goes on a page whose settings are [settings] high and end [end] over the dock, in a
  * window of [room]: [gap] under them where the page scrolls anyway, at the window's foot where all of
  * it fits, and nowhere where the settings fit and only the picture would make them scroll.
  */
-internal fun footOf(settings: Int, bird: Int, gap: Int, end: Int, room: Int): Foot {
+internal fun picturePlacement(settings: Int, bird: Int, gap: Int, end: Int, room: Int): PicturePlacement {
     val withBird = settings + gap + bird
     return when {
-        settings + end > room -> Foot(withBird, settings + gap)
-        withBird <= room -> Foot(room, room - bird)
-        else -> Foot(room, null)
+        settings + end > room -> PicturePlacement(withBird, settings + gap)
+        withBird <= room -> PicturePlacement(room, room - bird)
+        else -> PicturePlacement(room, null)
     }
 }
 
@@ -193,9 +193,9 @@ internal object ReadmeHeader {
 
     /** The card's lower edge, which cuts the crowns. */
     const val FOOT = 200f
-    val Back = Crown(-164f, 290f, 150f)
-    val Behind = Crown(161f, 255f, 175f)
-    val Front = Crown(1f, 270f, 200f)
+    val Back = TreeCircle(-164f, 290f, 150f)
+    val Behind = TreeCircle(161f, 255f, 175f)
+    val Front = TreeCircle(1f, 270f, 200f)
 
     /** The middle of the bird's head, and where the icon's 108 units have it; one unit's size. */
     val Head = Offset(6f, -12f)
@@ -206,12 +206,12 @@ internal object ReadmeHeader {
     const val ICON_CROWN = 40f
 }
 
-internal data class Crown(val x: Float, val y: Float, val radius: Float)
+internal data class TreeCircle(val x: Float, val y: Float, val radius: Float)
 
-internal data class CrownTints(val back: Color, val behind: Color, val front: Color)
+internal data class TreeColors(val back: Color, val behind: Color, val front: Color)
 
-internal val DayCrowns = CrownTints(Color(0xFFD3DAC4), Color(0xFFB8C5A2), Color(0xFFC7D1B5))
-internal val NightCrowns = CrownTints(Color(0xFF2B3425), Color(0xFF34402C), Color(0xFF3B4832))
+internal val DayTrees = TreeColors(Color(0xFFD3DAC4), Color(0xFFB8C5A2), Color(0xFFC7D1B5))
+internal val NightTrees = TreeColors(Color(0xFF2B3425), Color(0xFF34402C), Color(0xFF3B4832))
 
 /** The paper raised by the step Surface 1 lies under it: the header's own sun is lost on the app's lighter page. */
 private val DaySun = Color(0xFFFBFAF7)
@@ -247,7 +247,7 @@ internal fun LicenceNote() {
             color = colors.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 1,
-            modifier = Modifier.fillMaxWidth().textInk(type.displaySmall),
+            modifier = Modifier.fillMaxWidth().capToBaseline(type.displaySmall),
         )
         Spacer(Modifier.height(Space.S3))
         Words(
@@ -256,7 +256,7 @@ internal fun LicenceNote() {
             color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            modifier = Modifier.fillMaxWidth().textInk(small),
+            modifier = Modifier.fillMaxWidth().capToBaseline(small),
         )
     }
 }

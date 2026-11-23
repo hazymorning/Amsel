@@ -15,7 +15,7 @@ import kotlinx.coroutines.sync.withLock
  * the app until the phone restarts. Only there does a home address surely lead to the household's
  * own machines; on another network it may lead to anyone's.
  */
-internal class CheckedNetwork(private val network: PhoneNetwork, private val prefs: AppPrefs, scope: CoroutineScope) {
+internal class CheckedNetwork(private val network: PhoneNetwork, private val prefs: PrefsStore, scope: CoroutineScope) {
     private val checkedOn = MutableStateFlow<NetworkKey?>(null)
     private val checking = Mutex()
 

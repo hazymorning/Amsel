@@ -5,10 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MediaItem
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.PlaylistEdit
 import io.github.hazymorning.amsel.app.retryWhileOpen
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.ArtRef
@@ -42,7 +42,7 @@ class PlaylistViewModel(
     private val mapper: UiMapper,
     playing: Flow<String?>,
     edits: Flow<PlaylistEdit>,
-    private val messages: Messages,
+    private val messages: MessageController,
     private val worker: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
     private val page = MutableStateFlow(PlaylistUiState(loading = true))
@@ -96,7 +96,7 @@ class PlaylistViewModel(
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
         loading = viewModelScope.launch {
-            val load = Load()
+            val load = PageLoad()
             val item = async { load.attempt { source.item(key) } }
             val firstPage = async { rowsOrNull(load, offset = 0, limit = FIRST_ROWS) }
             if (first) source.shown(key)?.let { last -> paint(last) }
@@ -104,7 +104,11 @@ class PlaylistViewModel(
             if (playlist != null) page.update { it.copy(playlist = mapper.playlistHeader(playlist)) }
             var rows = firstPage.await()
             val firstRows = rows
-            if (playlist != null && firstRows != null) launch { source.keep(key, ShownPage(playlist, firstRows.items)) }
+            if (playlist != null &&
+                firstRows != null
+            ) {
+                launch { source.keep(key, CachedPage(playlist, firstRows.items)) }
+            }
             page.update {
                 it.copy(
                     tracks = rows?.tracks ?: it.tracks,
@@ -135,7 +139,7 @@ class PlaylistViewModel(
      * The first tracks the page showed last time, where the server has not answered yet. They are
      * not [PlaylistUiState.complete], so nothing is removed by a position that may have moved since.
      */
-    private suspend fun paint(last: ShownPage) {
+    private suspend fun paint(last: CachedPage) {
         val rows = withContext(worker) { rows(last.rows, offset = 0, complete = false, next = 0) }
         page.update {
             if (it.tracks.isNotEmpty()) {
@@ -151,7 +155,7 @@ class PlaylistViewModel(
     }
 
     /** A page of rows from [offset], mapped off the main thread; null when the server could not be asked or refused. */
-    private suspend fun rowsOrNull(load: Load, offset: Int, limit: Int = MaApi.PAGE): Rows? {
+    private suspend fun rowsOrNull(load: PageLoad, offset: Int, limit: Int = MaApi.PAGE): Rows? {
         val page = load.attempt { source.playlistTracks(key, offset, limit) } ?: return null
         return withContext(worker) { rows(page.items, offset, page.complete, page.next) }
     }

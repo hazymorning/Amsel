@@ -39,7 +39,7 @@ fun SheetQuestion(
                 question,
                 style = style,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.widthIn(max = Sizes.Measure).textInk(style).inkStart(question, style),
+                modifier = Modifier.widthIn(max = Sizes.Measure).capToBaseline(style).trimStartBearing(question, style),
             )
             Spacer(Modifier.height(Space.Group))
             PrimaryButton(primary, onClick = onPrimary, modifier = Modifier.fillMaxWidth())

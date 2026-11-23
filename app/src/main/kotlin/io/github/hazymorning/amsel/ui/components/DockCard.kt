@@ -137,7 +137,7 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit, speakerButton: Bo
                 words,
                 type.dockLine,
                 color = colors.onSurfaceVariant,
-                modifier = Modifier.inkStart(words, type.dockLine),
+                modifier = Modifier.trimStartBearing(words, type.dockLine),
             )
         }
         if (speakerButton) {
@@ -344,7 +344,7 @@ private fun PlayerWords(state: NowPlayingUi, speaker: SpeakerUi, modifier: Modif
             line,
             type.dockLine,
             colors.onSurfaceVariant,
-            song.inkStart(line, type.dockLine),
+            song.trimStartBearing(line, type.dockLine),
             runs = runs,
         )
     }

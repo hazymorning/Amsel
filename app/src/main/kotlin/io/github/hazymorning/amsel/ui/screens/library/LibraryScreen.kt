@@ -41,7 +41,7 @@ import kotlinx.coroutines.flow.map
  * The library: its title, the kinds as chips, the order in words, then the items. The header
  * scrolls with them; once the title has gone, a slim bar names the kind that shows. A sideways
  * swipe goes to the chip beside the chosen one, round from the last to the first, and each kind
- * keeps its own place in its list, the header staying where it stood ([LibraryPlaces.handOver]).
+ * keeps its own place in its list, the header staying where it stood ([LibraryScrollPositions.handOver]).
  * One kind alone, a place of its own in the bar ([LibraryUiState.single]), is the title itself.
  */
 @Composable
@@ -57,7 +57,7 @@ fun LibraryScreen(
     onRefresh: () -> Unit = {},
 ) {
     val title = stringResource(if (state.single) state.kind.label else PlaybackR.string.library)
-    val places = rememberSaveable(saver = LibraryPlaces.Saver) { LibraryPlaces() }
+    val places = rememberSaveable(saver = LibraryScrollPositions.Saver) { LibraryScrollPositions() }
     val list = places.list(state.kind)
     val grid = places.grid(state.kind)
     val covers = state.kind.covers && !state.offline && state.failure == null

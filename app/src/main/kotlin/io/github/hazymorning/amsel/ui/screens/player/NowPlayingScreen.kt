@@ -46,10 +46,10 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.rememberPlayerLayerState
 import io.github.hazymorning.amsel.ui.theme.CoverColors
-import io.github.hazymorning.amsel.ui.theme.Lift
+import io.github.hazymorning.amsel.ui.theme.Elevation
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
-import io.github.hazymorning.amsel.ui.theme.around
+import io.github.hazymorning.amsel.ui.theme.extendForShadow
 import io.github.hazymorning.amsel.ui.theme.isNight
 import io.github.hazymorning.amsel.ui.theme.rememberCoverColors
 import kotlinx.coroutines.launch
@@ -127,9 +127,9 @@ fun NowPlayingScreen(
             Artwork(
                 state.art,
                 // The cover's shade moves and fades with it.
-                Modifier.then(swipe.detect).around(Lift.Cover, swipe.follow),
+                Modifier.then(swipe.detect).extendForShadow(Elevation.Cover, swipe.follow),
                 kind = if (state.spoken) state.kind else MediaKind.Track,
-                lifted = !night,
+                elevated = !night,
                 name = state.album ?: state.title,
             )
             val chapter = rememberChapter(state, position)

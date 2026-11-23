@@ -57,7 +57,7 @@ fun ChapterRow(
                 style = style,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                modifier = Modifier.inkSides(length, style),
+                modifier = Modifier.trimSideBearings(length, style),
             )
         },
     )

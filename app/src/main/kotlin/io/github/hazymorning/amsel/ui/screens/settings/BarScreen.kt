@@ -10,10 +10,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.graph
-import io.github.hazymorning.amsel.ui.navigation.Arrangement
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
+import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import kotlinx.coroutines.launch
 
 /**
@@ -22,34 +22,34 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun BarScreen(
-    places: Arrangement<BarPlace>,
-    onChange: (Arrangement<BarPlace>) -> Unit,
+    places: OrderedToggles<BarItem>,
+    onChange: (OrderedToggles<BarItem>) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) = ArrangeScreen(
     title = stringResource(R.string.settings_bar),
     hint = stringResource(R.string.bar_hint),
     arrangement = places,
-    key = BarPlace::id,
+    key = BarItem::id,
     label = { stringResource(it.label) },
-    icon = BarPlace::icon,
-    fixed = BarPlace.Home,
+    icon = BarItem::icon,
+    fixed = BarItem.Home,
     fixedLine = stringResource(R.string.bar_home_stays),
     onChange = onChange,
     onBack = onBack,
     modifier = modifier,
-    max = BarPlace.MAX,
+    max = BarItem.MAX,
     fullLine = stringResource(R.string.bar_full),
     note = stringResource(R.string.bar_settings_pull).let { pull ->
-        { place -> pull.takeIf { place == BarPlace.Settings && place !in places.shown } }
+        { place -> pull.takeIf { place == BarItem.Settings && place !in places.shown } }
     },
 )
 
 /** Which controls the mini player shows beside what plays, and in what order. Play always stays. */
 @Composable
 fun DockScreen(
-    controls: Arrangement<DockControl>,
-    onChange: (Arrangement<DockControl>) -> Unit,
+    controls: OrderedToggles<DockControl>,
+    onChange: (OrderedToggles<DockControl>) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) = ArrangeScreen(
@@ -74,8 +74,8 @@ fun BarRoute(navigator: Navigator) {
     val stored by prefs.prefs.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     BarScreen(
-        places = BarPlace.arrangement(stored?.barPlaces),
-        onChange = { places -> scope.launch { prefs.setBarPlaces(places.tokens(BarPlace::id)) } },
+        places = BarItem.arrangement(stored?.barPlaces),
+        onChange = { places -> scope.launch { prefs.setBarPlaces(places.tokens(BarItem::id)) } },
         onBack = navigator::back,
     )
 }

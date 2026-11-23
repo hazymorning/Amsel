@@ -3,7 +3,7 @@ package io.github.hazymorning.amsel.ui.screens.pages
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.PlaylistEdit
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
@@ -30,7 +30,7 @@ import org.junit.Test
 /** The pages' ViewModels against the recorded 2.11 server shapes. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PagesViewModelTest {
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
     private val mapper = UiMapper { null }
     private val playing = MutableStateFlow<String?>(null)
 

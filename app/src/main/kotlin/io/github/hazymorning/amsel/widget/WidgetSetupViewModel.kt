@@ -28,7 +28,7 @@ data class WidgetSpeaker(val id: String, val name: String)
 @Immutable
 data class WidgetSetupUi(
     val setup: WidgetSetup = WidgetSetup(),
-    val look: WidgetLook = WidgetLook(),
+    val look: WidgetContent = WidgetContent(),
     /** The widget as it will show, at its size; null until drawn. */
     val picture: RemoteViews? = null,
     /** Its size on the home screen, in dp. */
@@ -46,21 +46,21 @@ data class WidgetSetupUi(
 @OptIn(ExperimentalCoroutinesApi::class)
 class WidgetSetupViewModel(
     private val widgetId: Int,
-    private val widgets: Widgets,
+    private val widgets: WidgetController,
     speakers: Flow<List<WidgetSpeaker>>,
     volumeLimit: Flow<Int>,
 ) : ViewModel() {
     private val setup = MutableStateFlow<WidgetSetup?>(null)
     private val size = widgets.size(widgetId)
 
-    private val look: Flow<WidgetLook> = setup.filterNotNull()
+    private val look: Flow<WidgetContent> = setup.filterNotNull()
         .map { it.speaker }
         .distinctUntilChanged()
-        .flatMapLatest { widgets.lookFor(it) }
-        .onStart { emit(WidgetLook()) }
+        .flatMapLatest { widgets.contentFor(it) }
+        .onStart { emit(WidgetContent()) }
 
     private val picture: Flow<RemoteViews?> = combine(setup.filterNotNull(), look, ::Pair)
-        .mapLatest<Pair<WidgetSetup, WidgetLook>, RemoteViews?> { (setup, look) ->
+        .mapLatest<Pair<WidgetSetup, WidgetContent>, RemoteViews?> { (setup, look) ->
             widgets.picture(widgetId, setup, look, size)
         }
         .onStart { emit(null) }

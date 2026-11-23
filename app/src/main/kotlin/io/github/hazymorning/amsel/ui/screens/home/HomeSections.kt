@@ -73,7 +73,7 @@ internal fun Sections(
     )
     // One for the list's life: a new one at each recomposition would keep every section from skipping.
     val home = remember(list) {
-        ScrollRoom(list, vertical = true) {
+        DragScrollArea(list, vertical = true) {
             listBox.copy(top = listBox.top + shown.first, bottom = listBox.bottom - shown.second)
         }
     }

@@ -51,10 +51,10 @@ import io.github.hazymorning.amsel.ui.components.PreloadCover
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
-import io.github.hazymorning.amsel.ui.navigation.Opening
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.navigation.Tab
 import io.github.hazymorning.amsel.ui.theme.LocalReducedMotion
@@ -98,13 +98,13 @@ fun AppShell(
     onControl: (PlayerControl) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     layer: PlayerLayerState = rememberPlayerLayerState(),
-    opening: Opening? = null,
+    opening: DeepLink? = null,
     onOpened: () -> Unit = {},
     offer: Offer? = null,
     onTakeOffer: (Offer) -> Unit = {},
     onDismissOffer: (Offer) -> Unit = {},
     /** The places the bottom bar shows, in its order. */
-    bar: List<BarPlace> = BarPlace.Default,
+    bar: List<BarItem> = BarItem.Default,
     /** The mini player's controls beside what plays, in the person's order. */
     dock: List<DockControl> = DockControl.Default.visible,
     /** The mini player's controls that open something or change it: the heart, volume, sleep, the speaker. */
@@ -120,7 +120,7 @@ fun AppShell(
     LaunchedEffect(opening) {
         val asked = opening ?: return@LaunchedEffect
         when (asked) {
-            Opening.Search -> {
+            DeepLink.Search -> {
                 tabs.popToRoot(Tab.Search)
                 tab = Tab.Search
                 newSearch++
@@ -129,15 +129,15 @@ fun AppShell(
 
             // Opened cold, the speaker reports a moment after the app shows; if nothing plays by
             // then, Home stays, rather than Now Playing rising over it later out of nowhere.
-            Opening.NowPlaying, Opening.UpNext -> withTimeoutOrNull(NOW_PLAYING_WAIT_MS) {
+            DeepLink.NowPlaying, DeepLink.UpNext -> withTimeoutOrNull(NOW_PLAYING_WAIT_MS) {
                 snapshotFlow { playing }.first { it != null }
                 layer.open()
-                if (asked == Opening.UpNext) upNext.value = true
+                if (asked == DeepLink.UpNext) upNext.value = true
             }
 
-            Opening.Speakers -> onSpeaker()
+            DeepLink.Speakers -> onSpeaker()
 
-            Opening.Group -> onGroup()
+            DeepLink.Group -> onGroup()
         }
         onOpened()
     }

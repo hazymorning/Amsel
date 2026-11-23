@@ -2,20 +2,21 @@ package io.github.hazymorning.amsel.ui.screens.library
 
 import androidx.lifecycle.SavedStateHandle
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.LibrarySort
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
+import io.github.hazymorning.amsel.ui.model.ServerStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,7 +42,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibraryViewModelTest {
     private val address = MutableStateFlow<ServerAddress?>(ServerAddress.fromBaseUrl("http://192.168.1.20:8095"))
-    private val mapper = UiMapper { address.value?.let(::Images) }
+    private val mapper = UiMapper { address.value?.let(::ImageUrls) }
     private val sources = mutableMapOf<Pair<MediaType, LibrarySort>, Flow<List<LibraryItemEntity>>>()
     private val asked = mutableListOf<Pair<MediaType, LibrarySort>>()
     private val syncing = MutableStateFlow(false)
@@ -49,7 +50,7 @@ class LibraryViewModelTest {
     private val session = MutableStateFlow<SessionState>(SessionState.Ready(ServerInfo("id", "2.11.0", 99), null))
     private val resyncs = mutableListOf<MediaType>()
     private var sync = CompletableDeferred<Unit>()
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
 
     @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
 
@@ -326,30 +327,41 @@ class LibraryViewModelTest {
 
     @Test fun anEmptyListWhileSyncingOrConnectingIsTheFirstLoad() {
         val empty = LibraryPage(playlists, emptyList())
-        assertTrue(libraryState(empty, syncing = true, Reach.Online, synced = false).loading)
+        assertTrue(libraryState(empty, syncing = true, ServerStatus.Connected, synced = false).loading)
         // Synced before, an empty kind stays empty while the index syncs again or reconnects.
-        assertFalse(libraryState(empty, syncing = true, Reach.Online, synced = true).loading)
-        assertFalse(libraryState(empty, syncing = false, Reach.Connecting, synced = true).loading)
-        assertTrue(libraryState(empty, syncing = false, Reach.Connecting, synced = false).loading)
+        assertFalse(libraryState(empty, syncing = true, ServerStatus.Connected, synced = true).loading)
+        assertFalse(libraryState(empty, syncing = false, ServerStatus.Connecting, synced = true).loading)
+        assertTrue(libraryState(empty, syncing = false, ServerStatus.Connecting, synced = false).loading)
         assertTrue(
-            libraryState(LibraryPage(playlists, items = null), syncing = false, Reach.Offline, synced = false).loading,
+            libraryState(
+                LibraryPage(playlists, items = null),
+                syncing = false,
+                ServerStatus.Offline,
+                synced = false,
+            ).loading,
         )
     }
 
     @Test fun anEmptyListOfflineIsUnreachable() {
-        val state = libraryState(LibraryPage(playlists, emptyList()), syncing = true, Reach.Offline, synced = false)
+        val state =
+            libraryState(LibraryPage(playlists, emptyList()), syncing = true, ServerStatus.Offline, synced = false)
         assertTrue(state.offline)
         assertFalse(state.loading)
     }
 
     @Test fun anEmptyListOnlineAndSyncedIsEmpty() {
         assertTrue(
-            libraryState(LibraryPage(playlists, emptyList()), syncing = false, Reach.Online, synced = false).isEmpty,
+            libraryState(
+                LibraryPage(playlists, emptyList()),
+                syncing = false,
+                ServerStatus.Connected,
+                synced = false,
+            ).isEmpty,
         )
     }
 
     @Test fun cachedItemsAlwaysShow() {
-        val state = libraryState(LibraryPage(playlists, one), syncing = true, Reach.Offline, synced = false)
+        val state = libraryState(LibraryPage(playlists, one), syncing = true, ServerStatus.Offline, synced = false)
         assertEquals(one, state.items)
         assertFalse(state.loading)
         assertFalse(state.offline)

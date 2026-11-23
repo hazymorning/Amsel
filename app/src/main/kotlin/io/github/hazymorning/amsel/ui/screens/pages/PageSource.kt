@@ -18,9 +18,9 @@ import io.github.hazymorning.amsel.api.podcastEpisodes
 import io.github.hazymorning.amsel.api.similarArtists
 import io.github.hazymorning.amsel.api.similarTracks
 import io.github.hazymorning.amsel.api.withoutSeed
-import io.github.hazymorning.amsel.app.Messages
-import io.github.hazymorning.amsel.data.PageMemory
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.app.MessageController
+import io.github.hazymorning.amsel.data.CachedPage
+import io.github.hazymorning.amsel.data.PageCache
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.data.library.LibraryRepository
 import io.github.hazymorning.amsel.data.library.ProgressUpdate
@@ -70,10 +70,10 @@ interface PageSource {
     val progress: Flow<ProgressUpdate>
 
     /** What the page of [key] showed last time, for its first paint; null when this phone holds none. */
-    suspend fun shown(key: String): ShownPage?
+    suspend fun shown(key: String): CachedPage?
 
     /** Keeps what the page of [key] now shows, for the next visit's first paint. */
-    suspend fun keep(key: String, page: ShownPage)
+    suspend fun keep(key: String, page: CachedPage)
 
     /** The index's album covers of each of the artists [keys] that has no picture; none it does not hold. */
     suspend fun albumCovers(keys: List<String>): Map<String, List<String>>
@@ -86,7 +86,7 @@ interface PageSource {
 class ServerPageSource(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
-    private val memory: PageMemory,
+    private val memory: PageCache,
     /** Whether the server is connected, as it changes. */
     private val connected: Flow<Boolean>,
 ) : PageSource {
@@ -135,9 +135,9 @@ class ServerPageSource(
 
     override val progress: Flow<ProgressUpdate> = flow { emitAll(library().progress) }
 
-    override suspend fun shown(key: String): ShownPage? = memory.read(key)
+    override suspend fun shown(key: String): CachedPage? = memory.read(key)
 
-    override suspend fun keep(key: String, page: ShownPage) = memory.write(key, page)
+    override suspend fun keep(key: String, page: CachedPage) = memory.write(key, page)
 
     override suspend fun albumCovers(keys: List<String>): Map<String, List<String>> = library().albumCovers(keys)
 
@@ -170,7 +170,7 @@ internal fun List<MediaItem>.similarTo(key: String, seed: MediaItem?): List<Medi
  * The calls of one page load: each answers, or is null when the server could not be asked or
  * refused, and the first such [failure] is kept for the page to say.
  */
-internal class Load {
+internal class PageLoad {
     var failure: Exception? = null
         private set
 
@@ -186,7 +186,7 @@ internal class Load {
  * Where [load] could not reach the server, [again] once it is connected anew: a page opened while
  * Amsel connects, as it does coming back to the front, fills in by itself, as Home and the Library do.
  */
-internal suspend fun PageSource.againOnceConnected(load: Load, again: () -> Unit) {
+internal suspend fun PageSource.againOnceConnected(load: PageLoad, again: () -> Unit) {
     if (load.failure !is MaConnectionException) return
     connectedAgain()
     again()
@@ -196,7 +196,7 @@ internal suspend fun PageSource.againOnceConnected(load: Load, again: () -> Unit
  * A page that still shows what it has says why [load] failed, with Retry; one with nothing to show
  * says so in its own place ([showUnavailable]).
  */
-internal fun Messages.loadFailed(load: Load, showUnavailable: Boolean, retry: () -> Unit) {
+internal fun MessageController.loadFailed(load: PageLoad, showUnavailable: Boolean, retry: () -> Unit) {
     val failure = load.failure ?: return
     if (!showUnavailable) show(failureText(failure), retry = retry)
 }

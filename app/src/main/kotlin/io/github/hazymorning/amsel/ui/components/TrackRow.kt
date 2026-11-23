@@ -89,7 +89,7 @@ fun LeadNumber(text: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             softWrap = false,
-            modifier = Modifier.inkStart(text, style),
+            modifier = Modifier.trimStartBearing(text, style),
         )
     }
 }

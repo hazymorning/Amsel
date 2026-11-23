@@ -24,24 +24,24 @@ internal class OptimisticTransport(
     private val timeoutMs: Long,
     private val volumeTimeoutMs: Long,
 ) {
-    data class Wish<T>(val value: T, val atMs: Long, val untilMs: Long)
+    data class PendingRequest<T>(val value: T, val atMs: Long, val untilMs: Long)
 
     /** One speaker's standing requests; null where nothing was asked. */
-    data class Wishes(
-        val playing: Wish<Boolean>? = null,
-        val shuffle: Wish<Boolean>? = null,
-        val repeat: Wish<RepeatMode>? = null,
-        val volume: Wish<Int>? = null,
+    data class PendingRequests(
+        val playing: PendingRequest<Boolean>? = null,
+        val shuffle: PendingRequest<Boolean>? = null,
+        val repeat: PendingRequest<RepeatMode>? = null,
+        val volume: PendingRequest<Int>? = null,
         /** The queue's next item a skip moves to, from its start. */
-        val item: Wish<NowPlayingUi>? = null,
+        val item: PendingRequest<NowPlayingUi>? = null,
     ) {
         val isEmpty get() = playing == null && shuffle == null && repeat == null && volume == null && item == null
     }
 
-    private val _wishes = MutableStateFlow<Map<String, Wishes>>(emptyMap())
+    private val _pending = MutableStateFlow<Map<String, PendingRequests>>(emptyMap())
 
     /** Every speaker's standing requests, by player id. */
-    val wishes: StateFlow<Map<String, Wishes>> = _wishes.asStateFlow()
+    val pending: StateFlow<Map<String, PendingRequests>> = _pending.asStateFlow()
 
     fun playing(playerId: String, on: Boolean) = ask(playerId, timeoutMs) { w, wish -> w.copy(playing = wish(on)) }
 
@@ -56,12 +56,12 @@ internal class OptimisticTransport(
     fun item(playerId: String, next: NowPlayingUi) = ask(playerId, timeoutMs) { w, wish -> w.copy(item = wish(next)) }
 
     /** A command failed: the speaker's own state shows again, beside the sentence that says so. */
-    fun clear(playerId: String) = _wishes.update { it - playerId }
+    fun clear(playerId: String) = _pending.update { it - playerId }
 
     /** Drops what [reported] for [playerId] already shows: the speaker has caught up. */
-    fun settle(playerId: String, reported: NowPlayingUi) = _wishes.update { all ->
+    fun settle(playerId: String, reported: NowPlayingUi) = _pending.update { all ->
         val w = all[playerId] ?: return@update all
-        val left = Wishes(
+        val left = PendingRequests(
             playing = w.playing?.takeIf { it.value != reported.isPlaying },
             shuffle = w.shuffle?.takeIf { it.value != reported.shuffle },
             repeat = w.repeat?.takeIf { it.value != reported.repeat },
@@ -76,10 +76,10 @@ internal class OptimisticTransport(
      * where it stood at the tap; a play shows as playing at once, its position standing until the
      * speaker reports that it plays, so the seek line never runs ahead of the sound.
      */
-    fun overlay(reported: NowPlayingUi, wishes: Wishes?): NowPlayingUi {
-        if (wishes == null) return reported
+    fun overlay(reported: NowPlayingUi, pending: PendingRequests?): NowPlayingUi {
+        if (pending == null) return reported
         // A skip shows the next item from the tap on, standing at its start, with the speaker's own controls.
-        val base = wishes.item?.let { skip ->
+        val base = pending.item?.let { skip ->
             skip.value.copy(
                 isPlaying = reported.isPlaying,
                 arriving = reported.isPlaying,
@@ -93,11 +93,11 @@ internal class OptimisticTransport(
             )
         } ?: reported
         val shown = base.copy(
-            shuffle = wishes.shuffle?.value ?: base.shuffle,
-            repeat = wishes.repeat?.value ?: base.repeat,
-            volume = base.volume?.let { wishes.volume?.value ?: it },
+            shuffle = pending.shuffle?.value ?: base.shuffle,
+            repeat = pending.repeat?.value ?: base.repeat,
+            volume = base.volume?.let { pending.volume?.value ?: it },
         )
-        val playing = wishes.playing?.takeIf { it.value != reported.isPlaying } ?: return shown
+        val playing = pending.playing?.takeIf { it.value != reported.isPlaying } ?: return shown
         return if (playing.value) {
             shown.copy(isPlaying = true, arriving = true)
         } else {
@@ -110,11 +110,15 @@ internal class OptimisticTransport(
         }
     }
 
-    private fun <T> ask(playerId: String, lifetimeMs: Long, change: (Wishes, (T) -> Wish<T>) -> Wishes) {
+    private fun <T> ask(
+        playerId: String,
+        lifetimeMs: Long,
+        change: (PendingRequests, (T) -> PendingRequest<T>) -> PendingRequests,
+    ) {
         val at = elapsedRealtime()
         val until = at + lifetimeMs
-        _wishes.update { all ->
-            all + (playerId to change(all[playerId] ?: Wishes()) { Wish(it, at, until) })
+        _pending.update { all ->
+            all + (playerId to change(all[playerId] ?: PendingRequests()) { PendingRequest(it, at, until) })
         }
         scope.launch {
             delay(lifetimeMs)
@@ -123,9 +127,9 @@ internal class OptimisticTransport(
     }
 
     /** Drops every request that ran out by [untilMs]; a newer one for the same thing has its own time. */
-    private fun expire(untilMs: Long) = _wishes.update { all ->
+    private fun expire(untilMs: Long) = _pending.update { all ->
         all.mapValues { (_, w) ->
-            Wishes(
+            PendingRequests(
                 playing = w.playing?.takeIf { it.untilMs > untilMs },
                 shuffle = w.shuffle?.takeIf { it.untilMs > untilMs },
                 repeat = w.repeat?.takeIf { it.untilMs > untilMs },

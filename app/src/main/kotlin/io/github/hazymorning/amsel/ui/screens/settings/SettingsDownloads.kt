@@ -21,7 +21,7 @@ import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsIntro
-import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
+import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignInAction
 import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignInForm
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -58,7 +58,7 @@ internal fun downloadsLine(account: AbsAccount?, usedBytes: Long? = null): Strin
 internal fun DownloadsSheetContent(
     state: DownloadSettings,
     onWifiOnlyChange: (Boolean) -> Unit,
-    onSignIn: AbsSignIn,
+    onSignIn: AbsSignInAction,
     onSignOut: () -> Unit,
 ) {
     Column(

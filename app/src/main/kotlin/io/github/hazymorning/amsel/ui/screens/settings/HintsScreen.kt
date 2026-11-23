@@ -14,7 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.app.Hints
+import io.github.hazymorning.amsel.app.HintController
 import io.github.hazymorning.amsel.data.HINTS_ALL
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
@@ -26,13 +26,13 @@ import kotlinx.coroutines.launch
 
 /** A kind of hint the person can turn off: when it comes, and what it suggests then. */
 internal enum class HintKind(val key: String, @StringRes val situation: Int, @StringRes val suggests: Int) {
-    Liked(Hints.HINT_LIKED, R.string.hints_liked, R.string.hints_liked_offer),
-    Headphones(Hints.HINT_HEADPHONES, R.string.hints_headphones, R.string.hints_to_phone),
-    Away(Hints.HINT_AWAY, R.string.hints_away, R.string.hints_to_phone),
-    Home(Hints.HINT_HOME, R.string.hints_home, R.string.hints_home_offer),
-    Silent(Hints.HINT_SILENT, R.string.hints_silent, R.string.hints_silent_offer),
-    Ended(Hints.HINT_ENDED, R.string.hints_ended, R.string.hints_ended_offer),
-    Sleep(Hints.HINT_SLEEP, R.string.hints_sleep, R.string.hints_sleep_offer),
+    Liked(HintController.HINT_LIKED, R.string.hints_liked, R.string.hints_liked_offer),
+    Headphones(HintController.HINT_HEADPHONES, R.string.hints_headphones, R.string.hints_to_phone),
+    Away(HintController.HINT_AWAY, R.string.hints_away, R.string.hints_to_phone),
+    Home(HintController.HINT_HOME, R.string.hints_home, R.string.hints_home_offer),
+    Silent(HintController.HINT_SILENT, R.string.hints_silent, R.string.hints_silent_offer),
+    Ended(HintController.HINT_ENDED, R.string.hints_ended, R.string.hints_ended_offer),
+    Sleep(HintController.HINT_SLEEP, R.string.hints_sleep, R.string.hints_sleep_offer),
 }
 
 /** How many kinds of hint are on, given those [off]: all, none, or a count. */

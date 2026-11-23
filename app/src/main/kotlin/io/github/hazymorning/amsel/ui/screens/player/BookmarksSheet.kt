@@ -42,10 +42,10 @@ import io.github.hazymorning.amsel.ui.components.LabelledField
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.TextAction
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.dateText
 import io.github.hazymorning.amsel.ui.components.formatDuration
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -80,7 +80,9 @@ fun BookmarksSheetContent(
                 sentence,
                 style = body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = Keyline.Margin).textInk(body).inkStart(sentence, body),
+                modifier = Modifier.padding(
+                    horizontal = Keyline.Margin,
+                ).capToBaseline(body).trimStartBearing(sentence, body),
             )
             return@Column
         }

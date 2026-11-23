@@ -41,7 +41,7 @@ fun EmptyState(
     messageModifier: Modifier = Modifier,
 ) {
     val glyph: (@Composable () -> Unit)? = icon?.let {
-        { InkGlyph(it, tint = MaterialTheme.colorScheme.outline, size = Sizes.IconLarge, inkHeight = true) }
+        { AlignedGlyph(it, tint = MaterialTheme.colorScheme.outline, size = Sizes.IconLarge, trimHeight = true) }
     }
     AnchoredMessage(glyph, message, modifier, actionLabel, onAction, messageModifier)
 }
@@ -76,7 +76,9 @@ private fun AnchoredMessage(
                     style = body,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = messageModifier.widthIn(max = Sizes.Measure).textInk(body).inkCentre(message, body),
+                    modifier = messageModifier.widthIn(
+                        max = Sizes.Measure,
+                    ).capToBaseline(body).centreOnGlyphs(message, body),
                 )
                 if (actionLabel != null && onAction != null) {
                     Spacer(Modifier.height(with(LocalDensity.current) { groupAfter(body) }))

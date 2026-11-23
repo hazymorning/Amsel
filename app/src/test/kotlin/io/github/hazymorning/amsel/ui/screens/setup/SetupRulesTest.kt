@@ -68,7 +68,7 @@ class SetupRulesTest {
     }
 
     @Test fun `a name typed without a scheme that https does not reach asks for http, typed so`() {
-        fun typed(text: String) = Target(address(text), connectingTo = text, field = text, fromList = false)
+        fun typed(text: String) = ServerCheckRequest(address(text), connectingTo = text, field = text, fromList = false)
         assertEquals(ServerError.HttpsFailed, ServerError.Unreachable.of(typed("music.example.com")))
         // Typed with its scheme, or a home address over http: nothing more to say.
         assertEquals(ServerError.Unreachable, ServerError.Unreachable.of(typed("https://music.example.com")))

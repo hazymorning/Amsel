@@ -56,7 +56,7 @@ fun SkeletonArt(modifier: Modifier = Modifier) {
     }
 }
 
-/** [inkTop] and [inkBottom] trim the line as [textInk] trims real text. */
+/** [glyphTop] and [inkBottom] trim the line as [capToBaseline] trims real text. */
 @Composable
 fun SkeletonText(
     style: TextStyle,
@@ -77,7 +77,15 @@ fun SkeletonText(
             maxLines = 1,
             modifier = Modifier
                 .clearAndSetSemantics {}
-                .then(if (inkTop || inkBottom) Modifier.textInk(style, top = inkTop, bottom = inkBottom) else Modifier),
+                .then(
+                    if (inkTop ||
+                        inkBottom
+                    ) {
+                        Modifier.capToBaseline(style, top = inkTop, bottom = inkBottom)
+                    } else {
+                        Modifier
+                    },
+                ),
         )
         val sized = if (width != null) Modifier.width(width) else Modifier.fillMaxWidth(fraction)
         Box(

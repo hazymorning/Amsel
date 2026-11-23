@@ -10,11 +10,11 @@ import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.PlayerQueue
 import io.github.hazymorning.amsel.api.QueueItem
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.UpNextEdit
 import io.github.hazymorning.amsel.app.retryWhileOpen
 import io.github.hazymorning.amsel.data.SessionState
-import io.github.hazymorning.amsel.data.Speakers
+import io.github.hazymorning.amsel.data.SpeakerRepository
 import io.github.hazymorning.amsel.playback.RemotePlayer
 import io.github.hazymorning.amsel.playback.failureText
 import io.github.hazymorning.amsel.ui.components.moved
@@ -53,10 +53,10 @@ import kotlinx.coroutines.sync.withLock
 class UpNextViewModel(
     private val queueId: String,
     private val api: MaApi,
-    private val speakers: Speakers,
+    private val speakers: SpeakerRepository,
     session: Flow<SessionState>,
     private val mapper: UiMapper,
-    private val messages: Messages,
+    private val messages: MessageController,
     private val appScope: CoroutineScope,
     /** Runs before a tapped song starts: on This phone it releases the hold a pause left. */
     private val beforePlay: (queueId: String) -> Unit,

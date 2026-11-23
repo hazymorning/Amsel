@@ -14,11 +14,11 @@ import android.widget.RemoteViews
  */
 internal class WidgetPreviews(
     private val context: Context,
-    private val draw: suspend (WidgetKind, WidgetLook) -> RemoteViews,
+    private val draw: suspend (WidgetKind, WidgetContent) -> RemoteViews,
 ) {
     private var offeredAt: Long? = null
 
-    suspend fun offer(look: WidgetLook) {
+    suspend fun offer(look: WidgetContent) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
         if (!look.signedIn || look.title == null) return
         val now = SystemClock.elapsedRealtime()

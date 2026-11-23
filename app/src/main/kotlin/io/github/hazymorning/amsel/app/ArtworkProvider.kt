@@ -10,7 +10,7 @@ import coil3.ImageLoader
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.CarArtwork
 import java.io.FileNotFoundException
@@ -59,10 +59,10 @@ class ArtworkProvider : ContentProvider() {
 internal suspend fun carCover(
     context: Context,
     loader: ImageLoader,
-    images: Images,
+    images: ImageUrls,
     proxyId: String,
 ): ParcelFileDescriptor? {
-    val url = Images.sized(images.url(proxyId), CarArtwork.SIZE, format = "jpeg")
+    val url = ImageUrls.sized(images.url(proxyId), CarArtwork.SIZE, format = "jpeg")
     val key = artworkKey(url)
     val request = ImageRequest.Builder(
         context,

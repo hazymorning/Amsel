@@ -1,14 +1,14 @@
 package io.github.hazymorning.amsel.ui.screens.pages
 
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaConnectionException
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaItemImage
 import io.github.hazymorning.amsel.api.MediaItemMetadata
 import io.github.hazymorning.amsel.api.ServerAddress
-import io.github.hazymorning.amsel.app.Messages
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.app.MessageController
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,11 +34,11 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ArtistViewModelTest {
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
     private val mapper = UiMapper { null }
 
     /** Draws covers, as the app does once connected. */
-    private val drawn = UiMapper { Images(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
+    private val drawn = UiMapper { ImageUrls(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
     private val playing = MutableStateFlow<String?>(null)
 
     @Before fun main() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -324,7 +324,7 @@ class ArtistViewModelTest {
     @Test fun `an artist opened again wears last time's covers before the server answers, and keeps them`() = runTest {
         val shelf = listOf(album(1, 2020, "c1"), album(2, 2021, "c2"))
         val source = FakeSource(gated = true).apply {
-            shownPages[ARTIST] = ShownPage(bare, shelf = shelf)
+            shownPages[ARTIST] = CachedPage(bare, shelf = shelf)
             item = bare
             albums = shelf
         }

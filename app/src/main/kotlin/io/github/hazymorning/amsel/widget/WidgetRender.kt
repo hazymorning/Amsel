@@ -62,24 +62,24 @@ internal class WidgetRender(private val context: Context, private val images: Im
     suspend fun draw(
         id: Int,
         setup: WidgetSetup,
-        look: WidgetLook,
+        look: WidgetContent,
         sizes: List<SizeF>,
         taps: Boolean = true,
         clearInk: Boolean? = null,
     ): RemoteViews {
         val fits = sizes.map { views.fit(it.width, it.height, setup, look) }
         val pictures = pictures(setup, look, fits, faces(setup, fits))
-        val ink = setup.style == WidgetStyle.Clear && (clearInk ?: wallpaperWantsInk(context))
+        val ink = setup.style == WidgetStyle.Clear && (clearInk ?: wallpaperWantsDarkText(context))
         return views.build(id, setup, look, fits, pictures, ink, taps)
     }
 
     /** The covers [fits] show: the ground, what plays at each cover's side, a tile's Play … cover. */
     private suspend fun pictures(
         setup: WidgetSetup,
-        look: WidgetLook,
+        look: WidgetContent,
         fits: List<WidgetFit>,
         faces: Map<String, Bitmap>,
-    ): WidgetPictures {
+    ): WidgetBitmaps {
         val playing = look.signedIn && look.title != null
         val covered = fits.filter { it.form in Covered }.map { views.px(it.art) }
         val tiles = fits.filter { it.form == WidgetForm.Tile }
@@ -97,7 +97,7 @@ internal class WidgetRender(private val context: Context, private val images: Im
             setup.style == WidgetStyle.Darkened -> ground(look.artLarge ?: look.art, ART_PX, WidgetArt::darkened)
             else -> null
         }
-        return WidgetPictures(
+        return WidgetBitmaps(
             cover = ground,
             art = art,
             faces = faces,

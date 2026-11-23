@@ -31,8 +31,8 @@ import io.github.hazymorning.amsel.ui.components.FieldNote
 import io.github.hazymorning.amsel.ui.components.LabelledField
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.capToBaseline
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.groupAfter
@@ -105,7 +105,7 @@ private fun ServerName(name: String, address: String) {
             name,
             style = type.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.textInk(type.bodyLarge).inkStart(name, type.bodyLarge),
+            modifier = Modifier.capToBaseline(type.bodyLarge).trimStartBearing(name, type.bodyLarge),
         )
         Words(
             address,
@@ -113,8 +113,8 @@ private fun ServerName(name: String, address: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .paddingFromBaseline(top = with(LocalDensity.current) { secondLine(type.bodyMedium) })
-                .textInk(type.bodyMedium, top = false)
-                .inkStart(address, type.bodyMedium),
+                .capToBaseline(type.bodyMedium, top = false)
+                .trimStartBearing(address, type.bodyMedium),
         )
     }
 }

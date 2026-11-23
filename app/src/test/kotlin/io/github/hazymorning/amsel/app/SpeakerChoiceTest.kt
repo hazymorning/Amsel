@@ -9,32 +9,35 @@ class SpeakerChoiceTest {
         choiceOf(same, fromPhone, holds, plays, targetPlays)
 
     @Test fun thePhonesMusicGoesAlongPlayingOrPaused() {
-        assertEquals(Choice.Move, tap(fromPhone = true, holds = true, plays = true, targetPlays = false))
-        assertEquals(Choice.Move, tap(fromPhone = true, holds = true, plays = false, targetPlays = false))
+        assertEquals(PlayOnAction.Move, tap(fromPhone = true, holds = true, plays = true, targetPlays = false))
+        assertEquals(PlayOnAction.Move, tap(fromPhone = true, holds = true, plays = false, targetPlays = false))
     }
 
     @Test fun aSpeakerThatPlaysIsNeverTakenOverUnasked() {
-        assertEquals(Choice.Ask, tap(fromPhone = true, holds = true, plays = true, targetPlays = true))
+        assertEquals(PlayOnAction.Ask, tap(fromPhone = true, holds = true, plays = true, targetPlays = true))
         // Paused music does not stop what plays there: the person sees that instead.
-        assertEquals(Choice.Select, tap(fromPhone = true, holds = true, plays = false, targetPlays = true))
+        assertEquals(PlayOnAction.Select, tap(fromPhone = true, holds = true, plays = false, targetPlays = true))
     }
 
     @Test fun musicPlayingOnASpeakerStaysUnlessThePersonTakesItAlong() {
-        assertEquals(Choice.Ask, tap(fromPhone = false, holds = true, plays = true, targetPlays = false))
-        assertEquals(Choice.Ask, tap(fromPhone = false, holds = true, plays = true, targetPlays = true))
+        assertEquals(PlayOnAction.Ask, tap(fromPhone = false, holds = true, plays = true, targetPlays = false))
+        assertEquals(PlayOnAction.Ask, tap(fromPhone = false, holds = true, plays = true, targetPlays = true))
     }
 
     @Test fun whatRestsOnASpeakerStaysThere() {
-        assertEquals(Choice.Select, tap(fromPhone = false, holds = true, plays = false, targetPlays = false))
-        assertEquals(Choice.Select, tap(fromPhone = false, holds = true, plays = false, targetPlays = true))
+        assertEquals(PlayOnAction.Select, tap(fromPhone = false, holds = true, plays = false, targetPlays = false))
+        assertEquals(PlayOnAction.Select, tap(fromPhone = false, holds = true, plays = false, targetPlays = true))
     }
 
     @Test fun withNothingToBringTheSpeakerOnlyChanges() {
-        assertEquals(Choice.Select, tap(fromPhone = true, holds = false, plays = false, targetPlays = false))
-        assertEquals(Choice.Select, tap(fromPhone = false, holds = false, plays = false, targetPlays = true))
+        assertEquals(PlayOnAction.Select, tap(fromPhone = true, holds = false, plays = false, targetPlays = false))
+        assertEquals(PlayOnAction.Select, tap(fromPhone = false, holds = false, plays = false, targetPlays = true))
     }
 
     @Test fun theSpeakerInUseStays() {
-        assertEquals(Choice.Stay, tap(fromPhone = true, holds = true, plays = true, targetPlays = true, same = true))
+        assertEquals(
+            PlayOnAction.Stay,
+            tap(fromPhone = true, holds = true, plays = true, targetPlays = true, same = true),
+        )
     }
 }

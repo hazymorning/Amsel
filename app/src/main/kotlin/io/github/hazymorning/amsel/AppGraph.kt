@@ -23,52 +23,52 @@ import io.github.hazymorning.amsel.api.localCleartext
 import io.github.hazymorning.amsel.api.plainHttpOnlyWhen
 import io.github.hazymorning.amsel.app.ArtworkKeys
 import io.github.hazymorning.amsel.app.ArtworkLoader
-import io.github.hazymorning.amsel.app.Bookmarks
-import io.github.hazymorning.amsel.app.DownloadOffer
-import io.github.hazymorning.amsel.app.Downloading
-import io.github.hazymorning.amsel.app.Favorites
-import io.github.hazymorning.amsel.app.Hints
-import io.github.hazymorning.amsel.app.ItemActions
-import io.github.hazymorning.amsel.app.Messages
-import io.github.hazymorning.amsel.app.Offers
-import io.github.hazymorning.amsel.app.PlayOn
-import io.github.hazymorning.amsel.app.Playback
-import io.github.hazymorning.amsel.app.Playing
+import io.github.hazymorning.amsel.app.BookmarkStore
+import io.github.hazymorning.amsel.app.DownloadController
+import io.github.hazymorning.amsel.app.DownloadOfferPolicy
+import io.github.hazymorning.amsel.app.FavoritesRepository
+import io.github.hazymorning.amsel.app.GroupVolumeController
+import io.github.hazymorning.amsel.app.HintController
+import io.github.hazymorning.amsel.app.ItemActionController
+import io.github.hazymorning.amsel.app.MessageController
+import io.github.hazymorning.amsel.app.OfferController
+import io.github.hazymorning.amsel.app.PlayOnController
+import io.github.hazymorning.amsel.app.PlaybackController
+import io.github.hazymorning.amsel.app.PlaybackState
 import io.github.hazymorning.amsel.app.PlaylistEditor
-import io.github.hazymorning.amsel.app.QueueDjs
-import io.github.hazymorning.amsel.app.RecentSearches
-import io.github.hazymorning.amsel.app.SleepTimer
-import io.github.hazymorning.amsel.app.SpeakerGroups
-import io.github.hazymorning.amsel.app.SpeakerVolumes
-import io.github.hazymorning.amsel.app.Tips
-import io.github.hazymorning.amsel.app.Updates
+import io.github.hazymorning.amsel.app.QueueDjController
+import io.github.hazymorning.amsel.app.RecentSearchStore
+import io.github.hazymorning.amsel.app.SleepTimerController
+import io.github.hazymorning.amsel.app.SpeakerGroupController
+import io.github.hazymorning.amsel.app.TipController
+import io.github.hazymorning.amsel.app.UpdateController
 import io.github.hazymorning.amsel.data.AndroidPhoneNetwork
 import io.github.hazymorning.amsel.data.DataGraph
-import io.github.hazymorning.amsel.data.KeystoreTokenVault
+import io.github.hazymorning.amsel.data.KeystoreTokenCipher
 import io.github.hazymorning.amsel.data.PhoneNetwork
 import io.github.hazymorning.amsel.data.SessionState
-import io.github.hazymorning.amsel.data.TokenVault
+import io.github.hazymorning.amsel.data.TokenCipher
 import io.github.hazymorning.amsel.playback.DataPlaybackGraph
 import io.github.hazymorning.amsel.playback.DownloadService
 import io.github.hazymorning.amsel.playback.LocalPlayback
 import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
 import io.github.hazymorning.amsel.playback.PlaybackGraph
-import io.github.hazymorning.amsel.playback.SeekLanes
+import io.github.hazymorning.amsel.playback.SeekDispatcher
+import io.github.hazymorning.amsel.playback.SelectedSpeaker
 import io.github.hazymorning.amsel.playback.SpeakerSelection
-import io.github.hazymorning.amsel.playback.Target
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.SpokenWord
-import io.github.hazymorning.amsel.widget.SessionHands
-import io.github.hazymorning.amsel.widget.SpeakerHands
-import io.github.hazymorning.amsel.widget.WidgetCommands
+import io.github.hazymorning.amsel.widget.OptimisticWidgetActions
+import io.github.hazymorning.amsel.widget.SessionTransport
+import io.github.hazymorning.amsel.widget.SpeakerTransport
+import io.github.hazymorning.amsel.widget.WidgetController
 import io.github.hazymorning.amsel.widget.WidgetItem
-import io.github.hazymorning.amsel.widget.WidgetPlan
+import io.github.hazymorning.amsel.widget.WidgetRefreshJobScheduler
 import io.github.hazymorning.amsel.widget.WidgetSource
 import io.github.hazymorning.amsel.widget.WidgetStore
-import io.github.hazymorning.amsel.widget.Widgets
-import io.github.hazymorning.amsel.widget.widgetLook
+import io.github.hazymorning.amsel.widget.widgetContent
 import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -91,7 +91,7 @@ import okhttp3.OkHttpClient
  * when first used; [start] starts what runs for as long as the app does. One OkHttpClient serves
  * the WebSocket, discovery and artwork.
  */
-class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVault()) {
+class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenCipher()) {
     private val app = context.applicationContext
 
     /** Outlives screens: play actions and sync must finish even if the user navigates away. */
@@ -138,7 +138,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     private suspend fun forgetSession() {
         recentSearches.clear()
         bookmarks.clear()
-        widgets.forgetLook()
+        widgets.forgetContent()
         imageLoader.memoryCache?.clear()
         withContext(Dispatchers.IO) { imageLoader.diskCache?.clear() }
     }
@@ -146,8 +146,8 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
     /** Downloads playing on this phone, built on first use. */
     val local: LocalPlayback by lazy { LocalPlayback(app, data.downloads, data.abs, network.current, scope) }
 
-    private val lanes: SeekLanes by lazy {
-        SeekLanes(data.session.api, data.session::wake, data.speakers, phone, scope, SystemClock::elapsedRealtime)
+    private val seekDispatcher: SeekDispatcher by lazy {
+        SeekDispatcher(data.session.api, data.session::wake, data.speakers, phone, scope, SystemClock::elapsedRealtime)
     }
 
     val dispatcher: PlayDispatcher by lazy {
@@ -156,9 +156,9 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             phone,
             scope,
             data.speakers,
-            seekIn = lanes::seekIn,
-            starting = lanes::starting,
-            phoneMixStarts = local::giveWay,
+            seekIn = seekDispatcher::seekIn,
+            starting = seekDispatcher::starting,
+            phoneMixStarts = local::stopDownloadPlayback,
             elapsedRealtime = SystemClock::elapsedRealtime,
         )
     }
@@ -174,7 +174,7 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         DataPlaybackGraph(
             data,
             dispatcher,
-            lanes,
+            seekDispatcher,
             selection.target,
             scope,
             phone,
@@ -186,10 +186,10 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         )
     }
 
-    val messages: Messages by lazy { Messages(data.session.foreground) }
+    val messages: MessageController by lazy { MessageController(data.session.foreground) }
 
-    val offers: Offers by lazy {
-        Offers(
+    val offers: OfferController by lazy {
+        OfferController(
             data.session.foreground,
             passes = { data.prefs.prefs.value?.hintPasses.orEmpty() },
             setPasses = { kind, passes -> scope.launch { data.prefs.setHintPasses(kind, passes) } },
@@ -198,28 +198,35 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         )
     }
 
-    val hints: Hints by lazy {
-        Hints(app, data, offers, messages, favorites, playlists, playing, playOn, playback, sleepTimer, scope)
+    val hints: HintController by lazy {
+        HintController(app, data, offers, messages, favorites, playlists, playing, playOn, playback, sleepTimer, scope)
     }
 
-    val favorites: Favorites by lazy {
-        Favorites(data.session.api, data.library, messages, data.session.state, data.session.client.events, scope)
+    val favorites: FavoritesRepository by lazy {
+        FavoritesRepository(
+            data.session.api,
+            data.library,
+            messages,
+            data.session.state,
+            data.session.client.events,
+            scope,
+        )
     }
 
-    val playing: Playing by lazy {
-        Playing(app, data, selection.target, phone, dispatcher, local, mapper, favorites, scope)
+    val playing: PlaybackState by lazy {
+        PlaybackState(app, data, selection.target, phone, dispatcher, local, mapper, favorites, scope)
     }
 
     /** The home screen's widgets: what plays where, and the buttons each person set. */
-    val widgets: Widgets by lazy {
-        Widgets(
+    val widgets: WidgetController by lazy {
+        WidgetController(
             app,
             WidgetStore(app.filesDir.resolve(WIDGET_FOLDER)),
             imageLoader,
             scope,
             hands = { speaker ->
                 if (speaker == null) {
-                    SessionHands(
+                    SessionTransport(
                         app,
                         wakeSession = data.session::wake,
                         showPlaying = { on ->
@@ -227,9 +234,9 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
                         },
                     )
                 } else {
-                    SpeakerHands(
+                    SpeakerTransport(
                         wakeSession = data.session::wake,
-                        player = { playbackGraph.playerFor(Target(speaker, isPhone = false)) },
+                        player = { playbackGraph.playerFor(SelectedSpeaker(speaker, isPhone = false)) },
                         showPlaying = { on -> playing.optimistic.playing(speaker, on) },
                     )
                 }
@@ -237,10 +244,10 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
             lastStarted = { playbackGraph.catalog.inProgress(1).firstOrNull()?.let { WidgetItem(it.uri, it.title) } },
             source = { widgetSource() },
             live = true,
-            actions = WidgetCommands(app, data, playbackGraph.commands, playing.optimistic, favorites, scope),
+            actions = OptimisticWidgetActions(app, data, playbackGraph.commands, playing.optimistic, favorites, scope),
             connected = { data.session.client.state.value is ConnectionState.Connected },
-            lookAtSpeakers = data::lookAtSpeakers,
-            plan = WidgetPlan(app),
+            refreshSpeakers = data::refreshSpeakers,
+            plan = WidgetRefreshJobScheduler(app),
         )
     }
 
@@ -248,17 +255,17 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         /** Where the session stands, and whether what the server last said of the speakers holds. */
         private val heard = combine(data.session.state, data.session.upToDate, ::Pair)
 
-        override val looks =
+        override val content =
             combine(playing.speaker, playing.nowPlaying, heard, data.permissions) {
                     speaker,
                     np,
                     (session, current),
                     may,
                 ->
-                widgetLook(speaker, playing.nameOf(speaker), np, session, may.canWriteLibrary, current)
+                widgetContent(speaker, playing.nameOf(speaker), np, session, may.canWriteLibrary, current)
             }
 
-        override fun lookOf(id: String) = combine(
+        override fun contentOf(id: String) = combine(
             playing.speakers,
             playing.nowPlayingOf(id),
             heard,
@@ -267,29 +274,29 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         ) { speakers, np, (session, current), may, liked ->
             val speaker = speakers.firstOrNull { it.id == id } ?: SpeakerUi(id, "", available = false)
             val heart = np?.key?.let(liked::get)?.let { np.copy(favorite = it) } ?: np
-            widgetLook(speaker, playing.nameOf(id), heart, session, may.canWriteLibrary, current)
+            widgetContent(speaker, playing.nameOf(id), heart, session, may.canWriteLibrary, current)
         }
 
         override val failures =
             playbackGraph.failures.map { it.playerId to app.getString(it.text, playing.nameOf(it.playerId)) }
     }
 
-    val playback: Playback by lazy {
-        Playback(app, data, playbackGraph, playing, phone, dispatcher, messages, local, scope)
+    val playback: PlaybackController by lazy {
+        PlaybackController(app, data, playbackGraph, playing, phone, dispatcher, messages, local, scope)
     }
 
-    val playOn: PlayOn by lazy {
-        PlayOn(data, playing, phone, local, dispatcher, messages, scope, playbackGraph.commands)
+    val playOn: PlayOnController by lazy {
+        PlayOnController(data, playing, phone, local, dispatcher, messages, scope, playbackGraph.commands)
     }
 
-    val groups: SpeakerGroups by lazy { SpeakerGroups(data, playing, phone, messages, scope) }
+    val groups: SpeakerGroupController by lazy { SpeakerGroupController(data, playing, phone, messages, scope) }
 
-    val speakerVolumes: SpeakerVolumes by lazy { SpeakerVolumes(data, messages, scope) }
+    val speakerVolumes: GroupVolumeController by lazy { GroupVolumeController(data, messages, scope) }
 
     val playlists: PlaylistEditor by lazy { PlaylistEditor(data.session.api, data.library, mapper, messages, scope) }
 
-    val actions: ItemActions by lazy {
-        ItemActions(
+    val actions: ItemActionController by lazy {
+        ItemActionController(
             data.session.api,
             data.library,
             playback,
@@ -311,16 +318,16 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         )
     }
 
-    val djs: QueueDjs by lazy { QueueDjs(data.extras, messages, scope, nameOf = playing::nameOf) }
+    val djs: QueueDjController by lazy { QueueDjController(data.extras, messages, scope, nameOf = playing::nameOf) }
 
     val mapper: UiMapper by lazy { UiMapper { data.session.images } }
 
-    val sleepTimer: SleepTimer by lazy { SleepTimer(app, data, playing, local, messages, scope) }
+    val sleepTimer: SleepTimerController by lazy { SleepTimerController(app, data, playing, local, messages, scope) }
 
-    val downloading: Downloading by lazy { Downloading(app, data.downloads, data.abs, messages, scope) }
+    val downloading: DownloadController by lazy { DownloadController(app, data.downloads, data.abs, messages, scope) }
 
-    val downloadOffer: DownloadOffer by lazy {
-        DownloadOffer(
+    val downloadOffer: DownloadOfferPolicy by lazy {
+        DownloadOfferPolicy(
             playing.nowPlaying,
             data.session.foreground,
             data.downloads.states,
@@ -336,13 +343,15 @@ class AppGraph(context: Context, private val vault: TokenVault = KeystoreTokenVa
         )
     }
 
-    val tips: Tips by lazy { Tips(data.prefs.prefs, data.session.foreground, data.prefs::setTipSeen, scope) }
+    val tips: TipController by lazy {
+        TipController(data.prefs.prefs, data.session.foreground, data.prefs::setTipSeen, scope)
+    }
 
-    val bookmarks: Bookmarks by lazy { Bookmarks(app, playing, playback, messages, scope) }
-    val recentSearches: RecentSearches by lazy { RecentSearches(app, scope) }
+    val bookmarks: BookmarkStore by lazy { BookmarkStore(app, playing, playback, messages, scope) }
+    val recentSearches: RecentSearchStore by lazy { RecentSearchStore(app, scope) }
 
-    val updates: Updates by lazy {
-        Updates(
+    val updates: UpdateController by lazy {
+        UpdateController(
             http,
             BuildConfig.VERSION_NAME,
             messages,

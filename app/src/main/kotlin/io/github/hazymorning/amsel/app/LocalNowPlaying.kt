@@ -2,7 +2,7 @@ package io.github.hazymorning.amsel.app
 
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.data.downloads.DownloadManifest
-import io.github.hazymorning.amsel.playback.LocalPlaying
+import io.github.hazymorning.amsel.playback.LocalPlaybackState
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.ChapterUi
 import io.github.hazymorning.amsel.ui.model.MediaKind
@@ -12,7 +12,7 @@ import java.io.File
 import kotlin.math.roundToLong
 
 /** A download playing on this phone as Now Playing shows it: its cover and chapters are on the phone too. */
-internal fun LocalPlaying.nowPlaying(speaker: SpeakerUi): NowPlayingUi = NowPlayingUi(
+internal fun LocalPlaybackState.nowPlaying(speaker: SpeakerUi): NowPlayingUi = NowPlayingUi(
     title = manifest.title,
     artist = manifest.author.orEmpty(),
     art = cover?.let { ArtRef(it.toString()) },

@@ -4,7 +4,7 @@ import io.github.hazymorning.amsel.api.ItemPage
 import io.github.hazymorning.amsel.api.MaJson
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.fixture
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.data.library.ProgressUpdate
 import kotlinx.coroutines.CompletableDeferred
@@ -58,7 +58,7 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
     var itemFailure: Throwable? = null
 
     /** What each page showed last time, by key: never held back, as the phone answers. */
-    val shownPages = mutableMapOf<String, ShownPage>()
+    val shownPages = mutableMapOf<String, CachedPage>()
 
     /** The album covers the index made each artist without a picture, by uri. */
     var covers: Map<String, List<String>> = emptyMap()
@@ -103,7 +103,7 @@ internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, 
 
     override suspend fun shown(key: String) = shownPages[key]
 
-    override suspend fun keep(key: String, page: ShownPage) {
+    override suspend fun keep(key: String, page: CachedPage) {
         shownPages[key] = page
     }
 

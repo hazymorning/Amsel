@@ -120,8 +120,8 @@ private const val PAUSED = "paused"
 public data class QueueItem(
     @SerialName("queue_item_id") val queueItemId: String,
     val name: String = "",
-    @Serializable(with = LenientInt::class) val duration: Int? = null,
-    @SerialName("media_item") @Serializable(with = MediaItemOrNull::class) val mediaItem: MediaItem? = null,
+    @Serializable(with = LenientIntSerializer::class) val duration: Int? = null,
+    @SerialName("media_item") @Serializable(with = MediaItemOrNullSerializer::class) val mediaItem: MediaItem? = null,
     val image: MediaItemImage? = null,
 )
 
@@ -137,15 +137,17 @@ public data class PlayerQueue(
     /** A mix the server keeps flowing: it always shuffles, and shuffle and repeat are refused. */
     @SerialName("is_dynamic") val isDynamic: Boolean = false,
     /** What the queue was filled from; a mix names itself here ([endlessMixOf]). */
-    @Serializable(with = MappingList::class) val sources: List<ItemMapping> = emptyList(),
+    @Serializable(with = MappingListSerializer::class) val sources: List<ItemMapping> = emptyList(),
     @SerialName("current_index") val currentIndex: Int? = null,
     @SerialName("index_in_buffer") val indexInBuffer: Int? = null,
     @SerialName("elapsed_time") val elapsedTime: Double = 0.0,
     @SerialName("elapsed_time_last_updated") val elapsedTimeLastUpdated: Double? = null,
     /** How fast the position moves: 1.0, or a book's or episode's speed set in Music Assistant. */
     @SerialName("playback_speed") val playbackSpeed: Double = 1.0,
-    @SerialName("current_item") @Serializable(with = QueueItemOrNull::class) val currentItem: QueueItem? = null,
-    @SerialName("next_item") @Serializable(with = QueueItemOrNull::class) val nextItem: QueueItem? = null,
+    @SerialName(
+        "current_item",
+    ) @Serializable(with = QueueItemOrNullSerializer::class) val currentItem: QueueItem? = null,
+    @SerialName("next_item") @Serializable(with = QueueItemOrNullSerializer::class) val nextItem: QueueItem? = null,
     @SerialName("extra_attributes") val extraAttributes: JsonObject? = null,
 ) {
     public val isPlaying: Boolean get() = state == PLAYING

@@ -65,7 +65,7 @@ internal fun RowText(
                 color = titleColor,
                 maxLines = titleLines,
                 tail = second.takeIf { !twoLines },
-                modifier = Modifier.inkStart(title, titleStyle),
+                modifier = Modifier.trimStartBearing(title, titleStyle),
             )
         }
         // The play bars stand where a download's mark would: what plays matters more.
@@ -82,7 +82,7 @@ internal fun RowText(
                     secondStyle,
                     color = colors.onSurfaceVariant,
                     maxLines = subtitleLines,
-                    modifier = Modifier.inkStart(second, secondStyle),
+                    modifier = Modifier.trimStartBearing(second, secondStyle),
                 )
             }
             if (before != null) MarkBefore(secondStyle, before, line) else line()

@@ -24,7 +24,7 @@ import androidx.media3.common.util.UnstableApi
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.playback.PlaybackService
 import io.github.hazymorning.amsel.ui.AppRoot
-import io.github.hazymorning.amsel.ui.navigation.Opening
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
     private var search: Intent? = null
 
     /** Where a shortcut or a link asked to go, until the app is there. */
-    private var opening by mutableStateOf<Opening?>(null)
+    private var opening by mutableStateOf<DeepLink?>(null)
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,8 +53,8 @@ class MainActivity : ComponentActivity() {
         // Reopened from Recents, the task's first intent comes again: an old request, not a new one.
         search = savedInstanceState?.let { BundleCompat.getParcelable(it, WAITING_SEARCH, Intent::class.java) }
             ?: intent.takeIf { savedInstanceState == null && it.isSearch && !it.fromHistory }
-        opening = savedInstanceState?.getString(WAITING_OPENING)?.let(Opening::valueOf)
-            ?: intent.takeIf { savedInstanceState == null && !it.fromHistory }?.let { Opening.of(it.data) }
+        opening = savedInstanceState?.getString(WAITING_OPENING)?.let(DeepLink::valueOf)
+            ?: intent.takeIf { savedInstanceState == null && !it.fromHistory }?.let { DeepLink.of(it.data) }
         setContent { AppRoot(graph, opening, onOpened = { opening = null }) }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        Opening.of(intent.data)?.let {
+        DeepLink.of(intent.data)?.let {
             opening = it
             return
         }

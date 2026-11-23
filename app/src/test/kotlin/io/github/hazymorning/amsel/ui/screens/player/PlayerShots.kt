@@ -3,7 +3,7 @@ package io.github.hazymorning.amsel.ui.screens.player
 import androidx.compose.runtime.Composable
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.ActionTarget
-import io.github.hazymorning.amsel.app.GroupChoice
+import io.github.hazymorning.amsel.app.GroupCandidate
 import io.github.hazymorning.amsel.app.MemberVolume
 import io.github.hazymorning.amsel.app.SleepMode
 import io.github.hazymorning.amsel.app.SleepTimerState
@@ -100,9 +100,9 @@ private val kitchen = PlayerSample.speakers.first { it.id == "kitchen" }
 
 /** The speakers that could play along with Kitchen; none does. */
 private val alongside = listOf(
-    GroupChoice("bedroom", "Bedroom", isPhone = false, member = false),
-    GroupChoice("living", "Living room", isPhone = false, member = false),
-    GroupChoice("phone", "This phone", isPhone = true, member = false),
+    GroupCandidate("bedroom", "Bedroom", isPhone = false, member = false),
+    GroupCandidate("living", "Living room", isPhone = false, member = false),
+    GroupCandidate("phone", "This phone", isPhone = true, member = false),
 )
 
 @Composable

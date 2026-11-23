@@ -38,7 +38,7 @@ import org.robolectric.RuntimeEnvironment
  */
 @RunWith(RobolectricTestRunner::class)
 class SessionTest {
-    private val plainVault = object : TokenVault {
+    private val plainVault = object : TokenCipher {
         override fun seal(token: String) = token
 
         override fun open(sealed: String) = sealed
@@ -49,7 +49,7 @@ class SessionTest {
         storedId: String? = null,
         network: FakePhoneNetwork = FakePhoneNetwork(),
         staleAfterMs: Long = Long.MAX_VALUE,
-        block: suspend (Session, AppPrefs, FakeMaServer) -> Unit,
+        block: suspend (Session, PrefsStore, FakeMaServer) -> Unit,
     ) = runBlocking {
         val fake =
             FakeMaServer(fixture("2.11", "server_info").getValue("response")) { command, _ ->
@@ -60,7 +60,7 @@ class SessionTest {
                 }
             }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        val prefs = AppPrefs(RuntimeEnvironment.getApplication(), scope)
+        val prefs = PrefsStore(RuntimeEnvironment.getApplication(), scope)
         prefs.saveServer(fake.address.toString(), storedId ?: fake.serverId, "Home", "token")
         // The preferences outlive a test: no network is checked from an earlier one.
         prefs.saveCheckedNetwork(null)
@@ -263,7 +263,7 @@ class SessionTest {
         withSession { session, _, fake ->
             session.restore()
             assertFalse(session.upToDate.value)
-            assertEquals(true, session.glance { api -> api.serverTime() == null })
+            assertEquals(true, session.readOnOwnSocket { api -> api.serverTime() == null })
             assertEquals(listOf("auth", "time"), fake.received.map { it["command"]?.jsonPrimitive?.content })
             assertEquals(ConnectionState.Idle, session.client.state.value)
             assertTrue(session.upToDate.value)
@@ -279,7 +279,7 @@ class SessionTest {
             // Closed on purpose: what the server said still holds.
             assertTrue(session.upToDate.value)
             leaveHome(fake)
-            assertEquals(null, session.glance { true })
+            assertEquals(null, session.readOnOwnSocket { true })
             assertFalse(session.upToDate.value)
         }
 
@@ -331,7 +331,7 @@ class SessionTest {
             }
         }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        val prefs = AppPrefs(RuntimeEnvironment.getApplication(), scope)
+        val prefs = PrefsStore(RuntimeEnvironment.getApplication(), scope)
         prefs.saveServer(fake.address.toString(), fake.serverId, "Home", "refused")
         val session = Session(prefs, plainVault, OkHttpClient(), scope, "Test", FakePhoneNetwork())
         try {
@@ -359,13 +359,13 @@ class SessionTest {
                 listOf(FakeMaServer.result(null))
             }
         }
-        val noRoom = object : TokenVault {
+        val noRoom = object : TokenCipher {
             override fun seal(token: String) = if (token == fresh) throw GeneralSecurityException("Keystore") else token
 
             override fun open(sealed: String) = sealed
         }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        val prefs = AppPrefs(RuntimeEnvironment.getApplication(), scope)
+        val prefs = PrefsStore(RuntimeEnvironment.getApplication(), scope)
         prefs.saveServer(fake.address.toString(), fake.serverId, "Home", old)
         val session = Session(prefs, noRoom, OkHttpClient(), scope, "Test", FakePhoneNetwork())
         try {

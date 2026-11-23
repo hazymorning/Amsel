@@ -30,7 +30,7 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.zIndex
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.InkGlyph
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
@@ -39,7 +39,7 @@ import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.holdToMove
 import io.github.hazymorning.amsel.ui.components.rememberReorderable
 import io.github.hazymorning.amsel.ui.components.reorderHandle
-import io.github.hazymorning.amsel.ui.navigation.Arrangement
+import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Sizes
 
@@ -56,14 +56,14 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 internal fun <T> ArrangeScreen(
     title: String,
     hint: String,
-    arrangement: Arrangement<T>,
+    arrangement: OrderedToggles<T>,
     key: (T) -> String,
     label: @Composable (T) -> String,
     /** The glyph's drawable for each thing. */
     icon: (T) -> Int,
     fixed: T?,
     fixedLine: String,
-    onChange: (Arrangement<T>) -> Unit,
+    onChange: (OrderedToggles<T>) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     max: Int = Int.MAX_VALUE,
@@ -158,7 +158,7 @@ internal fun <T> ArrangeScreen(
                             }
                             )
                     },
-                    leading = { InkGlyph(icon(item), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    leading = { AlignedGlyph(icon(item), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     trailing = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // Those that wait, and the last one shown, have their switch dimmed; the hint says why.
@@ -173,7 +173,7 @@ internal fun <T> ArrangeScreen(
                                     .clearAndSetSemantics {},
                                 contentAlignment = Alignment.Center,
                             ) {
-                                InkGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                AlignedGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     },

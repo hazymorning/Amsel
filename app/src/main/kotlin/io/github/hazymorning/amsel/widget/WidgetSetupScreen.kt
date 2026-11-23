@@ -41,10 +41,10 @@ import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.moved
 import io.github.hazymorning.amsel.ui.components.rememberReorderable
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.screens.settings.LabelToBlock
 import io.github.hazymorning.amsel.ui.screens.settings.RowWords
 import io.github.hazymorning.amsel.ui.screens.settings.SettingsBlock
@@ -251,7 +251,7 @@ private fun WidgetHint(text: String, modifier: Modifier = Modifier) {
         style,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = Int.MAX_VALUE,
-        modifier = modifier.fillMaxWidth().textInk(style).inkStart(text, style),
+        modifier = modifier.fillMaxWidth().capToBaseline(style).trimStartBearing(text, style),
     )
 }
 

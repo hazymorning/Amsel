@@ -183,7 +183,7 @@ interface LibraryDao {
         .associateBy { it.uri }
 
     @Query("SELECT uri, albumCovers FROM items WHERE uri IN (:uris) AND albumCovers IS NOT NULL")
-    suspend fun heldCovers(uris: List<String>): List<HeldCovers>
+    suspend fun heldCovers(uris: List<String>): List<IndexedAlbumCovers>
 
     /** For each of [uris] that wears its albums' covers, those covers: any number of uris, a few hundred a query. */
     suspend fun coversOf(uris: Collection<String>): Map<String, List<String>> = uris.distinct()
@@ -253,7 +253,7 @@ interface LibraryDao {
 
 data class AlbumCover(val artistUri: String, val albumArtists: String?, val imageProxyId: String)
 
-data class HeldCovers(val uri: String, val albumCovers: String)
+data class IndexedAlbumCovers(val uri: String, val albumCovers: String)
 
 /** How many album covers make an artist's cover: two by two. */
 const val ALBUM_COVERS = 4

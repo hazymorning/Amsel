@@ -47,8 +47,8 @@ import io.github.hazymorning.amsel.ui.components.TileGrid
 import io.github.hazymorning.amsel.ui.components.baselineFrame
 import io.github.hazymorning.amsel.ui.components.overhang
 import io.github.hazymorning.amsel.ui.components.plus
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
-import io.github.hazymorning.amsel.ui.components.rowInkTop
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphTop
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.secondLine
 import io.github.hazymorning.amsel.ui.model.twoLines
@@ -61,7 +61,7 @@ internal fun LazyListScope.header(header: LibraryHeader) {
     item(key = "header", contentType = "header") {
         Column {
             header.Content()
-            Spacer(Modifier.height(SortToList - rowInkTop(RowLead.Cover, twoLines = true)))
+            Spacer(Modifier.height(SortToList - rowGlyphTop(RowLead.Cover, twoLines = true)))
         }
     }
 }
@@ -93,7 +93,7 @@ internal fun RowList(
         LazyColumn(
             Modifier.fillMaxSize(),
             state = listState,
-            contentPadding = insets.plus(bottom = Space.ListEnd - rowInkBottom(RowLead.Cover, twoLines = true)),
+            contentPadding = insets.plus(bottom = Space.ListEnd - rowGlyphBottom(RowLead.Cover, twoLines = true)),
         ) {
             header(header)
             items(state.items, key = { it.key }, contentType = { "row" }) { item ->

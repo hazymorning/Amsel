@@ -149,7 +149,7 @@ class WidgetShots : ScreenshotTest() {
 
     /** [setup] showing [look] at [size], its top left in cell [column], [row]. */
     @Composable
-    private fun Widget(setup: WidgetSetup, look: WidgetLook, size: SizeF, column: Int, row: Int) {
+    private fun Widget(setup: WidgetSetup, look: WidgetContent, size: SizeF, column: Int, row: Int) {
         val context = LocalContext.current
         val night = MaterialTheme.colorScheme.isNight
         val views =

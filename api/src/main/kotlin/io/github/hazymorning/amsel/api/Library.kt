@@ -236,7 +236,9 @@ private suspend fun MaApi.runTask(command: String, args: JsonObject): Unit = cor
         // a word: waiting past this connection could wait for ever.
         val task = merge<BackgroundTask?>(
             updates.receiveAsFlow()
-                .mapNotNull { tasks -> tasks.decodeOrNull(TaskList)?.firstOrNull { it.id == id && it.finished } },
+                .mapNotNull { tasks ->
+                    tasks.decodeOrNull(TaskListSerializer)?.firstOrNull { it.id == id && it.finished }
+                },
             flow {
                 closed.await()
                 emit(null)

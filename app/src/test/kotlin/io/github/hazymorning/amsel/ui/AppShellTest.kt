@@ -27,8 +27,8 @@ import androidx.compose.ui.test.swipeUp
 import io.github.hazymorning.amsel.sample.SampleData
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
-import io.github.hazymorning.amsel.ui.navigation.Opening
+import io.github.hazymorning.amsel.ui.navigation.BarItem
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import org.junit.Assert.assertEquals
@@ -51,10 +51,10 @@ class AppShellTest {
     private var speakerTaps = 0
     private var groupTaps = 0
     private val controls = mutableListOf<PlayerControl>()
-    private val opening = mutableStateOf<Opening?>(null)
+    private val opening = mutableStateOf<DeepLink?>(null)
     private var opened = 0
 
-    private val bar = mutableStateOf(BarPlace.Default)
+    private val bar = mutableStateOf(BarItem.Default)
 
     private fun shell(nowPlaying: NowPlayingUi? = null) = shell(mutableStateOf(nowPlaying))
 
@@ -104,7 +104,7 @@ class AppShellTest {
     }
 
     @Test fun theBarShowsThePlacesChosenAndALongPressArrangesThem() {
-        bar.value = listOf(BarPlace.Library, BarPlace.Home)
+        bar.value = listOf(BarItem.Library, BarItem.Home)
         shell()
         compose.onNodeWithContentDescription("Search").assertDoesNotExist()
         compose.onNodeWithContentDescription("Speaker: This phone. Choose speaker").assertDoesNotExist()
@@ -207,7 +207,7 @@ class AppShellTest {
         compose.onNodeWithText("open album").performClick()
         compose.waitForIdle()
         // Taken out of the bar from its own pages, the place keeps them open...
-        bar.value = BarPlace.Default - BarPlace.Settings
+        bar.value = BarItem.Default - BarItem.Settings
         compose.waitForIdle()
         compose.onNodeWithText("page Album(key=a1)").assertExists()
         // ...and back at its top, which the bar no longer opens, the person is Home.
@@ -217,9 +217,9 @@ class AppShellTest {
     }
 
     @Test fun searchOpensOutsideTheBarAndStays() {
-        bar.value = BarPlace.Default - BarPlace.Search
+        bar.value = BarItem.Default - BarItem.Search
         shell()
-        opening.value = Opening.Search
+        opening.value = DeepLink.Search
         compose.waitForIdle()
         compose.onNodeWithText("page Search").assertExists()
     }
@@ -287,7 +287,7 @@ class AppShellTest {
         compose.onNodeWithText(SampleData.nowPlaying.title, substring = true, useUnmergedTree = true).performClick()
         compose.waitForIdle()
         compose.onNodeWithText("now playing layer").assertExists()
-        opening.value = Opening.Search
+        opening.value = DeepLink.Search
         compose.waitForIdle()
         compose.onNodeWithContentDescription("Search").assertIsSelected()
         compose.onNodeWithText("new search 1").assertExists()
@@ -296,7 +296,7 @@ class AppShellTest {
         // From a page in Search, again: back at its top, a second new search.
         compose.onNodeWithText("open album").performClick()
         compose.waitForIdle()
-        opening.value = Opening.Search
+        opening.value = DeepLink.Search
         compose.waitForIdle()
         compose.onNodeWithText("new search 2").assertExists()
         assertEquals(2, opened)
@@ -305,7 +305,7 @@ class AppShellTest {
     @Test fun aNowPlayingLinkWaitsForTheSpeakerToSayWhatPlays() {
         val playing = mutableStateOf<NowPlayingUi?>(null)
         shell(playing)
-        opening.value = Opening.NowPlaying
+        opening.value = DeepLink.NowPlaying
         compose.waitForIdle()
         assertEquals(0, opened)
         playing.value = SampleData.nowPlaying
@@ -317,7 +317,7 @@ class AppShellTest {
     @Test fun aNowPlayingLinkWithNothingPlayingLeavesHomeAsItIs() {
         val playing = mutableStateOf<NowPlayingUi?>(null)
         shell(playing)
-        opening.value = Opening.NowPlaying
+        opening.value = DeepLink.NowPlaying
         compose.waitForIdle()
         assertEquals(0, opened)
         compose.mainClock.advanceTimeBy(6_000)
@@ -334,7 +334,7 @@ class AppShellTest {
     @Test fun anUpNextLinkOpensNowPlayingAndAsksForUpNext() {
         val playing = mutableStateOf<NowPlayingUi?>(null)
         shell(playing)
-        opening.value = Opening.UpNext
+        opening.value = DeepLink.UpNext
         compose.waitForIdle()
         compose.onNodeWithText("up next open").assertDoesNotExist()
         playing.value = SampleData.nowPlaying
@@ -347,7 +347,7 @@ class AppShellTest {
     /** A widget's Group button: the speaker picker at its group step. */
     @Test fun aGroupLinkOpensThePickerToGroup() {
         shell()
-        opening.value = Opening.Group
+        opening.value = DeepLink.Group
         compose.waitForIdle()
         assertEquals(1, groupTaps)
         assertEquals(0, speakerTaps)
@@ -356,7 +356,7 @@ class AppShellTest {
 
     @Test fun aSpeakersLinkOpensThePicker() {
         shell()
-        opening.value = Opening.Speakers
+        opening.value = DeepLink.Speakers
         compose.waitForIdle()
         assertEquals(1, speakerTaps)
         assertEquals(1, opened)

@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.orNullOnFailure
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.retryWhileOpen
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.mapping.albumBesides
@@ -43,7 +43,7 @@ class ArtistViewModel(
     private val source: PageSource,
     private val mapper: UiMapper,
     playing: Flow<String?>,
-    private val messages: Messages,
+    private val messages: MessageController,
     private val similarOffered: Flow<Boolean> = flowOf(false),
 ) : ViewModel() {
     private val page = MutableStateFlow(ArtistUiState(loading = true, popularLoading = true))
@@ -82,7 +82,7 @@ class ArtistViewModel(
         loading?.cancel()
         page.update { it.copy(loading = true, popularLoading = true, unavailable = false) }
         loading = viewModelScope.launch {
-            val load = Load()
+            val load = PageLoad()
             val item = async { load.attempt { source.item(key) } }
             val popular = async { load.attempt { source.artistTopTracks(key) } }
             val albums = async { load.attempt { source.artistAlbums(key) } }
@@ -130,7 +130,7 @@ class ArtistViewModel(
             }
             messages.loadFailed(load, shown(page.value, source.row(key).first(), null, null).showUnavailable, retryLoad)
             if (served != null && servedPopular != null && servedAlbums != null) {
-                source.keep(key, ShownPage(served, servedPopular, servedAlbums))
+                source.keep(key, CachedPage(served, servedPopular, servedAlbums))
             }
             source.againOnceConnected(load, ::retry)
         }
@@ -148,7 +148,7 @@ class ArtistViewModel(
     }
 
     /** What the page showed last time, where the server has not answered yet. */
-    private suspend fun paintShown(last: ShownPage) {
+    private suspend fun paintShown(last: CachedPage) {
         val artist = artistOf(last.item)
         covers.value = mapper.pageCovers(last.shelf, last.rows)
         page.update {

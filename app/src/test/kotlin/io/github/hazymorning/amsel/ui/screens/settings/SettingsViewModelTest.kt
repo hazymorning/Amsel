@@ -5,7 +5,7 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MaUser
 import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.data.Prefs
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
@@ -38,7 +38,7 @@ class SettingsViewModelTest {
     private val session = MutableStateFlow<SessionState>(anna)
     private val user = MutableStateFlow<MaUser?>(annaUser)
     private val prefs = MutableStateFlow<Prefs?>(null)
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
     private val savedThemes = mutableListOf<String>()
     private var saveTheme: suspend (String) -> Unit = { savedThemes += it }
     private var signOuts = 0

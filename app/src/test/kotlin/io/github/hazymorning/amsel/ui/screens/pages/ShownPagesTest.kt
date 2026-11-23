@@ -2,8 +2,8 @@ package io.github.hazymorning.amsel.ui.screens.pages
 
 import io.github.hazymorning.amsel.api.EPISODE_PAGE
 import io.github.hazymorning.amsel.api.MaConnectionException
-import io.github.hazymorning.amsel.app.Messages
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.app.MessageController
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,7 +25,7 @@ import org.junit.Test
 /** A page opened again paints what it showed last time while the server is asked. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ShownPagesTest {
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
     private val mapper = UiMapper { null }
     private val playing = MutableStateFlow<String?>(null)
 
@@ -57,7 +57,7 @@ class ShownPagesTest {
 
     @Test fun `an album the server cannot give now keeps what it showed last time, with Retry`() = runTest {
         val source = FakeSource().apply {
-            shownPages[ALBUM] = ShownPage(one("music_albums_get"), list("music_albums_album_tracks"))
+            shownPages[ALBUM] = CachedPage(one("music_albums_get"), list("music_albums_album_tracks"))
             failure = MaConnectionException("offline")
         }
         val state = watch(AlbumViewModel(ALBUM, source, mapper, playing, messages).state)
@@ -68,7 +68,7 @@ class ShownPagesTest {
 
     @Test fun `a playlist's remembered tracks show at once, but nothing is removed by them`() = runTest {
         val source = FakeSource(gated = true).apply {
-            shownPages[PLAYLIST] = ShownPage(one("music_playlists_get"), list("music_playlists_playlist_tracks"))
+            shownPages[PLAYLIST] = CachedPage(one("music_playlists_get"), list("music_playlists_playlist_tracks"))
             item = one("music_playlists_get")
             tracks = list("music_playlists_playlist_tracks").take(2)
         }
@@ -86,7 +86,7 @@ class ShownPagesTest {
 
     @Test fun `an artist opened again shows its popular songs and albums at once`() = runTest {
         val source = FakeSource(gated = true).apply {
-            shownPages[ARTIST] = ShownPage(
+            shownPages[ARTIST] = CachedPage(
                 one("music_artists_get"),
                 rows = list("music_artists_artist_tracks").take(5),
                 shelf = list("music_artists_artist_albums"),
@@ -104,7 +104,7 @@ class ShownPagesTest {
         runTest {
             val episodes = list("music_podcasts_podcast_episodes__page")
             val source = FakeSource(gated = true).apply {
-                shownPages[PODCAST] = ShownPage(one("music_podcasts_get"), episodes)
+                shownPages[PODCAST] = CachedPage(one("music_podcasts_get"), episodes)
                 item = one("music_podcasts_get")
                 pages = listOf(List(EPISODE_PAGE) { i -> episodes[i % 2].copy(uri = "${episodes[i % 2].uri}#$i") })
             }
@@ -123,7 +123,7 @@ class ShownPagesTest {
     @Test fun `episodes shown from last time ask for no more until the server has answered`() = runTest {
         val episodes = list("music_podcasts_podcast_episodes__page")
         val source = FakeSource().apply {
-            shownPages[PODCAST] = ShownPage(one("music_podcasts_get"), episodes)
+            shownPages[PODCAST] = CachedPage(one("music_podcasts_get"), episodes)
             failure = MaConnectionException("offline")
         }
         val vm = PodcastViewModel(PODCAST, source, mapper, playing, messages)

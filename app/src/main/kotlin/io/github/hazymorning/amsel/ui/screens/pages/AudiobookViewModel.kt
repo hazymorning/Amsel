@@ -3,13 +3,13 @@ package io.github.hazymorning.amsel.ui.screens.pages
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.hazymorning.amsel.app.ItemDownload
+import io.github.hazymorning.amsel.app.ItemDownloadState
 import io.github.hazymorning.amsel.app.art
 import io.github.hazymorning.amsel.app.chapterList
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.data.downloads.DownloadManifest
 import io.github.hazymorning.amsel.data.downloads.DownloadState
-import io.github.hazymorning.amsel.playback.Chapters
+import io.github.hazymorning.amsel.playback.ChapterNavigation
 import io.github.hazymorning.amsel.playback.positionAt
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.mapping.chapterList
@@ -44,7 +44,7 @@ class AudiobookViewModel(
     private val source: PageSource,
     private val mapper: UiMapper,
     playing: Flow<NowPlayingUi?>,
-    download: Flow<ItemDownload> = flowOf(ItemDownload()),
+    download: Flow<ItemDownloadState> = flowOf(ItemDownloadState()),
 ) : ViewModel() {
     private val page = MutableStateFlow(AudiobookUiState(loading = true))
     private var loading: Job? = null
@@ -85,7 +85,7 @@ class AudiobookViewModel(
 
     fun retry() = load()
 
-    private fun book(manifest: DownloadManifest, download: ItemDownload) = AudiobookUi(
+    private fun book(manifest: DownloadManifest, download: ItemDownloadState) = AudiobookUi(
         key = key,
         title = manifest.title,
         art = download.cover?.art(),
@@ -99,7 +99,7 @@ class AudiobookViewModel(
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
         loading = viewModelScope.launch {
-            val load = Load()
+            val load = PageLoad()
             val served = async { load.attempt { source.item(key) } }
             if (first) {
                 source.shown(key)?.let { last ->
@@ -120,7 +120,7 @@ class AudiobookViewModel(
                     unavailable = item == null,
                 )
             }
-            if (item != null) source.keep(key, ShownPage(item))
+            if (item != null) source.keep(key, CachedPage(item))
             source.againOnceConnected(load, ::retry)
         }
     }
@@ -209,6 +209,6 @@ data class AudiobookUiState(
     /** The chapter the person is in at [nowMs], by index, or -1. */
     fun chapterAt(nowMs: Long): Int {
         val position = positionAt(nowMs) ?: return -1
-        return Chapters.indexAt(chapters.map { it.startMs }, position)
+        return ChapterNavigation.indexAt(chapters.map { it.startMs }, position)
     }
 }

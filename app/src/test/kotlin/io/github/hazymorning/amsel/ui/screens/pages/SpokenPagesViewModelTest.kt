@@ -2,8 +2,8 @@ package io.github.hazymorning.amsel.ui.screens.pages
 
 import io.github.hazymorning.amsel.api.EPISODE_PAGE
 import io.github.hazymorning.amsel.api.MaConnectionException
-import io.github.hazymorning.amsel.app.ItemDownload
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.ItemDownloadState
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.data.downloads.DownloadChapter
 import io.github.hazymorning.amsel.data.downloads.DownloadManifest
 import io.github.hazymorning.amsel.data.downloads.DownloadState
@@ -31,7 +31,7 @@ import org.junit.Test
 /** The book and podcast pages against the recorded 2.11 shapes. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SpokenPagesViewModelTest {
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
     private val mapper = UiMapper { null }
     private val playing = MutableStateFlow<NowPlayingUi?>(null)
     private val playingUri = MutableStateFlow<String?>(null)
@@ -80,7 +80,7 @@ class SpokenPagesViewModelTest {
             chapters = listOf(DownloadChapter("Eins", 0.0, 150.0), DownloadChapter("Zwei", 150.0, 0.0)),
             complete = true,
         )
-        val download = MutableStateFlow(ItemDownload(DownloadState.Done, manifest, File("/data/cover")))
+        val download = MutableStateFlow(ItemDownloadState(DownloadState.Done, manifest, File("/data/cover")))
         val state = watch(AudiobookViewModel(BOOK, source, mapper, playing, download).state)
         advanceUntilIdle()
 
@@ -92,7 +92,7 @@ class SpokenPagesViewModelTest {
         // A chapter without its end runs to the book's.
         assertEquals(200_000L, shown.chapters[1].endMs)
         assertTrue(shown.offersDownload)
-        download.value = ItemDownload()
+        download.value = ItemDownloadState()
         assertTrue(state.value.showUnavailable)
     }
 

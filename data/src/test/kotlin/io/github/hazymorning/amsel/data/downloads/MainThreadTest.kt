@@ -55,7 +55,8 @@ class MainThreadTest {
             "audiobook",
             providerMappings = listOf(ProviderMapping("book1", "audiobookshelf", "audiobookshelf--a1")),
         )
-        val downloads = Downloads(client, DownloadStore(root), FakeNetwork(), MutableStateFlow(false), { item }, {})
+        val downloads =
+            DownloadRepository(client, DownloadStore(root), FakeNetwork(), MutableStateFlow(false), { item }, {})
         client.signIn(abs.url.removePrefix("http://"), "root", "pw")
         abs.expireAccess()
         downloads.add(BOOK)

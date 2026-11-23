@@ -17,8 +17,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import io.github.hazymorning.amsel.ui.components.inkSides
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.capToBaseline
+import io.github.hazymorning.amsel.ui.components.trimSideBearings
 import io.github.hazymorning.amsel.ui.components.weighted
 import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
@@ -67,7 +67,7 @@ internal fun SkipSeconds(
             color = ink,
             maxLines = 1,
             softWrap = false,
-            modifier = Modifier.clearAndSetSemantics {}.textInk(style).inkSides(figure, style),
+            modifier = Modifier.clearAndSetSemantics {}.capToBaseline(style).trimSideBearings(figure, style),
         )
     }
 }

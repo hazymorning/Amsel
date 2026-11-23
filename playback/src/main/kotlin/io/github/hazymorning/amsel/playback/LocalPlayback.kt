@@ -20,7 +20,7 @@ import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.data.NetworkKey
 import io.github.hazymorning.amsel.data.downloads.AbsClient
 import io.github.hazymorning.amsel.data.downloads.DownloadManifest
-import io.github.hazymorning.amsel.data.downloads.Downloads
+import io.github.hazymorning.amsel.data.downloads.DownloadRepository
 import io.github.hazymorning.amsel.data.downloads.LocalProgress
 import java.io.IOException
 import kotlin.math.roundToLong
@@ -36,7 +36,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** A downloaded item playing on this phone, as Now Playing shows it: where it was at [atMs] (elapsedRealtime). */
-data class LocalPlaying(
+data class LocalPlaybackState(
     val manifest: DownloadManifest,
     val positionMs: Long,
     val atMs: Long,
@@ -49,19 +49,19 @@ data class LocalPlaying(
  * server in the way, so a seek or a skip is instant and needs no connection. A book's files are one
  * timeline ([ConcatenatingMediaSource2]), next and previous step by chapter, back and forward by 15
  * and 30 seconds. Where the person is stays on the phone, every few seconds and at every pause, and
- * goes to Audiobookshelf now and then ([ProgressSaves]); a start takes the newer of the two.
+ * goes to Audiobookshelf now and then ([DownloadProgressSync]); a start takes the newer of the two.
  */
 @OptIn(UnstableApi::class)
 class LocalPlayback(
     private val context: Context,
-    private val downloads: Downloads,
+    private val downloads: DownloadRepository,
     private val abs: AbsClient,
     /** The networks the phone is on: a send that failed waits for another. */
     network: StateFlow<NetworkKey?>,
     private val scope: CoroutineScope,
 ) {
     private var exo: ExoPlayer? = null
-    private val saves = ProgressSaves(
+    private val saves = DownloadProgressSync(
         scope + Dispatchers.Main.immediate,
         network,
         ::place,
@@ -85,10 +85,10 @@ class LocalPlayback(
 
     /** Whether what was just loaded starts once at its place: a pause meanwhile says no. Main thread. */
     private var startWhenResumed = false
-    private val _now = MutableStateFlow<LocalPlaying?>(null)
+    private val _now = MutableStateFlow<LocalPlaybackState?>(null)
 
     /** What plays from the phone's downloads; null when nothing is loaded. */
-    val now: StateFlow<LocalPlaying?> = _now.asStateFlow()
+    val now: StateFlow<LocalPlaybackState?> = _now.asStateFlow()
 
     private var built: Player? = null
 
@@ -164,7 +164,7 @@ class LocalPlayback(
     }
 
     /** Ends what plays from the phone's files, if anything, from any thread: the server's stream takes its place. */
-    fun giveWay() {
+    fun stopDownloadPlayback() {
         if (now.value != null) scope.launch(Dispatchers.Main) { stop() }
     }
 
@@ -238,7 +238,7 @@ class LocalPlayback(
 
     private fun publish(manifest: DownloadManifest) {
         val exo = exo ?: return
-        _now.value = LocalPlaying(
+        _now.value = LocalPlaybackState(
             manifest,
             exo.currentPosition,
             SystemClock.elapsedRealtime(),
@@ -268,15 +268,15 @@ class LocalPlayback(
     }
 
     /** Where the person is in what is loaded. Main thread. */
-    private fun place(): DownloadPlace? {
+    private fun place(): DownloadPosition? {
         if (resuming != null) return null
         val exo = exo ?: return null
         val manifest = _now.value?.manifest ?: return null
         val finished = exo.playbackState == Player.STATE_ENDED
-        return DownloadPlace(manifest, LocalProgress(exo.currentPosition / MS, System.currentTimeMillis(), finished))
+        return DownloadPosition(manifest, LocalProgress(exo.currentPosition / MS, System.currentTimeMillis(), finished))
     }
 
-    /** Next and previous step through the chapters, as for a speaker ([Chapters]). */
+    /** Next and previous step through the chapters, as for a speaker ([ChapterNavigation]). */
     private inner class ChapterPlayer(player: ExoPlayer) : ForwardingPlayer(player) {
         private val starts: List<Long>
             get() = _now.value?.manifest?.chapters.orEmpty().map { (it.startSec * MS).roundToLong() }.sorted()
@@ -300,11 +300,15 @@ class LocalPlayback(
         }
 
         override fun seekToNext() {
-            Chapters.nextStart(starts, currentPosition)?.let(::seekTo)
+            ChapterNavigation.nextStart(starts, currentPosition)?.let(::seekTo)
         }
 
         override fun seekToPrevious() {
-            Chapters.previousStart(starts, currentPosition, RemotePlayer.MA_RESTART_THRESHOLD_MS)?.let(::seekTo)
+            ChapterNavigation.previousStart(
+                starts,
+                currentPosition,
+                RemotePlayer.MA_RESTART_THRESHOLD_MS,
+            )?.let(::seekTo)
                 ?: seekTo(0)
         }
     }

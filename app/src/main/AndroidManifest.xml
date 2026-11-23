@@ -44,7 +44,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <!-- amsel://search, amsel://now-playing, amsel://up-next, amsel://speakers and amsel://group
-                 (Opening): for the launcher's shortcuts and Amsel's widgets, and for a widget such as
+                 (DeepLink): for the launcher's shortcuts and Amsel's widgets, and for a widget such as
                  KWGT, which opens them as links. They only open a screen. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -108,11 +108,11 @@
         </receiver>
         <!-- The widget's buttons; only its own pending intents reach it. -->
         <receiver
-            android:name=".widget.WidgetTaps"
+            android:name=".widget.WidgetTapReceiver"
             android:exported="false" />
         <!-- The widgets' looks at the speakers while Amsel's socket is closed (JobScheduler binds it). -->
         <service
-            android:name=".widget.WidgetLooks"
+            android:name=".widget.WidgetRefreshJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <!-- The car's artwork: not exported, the car is granted reading it when it connects. -->

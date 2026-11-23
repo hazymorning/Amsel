@@ -8,9 +8,9 @@ import io.github.hazymorning.amsel.api.ItemPage
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.listening
 import io.github.hazymorning.amsel.api.orNullOnFailure
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.retryWhileOpen
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.data.library.ProgressUpdate
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
@@ -39,7 +39,7 @@ class PodcastViewModel(
     private val source: PageSource,
     private val mapper: UiMapper,
     playing: Flow<String?>,
-    private val messages: Messages,
+    private val messages: MessageController,
 ) : ViewModel() {
     private val page = MutableStateFlow(PodcastUiState(loading = true))
     private var loading: Job? = null
@@ -108,7 +108,7 @@ class PodcastViewModel(
         more?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
         loading = viewModelScope.launch {
-            val load = Load()
+            val load = PageLoad()
             val podcast = async { load.attempt { source.item(key) } }
             val newest = async { load.attempt { source.episodes(key, 0, EPISODE_PAGE) } }
             if (first) source.shown(key)?.let { last -> page.update { it.from(last) } }
@@ -128,13 +128,13 @@ class PodcastViewModel(
                 )
             }
             messages.loadFailed(load, shown(page.value, source.row(key).first(), null).showUnavailable, retryLoad)
-            if (item != null && episodes != null) source.keep(key, ShownPage(item, episodes.items))
+            if (item != null && episodes != null) source.keep(key, CachedPage(item, episodes.items))
             source.againOnceConnected(load, ::retry)
         }
     }
 
     /** What the page showed last time, where the server has not answered yet. */
-    private fun PodcastUiState.from(last: ShownPage) = copy(
+    private fun PodcastUiState.from(last: CachedPage) = copy(
         podcast = podcast ?: mapper.media(last.item),
         episodes = episodes.ifEmpty { episodesAfter(emptyList(), last.rows) },
     )

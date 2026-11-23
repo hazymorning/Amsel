@@ -40,9 +40,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.InkGlyph
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkSides
+import io.github.hazymorning.amsel.ui.components.trimSideBearings
 import io.github.hazymorning.amsel.ui.components.wordGlyph
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -161,9 +161,9 @@ private fun SettingsBand(shown: () -> Float, full: Float, top: Dp, onSettings: (
 private fun GlyphAndWord(@DrawableRes icon: Int, text: String, color: Color, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyLarge
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-        InkGlyph(icon, tint = color, size = wordGlyph(style))
+        AlignedGlyph(icon, tint = color, size = wordGlyph(style))
         Spacer(Modifier.width(Space.Part))
-        Words(text, style = style, color = color, modifier = Modifier.inkSides(text, style))
+        Words(text, style = style, color = color, modifier = Modifier.trimSideBearings(text, style))
     }
 }
 

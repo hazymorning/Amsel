@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Held on the launcher icon, and pinned to the home screen from there. Each opens the link it
-     names (Opening), which a widget can open too. -->
+     names (DeepLink), which a widget can open too. -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:icon="@drawable/shortcut_search"

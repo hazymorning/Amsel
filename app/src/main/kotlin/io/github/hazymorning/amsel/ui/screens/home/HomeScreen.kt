@@ -28,7 +28,7 @@ import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.model.MediaUi
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
@@ -201,7 +201,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boo
         onSettings = {
             tips.seen(Tip.Settings)
             navigator.open(Route.Settings)
-        }.takeIf { BarPlace.Settings !in BarPlace.of(prefs?.barPlaces) },
+        }.takeIf { BarItem.Settings !in BarItem.of(prefs?.barPlaces) },
         tip = tip.takeUnless { told },
         onTipGone = tips::seen,
         onSearch = LocalStartSearch.current,

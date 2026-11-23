@@ -1,7 +1,7 @@
 package io.github.hazymorning.amsel.data.downloads
 
-import io.github.hazymorning.amsel.data.AppPrefs
-import io.github.hazymorning.amsel.data.TokenVault
+import io.github.hazymorning.amsel.data.PrefsStore
+import io.github.hazymorning.amsel.data.TokenCipher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /** The Audiobookshelf account in [prefs], its token sealed by [vault] as the session's is. */
-class PrefsAbsAccountStore(private val prefs: AppPrefs, private val vault: TokenVault, scope: CoroutineScope) :
+class PrefsAbsAccountStore(private val prefs: PrefsStore, private val vault: TokenCipher, scope: CoroutineScope) :
     AbsAccountStore {
     override val account: StateFlow<AbsAccount?> = prefs.prefs.map { p ->
         val url = p?.absUrl ?: return@map null

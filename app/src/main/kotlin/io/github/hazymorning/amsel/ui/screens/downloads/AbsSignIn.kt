@@ -41,8 +41,8 @@ import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.capToBaseline
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.rememberLocalNetworkGate
 import io.github.hazymorning.amsel.ui.screens.setup.SetupButton
@@ -62,13 +62,13 @@ internal fun AbsIntro(text: String = stringResource(R.string.abs_intro)) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Keyline.Margin)
-            .textInk(style)
-            .inkStart(text, style),
+            .capToBaseline(style)
+            .trimStartBearing(text, style),
     )
 }
 
 /** Signs in at an address with a username and password: null when it worked, else why not. */
-typealias AbsSignIn = suspend (address: String, username: String, password: String) -> AbsException.Reason?
+typealias AbsSignInAction = suspend (address: String, username: String, password: String) -> AbsException.Reason?
 
 /**
  * Signing in to Audiobookshelf, where downloads come from: its address, the username and the
@@ -80,7 +80,7 @@ typealias AbsSignIn = suspend (address: String, username: String, password: Stri
 @Composable
 internal fun AbsSignInForm(
     button: String,
-    signIn: AbsSignIn,
+    signIn: AbsSignInAction,
     onSignedIn: () -> Unit,
     modifier: Modifier = Modifier,
     last: AbsAccount? = null,

@@ -82,7 +82,7 @@ class WidgetInsetsTest {
     /** [slots] showing [look], laid out for [planned] and drawn at [actual]. */
     private fun draw(
         slots: List<WidgetSlot>,
-        look: WidgetLook,
+        look: WidgetContent,
         planned: SizeF,
         actual: SizeF = planned,
         cells: WidgetCells = WidgetCells.All,
@@ -96,7 +96,7 @@ class WidgetInsetsTest {
         return Drawn(bitmap, context.getColor(R.color.widget_background_plain), density)
     }
 
-    private fun laidOut(setup: WidgetSetup, look: WidgetLook, planned: SizeF, actual: SizeF = planned): View {
+    private fun laidOut(setup: WidgetSetup, look: WidgetContent, planned: SizeF, actual: SizeF = planned): View {
         val view = WidgetSample.plain(context, setup, look, planned).apply(context, FrameLayout(context))
         val width = (actual.width * density).roundToInt()
         val height = (actual.height * density).roundToInt()

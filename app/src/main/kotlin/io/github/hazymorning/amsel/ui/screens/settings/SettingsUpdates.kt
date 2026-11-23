@@ -20,9 +20,9 @@ import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.sheetEnd
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
@@ -66,8 +66,8 @@ internal fun UpdatesSheetContent(
                 .fillMaxWidth()
                 .padding(horizontal = Keyline.Margin)
                 .semantics { liveRegion = LiveRegionMode.Polite }
-                .textInk(style)
-                .inkStart(sentence, style),
+                .capToBaseline(style)
+                .trimStartBearing(sentence, style),
         )
         Spacer(Modifier.height(Space.Group))
         PrimaryButton(

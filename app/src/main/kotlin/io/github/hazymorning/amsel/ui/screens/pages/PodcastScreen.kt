@@ -31,9 +31,9 @@ import io.github.hazymorning.amsel.ui.components.LoadAhead
 import io.github.hazymorning.amsel.ui.components.MoreButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.TextAction
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
-import io.github.hazymorning.amsel.ui.components.rowInkTop
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphTop
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.navigation.Navigator
@@ -77,7 +77,7 @@ fun PodcastScreen(
         listState,
         onBack,
         modifier,
-        bottom = Space.ListEnd - rowInkBottom(RowLead.None, twoLines = true),
+        bottom = Space.ListEnd - rowGlyphBottom(RowLead.None, twoLines = true),
         art = podcast?.art,
         actions = {
             if (podcast != null) MoreButton(podcast.title, onClick = { onMore(podcast) })
@@ -91,7 +91,7 @@ fun PodcastScreen(
             }
         } else {
             item(key = "gap", contentType = PageSlot.Actions) {
-                Spacer(Modifier.height(Space.HeaderToList - rowInkTop(RowLead.None, twoLines = true)))
+                Spacer(Modifier.height(Space.HeaderToList - rowGlyphTop(RowLead.None, twoLines = true)))
             }
         }
         if (state.episodesLoading) {
@@ -144,7 +144,7 @@ private fun MoreFailed(onRetry: () -> Unit) {
             text,
             style = style,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f).inkStart(text, style),
+            modifier = Modifier.weight(1f).trimStartBearing(text, style),
         )
         TextAction(stringResource(R.string.retry), onRetry)
     }

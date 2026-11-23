@@ -25,11 +25,11 @@ enum class DockControl(val id: String, @StringRes val label: Int, @DrawableRes v
         const val MAX = 3
 
         /** The mini player as it comes: play, then next. */
-        val Default = Arrangement(entries, setOf(PlayPause, Next))
+        val Default = OrderedToggles(entries, setOf(PlayPause, Next))
 
         /** The controls in the person's order, play always among those shown. */
-        fun arrangement(tokens: List<String>?): Arrangement<DockControl> {
-            val stored = Arrangement.of(tokens, entries, DockControl::id, Default)
+        fun arrangement(tokens: List<String>?): OrderedToggles<DockControl> {
+            val stored = OrderedToggles.of(tokens, entries, DockControl::id, Default)
             return stored.copy(shown = stored.shown + PlayPause)
         }
     }

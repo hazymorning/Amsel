@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
 import coil3.ImageLoader
 import coil3.disk.DiskCache
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.ServerAddress
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.runBlocking
@@ -30,10 +30,10 @@ class ArtworkProviderTest {
 
     private fun ParcelFileDescriptor.bytes() = ParcelFileDescriptor.AutoCloseInputStream(this).use { it.readBytes() }
 
-    private fun withServer(block: suspend (MockWebServer, Images, ImageLoader) -> Unit) = runBlocking {
+    private fun withServer(block: suspend (MockWebServer, ImageUrls, ImageLoader) -> Unit) = runBlocking {
         MockWebServer().use { server ->
             server.start()
-            val images = Images(requireNotNull(ServerAddress.parse(server.url("/").toString())))
+            val images = ImageUrls(requireNotNull(ServerAddress.parse(server.url("/").toString())))
             val loader = ImageLoader.Builder(context)
                 .diskCache { DiskCache.Builder().directory(folder.root.toOkioPath()).build() }
                 .build()

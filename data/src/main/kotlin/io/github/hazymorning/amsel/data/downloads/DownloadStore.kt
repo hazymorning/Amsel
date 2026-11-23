@@ -69,7 +69,7 @@ class DownloadStore(private val root: File) {
     }
 
     /**
-     * Throws [IOException] for a name [DownloadJob.plan] does not give: a manifest from before names
+     * Throws [IOException] for a name [DownloadTask.plan] does not give: a manifest from before names
      * were checked may name a file outside the item's folder.
      */
     fun file(uri: String, file: DownloadFile): File {

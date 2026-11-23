@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.Dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Shapes
@@ -114,7 +114,7 @@ internal fun HomeCard(item: MediaUi, onClick: () -> Unit, onMore: (() -> Unit)?,
             style,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
-            modifier = Modifier.weight(1f).padding(horizontal = CardPadding).inkStart(item.title, style),
+            modifier = Modifier.weight(1f).padding(horizontal = CardPadding).trimStartBearing(item.title, style),
         )
     }
 }

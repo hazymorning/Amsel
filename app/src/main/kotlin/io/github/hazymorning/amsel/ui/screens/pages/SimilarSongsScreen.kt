@@ -27,7 +27,7 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.TrackRow
 import io.github.hazymorning.amsel.ui.components.plus
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.model.TrackUi
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.rememberRetry
@@ -49,7 +49,7 @@ fun SimilarSongsScreen(
     val whole = stringResource(R.string.pages_similar_to, title)
     MaterialScreen(modifier, bar = { PageTopBar(whole, onBack, shorterTitle = title) }) { insets ->
         ScrollEdges(list)
-        val rows = insets.plus(bottom = Space.ListEnd - rowInkBottom(RowLead.Cover, twoLines = true))
+        val rows = insets.plus(bottom = Space.ListEnd - rowGlyphBottom(RowLead.Cover, twoLines = true))
         val message = Modifier.fillMaxSize().padding(insets)
         when {
             state.songs.isNotEmpty() -> LazyColumn(Modifier.fillMaxSize(), list, contentPadding = rows) {

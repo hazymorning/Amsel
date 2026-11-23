@@ -44,43 +44,43 @@ class SettingsBirdTest {
     @get:Rule val compose = createComposeRule()
 
     @Test fun aPageThatScrollsEndsWithThePicture() = assertEquals(
-        Foot(height = 2296, bird = 2072),
-        footOf(settings = 2000, bird = 224, gap = 72, end = 96, room = 1900),
+        PicturePlacement(height = 2296, bird = 2072),
+        picturePlacement(settings = 2000, bird = 224, gap = 72, end = 96, room = 1900),
     )
 
     @Test fun whereEverythingFitsThePictureStandsAtTheScreensFoot() = assertEquals(
-        Foot(height = 2000, bird = 1776),
-        footOf(settings = 1000, bird = 224, gap = 72, end = 96, room = 2000),
+        PicturePlacement(height = 2000, bird = 1776),
+        picturePlacement(settings = 1000, bird = 224, gap = 72, end = 96, room = 2000),
     )
 
     @Test fun thePictureIsLeftOutWhereOnlyItWouldMakeThePageScroll() = assertEquals(
-        Foot(height = 1200, bird = null),
-        footOf(settings = 1000, bird = 224, gap = 72, end = 96, room = 1200),
+        PicturePlacement(height = 1200, bird = null),
+        picturePlacement(settings = 1000, bird = 224, gap = 72, end = 96, room = 1200),
     )
 
     @Test fun aPageThatFitsToTheLastPixelStaysAsItIs() = assertEquals(
-        Foot(height = 1096, bird = null),
-        footOf(settings = 1000, bird = 224, gap = 72, end = 96, room = 1096),
+        PicturePlacement(height = 1096, bird = null),
+        picturePlacement(settings = 1000, bird = 224, gap = 72, end = 96, room = 1096),
     )
 
     @Test fun aLongPageScrollsUntilTheCrownsStandOnItsEdge() {
         val scroll = show(room = 300.dp, settings = 400.dp)
         assertEquals(px(400.dp) + px(48.dp) + px(BirdHeight) - px(300.dp), scroll.maxValue)
-        assertNotEquals("the picture shows before the page's end", DayCrowns.front, footPixel())
+        assertNotEquals("the picture shows before the page's end", DayTrees.front, footPixel())
         compose.runOnIdle { runBlocking { scroll.scrollTo(scroll.maxValue) } }
-        assertEquals(DayCrowns.front, footPixel())
+        assertEquals(DayTrees.front, footPixel())
     }
 
     @Test fun aShortPageHasThePictureAtItsFootAndDoesNotScroll() {
         val scroll = show(room = 600.dp, settings = 400.dp)
         assertEquals(0, scroll.maxValue)
-        assertEquals(DayCrowns.front, footPixel())
+        assertEquals(DayTrees.front, footPixel())
     }
 
     @Test fun aPageThatOnlyJustFitsShowsNoPictureAndDoesNotScroll() {
         val scroll = show(room = 450.dp, settings = 400.dp)
         assertEquals(0, scroll.maxValue)
-        assertNotEquals(DayCrowns.front, footPixel())
+        assertNotEquals(DayTrees.front, footPixel())
     }
 
     @Test fun thePictureSaysNothingToTalkBack() {
@@ -102,8 +102,8 @@ class SettingsBirdTest {
     }
 
     @Test fun theCrownsWearTheReadmesTints() {
-        assertEquals(DayCrowns, HeaderSvg("light").crowns())
-        assertEquals(NightCrowns, HeaderSvg("dark").crowns())
+        assertEquals(DayTrees, HeaderSvg("light").crowns())
+        assertEquals(NightTrees, HeaderSvg("dark").crowns())
     }
 
     @Test fun atNightTheReadmesMoonIsTheInk() = assertEquals(
@@ -147,11 +147,11 @@ private class HeaderSvg(mode: String) {
     val iconUnit = bird[2]
     val iconHead = Offset(bird[3], bird[4])
 
-    fun crowns() = CrownTints(circles[1].fill, circles[2].fill, circles[3].fill)
+    fun crowns() = TreeColors(circles[1].fill, circles[2].fill, circles[3].fill)
 }
 
 private class Circle(val x: Float, val y: Float, val radius: Float, val fill: Color) {
-    fun from(disc: Circle) = Crown(x - disc.x, y - disc.y, radius)
+    fun from(disc: Circle) = TreeCircle(x - disc.x, y - disc.y, radius)
 }
 
 private val VIEW_BOX = Regex("""viewBox="0 0 [\d.]+ ([\d.]+)"""")

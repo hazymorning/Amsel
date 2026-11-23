@@ -39,20 +39,20 @@ sealed interface PlaylistEdit {
 }
 
 /** A song went into [playlist]; [open] leads to it, where the sheet that added it can go there. */
-class AddedTo(val playlist: MediaUi, val open: (() -> Unit)?)
+class AddedToPlaylist(val playlist: MediaUi, val open: (() -> Unit)?)
 
 /** The ⋮ sheet's changes to playlists: adding to one, and removing a track from one. */
 class PlaylistEditor(
     private val api: MaApi,
     private val library: LibraryRepository,
     private val mapper: UiMapper,
-    private val messages: Messages,
+    private val messages: MessageController,
     private val scope: CoroutineScope,
 ) {
-    private val _added = Channel<AddedTo>(ADDED_BUFFER, BufferOverflow.DROP_OLDEST)
+    private val _added = Channel<AddedToPlaylist>(ADDED_BUFFER, BufferOverflow.DROP_OLDEST)
 
-    /** Songs that went into a playlist from here, for the hints to say so ([Hints]). */
-    val added: Flow<AddedTo> = _added.receiveAsFlow()
+    /** Songs that went into a playlist from here, for the hints to say so ([HintController]). */
+    val added: Flow<AddedToPlaylist> = _added.receiveAsFlow()
 
     private val _edits =
         MutableSharedFlow<PlaylistEdit>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -78,7 +78,7 @@ class PlaylistEditor(
             val error = try {
                 api.addToPlaylist(id, listOf(uri))
                 _edits.emit(PlaylistEdit.Added(playlist.key))
-                _added.trySend(AddedTo(playlist, open))
+                _added.trySend(AddedToPlaylist(playlist, open))
                 return@launch
             } catch (e: MaException) {
                 e

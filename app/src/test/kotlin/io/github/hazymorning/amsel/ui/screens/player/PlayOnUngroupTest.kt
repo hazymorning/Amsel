@@ -10,7 +10,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
-import io.github.hazymorning.amsel.app.GroupChoice
+import io.github.hazymorning.amsel.app.GroupCandidate
 import io.github.hazymorning.amsel.sample.PlayerSample
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import org.junit.Assert.assertEquals
@@ -34,9 +34,9 @@ class PlayOnUngroupTest {
     private val grouped = PlayerSample.speakers.filter { it.id != "living" && it.id != "bedroom" }
         .map { if (it.id == "kitchen") it.copy(others = 2) else it }
     private val kitchensGroup = listOf(
-        GroupChoice("bedroom", "Bedroom", isPhone = false, member = true),
-        GroupChoice("living", "Living room", isPhone = false, member = true),
-        GroupChoice(phone.id, "", isPhone = true, member = false),
+        GroupCandidate("bedroom", "Bedroom", isPhone = false, member = true),
+        GroupCandidate("living", "Living room", isPhone = false, member = true),
+        GroupCandidate(phone.id, "", isPhone = true, member = false),
     )
 
     private fun show(content: @Composable () -> Unit) = compose.setContent {
@@ -44,7 +44,7 @@ class PlayOnUngroupTest {
     }
 
     @Test fun withNoGroupThereIsGroupForTheSpeakerInUseAndNoUngroup() {
-        val alone = listOf(GroupChoice("living", "Living room", isPhone = false, member = false))
+        val alone = listOf(GroupCandidate("living", "Living room", isPhone = false, member = false))
         show { PlayOnSheetContent(PlayOnUiState(PlayerSample.speakers, "kitchen", kitchen, alone), onSelect = {}) }
         compose.onNodeWithText("Ungroup all").assertDoesNotExist()
         compose.onNodeWithText("Group").performClick()
@@ -88,7 +88,7 @@ class PlayOnUngroupTest {
 
     /** A widget's Group while Amsel still connects: the group step comes, never the list before it. */
     @Test fun openedToGroupItWaitsForTheSpeakersAndOpensAtTheGroupStep() {
-        val alone = listOf(GroupChoice("living", "Living room", isPhone = false, member = false))
+        val alone = listOf(GroupCandidate("living", "Living room", isPhone = false, member = false))
         var state by mutableStateOf(PlayOnUiState(listOf(phone), phone.id, known = false))
         show { PlayOnSheetContent(state, onSelect = {}, startGrouping = true) }
         compose.onNodeWithText("Group").assertIsDisplayed()

@@ -6,13 +6,10 @@ import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.NothingToMixException
 import io.github.hazymorning.amsel.api.QueueOption
 import io.github.hazymorning.amsel.api.RepeatMode
-import io.github.hazymorning.amsel.data.Place
-import io.github.hazymorning.amsel.data.Seeks
+import io.github.hazymorning.amsel.data.ItemPosition
+import io.github.hazymorning.amsel.data.SeekTracker
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -33,7 +30,7 @@ interface SpeakerCommands {
 
     /**
      * Takes [playerId] to [positionSeconds] in what it holds and returns at once: the place shows at
-     * once, and the command follows ([SeekLane]). [step] for a skip by seconds or a step to another
+     * once, and the command follows ([SeekController]). [step] for a skip by seconds or a step to another
      * chapter, which more may follow.
      */
     fun seek(playerId: String, positionSeconds: Int, step: Boolean = false)
@@ -90,56 +87,8 @@ class PhoneNotReadyException(val refused: Boolean = false, val stopped: Boolean 
     Exception("This phone has not joined the server")
 
 /**
- * One [SeekLane] a speaker, built on first use: the plays ([PlayDispatcher]) and the commands
- * ([MaSpeakerCommands]) share them. A seek [wake]s the session first, and one for This phone waits
- * until its Sendspin client has joined the server, and releases its output.
- */
-class SeekLanes(
-    private val api: MaApi,
-    private val wake: () -> Unit,
-    private val seeks: Seeks,
-    private val phone: LocalOutput,
-    private val scope: CoroutineScope,
-    private val elapsedRealtime: () -> Long,
-) {
-    private val lanes = mutableMapOf<String, SeekLane>()
-    private val _failures =
-        MutableSharedFlow<CommandFailure>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-    /** Seeks that did not reach their speaker. */
-    val failures: SharedFlow<CommandFailure> = _failures.asSharedFlow()
-
-    /** A seek in [place]'s item, which [queueId] is starting: a book started at a chapter no `start_item` leads to. */
-    fun seekIn(queueId: String, place: Place) = lane(queueId).seekIn(place)
-
-    /** A play that starts playback was asked of [playerId] ([SpeakerCommands.starting]). */
-    fun starting(playerId: String) = lane(playerId).starting()
-
-    internal fun lane(playerId: String): SeekLane = synchronized(lanes) {
-        lanes.getOrPut(playerId) {
-            SeekLane(
-                playerId,
-                seeks,
-                scope,
-                elapsedRealtime,
-                seekOnServer = { seconds ->
-                    val id = if (playerId == phone.id) phone.awaitConnected().also { phone.hold(false) } else playerId
-                    wake()
-                    api.seek(id, seconds)
-                },
-                pauseOnServer = {
-                    wake()
-                    api.pause(playerId)
-                },
-                onFailed = { error, retry -> _failures.tryEmit(CommandFailure(playerId, error, retry = retry)) },
-            )
-        }
-    }
-}
-
-/**
  * Speaker commands on the real server, one each, as the official app sends them; play actions go
- * through the [PlayDispatcher] and seeks through [lanes]. Each one [wake]s the session first: a
+ * through the [PlayDispatcher] and seeks through [seekDispatcher]. Each one [wake]s the session first: a
  * command from the notification, a headset or the car may arrive after the socket's idle close,
  * and nothing else would reopen it.
  */
@@ -147,29 +96,29 @@ class MaSpeakerCommands(
     private val api: MaApi,
     private val dispatcher: PlayDispatcher,
     private val wake: () -> Unit,
-    private val seeks: Seeks,
-    private val lanes: SeekLanes,
+    private val seeks: SeekTracker,
+    private val seekDispatcher: SeekDispatcher,
     private val scope: CoroutineScope,
 ) : SpeakerCommands {
     /** Seeks that did not reach their speaker. */
-    val failures: SharedFlow<CommandFailure> get() = lanes.failures
+    val failures: SharedFlow<CommandFailure> get() = seekDispatcher.failures
 
-    override suspend fun play(playerId: String) = lane(playerId).play { awake { api.play(playerId) } }
+    override suspend fun play(playerId: String) = controller(playerId).play { awake { api.play(playerId) } }
 
-    override suspend fun pause(playerId: String) = rest(playerId) { api.pause(playerId) }
+    override suspend fun pause(playerId: String) = sendPauseOrStop(playerId) { api.pause(playerId) }
 
-    override suspend fun stop(playerId: String) = rest(playerId) { api.stop(playerId) }
+    override suspend fun stop(playerId: String) = sendPauseOrStop(playerId) { api.stop(playerId) }
 
     /**
      * A pause or a stop. One asked while the server starts a play is taken and then overrun
-     * ([SeekLane]): the lane sends a pause after its own plays and seeks, and here it is told of a
+     * ([SeekController]): the lane sends a pause after its own plays and seeks, and here it is told of a
      * `play_media` on its way and of a start the server reports, once those are over.
      */
-    private suspend fun rest(playerId: String, command: suspend () -> Unit) {
-        val lane = lane(playerId)
+    private suspend fun sendPauseOrStop(playerId: String, command: suspend () -> Unit) {
+        val controller = controller(playerId)
         val play = dispatcher.pending.value[playerId]
-        val starting = play != null || seeks.holding(playerId)?.starting == true
-        lane.paused(starting)
+        val starting = play != null || seeks.queueStatus(playerId)?.starting == true
+        controller.paused(starting)
         awake { command() }
         if (!starting) return
         scope.launch {
@@ -177,22 +126,22 @@ class MaSpeakerCommands(
                 if (play != null) dispatcher.pending.first { it[playerId] != play }
                 seeks.started(playerId)
             } ?: return@launch
-            lane.landed()
+            controller.streamStarted()
         }
     }
 
-    override suspend fun next(playerId: String) = lane(playerId).skip { awake { api.next(playerId) } }
+    override suspend fun next(playerId: String) = controller(playerId).skip { awake { api.next(playerId) } }
 
-    override suspend fun previous(playerId: String) = lane(playerId).skip { awake { api.previous(playerId) } }
+    override suspend fun previous(playerId: String) = controller(playerId).skip { awake { api.previous(playerId) } }
 
     override fun seek(playerId: String, positionSeconds: Int, step: Boolean) =
-        lane(playerId).seek(positionSeconds, step)
+        controller(playerId).seek(positionSeconds, step)
 
     /** A seek in [place]'s item, which [queueId] is starting: a book started at a chapter no `start_item` leads to. */
-    fun seekIn(queueId: String, place: Place) = lanes.seekIn(queueId, place)
+    fun seekIn(queueId: String, place: ItemPosition) = seekDispatcher.seekIn(queueId, place)
 
     override suspend fun playIndex(playerId: String, queueItemId: String) =
-        lane(playerId).skip { awake { api.playIndex(playerId, queueItemId) } }
+        controller(playerId).skip { awake { api.playIndex(playerId, queueItemId) } }
 
     override suspend fun setVolume(playerId: String, level: Int) = awake { api.setVolume(playerId, level) }
 
@@ -205,13 +154,13 @@ class MaSpeakerCommands(
     override suspend fun setRepeat(playerId: String, mode: RepeatMode) = awake { api.setRepeat(playerId, mode) }
 
     override suspend fun playMedia(request: PlayRequest) {
-        if (request.option == QueueOption.Replace) lane(request.queueId).dropped()
+        if (request.option == QueueOption.Replace) controller(request.queueId).dropped()
         awake { dispatcher.play(request) }
     }
 
-    override fun starting(playerId: String) = lanes.starting(playerId)
+    override fun starting(playerId: String) = seekDispatcher.starting(playerId)
 
-    private fun lane(playerId: String): SeekLane = lanes.lane(playerId)
+    private fun controller(playerId: String): SeekController = seekDispatcher.controller(playerId)
 
     private inline fun awake(command: () -> Unit) {
         wake()
@@ -226,8 +175,8 @@ private const val START_WAIT_MS = 120_000L
  * Runs [send], which takes [queueId] to [place] (a book started at a chapter): the place is told
  * first, and whether the server answered or the command failed.
  */
-internal inline fun Seeks.flying(queueId: String, place: Place, send: () -> Unit) {
-    val ticket = fly(queueId, place)
+internal inline fun SeekTracker.trackSeek(queueId: String, place: ItemPosition, send: () -> Unit) {
+    val ticket = startSeek(queueId, place)
     sent(queueId, ticket)
     var answered = false
     try {

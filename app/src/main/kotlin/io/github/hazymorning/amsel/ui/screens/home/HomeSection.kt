@@ -83,7 +83,7 @@ internal fun Section(
     actions: SectionActions,
     reorder: Reorderable,
     modifier: Modifier = Modifier,
-    home: ScrollRoom? = null,
+    home: DragScrollArea? = null,
 ) {
     val title = section.heading()
     if (!editing) {
@@ -120,7 +120,7 @@ internal fun Section(
         Column(
             Modifier
                 .overhang(top = Space.BandText, bottom = Space.BandText)
-                .then(if (lifted) Modifier.clip(LiftedBand).background(band, LiftedBand) else Modifier)
+                .then(if (lifted) Modifier.clip(SectionRowShape).background(band, SectionRowShape) else Modifier)
                 .padding(vertical = Space.BandText),
         ) {
             Column(
@@ -178,7 +178,7 @@ private fun SectionBody(section: SectionUi, actions: SectionActions) {
 }
 
 /** A row's band at section size: a tile's shape, as far past the margins as a text row's band. */
-private object LiftedBand : Shape {
+private object SectionRowShape : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val inset = with(density) { (Keyline.Margin - Space.BandText).toPx() }
         val band = Shapes.Tile.createOutline(Size(size.width - inset * 2, size.height), layoutDirection, density)
