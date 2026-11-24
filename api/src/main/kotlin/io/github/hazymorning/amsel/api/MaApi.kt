@@ -20,18 +20,16 @@ import kotlinx.serialization.json.putJsonArray
 public class MaApi(internal val client: MaClient) {
     private val send: CommandSender = { command, args -> client.call(command, args) }
 
-    /** A long-lived token named [name] for the signed-in person; null when none comes back. */
     public suspend fun createToken(name: String): String? = createToken(send, name)
 
-    /** Retires [token] on the server, which closes every socket signed in with it. */
+    /** The server then closes every socket signed in with [token]. */
     public suspend fun revokeToken(token: String): Unit = revokeToken(send, token)
 
-    /** Ends this connection's sign-in on the server: at most [timeout] for the answer, once connected. */
+    /** [timeout] is for the answer, after the wait for a connection. */
     public suspend fun logout(timeout: Duration) {
         client.call("auth/logout", timeout = timeout)
     }
 
-    /** The connected server's schema, waiting for the connection as every command does. */
     internal suspend fun schema(): Int = client.server().schemaVersion
 
     // Transport goes through players/cmd/*, which also covers external sources.
@@ -53,8 +51,8 @@ public class MaApi(internal val client: MaClient) {
     }
 
     /**
-     * The volume of the speaker as it plays: a group or a sync leader moves its members together,
-     * keeping their balance; a speaker on its own takes it as `volume_set` (2.10 and 2.11 alike).
+     * A group or sync leader moves its members together, keeping their balance; a lone speaker takes
+     * it as `volume_set`. See docs/API-NOTES.md, "Player commands".
      */
     public suspend fun setVolume(playerId: String, level: Int): Unit =
         playerCmd("group_volume", playerId) { put("volume_level", level.coerceIn(0, 100)) }
@@ -63,10 +61,7 @@ public class MaApi(internal val client: MaClient) {
     public suspend fun setOwnVolume(playerId: String, level: Int): Unit =
         playerCmd("volume_set", playerId) { put("volume_level", level.coerceIn(0, 100)) }
 
-    /**
-     * The server's own sleep timer (2.11 on): it stops the speaker [seconds] from now, whether or not
-     * a phone is there to watch. Returns when, in Unix seconds.
-     */
+    /** 2.11 on; older servers answer an error. Returns when the server stops the speaker, in Unix seconds. */
     public suspend fun setSleepTimer(playerId: String, seconds: Int): Double? {
         val answer = client.call(
             "players/sleep_timer/set",
@@ -83,9 +78,8 @@ public class MaApi(internal val client: MaClient) {
     }
 
     /**
-     * Adds speakers to [leaderId]'s group and takes others out; the leader keeps playing. A speaker
-     * to take out that the server does not see in the group is passed over; a leader out of reach
-     * is an error.
+     * The leader keeps playing. A speaker to remove that is not in the group is skipped; a leader out
+     * of reach is an error.
      */
     public suspend fun setMembers(leaderId: String, add: List<String>, remove: List<String>) {
         client.call(
@@ -99,10 +93,7 @@ public class MaApi(internal val client: MaClient) {
         )
     }
 
-    /**
-     * The step the server's volume up and down take, as set in its Players settings: 1 to 10, or
-     * null for its own ladder (1, 2 or 3 by level). Needs the right to read the server's settings.
-     */
+    /** 1 to 10, or null for the server's ladder (1, 2 or 3 by level). Needs `config.core.read`. */
     public suspend fun volumeStep(): Int? {
         val answer = client.call(
             "config/core/get_value",
@@ -120,14 +111,11 @@ public class MaApi(internal val client: MaClient) {
 
     public suspend fun queues(): List<PlayerQueue> = list("player_queues/all", PlayerQueue.serializer())
 
-    /** Up to [limit] of a queue's items from [offset], in play order, played ones included. */
+    /** In play order, played items included. */
     public suspend fun queueItems(queueId: String, offset: Int, limit: Int = PAGE): ItemPage<QueueItem> =
         page("player_queues/items", QueueItem.serializer(), offset, limit) { put("queue_id", queueId) }
 
-    /**
-     * Plays [uris] on a speaker. Returns once playback starts, which can take tens of seconds: send
-     * from an app-wide scope.
-     */
+    /** Returns only once playback starts, which can take tens of seconds: call from an app-wide scope. */
     public suspend fun playMedia(
         queueId: String,
         uris: List<String>,
@@ -142,17 +130,14 @@ public class MaApi(internal val client: MaClient) {
                 putJsonArray("media") { uris.forEach { add(JsonPrimitive(it)) } }
                 put("option", option.api)
                 if (startItem != null) put("start_item", startItem)
-                // Left out, the queue's own shuffle setting would still shuffle a playlist after Shuffle.
+                // Left out, the queue's own shuffle setting applies, still on after an earlier Shuffle.
                 if (option == QueueOption.Replace) put("shuffle", shuffle)
             },
             timeout = PLAY_TIMEOUT,
         )
     }
 
-    /**
-     * "Play on": moves Up next and its position to another speaker, which plays it when [play];
-     * otherwise it rests there at the same place.
-     */
+    /** With [play] false the target takes Up next at the same position without playing. */
     public suspend fun transfer(sourceQueueId: String, targetQueueId: String, play: Boolean = true) {
         client.call(
             "player_queues/transfer",
@@ -165,7 +150,6 @@ public class MaApi(internal val client: MaClient) {
         )
     }
 
-    /** Empties Up next; a queue that plays stops. */
     public suspend fun clearQueue(queueId: String): Unit = queueCmd("clear", queueId)
 
     public suspend fun playIndex(queueId: String, queueItemId: String): Unit =
@@ -193,10 +177,9 @@ public class MaApi(internal val client: MaClient) {
     public suspend fun setRepeat(queueId: String, mode: RepeatMode): Unit =
         queueCmd("repeat", queueId) { put("repeat_mode", mode.api) }
 
-    /** The server's clock in epoch seconds (`time`, schema 42), to extrapolate positions. */
+    /** The server's clock in epoch seconds, to extrapolate positions. */
     public suspend fun serverTime(): Double? = (client.call("time") as? JsonPrimitive)?.content?.toDoubleOrNull()
 
-    /** Approves "This phone"'s Sendspin pairing over the trusted control socket (scope players.control). */
     public suspend fun pairWebPlayer(pairingToken: String) {
         client.call("sendspin/pair_web_player", buildJsonObject { put("pairing_token", pairingToken) })
     }
@@ -246,10 +229,7 @@ public class MaApi(internal val client: MaClient) {
     ): List<T> =
         (client.call(command, buildJsonObject(build), timeout = timeout) as? JsonArray)?.decodeAll(serializer).orEmpty()
 
-    /**
-     * Up to [limit] of a listing from [offset]. A page is counted before it is decoded: an item that
-     * does not decode must not end the listing.
-     */
+    /** Counted before decoding: an item that does not decode must not end the listing. */
     internal suspend fun <T> page(
         command: String,
         serializer: KSerializer<T>,
@@ -270,7 +250,6 @@ public class MaApi(internal val client: MaClient) {
         return ItemPage(page.decodeAll(serializer), complete = page.size < limit, next = offset + page.size)
     }
 
-    /** Every item of a listing, paged by [PAGE]. */
     internal suspend fun <T> listAll(
         command: String,
         serializer: KSerializer<T>,
@@ -286,13 +265,13 @@ public class MaApi(internal val client: MaClient) {
     }
 
     public companion object {
-        /** Items a listing asks for at a time; the server's own default. */
+        /** The server's own default page size. */
         public const val PAGE: Int = 500
 
         /**
-         * The queue's play actions wait for its playback lock, up to 120 s for its group's and again
-         * for its own, before they run or fail as busy; giving up sooner reports a failure for a
-         * command the server still carries out.
+         * A play action waits up to 120 s for its group's playback lock and again for its own; giving
+         * up sooner reports a failure for a command the server still carries out.
+         * See docs/API-NOTES.md, "player_queues/play_media".
          */
         private val PLAY_TIMEOUT = 250.seconds
     }
@@ -304,29 +283,25 @@ internal fun JsonObjectBuilder.ids(itemId: String, provider: String) {
 }
 
 /**
- * A long playlist or podcast takes a while: 2.10 streams all of it in partials, and 2.11 fetches
- * all of it from the provider before it answers the first page.
+ * 2.10 streams a long playlist or podcast whole in partials; 2.11 fetches all of it from the
+ * provider before it answers the first page. See docs/API-NOTES.md, "Pages and sub-listings".
  */
 internal val STREAM_TIMEOUT = 90.seconds
 
-/** Decodes off the main thread, leaving out what does not decode: a page can hold hundreds of items. */
+/** Off the main thread: a page can hold hundreds of items. */
 internal suspend fun <T> JsonArray.decodeAll(serializer: KSerializer<T>): List<T> =
     withContext(Dispatchers.Default) { mapNotNull { decodeLeniently(serializer, it) } }
 
-/** Decodes off the main thread: a page's answer can hold hundreds of items. */
+/** Off the main thread: an answer can hold hundreds of items. */
 internal suspend fun <T> JsonElement?.decodeOrNull(serializer: KSerializer<T>): T? {
     if (this == null || this is JsonNull) return null
     val element = this
     return withContext(Dispatchers.Default) { decodeLeniently(serializer, element) }
 }
 
-/**
- * A page of a listing from an offset on; [complete] when nothing follows it. [next] is where the
- * following page starts, counted before an item that does not decode is left out.
- */
+/** [next] counts the items that did not decode as well, so the following page repeats none. */
 public data class ItemPage<T>(val items: List<T>, val complete: Boolean, val next: Int)
 
-/** A listing that cannot page answers everything at once: from [offset] on, it is the last page. */
 internal fun <T> List<T>.pageFrom(offset: Int): ItemPage<T> {
     val rest = drop(offset)
     return ItemPage(rest, complete = true, next = offset + rest.size)

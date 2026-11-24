@@ -10,8 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 /**
- * Asks for notifications where Android needs asking (13 on), as a download starts: they show how
- * far it has come and let it be stopped. The download runs whatever the answer, out of sight.
+ * Asked as a download starts, for its progress and stop notification; the download runs whatever
+ * the answer.
  */
 @Composable
 fun rememberNotificationAsk(): () -> Unit {

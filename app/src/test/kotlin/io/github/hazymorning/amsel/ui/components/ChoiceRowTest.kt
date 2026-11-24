@@ -19,13 +19,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** A choice looks the same chosen or not, but for its tick: its name is never cut by it. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w360dp-h640dp-xxhdpi")
 class ChoiceRowTest {
     @get:Rule val compose = createComposeRule()
 
-    /** The longest choice of the What sheet, chosen and not, over a short one. */
+    /** The What sheet's longest choice, chosen and not, above a short one for a one-line height. */
     private fun show(fontScale: Float) = compose.setContent {
         AmselTheme {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {

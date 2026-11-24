@@ -12,12 +12,9 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/**
- * Whether what the server last said is out of date: the socket has tried for [afterMs] in a row
- * without connecting. A close keeps it so, as nothing new was heard, until the socket connects.
- * Going from Connecting to Offline and back is one try, so a network that keeps coming and going
- * does not start the count again.
- */
+// True once the socket has tried to connect for [afterMs] in a row; a close keeps it, as nothing new was heard,
+// until the socket connects. Connecting and Offline are one phase, so a network that comes and goes does not
+// restart the count.
 internal fun CoroutineScope.staleness(state: Flow<ConnectionState>, afterMs: Long): StateFlow<Boolean> {
     val stale = MutableStateFlow(false)
     launch {

@@ -30,12 +30,9 @@ import io.github.hazymorning.amsel.ui.theme.rememberPress
 import io.github.hazymorning.amsel.ui.theme.spaced
 
 /**
- * A section's heading on the margin; when the source has more, the whole row is one tap target
- * that leads to all of it. [above] is how far the previous content's
- * last ink sits inside its layout, so the heading's capitals stand [Space.SectionToHeader] under
- * it; null puts the capitals at the layout's top. [below] runs from the baseline to the
- * content's layout top. [onLongClick] is a shortcut with no press mark (Home's edit mode); TalkBack
- * offers it as [longClickLabel].
+ * [above]: how far the previous content's visible bottom sits inside its layout, so the cap top lands
+ * [Space.SectionToHeader] below it; null puts the cap top at the layout's top. [below] runs from the
+ * baseline to the next content's layout top.
  */
 @Composable
 fun SectionHeader(
@@ -97,11 +94,7 @@ fun SectionHeader(
     }
 }
 
-/**
- * A small heading over a group of rows, on the margin (or at [start], with the rows' words), smaller
- * and firmer than the rows so it never reads as one of them: [above] runs to its capitals, [below]
- * from its baseline.
- */
+/** [above] is measured to the cap top, [below] from the baseline. */
 @Composable
 fun GroupLabel(text: String, above: Dp, below: Dp, start: Dp = Keyline.Margin) {
     val style = groupLabelStyle()
@@ -118,6 +111,5 @@ fun GroupLabel(text: String, above: Dp, below: Dp, start: Dp = Keyline.Margin) {
     )
 }
 
-/** Group labels: the captions' style, a step above the rows' second lines. */
 @Composable
 fun groupLabelStyle(): TextStyle = MaterialTheme.typography.labelLarge

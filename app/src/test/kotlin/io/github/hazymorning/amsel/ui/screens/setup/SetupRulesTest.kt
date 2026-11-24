@@ -31,7 +31,7 @@ class SetupRulesTest {
     @Test fun `an address is filled in as a person would type it, losing nothing`() {
         assertEquals("192.168.1.20", typedForm(requireNotNull(ServerAddress.fromBaseUrl("http://192.168.1.20:8095"))))
         assertEquals("http://music.local:9000", typedForm(address("music.local:9000")))
-        // A name off the home network goes to https by itself.
+        // A name off the home network defaults to https, so the scheme can be left out.
         assertEquals("music.example.com", typedForm(address("https://music.example.com")))
         assertEquals("http://music.example.com:8095", typedForm(address("http://music.example.com:8095")))
         listOf("music.local", "music.local:9000", "https://music.example.com", "http://10.0.0.5:8095/ma").forEach {
@@ -70,7 +70,6 @@ class SetupRulesTest {
     @Test fun `a name typed without a scheme that https does not reach asks for http, typed so`() {
         fun typed(text: String) = ServerCheckRequest(address(text), connectingTo = text, field = text, fromList = false)
         assertEquals(ServerError.HttpsFailed, ServerError.Unreachable.of(typed("music.example.com")))
-        // Typed with its scheme, or a home address over http: nothing more to say.
         assertEquals(ServerError.Unreachable, ServerError.Unreachable.of(typed("https://music.example.com")))
         assertEquals(ServerError.Unreachable, ServerError.Unreachable.of(typed("192.168.1.20")))
         assertEquals(ServerError.Certificate, ServerError.Certificate.of(typed("music.example.com")))

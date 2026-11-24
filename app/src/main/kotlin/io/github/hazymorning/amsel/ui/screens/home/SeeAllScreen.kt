@@ -44,7 +44,6 @@ import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
 import io.github.hazymorning.amsel.ui.rememberRetry
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** "See all" from a Home section: albums as a grid of tiles, anything else as rows. */
 @Composable
 fun SeeAllScreen(
     state: SeeAllUiState,
@@ -115,12 +114,12 @@ private val SectionSource.glyph: Int
         SectionSource.Search -> R.drawable.ic_search
     }
 
-/** The first cover 8 under the bar, as a row keeps it 8 under its top; the last ink 32 above the dock. */
+// No top padding: a row keeps its cover 8 dp under its own top. The last glyph ends [Space.ListEnd]
+// above the dock.
 @Composable
 private fun rowsPadding(insets: PaddingValues) =
     insets.plus(bottom = Space.ListEnd - rowGlyphBottom(RowLead.Cover, twoLines = true))
 
-/** First load only: the grid's tiles or the list's rows as tonal blocks. */
 @Composable
 private fun SeeAllSkeleton(albums: Boolean, insets: PaddingValues, modifier: Modifier = Modifier) {
     val loading = stringResource(R.string.loading)
@@ -161,5 +160,5 @@ fun SeeAllRoute(navigator: Navigator, option: SectionOption, modifier: Modifier 
     )
 }
 
-/** How many items See all asks for: more than anyone scrolls through from Home. */
+// More than anyone scrolls through from Home.
 private const val SEE_ALL = 500

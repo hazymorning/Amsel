@@ -35,7 +35,7 @@ import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** A downloaded item playing on this phone, as Now Playing shows it: where it was at [atMs] (elapsedRealtime). */
+/** [positionMs] as of [atMs] on the elapsedRealtime clock. */
 data class LocalPlaybackState(
     val manifest: DownloadManifest,
     val positionMs: Long,
@@ -44,19 +44,12 @@ data class LocalPlaybackState(
     val cover: Uri?,
 )
 
-/**
- * A downloaded book or episode played on this phone from its files, as Absorb and Lissen do: no
- * server in the way, so a seek or a skip is instant and needs no connection. A book's files are one
- * timeline ([ConcatenatingMediaSource2]), next and previous step by chapter, back and forward by 15
- * and 30 seconds. Where the person is stays on the phone, every few seconds and at every pause, and
- * goes to Audiobookshelf now and then ([DownloadProgressSync]); a start takes the newer of the two.
- */
+/** Main thread only (the player's looper), except [stopDownloadPlayback]. */
 @OptIn(UnstableApi::class)
 class LocalPlayback(
     private val context: Context,
     private val downloads: DownloadRepository,
     private val abs: AbsClient,
-    /** The networks the phone is on: a send that failed waits for another. */
     network: StateFlow<NetworkKey?>,
     private val scope: CoroutineScope,
 ) {
@@ -77,29 +70,27 @@ class LocalPlayback(
         },
     )
 
-    /** The cover of what [now] holds, looked up once. */
     private var cover: Uri? = null
 
-    /** Finds the place to start what was just loaded; until it has, that item's place is not known. Main thread. */
+    /** Looks up where the loaded item starts; until then its place is unknown and nothing of it is saved. */
     private var resuming: Job? = null
 
-    /** Whether what was just loaded starts once at its place: a pause meanwhile says no. Main thread. */
+    /** Whether the loaded item plays once [resuming] is done; a pause meanwhile clears it. */
     private var startWhenResumed = false
     private val _now = MutableStateFlow<LocalPlaybackState?>(null)
 
-    /** What plays from the phone's downloads; null when nothing is loaded. */
     val now: StateFlow<LocalPlaybackState?> = _now.asStateFlow()
 
     private var built: Player? = null
 
-    /** The session's player while [now] holds something; one instance, so a swap keeps it. Main thread. */
+    /** One instance, so the session can swap it out and back without losing the item. */
     val player: Player get() = built ?: ChapterPlayer(exoPlayer()).also { built = it }
 
     /** Whether [player] is this one's, without building it to find out. */
     fun owns(player: Player): Boolean = player === built
 
     init {
-        // Removed while it plays, here or by signing out: it stops, and nothing of it is written again.
+        // A download removed while it plays, also by signing out, stops; its place is not written again.
         scope.launch(Dispatchers.Main.immediate) {
             downloads.done.collect { done ->
                 if (_now.value?.manifest?.uri?.let { it !in done } == true) release()
@@ -107,7 +98,7 @@ class LocalPlayback(
         }
     }
 
-    /** Plays the download of [uri] from [startMs], or from where the person was. Main thread. */
+    /** [startMs] null resumes from the newer of this phone's and Audiobookshelf's place. */
     fun play(uri: String, startMs: Long? = null) {
         val manifest = downloads.manifest(uri) ?: return
         val exo = exoPlayer()
@@ -116,17 +107,17 @@ class LocalPlayback(
             val source = try {
                 source(manifest, art)
             } catch (e: IOException) {
-                // A manifest from before file names were checked, naming a file outside its folder.
+                // A manifest saved before file names were checked may name a file outside its folder.
                 return
             }
-            // What played goes with its place, before the other is loaded over it.
+            // The previous item's place is saved before the new one replaces it.
             if (_now.value != null) {
                 saves.save(send = true)
                 saves.stop()
             }
             resuming?.cancel()
             cover = art
-            // Not from its start while its place is looked up, as the last item's play would have it.
+            // Paused while its place is looked up, or the previous item's playWhenReady would start it at 0.
             exo.playWhenReady = false
             exo.setMediaSource(source)
             exo.prepare()
@@ -152,18 +143,15 @@ class LocalPlayback(
         exo?.pause()
     }
 
-    /** How loud, 0 to 1, for the sleep timer's fade. Main thread. */
     fun setVolume(volume: Float) {
         exo?.volume = volume.coerceIn(0f, 1f)
     }
 
-    /** Lets the item go, keeping where the person was: another plays instead. Main thread. */
     fun stop() {
         saves.save(send = true)
         release()
     }
 
-    /** Ends what plays from the phone's files, if anything, from any thread: the server's stream takes its place. */
     fun stopDownloadPlayback() {
         if (now.value != null) scope.launch(Dispatchers.Main) { stop() }
     }
@@ -229,7 +217,7 @@ class LocalPlayback(
         val builder = ConcatenatingMediaSource2.Builder().setMediaItem(item)
         for (file in manifest.files) {
             val uri = Uri.fromFile(downloads.file(manifest.uri, file))
-            // ExoPlayer takes a file's length up front, to lay out the timeline before it reads the file.
+            // The timeline is laid out from these durations before each file is read.
             val length = (file.durationSec * MS).roundToLong().coerceAtLeast(1)
             builder.add(files.createMediaSource(MediaItem.fromUri(uri)), length)
         }
@@ -247,7 +235,6 @@ class LocalPlayback(
         )
     }
 
-    /** The newer of this phone's place and Audiobookshelf's, in ms; the start when it was finished. */
     private suspend fun resumeAt(manifest: DownloadManifest): Long {
         val local = withContext(Dispatchers.IO) { downloads.progress(manifest.uri) }
         val remote = withContext(Dispatchers.IO) {
@@ -267,7 +254,6 @@ class LocalPlayback(
         return if (finished) 0 else (seconds * MS).roundToLong()
     }
 
-    /** Where the person is in what is loaded. Main thread. */
     private fun place(): DownloadPosition? {
         if (resuming != null) return null
         val exo = exo ?: return null
@@ -276,7 +262,6 @@ class LocalPlayback(
         return DownloadPosition(manifest, LocalProgress(exo.currentPosition / MS, System.currentTimeMillis(), finished))
     }
 
-    /** Next and previous step through the chapters, as for a speaker ([ChapterNavigation]). */
     private inner class ChapterPlayer(player: ExoPlayer) : ForwardingPlayer(player) {
         private val starts: List<Long>
             get() = _now.value?.manifest?.chapters.orEmpty().map { (it.startSec * MS).roundToLong() }.sorted()
@@ -289,7 +274,7 @@ class LocalPlayback(
 
         override fun isCommandAvailable(command: Int): Boolean = availableCommands.contains(command)
 
-        // From the notification, a headset or a car: while the place is looked up, they say whether it starts there.
+        // While the place is looked up, a controller's play only marks the item to start there.
         override fun play() {
             if (resuming != null) startWhenResumed = true else super.play()
         }

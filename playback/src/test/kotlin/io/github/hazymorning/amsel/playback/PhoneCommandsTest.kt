@@ -24,7 +24,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
-/** This phone's commands, and what happens when a command cannot reach its speaker. */
 @RunWith(RobolectricTestRunner::class)
 class PhoneCommandsTest {
     private val commandScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -46,7 +45,6 @@ class PhoneCommandsTest {
         elapsedRealtime,
     )
 
-    /** Which player id each command went to. */
     private val sentTo = mutableListOf<String>()
     private val recording = object : SpeakerCommands by speaker {
         override suspend fun play(playerId: String) {
@@ -147,7 +145,6 @@ class PhoneCommandsTest {
         assertNull(joinedId(PlayerState.Connecting(1), players, gone = emptySet()))
     }
 
-    /** Live, 2.10.9 and 2.11.0b7: the server keeps the left phone, unavailable, for 2 s after the client is back. */
     @Test fun anEntryTheServerKeptUnavailableIsNotAJoin() {
         val connected = PlayerState.Connected("phone-1", "Home", ClockQuality.Good, AudioStatus.IDLE)
         assertNull(joinedId(connected, mapOf("phone-1" to Player("phone-1", available = false)), gone = emptySet()))
@@ -220,14 +217,14 @@ class PhoneCommandsTest {
         val server = ServerInfo("s1", "2.11.0", 99)
         val connected = ConnectionState.Connected(server, null)
         assertEquals(server, sendspinServer(wanted = true, connected, last = null, retriesSafe = true))
-        // A Wi-Fi blip, a missed ping or a token rotation: Sendspin rides it out by itself.
+        // A Wi-Fi blip, a missed ping or a token rotation: Sendspin reconnects by itself.
         assertEquals(server, sendspinServer(true, ConnectionState.Connecting, last = server, retriesSafe = true))
         assertEquals(server, sendspinServer(true, ConnectionState.Offline, last = server, retriesSafe = true))
         // The idle close, signing out, or another speaker picked: stop.
         assertNull(sendspinServer(true, ConnectionState.Idle, last = server, retriesSafe = true))
         assertNull(sendspinServer(true, ConnectionState.SignedOut, last = server, retriesSafe = true))
         assertNull(sendspinServer(false, connected, last = server, retriesSafe = true))
-        // Never connected yet: nothing to connect to.
+        // Never connected yet: no server to keep.
         assertNull(sendspinServer(true, ConnectionState.Connecting, last = null, retriesSafe = true))
     }
 
@@ -246,7 +243,7 @@ class PhoneCommandsTest {
         val playing = PlayerState.Connected("phone-1", "Home", ClockQuality.Good, audio(AudioPhase.Playing))
         assertTrue(awakeFor(playing, was = false))
         assertFalse(awakeFor(playing.copy(audio = AudioStatus.IDLE), was = true))
-        // The connection drops: awake while the buffer still sounds, not once it has run dry.
+        // The connection drops: awake while the buffer still plays, not once it is starved.
         assertTrue(awakeFor(PlayerState.Reconnecting(1, null, audio(AudioPhase.Playing)), was = true))
         assertFalse(
             awakeFor(PlayerState.Reconnecting(1, null, audio(AudioPhase.Playing, starved = true)), true),

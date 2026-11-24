@@ -39,21 +39,17 @@ import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * The speakers that can play along with the group's leader, each with a round check: ticked ones
- * play in step with it. Done applies what changed; Back leaves it as it was.
- */
 @Composable
 internal fun GroupList(
     state: PlayOnUiState,
     onDone: (leaderId: String, add: List<String>, remove: List<String>) -> Unit,
 ) {
     val leader = state.leader ?: return
-    // What Done changes is counted from the group as it was when this list opened.
+    // Done's changes count from the group as it was when this list opened.
     val before = rememberSaveable(leader.id) { state.group.filter { it.member }.map { it.id } }
     var chosen by rememberSaveable(leader.id) { mutableStateOf(before) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = Space.SheetEdge)) {
-        // "Group with this phone" has words of its own: German wants "mit diesem Handy", not its name.
+        // The phone has its own string: German needs "mit diesem Handy", not the phone's name.
         SheetHeader(
             if (leader.isPhone) {
                 stringResource(
@@ -84,7 +80,7 @@ internal fun GroupList(
                 trailing = { RoundCheck(ticked) },
             )
         }
-        // Done stands a group's distance under the last speaker's name, as Group does in the list.
+        // Done stands Space.BeforeList under the last speaker's name, as Group does in the list.
         Spacer(
             Modifier.height((Space.BeforeList - rowGlyphBottom(RowLead.Glyph, twoLines = false)).coerceAtLeast(0.dp)),
         )
@@ -96,7 +92,6 @@ internal fun GroupList(
     }
 }
 
-/** A tick in a filled circle when on, an empty ring when off. */
 @Composable
 private fun RoundCheck(on: Boolean) {
     val colors = MaterialTheme.colorScheme

@@ -55,10 +55,9 @@ import io.github.hazymorning.amsel.ui.theme.rememberCoverColors
 import kotlinx.coroutines.launch
 
 /**
- * [colors] overrides the cover's hue (tests); null takes it from the artwork. [onArtist] leads to
- * the song's artist, the book's author or the episode's podcast. A book or an episode names its
- * chapter under its title, and its chapters open from the footer's last button ([onChapters]), where
- * music has Up next: never on the page itself, where a stray touch went to another chapter.
+ * [colors] overrides the cover's hue (tests). [onArtist] leads to the song's artist, the book's
+ * author or the episode's podcast. Chapters open only from the footer ([onChapters]), never on the
+ * page itself, where a stray touch went to another chapter.
  */
 @Composable
 fun NowPlayingScreen(
@@ -82,13 +81,12 @@ fun NowPlayingScreen(
     val extracted = rememberCoverColors(if (colors == null) state.art else null)
     val night = MaterialTheme.colorScheme.isNight
     val page = MaterialTheme.colorScheme.surface
-    // The whole page leans a little to the cover. By day the cover stands on its shadow; at night,
-    // where a shadow is lost, it stands on its own.
+    // A light tint of the cover's hue. The cover casts a shadow by day only, as one is lost at night.
     val wash =
         animateColorAsState((colors ?: extracted)?.tint(page, night) ?: page, Motion.effectsSlow(), label = "wash")
     val position = rememberPlaybackPosition(state)
 
-    // The foot's inset is the layout's to place the footer by: the gesture handle lies in the room under it.
+    // No bottom inset padding: the layout places the footer by footRoom(), the gesture handle below it.
     val foot = footRoom()
     Column(
         modifier
@@ -105,8 +103,8 @@ fun NowPlayingScreen(
             inset = NowPlayingInset,
             titleInset = if (sleepLeft != null) BarTitleInset + Sizes.TouchTarget else BarTitleInset,
             actions = {
-                // A sleep timer that runs shows beside the menu it was set from, in moss, as what
-                // runs is; what is left of it stands in its sheet.
+                // A running sleep timer shows beside the ⋮ it was set from, in the tertiary colour that
+                // marks what runs; the time left shows in its sheet.
                 if (sleepLeft != null) {
                     IconAction(
                         R.drawable.ic_sleep,
@@ -115,25 +113,24 @@ fun NowPlayingScreen(
                         tint = MaterialTheme.colorScheme.tertiary,
                     )
                 }
-                // The menu waits for the song, so it is never a control that does nothing.
+                // The ⋮ shows only once the item is known, so it never does nothing.
                 if (state.key != null) MoreButton(state.title, onMore)
             },
         )
-        // A sideways swipe on the cover is previous and next, as the dock's row has it.
         val swipe = rememberSideSwipeState(state.key ?: state.title, enabled = state.canSkip) { forward ->
             onControl(if (forward) PlayerControl.Next else PlayerControl.Previous)
         }
         NowPlayingLayout(foot, Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
             Artwork(
                 state.art,
-                // The cover's shade moves and fades with it.
+                // The cover's shadow moves and fades with the swipe.
                 Modifier.then(swipe.detect).extendForShadow(Elevation.Cover, swipe.follow),
                 kind = if (state.spoken) state.kind else MediaKind.Track,
                 elevated = !night,
                 name = state.album ?: state.title,
             )
             val chapter = rememberChapter(state, position)
-            // A book or an episode with chapters is headed by the chapter it is in, the book under it.
+            // With chapters, the current chapter heads the block and the title goes under it.
             val heading = chapter.value?.let { chapterLine(it) }
             val line = if (heading != null) state.title else state.byline()
             val linked = chapter.value == null &&
@@ -166,7 +163,6 @@ fun NowPlayingScreen(
     }
 }
 
-/** Now Playing for the current speaker, with Up next as a layer above it that drags and previews Back alike. */
 @Composable
 fun NowPlayingRoute(onClose: () -> Unit, navigator: Navigator, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -223,11 +219,7 @@ fun NowPlayingRoute(onClose: () -> Unit, navigator: Navigator, modifier: Modifie
     }
 }
 
-/**
- * What Now Playing's ⋮ opens: the song, the station, or the book or episode, which lead to their
- * page; the DJ's words open it as a song would, for the speaker's rows. Null while the server has
- * not named it.
- */
+/** Null until the server names the item. A DJ break opens as a song would, for the speaker's rows. */
 fun NowPlayingUi.moreTarget(): ActionTarget? {
     val key = key ?: return null
     return if (kind == MediaKind.Radio) {

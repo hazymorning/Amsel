@@ -31,90 +31,72 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** What the session's player follows: a speaker's id (null while this phone has none yet). */
+/** [playerId] is null while This phone has no id yet. */
 data class PlaybackTarget(val playerId: String?, val isPhone: Boolean)
 
-/** What the service needs from AppGraph. In the app this is `:data` plus the PlayDispatcher. */
 @OptIn(UnstableApi::class)
 interface PlaybackGraph {
-    /** The selected speaker, or this phone: where the app plays and what it controls. */
     val target: StateFlow<PlaybackTarget>
 
     /**
-     * The player the session holds (the notification, the lock screen, a headset, the car, and the
-     * app's own buttons): the selected speaker, or This phone while its music goes on and the
-     * selected speaker shows nothing at all, so what is heard can be paused.
+     * The session's player: the selected speaker, or This phone while its music goes on and the
+     * selected speaker shows nothing, so what is heard can be paused.
      */
     val sessionTarget: StateFlow<PlaybackTarget> get() = target
 
-    /** This phone's audio plays or is about to, whichever speaker the session holds. */
     val phoneAudible: StateFlow<Boolean> get() = Quiet
 
-    /**
-     * Now Playing's heart for what plays: liked or not, and null where Now Playing leaves it out
-     * (a guest, a book or an episode, nothing playing). The notification and the car show it too.
-     */
+    /** Null where Now Playing shows no heart: a guest, a book or an episode, nothing playing. */
     val heart: StateFlow<Boolean?>
 
-    /** A tap on that heart. */
     fun toggleHeart()
 
-    /** The volume limit the person set, 0 for none: speakers' keys stop at it (see [RemotePlayer]). */
+    /** 0 for none. */
     fun volumeLimit(): Int = 0
 
-    /** This phone's output, when it is the target. */
     val phone: LocalOutput?
 
-    /** Books and episodes downloaded for listening without a connection. */
     val downloads: DownloadRepository? get() = null
 
-    /** A download playing on this phone: the session holds its player while it holds something. */
     val local: LocalPlayback? get() = null
 
     fun snapshots(playerId: String): StateFlow<SpeakerSnapshot?>
 
-    /** Speaker [playerId] as a sentence about it names it, in the car as in the app. */
     fun speakerName(playerId: String): String
 
     val commands: SpeakerCommands
     val elapsedRealtime: () -> Long
     val catalog: Catalog
 
-    /** The app's: work that must finish though the player or the service that started it is gone. */
+    /** The app's scope, for work that must outlive the player or the service that started it. */
     val scope: CoroutineScope
 
-    /** Loads the artwork the session shows, on the app's own HTTP client and cache. */
     val artwork: BitmapLoader
 
     /**
-     * The session's speaker started or stopped playing: keep the connection open meanwhile. A
-     * download playing from the phone's files is no speaker and needs no connection.
+     * The connection stays open while the session's speaker plays; a download playing from the
+     * phone's files needs none and counts as not playing.
      */
     fun onPlayingChanged(playing: Boolean)
 
-    /** One of the app's services was created: playback may run with none of its screens shown. */
     fun onServiceCreated() {}
 
-    /** A transport command did not reach its speaker: it joins [failures]. */
     fun onCommandFailed(failure: CommandFailure)
 
-    /** Commands and plays that did not reach their speaker, from the app, the notification or the car. */
     val failures: Flow<CommandFailure>
 
-    /** Makes "This phone" the selected speaker; returns once [target] says so. */
+    /** Returns once [target] is This phone. */
     suspend fun selectPhone()
 
-    /** Why the car has nothing to browse, once the stored session is known; null when signed in. */
+    /** Waits until the stored session is restored; null when signed in. */
     suspend fun blocked(): BrowseBlockReason?
 
     /**
-     * What a voice request plays on the target: the uri the server finds for [query]; with no
-     * query ("play music"), null while the speaker holds something, which plays on, else what was
-     * played last. Throws [NoSuchElementException] when there is nothing to play.
+     * With no [query] ("play music"): null while the speaker holds something, which then plays on,
+     * else what was played last. Throws [NoSuchElementException] when there is nothing to play.
      */
     suspend fun voiceUri(query: String?, focus: String?): String?
 
-    /** A speaker, or this phone (same mapping, local output) once its player id is known. */
     fun playerFor(target: PlaybackTarget): Player = RemotePlayer(
         playerId = target.playerId.orEmpty(),
         snapshots = target.playerId?.let(::snapshots) ?: NoSpeaker,
@@ -127,17 +109,14 @@ interface PlaybackGraph {
     )
 
     companion object {
-        /** The app's, set as it starts, before Android creates a service. */
+        /** Set as the app starts, before Android creates a service. */
         lateinit var instance: PlaybackGraph
         private val NoSpeaker = MutableStateFlow<SpeakerSnapshot?>(null)
         private val Quiet = MutableStateFlow(false)
     }
 }
 
-/**
- * The one MediaLibraryService: one MediaLibrarySession for the service's lifetime, whose player is
- * the selected speaker. Media3 owns the notification and every foreground transition.
- */
+/** Media3 owns the notification and every foreground transition. */
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaLibraryService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -154,13 +133,11 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /** What the notification shows beside play: the skips of a book or an episode, and the heart. */
     private var buttonsShown: Pair<Boolean, Boolean?>? = null
 
     /** The target the session's player was built for. */
     private val held = MutableStateFlow<PlaybackTarget?>(null)
 
-    /** The notification was swiped away: it stays away until the speaker plays again. */
     private var notificationDismissed = false
 
     override fun onCreate() {
@@ -168,7 +145,6 @@ class PlaybackService : MediaLibraryService() {
         val graph = PlaybackGraph.instance
         graph.onServiceCreated()
         val first = graph.sessionTarget.value
-        // Tapping the notification, the lock-screen card or the Quick Settings player opens Amsel.
         val openApp = sessionActivity()
         val builder =
             MediaLibrarySession.Builder(
@@ -199,7 +175,7 @@ class PlaybackService : MediaLibraryService() {
         scope.launch { graph.heart.collect { showButtons(built) } }
         // A speaker that already plays fires no change: tell the connection now.
         graph.onPlayingChanged(built.player.speakerPlays)
-        // Said where the command came from too: the car, the lock screen, a watch.
+        // To every controller, so the car, the lock screen or a watch shows it too.
         scope.launch { graph.failures.collect { built.sendError(errorFor(it)) } }
         scope.launch {
             // Compared with what the player was built for rather than dropping the first value:
@@ -218,14 +194,14 @@ class PlaybackService : MediaLibraryService() {
                     }
                 }
         }
-        // This phone playing behind another speaker keeps the service in front, or Android stops it.
+        // This phone playing behind another speaker needs the service in the foreground too.
         scope.launch { graph.phoneAudible.drop(1).collect { triggerNotificationUpdate() } }
     }
 
     /**
-     * One session, new player: Media3 re-publishes metadata, state, timeline and DeviceInfo
-     * (so the platform VolumeProvider is rebuilt) to every controller, and the platform session
-     * keeps its identity, so media-button routing earned by local playback carries over.
+     * One session, new player: Media3 re-publishes state and DeviceInfo to every controller (which
+     * rebuilds the platform VolumeProvider), and the platform session keeps its identity, so
+     * media-button routing carries over.
      */
     private fun swapPlayer(session: MediaLibrarySession, next: Player) {
         val previous = session.player
@@ -235,17 +211,12 @@ class PlaybackService : MediaLibraryService() {
         // A download's player is kept: it holds the item, and plays again on the next swap.
         if (PlaybackGraph.instance.local?.owns(previous) != true) previous.release()
         showButtons(session)
-        // The new player may start in its final state (its speaker's snapshot is cached), so no
-        // change would keep the connection's "something plays" flag right.
+        // The new player may start in its final state (its speaker's snapshot is cached) and report
+        // no change, so the connection is told here.
         PlaybackGraph.instance.onPlayingChanged(next.speakerPlays)
     }
 
-    /**
-     * A book or an episode shows Now Playing's five controls for it: back 15, previous (a chapter),
-     * play, next and forward 30, the skips outermost; the player offers seeking back only for
-     * those. Music has previous, play and next, and Now Playing's heart beside them wherever Now
-     * Playing shows it.
-     */
+    /** COMMAND_SEEK_BACK is offered only for a book or an episode, which gets the skips instead of the heart. */
     private fun showButtons(session: MediaLibrarySession) {
         val spoken = session.player.isCommandAvailable(Player.COMMAND_SEEK_BACK)
         val heart = PlaybackGraph.instance.heart.value.takeUnless { spoken }
@@ -288,11 +259,7 @@ class PlaybackService : MediaLibraryService() {
         )
     }
 
-    /**
-     * The car hears the phone, so a play from Android Auto goes to This phone whatever speaker is
-     * selected: select it and return once the session holds the phone's player, which then
-     * receives the car's items. False when it could not be selected, or the session did not take it.
-     */
+    /** False when This phone could not be selected or the session did not swap to it in time. */
     @VisibleForTesting
     internal suspend fun holdPhone(): Boolean {
         if (PlaybackGraph.instance.target.value.isPhone && held.value?.isPhone == true) return true
@@ -326,7 +293,10 @@ class PlaybackService : MediaLibraryService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    /** Media3 brings the notification back for any speaker that holds an item, a stopped one too. */
+    /**
+     * Media3 brings the notification back for any speaker that holds an item, a stopped one too; a
+     * dismissed one stays away until the speaker plays again.
+     */
     override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
         if (session.player.playWhenReady) notificationDismissed = false
         val foreground = startInForegroundRequired || PlaybackGraph.instance.phoneAudible.value
@@ -334,9 +304,8 @@ class PlaybackService : MediaLibraryService() {
     }
 
     /**
-     * Media3's default pauses every player when the task is swiped away while nothing plays.
-     * For a remote speaker that would pause music someone else may be listening to, so only stop
-     * the service, never the speaker.
+     * Media3's default pauses every player when the task is removed while nothing plays; on a remote
+     * speaker that could pause someone else's music, so only the service stops.
      */
     override fun onTaskRemoved(rootIntent: Intent?) {
         val playing = isPlaybackOngoing && session?.player?.playsOrStarts == true
@@ -358,10 +327,9 @@ class PlaybackService : MediaLibraryService() {
     }
 
     companion object {
-        /** How long a car play waits for the session to hold This phone before going on. */
         private const val SWAP_WAIT_MS = 5_000L
 
-        /** The live session, for routing volume keys from the activity (same process only). */
+        /** For routing volume keys from the activity; same process only. */
         @Volatile
         var current: MediaLibrarySession? = null
             private set
@@ -369,17 +337,16 @@ class PlaybackService : MediaLibraryService() {
 }
 
 /**
- * It plays, or is on its way to: a play starting or a seek buffers, for minutes deep in a long file,
- * and the connection must stay open meanwhile as it does while it plays.
+ * Buffering counts: a play starting or a seek deep into a long file can take long
+ * (docs/API-NOTES.md, "Seek"), and the connection must stay open meanwhile.
  */
 private val Player.playsOrStarts: Boolean
     get() = playWhenReady && (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING)
 
-/** A speaker plays or starts: a download plays from the phone's own files, with no server to keep. */
+/** A download plays from the phone's own files and needs no connection. */
 private val Player.speakerPlays: Boolean
     get() = playsOrStarts && PlaybackGraph.instance.local?.owns(this) != true
 
-/** What a controller (the car, the lock screen, a watch) is told when [error] stopped what it asked. */
 @OptIn(UnstableApi::class)
 internal fun sessionError(error: Throwable, message: String): SessionError {
     val code = when {

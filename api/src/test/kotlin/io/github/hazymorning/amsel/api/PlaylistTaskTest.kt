@@ -15,7 +15,6 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** A playlist edit is a server task: the call answers when the task has run, not when it is queued. */
 class PlaylistTaskTest {
     private fun task(status: String, error: String? = null) = buildJsonObject {
         put("id", "t1")

@@ -32,10 +32,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/**
- * The socket's lifecycle outside the app: a transport command from the notification or a car
- * library read must reopen a socket the idle close shut, and keep it only as long as it is used.
- */
 @RunWith(RobolectricTestRunner::class)
 class SessionTest {
     private val plainVault = object : TokenCipher {
@@ -93,7 +89,7 @@ class SessionTest {
 
     @Test fun `a server set up anew where it answered before is signed out of, as for a refused token`() =
         withSession(storedId = "before-the-new-setup") { session, prefs, fake ->
-            // It answered as itself on this network in an earlier run of the app.
+            // It passed the server_id check on this network in an earlier run of the app.
             prefs.saveCheckedNetwork(FakePhoneNetwork.HOME.text)
             session.restore()
             session.setForeground(true)
@@ -166,7 +162,7 @@ class SessionTest {
     }
 
     @Test fun `music paused on the phone keeps the socket open in the background`() = withSession { session, _, _ ->
-        // Closed, the phone's player leaves the server, which drops its queue and brings back an old save.
+        // With the socket closed, the phone's player leaves the server, which drops its queue and restores an old save.
         session.restore()
         session.setHolding(true)
         session.awaitState { it is ConnectionState.Connected }
@@ -258,7 +254,6 @@ class SessionTest {
         }
     }
 
-    /** A widget's look: the server is read and let go, and nothing the app does on a connect comes with it. */
     @Test fun `a glance reads the server on a socket of its own and leaves the app's closed`() =
         withSession { session, _, fake ->
             session.restore()
@@ -297,7 +292,7 @@ class SessionTest {
             assertEquals(ConnectionState.Idle, session.client.state.value)
         }
 
-    /** The phone leaves home: the server's address answers nothing a socket can use. Returns home's answers. */
+    /** Makes the server unreachable; returns its dispatcher, to restore it. */
     private fun leaveHome(fake: FakeMaServer): Dispatcher {
         val home = fake.server.dispatcher
         fake.server.dispatcher = Unreachable
@@ -383,7 +378,7 @@ class SessionTest {
         }
     }
 
-    /** A long-lived token [id] that expires at [exp]; only its claims are read. */
+    /** Only the claims are read, so the header and signature are placeholders. */
     private fun jwt(id: String, exp: Long): String {
         val claims = """{"jti":"$id","exp":$exp,"is_long_lived":true}"""
         return "h." + Base64.getUrlEncoder().withoutPadding().encodeToString(claims.toByteArray()) + ".s"

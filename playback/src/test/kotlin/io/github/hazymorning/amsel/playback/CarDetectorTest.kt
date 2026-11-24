@@ -27,17 +27,13 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 
-/**
- * Android Auto, or a car's own media app, browses and controls as a car once it is found to be the
- * real one; an app that only took its package name gets what any other app gets.
- */
 @OptIn(UnstableApi::class)
 @RunWith(RobolectricTestRunner::class)
 class CarDetectorTest {
     private val app = RuntimeEnvironment.getApplication()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-    /** The apps the covers were opened to. */
+    /** Packages granted the artwork URIs. */
     private val covers = mutableListOf<String>()
     private val context = object : ContextWrapper(app) {
         override fun grantUriPermission(toPackage: String, uri: Uri, modeFlags: Int) {
@@ -137,7 +133,6 @@ class CarDetectorTest {
     }
 }
 
-/** [packageName] installed under [uid]: a system app, as a phone's or a car's firmware brings it, or not. */
 internal fun installApp(packageName: String, uid: Int, system: Boolean) {
     val app = ApplicationInfo().apply {
         this.packageName = packageName
@@ -151,7 +146,6 @@ internal fun installApp(packageName: String, uid: Int, system: Boolean) {
     shadowOf(RuntimeEnvironment.getApplication().packageManager).installPackage(info)
 }
 
-/** [packageName]'s controller under [uid], as Media3 hands it to the session. */
 @OptIn(UnstableApi::class)
 internal fun controllerOf(packageName: String, uid: Int, trusted: Boolean = false): MediaSession.ControllerInfo =
     MediaSession.ControllerInfo.createTestOnlyControllerInfo(packageName, 0, uid, 0, 0, trusted, Bundle.EMPTY, true)

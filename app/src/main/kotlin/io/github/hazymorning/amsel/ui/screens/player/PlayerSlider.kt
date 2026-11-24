@@ -42,15 +42,9 @@ import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 
 /**
- * The one slider (Now Playing's position, the sheets' volume and sleep timer): a 4 dp line, the part
- * played in ink and the rest in faint ink, and a small solid thumb that grows while a finger holds
- * it; without [restingThumb] the thumb shows only while held. Its layout is the line; the 48 dp
- * touch band reaches beyond it. A quick tap moves there, and a finger that moves sideways drags it;
- * a swipe up or down (closing Now Playing, a sheet) and a long press leave it alone: taken as moves,
- * they sent a book back to its chapter's start. [fraction] is read only while drawing, so a moving
- * value redraws without recomposing. [onChange] follows the finger and [onChangeFinished] comes on
- * release, [onChangeCancelled] when the drag is lost; a TalkBack adjustment is change and finish.
- * While [pending], the part played is drawn fainter: the value is asked for, and not there yet.
+ * Lays out as the line; the 48 dp touch band overhangs it. Only a tap or a sideways drag moves it:
+ * vertical swipes and long presses, taken as moves, once sent a book back to its chapter's start.
+ * [fraction] is read only while drawing; a TalkBack adjustment calls [onChange], then [onChangeFinished].
  */
 @Composable
 internal fun LineSlider(
@@ -101,7 +95,7 @@ internal fun LineSlider(
                 }
                 haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
                 dragging = fractionAt(sideways.position.x, size.width, rtl).also(change)
-                // A drag another gesture takes over, or one the slider loses midway, changes nothing more.
+                // A drag taken over by another gesture, or lost midway, is cancelled, not finished.
                 var done = false
                 try {
                     val lifted = horizontalDrag(sideways.id) { move ->
@@ -127,7 +121,7 @@ internal fun LineSlider(
             .height(Sizes.TouchTarget)
             .sliderSemantics(label, stateDescription, semanticValue, enabled, change, finished)
             .then(gestures)
-            // Its own layer: a playing line moves every frame.
+            // Its own layer, as a playing line redraws every frame.
             .graphicsLayer()
             .drawWithCache {
                 val y = size.height / 2f
@@ -143,12 +137,11 @@ internal fun LineSlider(
                         return@onDrawBehind
                     }
                     val f = (dragging ?: fraction()).coerceIn(0f, 1f)
-                    // Inside the line, so 0% and 100% both show the whole thumb.
                     val along = inset + f * (size.width - 2 * inset)
                     withTransform({ if (rtl) scale(-1f, 1f) }) {
                         drawLine(rest, Offset(left, y), Offset(right, y), stroke, StrokeCap.Round)
                         if (along > left) {
-                            // Held, it is the finger's: full ink.
+                            // While held, the value is the finger's: full strength, even while pending.
                             val tone = if (dragging != null) ink else ink.copy(alpha = played.value)
                             drawLine(tone, Offset(left, y), Offset(along, y), stroke, StrokeCap.Round)
                         }
@@ -159,13 +152,11 @@ internal fun LineSlider(
     )
 }
 
-/** Where along a slider of [width] px the finger at [x] stands, 0 to 1 from its start. */
 private fun fractionAt(x: Float, width: Int, rtl: Boolean): Float {
     val w = width.toFloat().coerceAtLeast(1f)
     return ((if (rtl) w - x else x) / w).coerceIn(0f, 1f)
 }
 
-/** What TalkBack says and sets: the value as a fraction, [stateDescription] in words. */
 private fun Modifier.sliderSemantics(
     label: String,
     stateDescription: String,
@@ -190,8 +181,7 @@ private fun Modifier.sliderSemantics(
     }
 }
 
-/** The line not yet played: ink, faint. */
 private const val REST_ALPHA = 0.12f
 
-/** The part played while the speaker is still on its way there: between faint and ink. */
+// The played part while the speaker has not reached the value yet.
 private const val PENDING_ALPHA = 0.45f

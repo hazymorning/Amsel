@@ -13,7 +13,6 @@ import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** A downloaded book's place: on the phone every 10 s, at Audiobookshelf seldom, and not again in vain. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadProgressSyncTest {
     private val scope = TestScope()
@@ -28,20 +27,16 @@ class DownloadProgressSyncTest {
 
     private val other = book.copy(uri = "library://audiobook/3", absItemId = "book2", title = "Das dünne Buch")
 
-    /** What is loaded. */
     private var now: DownloadManifest? = book
 
-    /** Saves kept on the phone, and of what. */
     private var kept = 0
     private val keptOf = mutableListOf<String>()
 
-    /** Sends to Audiobookshelf, of what. */
     private val sentOf = mutableListOf<String>()
 
-    /** Sends to Audiobookshelf, through or not. */
+    /** Failed sends included. */
     private var sent = 0
 
-    /** Audiobookshelf has a home address, which the train's network cannot reach. */
     private var unreachable = false
 
     private val saves = DownloadProgressSync(
@@ -78,7 +73,7 @@ class DownloadProgressSyncTest {
 
     @Test fun `a book let go for another keeps and sends its own place, and nothing of the other at 0 s`() {
         saves.playing(true)
-        // LocalPlayback lets it go with its place, then loads the other; Media3's stop comes after.
+        // As LocalPlayback.play: save, stop, load the other; Media3's stop event comes after.
         saves.save(send = true)
         saves.stop()
         now = other
@@ -94,14 +89,13 @@ class DownloadProgressSyncTest {
         after(15 * MINUTE)
         assertEquals(1, sent)
         assertEquals(90, kept)
-        // A pause still sends: where it stopped is where the person goes on from.
+        // A pause still sends: the user resumes from that place.
         saves.playing(false)
         scope.runCurrent()
         assertEquals(2, sent)
         saves.playing(true)
         after(5 * MINUTE)
         assertEquals(2, sent)
-        // Home again, on Wi-Fi.
         unreachable = false
         network.value = HOME
         after(5 * MINUTE)

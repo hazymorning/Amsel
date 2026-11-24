@@ -3,14 +3,11 @@ package io.github.hazymorning.amsel.ui.navigation
 import androidx.compose.runtime.Immutable
 
 /**
- * Things in the person's order, each shown or not: the bottom bar's places, the mini player's
- * controls. The order keeps every one, so turning one off leaves it where it stands, and turning it
- * on again brings it back there. Stored as their ids in that order, one left out with [HIDDEN]
- * before it ("home,speaker,-search,library").
+ * [order] keeps hidden items too, so one hidden and shown again returns to its place. Stored as ids in
+ * order, a hidden one prefixed with [HIDDEN]: "home,speaker,-search,library".
  */
 @Immutable
 data class OrderedToggles<T>(val order: List<T>, val shown: Set<T>) {
-    /** Those shown, in order: what the bar or the mini player holds. */
     val visible: List<T> get() = order.filter { it in shown }
 
     fun with(item: T, on: Boolean): OrderedToggles<T> = copy(shown = if (on) shown + item else shown - item)
@@ -26,8 +23,8 @@ data class OrderedToggles<T>(val order: List<T>, val shown: Set<T>) {
         const val HIDDEN = "-"
 
         /**
-         * From stored [tokens] (null: [defaults]), each known thing once. One the stored order lacks (an
-         * earlier bar stored only what it showed, or a later Amsel added it) joins at the end, left out.
+         * Null [tokens] gives [defaults]; unknown and repeated ids are dropped. Items missing from [tokens]
+         * (older versions stored only the shown ones; newer versions add items) join at the end, hidden.
          */
         fun <T> of(
             tokens: List<String>?,

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.hazymorning.amsel.ui.theme.Fade
 
-/** Each edge of a column fades only while there is more to scroll that way, growing in over the first [length]. */
+/** An edge fades only while there is more to scroll that way, ramping in over the first [length] of scroll. */
 fun Modifier.fadingEdges(state: LazyListState, length: Dp = Fade.Short): Modifier =
     fade(length, vertical = true) { px ->
         val info = state.layoutInfo
@@ -29,13 +29,12 @@ fun Modifier.fadingEdges(state: LazyListState, length: Dp = Fade.Short): Modifie
         start to end
     }
 
-/** [fadingEdges] for a plain scrolling row. */
 fun Modifier.fadingEdges(state: ScrollState): Modifier =
     fade(Fade.Long, vertical = false) { px -> state.value / px to (state.maxValue - state.value) / px }
 
 /**
- * Offscreen, so the mask touches only this content, not what is behind it. The bands are built once
- * per size; each frame only sets how strongly they take the content away.
+ * Offscreen, so DstOut erases only this content, not what lies behind it. Brushes are built once per
+ * size; each frame only sets their alpha.
  */
 private fun Modifier.fade(length: Dp, vertical: Boolean, amounts: (Float) -> Pair<Float, Float>): Modifier =
     graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -60,7 +59,6 @@ private fun Modifier.fade(length: Dp, vertical: Boolean, amounts: (Float) -> Pai
             }
         }
 
-/** Opaque at [from] (the edge), clear at [to]; drawn out of the content, it thins it toward the edge. */
 private fun edgeBrush(vertical: Boolean, from: Float, to: Float): Brush {
     val colors = listOf(Color.Black, Color.Transparent)
     return if (vertical) {

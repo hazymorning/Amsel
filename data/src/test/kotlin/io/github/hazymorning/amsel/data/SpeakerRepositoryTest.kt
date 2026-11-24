@@ -80,7 +80,7 @@ class SpeakerRepositoryTest {
             speakers.markGone(id)
             assertTrue(speakers.players.value.containsKey(id))
             assertEquals(setOf(id), speakers.gone.value)
-            // An update is not a re-join (2.11.0b7 calls a dropped phone available a second later)...
+            // An update is not a re-join (docs/API-NOTES.md, "This phone (Sendspin)")...
             speakers.onEvent(listed)
             assertEquals(setOf(id), speakers.gone.value)
             // ...the server adds it again once it has re-joined.

@@ -9,12 +9,11 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
-/** Episodes a podcast page asks for at a time. */
 public const val EPISODE_PAGE: Int = 50
 
 /**
- * `playlog_updated` and `media_item_played`: where one user (all users when [userId] is null)
- * now stands in an item. Every socket receives every user's.
+ * `playlog_updated` and `media_item_played`. Every socket receives every user's: apply one only
+ * when [userId] is the signed-in user's, or null for all users.
  */
 @Serializable
 public data class PlayProgress(
@@ -27,9 +26,8 @@ public data class PlayProgress(
 )
 
 /**
- * Up to [limit] of a podcast's episodes from [offset], newest first, each with the caller's
- * progress. Before schema 93 the server cannot page: the whole podcast streams in partials, oldest
- * first, so everything from [offset] comes at once, sorted here.
+ * Newest first. Before schema 93 the whole podcast streams in partials, oldest first: it is sorted
+ * here, and everything from [offset] comes as one page.
  */
 public suspend fun MaApi.podcastEpisodes(
     itemId: String,
@@ -50,29 +48,19 @@ public suspend fun MaApi.podcastEpisodes(
     }
 }
 
-/**
- * Books and episodes the caller has started and not finished, last played first. Item mappings
- * without position or duration; an episode drops out a week after it was last played.
- */
+/** Item mappings without resume position or duration; an episode drops out a week after its last play. */
 public suspend fun MaApi.inProgress(limit: Int): List<MediaItem> =
     list("music/in_progress_items", MediaItem.serializer()) { put("limit", limit) }
 
-/** A book or episode in progress as [inProgress] lists it, and as read again by its uri when that worked. */
+/** [fresh] is the item read again by its uri, null when that failed. */
 public data class InProgressItem(val listed: MediaItem, val fresh: MediaItem?)
 
-/**
- * [inProgress] with each item read again by its uri, side by side, for the progress and cover the
- * listing lacks; one finished meanwhile is left out.
- */
+/** Each item read again by its uri, concurrently, for the progress and cover the listing lacks. */
 public suspend fun MaApi.started(limit: Int): List<InProgressItem> = coroutineScope {
     inProgress(limit).map { item -> async { InProgressItem(item, orNullOnFailure { itemByUri(item.uri) }) } }.awaitAll()
 }.filterNot { it.fresh?.fullyPlayed == true }
 
-/**
- * The newest episode of every library podcast, newest first, with the caller's progress: Music
- * Assistant's own "Latest podcast episodes" row, refreshed every six hours. 2.11 only; 2.10
- * answers an empty list.
- */
+/** Refreshed by the server every six hours, so empty for a while after its first start; 2.10 answers `[]`. */
 public suspend fun MaApi.latestEpisodes(): List<MediaItem> =
     list("music/recommendations/items", MediaItem.serializer()) {
         put("provider", "recommendations")
@@ -80,8 +68,8 @@ public suspend fun MaApi.latestEpisodes(): List<MediaItem> =
     }
 
 /**
- * Marks a book or episode finished, or clears its progress. The server takes the item as an
- * object: a uri is refused (error 999) on both releases. Needs the library.write scope.
+ * [played] false clears the progress. The item goes as an object: a uri is refused (error 999).
+ * Needs the library.write scope.
  */
 public suspend fun MaApi.setPlayed(item: ItemUri, name: String, played: Boolean) {
     client.call(

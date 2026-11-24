@@ -15,13 +15,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** One speaker's seeks: as few as the taps mean, one at a time, and none for a speaker that does not play. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SeekControllerTest {
     private val scope = TestScope()
     private val seeks = FakeSeekTracker(CurrentItemStatus(BOOK, playing = true))
 
-    /** What reached the server, in order. */
     private val sent = mutableListOf<String>()
 
     /** Set to make the server hold its answer to a seek until it is completed. */
@@ -107,7 +105,6 @@ class SeekControllerTest {
         assertEquals(listOf("seek 500", "seek 700"), sent)
     }
 
-    /** Twenty taps half a second apart sent twenty seeks before: forty leftover decoders on the server. */
     @Test fun `twenty taps half a second apart send one seek`() {
         repeat(20) { tap ->
             controller.seek(300 + tap * 30, step = true)
@@ -264,7 +261,7 @@ class SeekControllerTest {
         assertEquals(listOf("seek 500", "seek 700"), sent)
     }
 
-    /** The server takes a pause while it starts a play, and the speaker plays all the same (live). */
+    /** The server overruns a pause sent while it starts a play (docs/API-NOTES.md, "A pause or a stop"). */
     @Test fun `a pause while a play is on its way pauses once the speaker has started`() {
         val started = starts { controller.play(it) }
         controller.paused()

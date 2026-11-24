@@ -12,7 +12,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** An artist without a picture is given the covers of its own albums, and they are found by its uri. */
 @RunWith(RobolectricTestRunner::class)
 class ArtistCoversTest {
     private val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), LibraryDb::class.java)

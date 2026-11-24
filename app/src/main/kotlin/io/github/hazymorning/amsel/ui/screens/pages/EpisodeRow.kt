@@ -11,12 +11,6 @@ import io.github.hazymorning.amsel.ui.components.leftText
 import io.github.hazymorning.amsel.ui.components.lengthText
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 
-/**
- * An episode: its title over "3 Oct · 45 min", which says in words where the person is in it:
- * "3 Oct · 18 min left" once started, "Played · 3 Oct · 45 min" once played, when the row is also
- * quiet; "Downloaded" or how far its download is comes first. The ring stands before that line
- * while it plays. A tap plays it, resumed by the server.
- */
 @Composable
 internal fun EpisodeRow(
     episode: EpisodeUi,
@@ -40,7 +34,6 @@ internal fun EpisodeRow(
     )
 }
 
-/** "3 Oct · 45 min", with the year when it is not this one; what is left once started; "Played" first once played. */
 @Composable
 private fun episodeLine(episode: EpisodeUi): String? {
     val date = episode.date?.let { dateText(it) }

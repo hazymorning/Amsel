@@ -59,15 +59,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 
-/** A scrolling container a carried pin scrolls by nearing its edge; [visible] is what it shows, in the window. */
+/** [visible] is the visible area in window coordinates. */
 internal class DragScrollArea(val scroll: ScrollableState, val vertical: Boolean, val visible: () -> Rect)
 
-/**
- * The pins in edit mode, in their section's own layout, every pin Home holds: a pin held still for a
- * moment lifts and follows the finger while the others make way, and letting go keeps the order. A
- * tap still opens a pin; TalkBack moves one through its actions. Carried to the edge of its shelf or
- * of Home ([home]), a pin scrolls it.
- */
 @Composable
 internal fun PinArrangement(
     section: SectionUi,
@@ -205,11 +199,8 @@ private fun Pin(
     }
 }
 
-/**
- * The pins laid out by hand, each in its slot of [slots] for the order [drag] holds, the carried one
- * under the finger: the pins never change places in composition while one is carried, so the one
- * held keeps its gesture.
- */
+// Pins are placed by [drag]'s order and never reordered in composition, so the carried pin keeps
+// its gesture.
 @Composable
 private fun PinSlots(
     drag: PinDragState,
@@ -243,7 +234,7 @@ private fun PinSlots(
     }
 }
 
-/** Equal slots in rows of [columns], [gapX] and [gapY] apart, starting [origin] in; all in pixels. */
+// In pixels; [Spec] holds the layout's request in dp.
 private data class SlotGrid(
     val columns: Int,
     val cell: Int,
@@ -253,7 +244,6 @@ private data class SlotGrid(
     val origin: Int,
     val count: Int,
 ) {
-    /** What a layout asks for, in dp. */
     data class Spec(val columns: Int, val cell: Dp, val gapX: Dp, val gapY: Dp, val origin: Dp)
 
     private val rows: Int get() = if (count == 0) 0 else (count + columns - 1) / columns
@@ -269,7 +259,6 @@ private data class SlotGrid(
         return Offset((origin + i % columns * (cell + gapX)).toFloat(), (i / columns * (height + gapY)).toFloat())
     }
 
-    /** The slot whose place holds [centre]: the carried pin's middle. */
     fun nearest(centre: Offset): Int {
         if (count == 0) return 0
         val column = floor((centre.x - origin + gapX / 2f) / (cell + gapX)).toInt().coerceIn(0, columns - 1)
@@ -282,10 +271,6 @@ private data class SlotGrid(
     }
 }
 
-/**
- * Where each pin is drawn. A pin glides to a new slot from where it is; the carried one is where
- * the finger has taken it, and when it is let go it glides from there into its slot.
- */
 @Stable
 private class PinDragState(private val scope: CoroutineScope) {
     private var order by mutableStateOf(emptyList<String>())
@@ -298,14 +283,12 @@ private class PinDragState(private val scope: CoroutineScope) {
     var dragging by mutableStateOf<String?>(null)
         private set
 
-    /** Whether the carried pin has left where it was picked up. */
+    /** The finger has moved the carried pin since pickup; scrolling under it does not count. */
     var moved = false
         private set
 
-    /** Where the arrangement lies in the window. */
     var origin = Offset.Zero
 
-    /** Home's order, once nothing is carried. */
     fun sync(keys: List<String>) {
         if (dragging == null) order = keys
     }
@@ -313,7 +296,7 @@ private class PinDragState(private val scope: CoroutineScope) {
     fun measured(next: SlotGrid) {
         if (next == slots) return
         slots = next
-        // Another size of slot (a turned phone, larger text): every pin starts again in its place.
+        // A new slot size (rotation, font scale): pins snap to their slots instead of animating.
         if (dragging == null) {
             shown.clear()
             targets.clear()
@@ -347,7 +330,7 @@ private class PinDragState(private val scope: CoroutineScope) {
         reorder()
     }
 
-    /** The view under the carried pin scrolled by [by]: it stays under the finger. */
+    /** Offsets the carried pin by what its container scrolled, so it stays under the finger. */
     fun carry(by: Offset) {
         at += by
         reorder()
@@ -360,14 +343,14 @@ private class PinDragState(private val scope: CoroutineScope) {
         if (from >= 0 && to != from) order = order.moved(from, to)
     }
 
-    /** Lets the carried pin go; the new order, if it changed. */
+    /** Returns the new order, or null if it did not change. */
     fun end(): List<String>? {
         val key = dragging ?: return null
         val slot = slots.at(order.indexOf(key))
         val glide = shown.getOrPut(key) { Animatable(at, Offset.VectorConverter) }
         targets[key] = slot
         val from = at
-        // At once, so the pin is never drawn for a frame where it was before it was picked up.
+        // Undispatched, so no frame draws the pin at its position from before the pickup.
         scope.launch(start = CoroutineStart.UNDISPATCHED) {
             glide.snapTo(from)
             glide.animateTo(slot, Motion.spatialFast())
@@ -376,11 +359,11 @@ private class PinDragState(private val scope: CoroutineScope) {
         return order.takeIf { it != before }
     }
 
-    /** The carried pin's box in the window. */
+    /** The carried pin's bounds in window coordinates. */
     fun box(): Rect? = if (dragging == null) null else Rect(origin + at, slots.size)
 }
 
-/** How fast a carried pin scrolls [DragScrollArea] when its middle comes within [edge] of an end, up to [most] a frame. */
+// Pixels per frame, rising to [most] as the pin's middle comes within [edge] of an end.
 private fun DragScrollArea.speed(box: Rect, edge: Float, most: Float): Float {
     val shows = visible()
     if (shows.isEmpty) return 0f
@@ -394,11 +377,8 @@ private fun DragScrollArea.speed(box: Rect, edge: Float, most: Float): Float {
     }
 }
 
-/** A carried pin's middle this close to an end of what scrolls starts scrolling it. */
 private val CarryEdge = 64.dp
 
-/** The fastest a carried pin scrolls, each frame. */
 private val CarrySpeed = 8.dp
 
-/** A carried pin rises this much, so it reads as lifted. */
 private const val LIFT = 1.04f

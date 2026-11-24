@@ -41,23 +41,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
-/** What became of a play, for what answers it ([HintController]). */
 sealed interface PlaybackEvent {
-    /** It was held back: [speaker] cannot be reached; [again] asks for it anew. */
+    /** The play was not sent: [speaker] is out of reach; [again] asks for it anew. */
     class Unreachable(val speaker: SpeakerUi, val again: () -> Unit) : PlaybackEvent
 
-    /** It went out to [speaker]. */
     class Started(val speaker: SpeakerUi) : PlaybackEvent
 
-    /** A book or an episode, [title], was asked for on speaker [speakerId]. */
     class SpokenStarted(val title: String, val speakerId: String) : PlaybackEvent
 }
 
-/**
- * What a screen may do with playback, wherever it is; what plays is [PlaybackState]'s. Transport goes
- * through the one Media3 session (so the app, the notification, headphone buttons and Android Auto
- * behave identically); play actions go through the PlayDispatcher.
- */
+// Transport goes through the Media3 session, so the app, the notification, headset buttons and
+// Android Auto behave alike; play actions go through the PlayDispatcher.
 class PlaybackController(
     private val context: Context,
     private val data: DataGraph,
@@ -71,16 +65,11 @@ class PlaybackController(
 ) {
     private val _events = Channel<PlaybackEvent>(EVENTS_BUFFER, BufferOverflow.DROP_OLDEST)
 
-    /** What became of the plays asked here, for the hints to answer ([HintController]). */
     val events: Flow<PlaybackEvent> = _events.receiveAsFlow()
 
     private var connection: ListenableFuture<MediaController>? = null
     private var controller: MediaController? = null
 
-    /**
-     * Remote volume changes, at most one every 150 ms: a drag or a held step sends only where it
-     * is by then, and the last level always goes.
-     */
     private val volumes = Channel<Pair<String, Int>>(Channel.CONFLATED)
 
     init {
@@ -97,19 +86,18 @@ class PlaybackController(
                 messages.show(failureText(error), playing.nameOf(id), retry = { volumes.trySend(id to level) })
             }
         }
-        // Play on and the dock would stay empty until the next connect: say so, with Retry, each
-        // time the app comes to the front while it lasts.
+        // Without the speakers, Play on and the dock stay empty until the next connect: said, with
+        // Retry, each time the app comes to the front meanwhile.
         scope.launch {
             combine(data.speakersFailure, data.session.foreground) { error, inFront -> error?.takeIf { inFront } }
                 .filterNotNull()
                 .collect { error -> messages.show(failureText(error), retry = data::reloadSpeakers) }
         }
-        // A download plays on this phone only: picking a speaker pauses it, and it waits there.
+        // A download plays only on this phone: selecting a speaker pauses it.
         scope.launch(Dispatchers.Main) {
             graph.target.collect { target -> if (!target.isPhone) local.pause() }
         }
         scope.launch {
-            // Plays and transport from the app, the notification, a headset or the car.
             graph.failures.collect { failure ->
                 playing.optimistic.clear(failure.playerId)
                 val retry = failure.retry?.let { phone.afterStop(failure.error, scope, it) }
@@ -118,10 +106,7 @@ class PlaybackController(
         }
     }
 
-    /**
-     * Connects the app to the session, which starts the service, until [release]: while the app is
-     * in front. Main thread only. A refused connection leaves no controller, and taps say so.
-     */
+    /** Main thread only, paired with [release]; a refused connection leaves no controller, and taps say so. */
     suspend fun connect() {
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, token).buildAsync()
@@ -129,7 +114,6 @@ class PlaybackController(
         controller = future.connected()
     }
 
-    /** The controller once [this] connection completes; null when it was refused or released first. */
     private suspend fun ListenableFuture<MediaController>.connected(): MediaController? =
         suspendCancellableCoroutine { cont ->
             addListener(
@@ -149,7 +133,6 @@ class PlaybackController(
             )
         }
 
-    /** Retry after the session refused the app: connect again, then do what was tapped. */
     private fun reconnect(control: PlayerControl) {
         scope.launch(Dispatchers.Main) {
             release()
@@ -158,18 +141,14 @@ class PlaybackController(
         }
     }
 
-    /** Lets the service go once nothing plays (Media3: release the controller in onStop). */
+    /** Call in onStop, as Media3 asks, so the service can stop once nothing plays. */
     fun release() {
         connection?.let(MediaController::releaseFuture)
         connection = null
         controller = null
     }
 
-    /**
-     * Plays [uris] on the current speaker: an album, playlist or artist, or tracks; [startItem]
-     * starts a list at a track, or a book at a chapter, which begins at [startPositionMs]. [title]
-     * is shown at once while the speaker starts.
-     */
+    /** [startItem] is a track uri to start a list at, or a book's chapter position (`start_item`). */
     fun play(
         uris: List<String>,
         startItem: String? = null,
@@ -180,8 +159,8 @@ class PlaybackController(
     ) {
         val target = graph.target.value
         val speaker = playing.speaker.value
-        // In front, a speaker out of reach is not sent the play: This phone is offered in its place.
-        // Behind the app's back it goes out, and the server says why it fails.
+        // In front, a play for a speaker out of reach is held back and This phone offered instead; in
+        // the background it goes out, and the server's error says why it fails.
         if (speaker.id == target.playerId && !speaker.isPhone && !speaker.available && data.session.foreground.value) {
             val again = { play(uris, startItem, shuffle, option, title, startPositionMs) }
             _events.trySend(PlaybackEvent.Unreachable(speaker, again))
@@ -190,8 +169,8 @@ class PlaybackController(
         val downloaded = uris.singleOrNull()?.takeIf { option == QueueOption.Replace && target.isPhone }
             ?.takeIf { data.downloads.manifest(it) != null }
         if (downloaded != null) return playDownload(downloaded, startPositionMs)
-        // Anything else on this phone comes from the server: the download lets go of the session.
-        // For a mix only once the server has songs for it, which the dispatcher learns.
+        // Anything else here streams from the server and stops the download's playback; a mix does so
+        // only once the server has songs for it, which the dispatcher learns (phoneMixStarts).
         val mix = option == QueueOption.Replace && uris.singleOrNull()?.let(::isEndlessMix) == true
         if (target.isPhone && !mix) local.stopDownloadPlayback()
         dispatcher.play(
@@ -209,10 +188,7 @@ class PlaybackController(
         _events.trySend(PlaybackEvent.Started(speaker))
     }
 
-    /**
-     * A download on This phone plays from its files: the phone's stream, if one plays, is paused
-     * first, silent at once, so the two are never heard together.
-     */
+    // The phone's stream, if one plays, is silenced at once and paused, so the two are never heard together.
     private fun playDownload(uri: String, startPositionMs: Long?) {
         val phoneId = phone.playerId.value
         if (local.now.value == null && phoneId != null && data.speakers.players.value[phoneId]?.isPlaying == true) {
@@ -229,9 +205,9 @@ class PlaybackController(
     }
 
     /**
-     * A book or an episode from a card or a row, played as the official app plays it, so the server
-     * starts it at its own bookmark: the queue's place may be an old save it brought back after
-     * This phone left. Returns true when it already plays, so nothing was sent.
+     * Unless a place is parked here, played with play_media so the server resumes from its bookmark:
+     * the queue's own place can be a stale save restored after This phone left. True when it already
+     * plays and nothing was sent. See docs/API-NOTES.md, "This phone (Sendspin)".
      */
     fun resume(uri: String, title: String?): Boolean {
         val now = playing.nowPlaying.value
@@ -241,7 +217,6 @@ class PlaybackController(
         return false
     }
 
-    /** A book's or an episode's play button: pauses it while it plays here, else plays it as [resume] does. */
     fun playOrPause(uri: String, title: String?) {
         val now = playing.nowPlaying.value
         val pauses = playing.uri == uri && now?.isPlaying == true
@@ -257,11 +232,8 @@ class PlaybackController(
         _events.trySend(PlaybackEvent.SpokenStarted(title, playing.speaker.value.id))
     }
 
-    /**
-     * The current speaker holds [uri] at a place the server does not have: one sought while it was
-     * paused, or where it was before the server rebuilt This phone's queue. Its own play starts
-     * there, while the bookmark play_media resumes from is older.
-     */
+    // A place the server does not have: sought while paused, or held from before the server rebuilt
+    // This phone's queue. A plain play starts there; play_media would resume from an older bookmark.
     private fun hasPausedPosition(uri: String): Boolean {
         val id = graph.target.value.playerId ?: return false
         return playing.uri == uri && data.downloads.manifest(uri) == null &&
@@ -269,23 +241,19 @@ class PlaybackController(
     }
 
     /**
-     * Call before anything starts playback on [queueId] outside [play] (Up next's tap on a song):
-     * on This phone it releases the local hold left by a pause, which would otherwise silence
-     * and pause the stream the server is about to send; on any speaker, a pause that still waits
-     * for an earlier start gives way.
+     * Call before playback starts on [queueId] outside [play] (a tap in Up next): it releases This
+     * phone's local hold, which would silence the coming stream, and drops a pause still waiting for
+     * an earlier start.
      */
     fun beforePlayOn(queueId: String) {
         if (queueId == phone.playerId.value) phone.hold(false)
         graph.commands.starting(queueId)
     }
 
-    /**
-     * "Play X on Amsel" from the assistant (MEDIA_PLAY_FROM_SEARCH), decided as the car's voice
-     * play is ([DataPlaybackGraph.voiceUri]). Signed out or on a too-old server, the screen on show
-     * already says what to do.
-     */
+    /** Resolved as the car's voice play is ([DataPlaybackGraph.voiceUri]). */
     fun playFromSearch(query: String, focus: String?) {
         scope.launch {
+            // Signed out or on a too-old server, the screen on show already says what to do.
             if (graph.blocked() != null) return@launch
             val error = try {
                 val uri = graph.voiceUri(query.takeIf { it.isNotBlank() }, focus)
@@ -307,9 +275,8 @@ class PlaybackController(
     }
 
     /**
-     * Transport from the app's own controls. The tap shows at once ([OptimisticTransportState]); play
-     * and pause follow what the button shows, so a second tap before the speaker answers undoes
-     * the first rather than repeating it.
+     * Play and pause follow what the button shows, taps not yet reported included, so a second tap
+     * before the speaker answers undoes the first rather than repeating it.
      */
     fun control(control: PlayerControl) {
         val id = graph.target.value.playerId
@@ -325,7 +292,7 @@ class PlaybackController(
 
                 is PlayerControl.SetVolume -> optimistic.volume(id, control.volume)
 
-                // A step to a book's next chapter stays on the book; the seek itself shows where it goes.
+                // Next within a book seeks to its next chapter, which shows as a seek, not a new item.
                 PlayerControl.Next -> if (!playing.nowPlaying.value.hasNextChapter()) {
                     playing.next?.let { optimistic.item(id, it) }
                 }
@@ -334,7 +301,7 @@ class PlaybackController(
             }
         }
         scope.launch(Dispatchers.Main) {
-            // A tap right after the app comes to the front waits for the connection on its way.
+            // A tap right after the app comes to the front waits for the pending connection.
             val c = controller ?: connection?.connected()
             if (c == null) {
                 id?.let(optimistic::clear)
@@ -368,7 +335,7 @@ class PlaybackController(
     }
 }
 
-/** Whether next steps to another chapter of what plays, as the session decides it (RemotePlayer). */
+// Must decide as the session does (RemotePlayer).
 private fun NowPlayingUi?.hasNextChapter(): Boolean {
     if (this == null || !hasChapters) return false
     return ChapterNavigation.nextStart(chapters.map { it.startMs }, positionAt(SystemClock.elapsedRealtime())) != null
@@ -376,5 +343,5 @@ private fun NowPlayingUi?.hasNextChapter(): Boolean {
 
 private const val VOLUME_EVERY_MS = 150L
 
-/** Plays asked in a burst: the hints answer the latest. */
+// A burst of plays drops the oldest events; the hints answer the latest.
 private const val EVENTS_BUFFER = 8

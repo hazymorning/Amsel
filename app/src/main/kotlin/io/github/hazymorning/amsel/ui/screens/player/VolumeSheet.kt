@@ -70,13 +70,8 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
-/**
- * Volume: a bar for the speaker in use and, for a group, one for each of its speakers under a quiet
- * line, all alike and a step apart. A bar is the slider itself ([VolumeBar]), so the sheet holds
- * nothing but the speakers and how loud each one plays. With a [limit], a bar stops on it and, once
- * the finger asked for more, the sheet asks in place of the bars: louder, or stay. A bar let past
- * asks no more while the sheet is open.
- */
+// With a [limit], a bar stops there and the sheet then asks: louder, or stay. A bar let past asks no
+// more while the sheet is open.
 @Composable
 fun VolumeSheetContent(
     speaker: String,
@@ -130,7 +125,6 @@ fun VolumeSheetContent(
                 onPast = { asking = OverLimitRequest(MAIN, speaker, it) },
             )
             if (members.isNotEmpty()) {
-                // A small heading over the group's speakers, as Settings names its groups.
                 GroupLabel(
                     stringResource(R.string.player_volume_in_group),
                     above = Space.S8,
@@ -153,20 +147,15 @@ fun VolumeSheetContent(
     }
 }
 
-/** A bar's wish past the limit: which bar ([MAIN] or a speaker's id), its name, and how loud. */
+/** [bar] is [MAIN] or a group member's id. */
 @Immutable
 private data class OverLimitRequest(val bar: String, val name: String, val wanted: Int)
 
 private const val MAIN = "main"
 
 /**
- * One speaker's volume as a pill of the second tone that fills with ink as far as the level: its
- * name at the start and the level at the end stand on it, each on the centre of its round end. A
- * drag anywhere along it moves the level, a tap sets it where it lands, and every step is a detent
- * the finger feels, an end a firmer one. The level keeps the room of "100 %", so nothing moves while
- * it changes. TalkBack hears the speaker, its level, and can set it. A speaker that sets its own
- * volume shows at 38% and says so. A [limit] is an end too, for a touch that starts at or under it:
- * the bar stops there, and once the finger lets go [onPast] hears how loud it asked for.
+ * A [limit] stops a touch that starts at or under it; once the finger lets go, [onPast] gets the level
+ * it asked for. The level keeps the width of "100 %", so nothing moves while it changes.
  */
 @Composable
 internal fun VolumeBar(
@@ -286,7 +275,7 @@ internal fun VolumeBar(
     }
 }
 
-/** One touch on a bar: where it stops, and how loud the finger asked past that. */
+// [ceiling]: where this touch stops; [past]: the level asked beyond it, 0 for none.
 private class VolumeDrag {
     var ceiling = MAX_LEVEL
     var past = 0
@@ -294,13 +283,12 @@ private class VolumeDrag {
 
 private const val MAX_LEVEL = 100
 
-/** A bar's height, as tall as the sheet's widest button, and a comfortable stretch for a thumb. */
+// A comfortable stretch for a thumb.
 private val BarHeight = 56.dp
 
-/** How much ink fills a bar as far as the level: plain to read the words over, plain to see where it ends. */
+// Light enough to read the words over, strong enough to see where the level ends.
 private const val FILL_INK = 0.14f
 
-/** The volume of the speaker that plays; a group's speakers each have their own under the group's. */
 @Composable
 fun VolumeRoute() {
     val graph = LocalContext.current.graph
@@ -319,7 +307,6 @@ fun VolumeRoute() {
     )
 }
 
-/** A level in words: "40 %", and at nothing, "silent". */
 @Composable
 internal fun volumeWords(level: Int): String = if (level == 0) {
     stringResource(R.string.player_volume_still)
@@ -327,7 +314,7 @@ internal fun volumeWords(level: Int): String = if (level == 0) {
     stringResource(R.string.player_volume_percent, level)
 }
 
-/** A volume as shown while someone changes it: the reported level takes over once they have let it be. */
+// The level shown while the user changes it; the reported one takes over SETTLE_MS after the last touch.
 @Stable
 internal class LevelState(initial: Int) {
     var shown by mutableIntStateOf(initial)

@@ -37,13 +37,6 @@ import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
 import io.github.hazymorning.amsel.ui.rememberRetry
 import kotlinx.coroutines.flow.map
 
-/**
- * The library: its title, the kinds as chips, the order in words, then the items. The header
- * scrolls with them; once the title has gone, a slim bar names the kind that shows. A sideways
- * swipe goes to the chip beside the chosen one, round from the last to the first, and each kind
- * keeps its own place in its list, the header staying where it stood ([LibraryScrollPositions.handOver]).
- * One kind alone, a place of its own in the bar ([LibraryUiState.single]), is the title itself.
- */
 @Composable
 fun LibraryScreen(
     state: LibraryUiState,
@@ -62,7 +55,7 @@ fun LibraryScreen(
     val grid = places.grid(state.kind)
     val covers = state.kind.covers && !state.offline && state.failure == null
     val titleHeight = remember { mutableIntStateOf(0) }
-    // The slim bar names the kind as soon as the title has gone, while the chips may still show.
+    // The bar shows once the title has scrolled off, even while the header's chips still show.
     val scrolled by remember(covers, list, grid) {
         derivedStateOf {
             val index = if (covers) grid.firstVisibleItemIndex else list.firstVisibleItemIndex
@@ -86,7 +79,7 @@ fun LibraryScreen(
         bar = { PageTopBar(stringResource(state.kind.label), onBack = null, showTitle = scrolled) },
         barShown = scrolled,
     ) { insets ->
-        // Inside the screen, so it is this screen's strip that learns the list has scrolled under it.
+        // Inside MaterialScreen, so this screen's top bar learns the list has scrolled under it.
         ScrollEdges(if (covers) grid else list)
         Box(Modifier.fillMaxSize().then(swipe.detect)) {
             when {
@@ -105,7 +98,7 @@ fun LibraryScreen(
                     LibrarySkeleton(state.kind, header, insets, placeholders = state.loading)
 
                 else -> AmselPullToRefresh(state.refreshing, onRefresh, Modifier.fillMaxSize()) { itemActions ->
-                    // The items follow a swipe; the header, which says where it leads, stays.
+                    // Only the items move with a swipe; the header, whose chips show the target, stays.
                     val items = itemActions.then(swipe.follow)
                     when {
                         state.isEmpty ->
@@ -122,15 +115,11 @@ fun LibraryScreen(
     }
 }
 
-/** Albums, stations, books and podcasts are known by their covers, so they list as a grid of tiles. */
+/** Kinds recognised by their covers show as a grid of tiles. */
 internal val LibraryKind.covers: Boolean
     get() = this == LibraryKind.Albums || this == LibraryKind.Radio || this == LibraryKind.Audiobooks ||
         this == LibraryKind.Podcasts
 
-/**
- * The Library tab, wired to the library index; or, given [only], that kind alone as a place of its
- * own in the bar.
- */
 @Composable
 fun LibraryRoute(navigator: Navigator, modifier: Modifier = Modifier, only: LibraryKind? = null) {
     val graph = LocalContext.current.graph
@@ -160,7 +149,7 @@ fun LibraryRoute(navigator: Navigator, modifier: Modifier = Modifier, only: Libr
         state = state,
         onSelectKind = viewModel::selectKind,
         onSort = viewModel::sort,
-        // A downloaded episode, the one kind here without a page, plays.
+        // Stations and downloaded episodes have no page: a tap plays them.
         onOpen = rememberOpenItem(navigator),
         onMore = {
             graph.tips.seen(Tip.More)

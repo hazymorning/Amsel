@@ -32,11 +32,8 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
- * Seeks and pauses against a real Music Assistant (scripts/test-server with the fake speaker
- * "Kitchen"): the speakers' positions and the seek lane as the app wires them, on what the server
- * really reports.
- * Skipped unless MA_URL is set; CI runs it on both supported servers. MA_SEEK_URI names another item
- * to seek in (a long book, by hand); the default is the library's longest song.
+ * Against scripts/test-server with its fake speaker "Kitchen"; skipped unless MA_URL is set. MA_SEEK_URI
+ * names another item to seek in (a long book, by hand); the default is the library's longest song.
  */
 class LiveSeekTest {
     private val url = System.getenv("MA_URL")
@@ -70,7 +67,6 @@ class LiveSeekTest {
             val api = MaApi(client)
             val speakers = SpeakerRepository(api, ::now, scope)
             scope.launch { client.events.collect(speakers::onEvent) }
-            // Counts the seeks that go out, where the lane tells of each.
             val sent = AtomicInteger()
             val counted = object : SeekTracker by speakers {
                 override fun sent(queueId: String, ticket: Long) {
@@ -108,8 +104,8 @@ class LiveSeekTest {
     }
 
     /**
-     * The server reports the old stream's time added to the target for a moment (2.10.9 and
-     * 2.11.0b7): four seconds played, a seek to 10 s, and it says 14. That never shows.
+     * The server briefly reports the old stream's time added to the target; that never shows. See
+     * docs/API-NOTES.md, "Position after a seek or a play".
      */
     @Test fun `a seek shows its target at once, stands there, and runs on from it`() = live { rig ->
         delay(3_000)
@@ -181,10 +177,7 @@ class LiveSeekTest {
         rig.assertNear(target, since = started)
     }
 
-    /**
-     * The server takes a pause while it starts a play, and the speaker plays all the same (2.10.9
-     * and 2.11.0b7): play, pause a moment later, and it played on.
-     */
+    /** The server overruns a pause sent while it starts a play (docs/API-NOTES.md, "A pause or a stop"). */
     @Test fun `a pause while the speaker starts to play again ends paused`() = live { rig ->
         rig.commands.pause(rig.kitchen)
         waitFor { rig.state()?.takeIf { !it.queue.isPlaying } }
@@ -210,7 +203,6 @@ class LiveSeekTest {
         assertFalse("it plays on", rig.state()?.queue?.isPlaying == true)
     }
 
-    /** At [target], or past it by no more than the time [since] the seek was asked for: never the old stream's time on top. */
     private fun Rig.assertNear(target: Int, since: Long) {
         val shown = shown()
         val passed = (now() - since) / 1000.0

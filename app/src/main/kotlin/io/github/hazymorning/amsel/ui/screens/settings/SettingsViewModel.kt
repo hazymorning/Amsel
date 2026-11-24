@@ -28,15 +28,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * Settings: who is signed in where, the theme, and Sign out. The theme answers the tap at once;
- * Sign out runs in [appScope] so forgetting the server's data finishes after this screen is gone
- * (the app root shows Setup as soon as the session says NeedsSetup).
- */
 class SettingsViewModel(
     session: StateFlow<SessionState>,
     address: StateFlow<ServerAddress?>,
-    /** Who is signed in, kept by the session while offline. */
+    /** Kept by the session while offline. */
     user: StateFlow<MaUser?>,
     prefs: StateFlow<Prefs?>,
     private val saveTheme: suspend (String) -> Unit,
@@ -46,13 +41,12 @@ class SettingsViewModel(
     private val saveVolumeLimit: suspend (Int) -> Unit = {},
     private val saveLookForUpdates: suspend (Boolean) -> Unit = {},
     private val saveDownloadOnWifi: suspend (Boolean) -> Unit = {},
-    /** Signs out and forgets the server's data (Session.signOut, then DataGraph.clear). */
     private val signOutAndForget: suspend () -> Unit,
     private val messages: MessageController,
     private val appScope: CoroutineScope,
     private val appVersion: String,
 ) : ViewModel() {
-    /** The theme just tapped, shown until the stored preference catches up (it then agrees). */
+    /** The theme just tapped, shown until the stored preference catches up. */
     private val chosenTheme = MutableStateFlow<ThemeMode?>(null)
     private var signOut: Job? = null
 
@@ -67,7 +61,8 @@ class SettingsViewModel(
 
     fun onThemeChange(mode: ThemeMode) {
         chosenTheme.value = mode
-        // Main.immediate: saves start in tap order, and DataStore applies them in that order.
+        // Main.immediate: saves start in tap order, and DataStore applies them in that order. A failed
+        // save shows the stored theme again, unless a later tap has replaced this one.
         save(again = { onThemeChange(mode) }, undo = { chosenTheme.compareAndSet(mode, null) }) { saveTheme(mode.pref) }
     }
 
@@ -86,10 +81,6 @@ class SettingsViewModel(
     fun onDownloadOnWifiChange(on: Boolean): Unit =
         save(again = { onDownloadOnWifiChange(on) }) { saveDownloadOnWifi(on) }
 
-    /**
-     * Stores one setting. A failure first runs [undo] (a theme goes back to the stored one, unless a
-     * later tap is already showing), then says so, with Retry while Settings is open.
-     */
     private fun save(again: () -> Unit, undo: () -> Unit = {}, write: suspend () -> Unit) {
         viewModelScope.launch {
             try {
@@ -103,6 +94,8 @@ class SettingsViewModel(
 
     fun onSignOut() {
         if (signOut?.isActive == true) return
+        // App scope: AppRoot shows Setup as soon as the session says NeedsSetup, and signing out must
+        // finish after this screen is gone.
         signOut = appScope.launch {
             try {
                 signOutAndForget()
@@ -113,7 +106,6 @@ class SettingsViewModel(
     }
 }
 
-/** The server's own name as the session knows it; "" when the server has none. */
 internal fun serverNameOf(session: SessionState): String = when (session) {
     is SessionState.Ready -> session.server.name
     is SessionState.Waiting -> session.serverName
@@ -121,11 +113,7 @@ internal fun serverNameOf(session: SessionState): String = when (session) {
     else -> null
 }.orEmpty()
 
-/**
- * Settings from the session, its [address] and [user], the stored theme ([prefs] is null until
- * read) and a theme just tapped. The address reads as Setup showed it: the host alone
- * (`192.168.1.20`, `music.example.com`), never a scheme or port.
- */
+/** [prefs] is null until read. */
 internal fun settingsState(
     prefs: Prefs?,
     session: SessionState,
@@ -157,34 +145,27 @@ internal fun settingsState(
     )
 }
 
-/** Settings fit one phone screen: account, theme, Open Music Assistant, the app. All of it is local. */
 @Immutable
 data class SettingsUiState(
-    /** The Music Assistant user, as Music Assistant names them; blank when not known yet. */
+    /** Blank until the server has named the user, as when Settings opens offline. */
     val userName: String,
-    /** The server's name in Music Assistant; blank when it has none. */
     val serverName: String,
-    /** The server's host, as Setup showed it. */
+    /** The host alone, as Setup showed it: no scheme or port. */
     val serverAddress: String,
     val theme: ThemeMode = ThemeMode.System,
-    /** The app's version name, such as "0.1.0". */
     val appVersion: String,
     val sleepFadeSec: Int = 30,
     val sleepShake: Boolean = true,
     val sleepOnPlay: Boolean = false,
     val followPlaying: Boolean = false,
-    /** The speakers following the music leaves out. */
     val followSkipped: Set<String> = emptySet(),
-    /** Above this level a speaker plays louder only after a question; 0 for no limit. */
+    /** A speaker plays louder than this only after asking; 0 for no limit. */
     val volumeLimit: Int = 0,
     val lookForUpdates: Boolean = false,
-    /** Downloads wait for Wi-Fi rather than use mobile data. */
     val downloadOnWifi: Boolean = true,
-    /** Whether the server answers now, said after where it is. */
     val connection: ServerStatus = ServerStatus.Connected,
 )
 
-/** The settings wired to the session and the stored preferences, for Settings and its pages. */
 @Composable
 internal fun rememberSettingsViewModel(): SettingsViewModel {
     val graph = LocalContext.current.graph

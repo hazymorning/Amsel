@@ -30,7 +30,6 @@ internal fun MediaItem.toEntity(addedRank: Int, playedRank: Int?) = LibraryItemE
         ?.joinToString("\n") { it.uri },
 )
 
-/** The row an item event leaves: the item as sent, over [existing] for what only the row knows. */
 internal fun MediaItem.toEntityOver(existing: LibraryItemEntity?, addedRank: Int): LibraryItemEntity {
     val row = toEntity(addedRank, existing?.playedRank)
     // An item sent without its provider mappings keeps the row's smart-playlist mark.
@@ -41,8 +40,8 @@ internal fun MediaItem.toEntityOver(existing: LibraryItemEntity?, addedRank: Int
         isSmart = isSmartPlaylist || (unmapped && existing?.isSmart == true),
         smartPlugin = isPluginSmartPlaylist || (unmapped && existing?.smartPlugin == true),
         isDynamic = isDynamic || (unmapped && existing?.isDynamic == true),
-        // Progress in an item event is the last listener's, whoever that was: the row keeps the
-        // person's own, and a new row waits for the next sync or this person's own play.
+        // Progress in an item event is the last listener's: the row keeps the user's own, and a new row waits
+        // for the next sync or the user's own play.
         resumeMs = existing?.resumeMs,
         fullyPlayed = existing?.fullyPlayed,
         // An artist's covers come from its albums, which its own event does not hold.

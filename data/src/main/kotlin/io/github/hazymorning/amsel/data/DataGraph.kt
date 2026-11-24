@@ -58,24 +58,20 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
-/** Home layouts, one per server ([HomeLayoutStore]). */
 private val Context.homeStore: DataStore<Preferences> by preferencesDataStore(
     name = "home",
     corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
 )
 
-/**
- * The data layer's singletons and the one loop that turns server events into state. Built once
- * by the app's AppGraph; nothing heavy happens until it calls [start].
- */
+/** Built once, by AppGraph; nothing heavy runs before [start]. */
 class DataGraph(
     context: Context,
     http: OkHttpClient,
     private val scope: CoroutineScope,
     vault: TokenCipher,
-    /** The networks the phone is on; the app's, as its http client follows [PhoneNetwork.plainHttpAllowed] too. */
+    // Shared with the app's http client, which also follows [PhoneNetwork.plainHttpAllowed].
     network: PhoneNetwork,
-    /** Starts the service that runs [DownloadRepository.work]; the app's, as the service is not this module's. */
+    // The service that runs [DownloadRepository.work] lives in the app module.
     startDownloads: () -> Unit,
 ) {
     private val app = context.applicationContext
@@ -89,7 +85,6 @@ class DataGraph(
     val speakers = SpeakerRepository(session.api, SystemClock::elapsedRealtime, scope)
     val extras = ExtrasRepository(session.api)
 
-    /** The Audiobookshelf account downloads come from. */
     val abs = AbsClient(http, PrefsAbsAccountStore(prefs, vault, scope), reachesHome = session::reachesHome)
 
     val downloads by lazy {
@@ -103,10 +98,8 @@ class DataGraph(
         )
     }
 
-    /** What each page last showed, for its next first paint. */
     val pages = PageCache(File(app.cacheDir, "pages")) { prefs.current().serverId }
 
-    /** The speaker music plays on, by player id: the one picked, else This phone. */
     private val speakerInUse =
         prefs.prefs.map { it?.speakerId ?: it?.phonePlayerId }.stateIn(scope, SharingStarted.Eagerly, null)
 
@@ -119,7 +112,7 @@ class DataGraph(
         speakers = speakerInUse,
     )
 
-    /** Everything loading for the signed-in server; [clear] ends it before forgetting the server. */
+    // Cancelled and joined by [clear], so no load for the old server writes after it.
     @Volatile private var serverWork = serverScope()
     private val homeRefresh = Debounced()
     private val indexRefresh = Debounced()
@@ -127,71 +120,68 @@ class DataGraph(
     private val extrasReload = Debounced()
     private val _ended = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    /** Each time a session has ended and the server's data is gone: what the app keeps of it goes too. */
+    /** Emits after a session ended and its server's data was cleared; the app clears its own copies then. */
     val ended: SharedFlow<Unit> = _ended.asSharedFlow()
 
     private val _permissions = MutableStateFlow(EVERYTHING)
 
-    /** What the user may change; everything until the server says otherwise, so nothing flickers. */
+    // Everything until the server names the scopes, so no control flickers away and back.
     val permissions: StateFlow<UserPermissions> = _permissions.asStateFlow()
 
     private val _speakersFailure = MutableStateFlow<Exception?>(null)
 
-    /** Why the speakers could not be loaded after the last connect; null once they were. */
     val speakersFailure: StateFlow<Exception?> = _speakersFailure.asStateFlow()
 
-    /** Loads the speakers again, for a Retry. */
     fun reloadSpeakers() {
         follow { loadSpeakers() }
     }
 
     /**
-     * What the speakers do now, for a widget's look: read on a glance while the app's socket is
-     * closed; while it is connected, events keep them current already. False when the server did
-     * not answer.
+     * For the widget: reads the speakers over a socket of its own while the app's is closed; while it is
+     * connected, events keep them current. False when the server did not answer.
      */
     suspend fun refreshSpeakers(): Boolean =
         session.client.state.value is ConnectionState.Connected || session.readOnOwnSocket { speakers.read(it) } != null
 
-    /** Restores the session and starts following the server. Call once, as the app starts. */
+    /** Call once, as the app starts. */
     fun start() {
-        // Apart: a car starting the app needs the connection, not Home's snapshot, and a refresh
-        // that lands first is not overwritten by the older snapshot.
+        // Separate launches: Android Auto needs the connection, not Home's snapshot, and home.load() never
+        // overwrites a refresh that finished first.
         scope.launch { home.load() }
         scope.launch { session.restore() }
-        // A dropped socket waits out its backoff, and one closed while the server was out of reach
-        // stays closed: the network coming back is reason to try at once.
+        // A dropped socket would wait out its backoff, and one closed while [Session.stale] would stay
+        // closed: a network that returns is reason to try at once.
         app.getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(
             object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) = session.reconnect()
             },
         )
-        // What was on its way goes on each time the app comes to the front: the download service may
-        // start only then.
+        // Downloads resume each time the app comes to the foreground, as Android starts the download service
+        // only then.
         scope.launch(Dispatchers.IO) {
             downloads.load()
             session.foreground.filter { it }.collect { downloads.resume() }
         }
-        // A session that ends, signed out or its token refused, takes its server's data with it:
-        // the next one may be another server or another person.
+        // A session that ends (signed out, or its token refused) takes its server's data with it: the next one
+        // may be another server or another user.
         scope.launch {
             session.state.ends().collect {
                 clear()
                 _ended.emit(Unit)
             }
         }
-        // Events are not replayed after a reconnect: reload what they would have told us.
+        // Events are not replayed after a reconnect, so reload what they would have changed.
         scope.launch {
             session.state.connects().collect { ready ->
                 follow { loadSpeakers() }
                 follow { library.syncIfNeeded(ready.server) }
             }
         }
-        // What only the screens show waits until the app is in front, not for a connection the car,
-        // a headset or the notification opened.
+        // What only the screens show loads once the app is in the foreground, not on a connection opened by
+        // Android Auto, a headset or the notification.
         scope.launch {
             session.state.connects().collectLatest { ready ->
-                // At once, and in place of a reload an event left waiting for the app.
+                // No debounce; replaces a reload an event left waiting for the foreground.
                 homeRefresh.restart(waitMs = 0) {
                     inFront()
                     home.refresh()
@@ -203,7 +193,6 @@ class DataGraph(
                 follow { extras.load() }
             }
         }
-        // Home's options that read the index follow the kinds a sync replaced, once the app is in front.
         scope.launch {
             library.replaced.collect {
                 indexRefresh.restart {
@@ -212,23 +201,23 @@ class DataGraph(
                         try {
                             home.offerListening()
                         } catch (e: IOException) {
-                            // Not stored, so not offered either: the next kind replaced offers it again.
+                            // Not stored, so not offered: the next replaced kind tries again.
                         }
                     }
                     home.refreshIndexed()
                 }
             }
         }
-        // Random albums change between visits: new ones are picked as the app leaves the front.
+        // Random albums change between visits: reshuffled as the app leaves the foreground.
         scope.launch {
             session.foreground.drop(1).filter { !it }.collect {
                 if (session.state.value is SessionState.Ready) follow { home.reshuffle() }
             }
         }
-        // A book or episode just finished or marked leaves Continue listening before Home reloads.
+        // A finished or marked book or episode leaves Continue listening before Home reloads.
         scope.launch { library.progress.collect { if (it.fullyPlayed) home.finished(it.uri) } }
-        // The speakers on their own: they change in memory at once, while the library writes to its
-        // index, which a provider's sync floods with events; behind it a pause would wait its turn.
+        // The speakers get a collector of their own: the library writes item events to its index and falls
+        // behind during a provider sync's burst of events, and a pause must not wait for that.
         scope.launch { session.client.events.collect { speakers.onEvent(it) } }
         scope.launch {
             session.client.events.collect { event ->
@@ -257,7 +246,6 @@ class DataGraph(
         }
     }
 
-    /** Home loads only while the app is in front: what changed meanwhile waits for it, stale. */
     private suspend fun inFront() = session.foreground.first { it }
 
     private suspend fun loadSpeakers() {
@@ -269,7 +257,6 @@ class DataGraph(
         }
     }
 
-    /** Forgets the server's data after signing out, once nothing loads for it any more. */
     private suspend fun clear() {
         serverWork.coroutineContext.job.cancelAndJoin()
         serverWork = serverScope()
@@ -280,39 +267,32 @@ class DataGraph(
         home.clear()
         library.clear()
         pages.clear()
-        // Downloads are that server's books, kept under its uris; the account was signed in for them.
+        // Downloads are that server's items, keyed by its uris; the Audiobookshelf account was signed in for them.
         downloads.clear()
         try {
             abs.signOut()
         } catch (e: IOException) {
-            // The phone could not forget it; the next sign-in replaces it.
+            // Left stored; the next sign-in replaces it.
         }
     }
 
-    /**
-     * Loads for the server now connected. A dropped connection or a refusal keeps what was there,
-     * and the next connect loads again.
-     */
+    // A failure keeps what was loaded before; the next connect loads again.
     private fun follow(load: suspend () -> Unit) = serverWork.launch { orNullOnFailure { load() } }
 
     private fun serverScope() = CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext[Job]))
 
-    /**
-     * A provider sync finished: sync the library index again once a burst of these events (one
-     * per provider) settles and the app is in front, whose screens read the index; outside the
-     * event loop, which a full sync would hold up for seconds.
-     */
+    // One music_sync_completed comes per provider sync: debounced, and run outside the event loop, which a full
+    // sync would hold up for seconds. See docs/API-NOTES.md, "Events".
     private fun resyncLibrarySoon(server: ServerInfo) = librarySync.restart {
         inFront()
         library.syncAll(server)
     }
 
-    /** Runs [load] once the events asking for it have settled; a newer request replaces a waiting one. */
     private inner class Debounced {
         private var job: Job? = null
 
-        // Event and connect collectors restart it from different threads: unsynchronised, both
-        // could cancel the same job and one of the two new ones would run unreplaced.
+        // The event and connect collectors call this from different threads: unsynchronised, both could cancel
+        // the same job and one of the two new jobs would run unreplaced.
         @Synchronized
         fun restart(waitMs: Long = EVENT_DEBOUNCE_MS, load: suspend () -> Unit) {
             job?.cancel()
@@ -326,10 +306,9 @@ class DataGraph(
     private companion object {
         const val EVENT_DEBOUNCE_MS = 2_000L
 
-        /** Before the server names the person's scopes. */
         val EVERYTHING = UserPermissions(setOf("*"))
 
-        /** Item changes the index-backed Home sections show; 2.10 sends a favorite only this way. */
+        // 2.10 reports a favourite only as media_item_updated. See docs/API-NOTES.md, "Favourites".
         val INDEX_CHANGES = setOf("media_item_updated", "media_item_deleted")
     }
 }
@@ -342,11 +321,8 @@ private val HOME_EVENTS = setOf(
     "music_sync_completed",
 )
 
-/**
- * Whether [event] changes what Home shows for the person [userId]. Not a song added or liked (Home
- * lists songs only as played), not the report sent every 30 s while anything plays, and not
- * another person's progress: every socket receives every user's.
- */
+// No refresh for a song added or liked (Home lists songs only as played), the report sent every 30 s while
+// anything plays, or another user's progress, which every socket receives. See docs/API-NOTES.md, "Events".
 internal fun refreshesHome(event: MaEvent, userId: String?): Boolean {
     if (event.name !in HOME_EVENTS) return false
     if (event.name == "media_item_added" || event.name == "favorite_updated") {
@@ -358,18 +334,14 @@ internal fun refreshesHome(event: MaEvent, userId: String?): Boolean {
 }
 
 /**
- * Each time the session becomes Ready: the first connect, every reconnect, and a sign-in after
- * Sign out (which [DataGraph.clear] emptied), even on the same server. It names the user this
- * connection signed in, which [Session.user] learns apart from it.
+ * Emits on every Ready: the first connect, each reconnect, and a sign-in after sign-out on the same server. Its
+ * user is this connection's; [Session.user] is updated separately.
  */
 internal fun Flow<SessionState>.connects(): Flow<SessionState.Ready> =
     map { it as? SessionState.Ready }.distinctUntilChanged().filterNotNull()
 
-/**
- * Each time a session ends: Setup after any state but the start's own. Setup straight from the
- * start ended nothing (nothing stored yet, or a token the phone could not open), so it forgets
- * nothing, least of all the downloads.
- */
+// NeedsSetup straight after Restoring ends nothing (nothing stored yet, or a token the Keystore cannot open),
+// so nothing is cleared, the downloads least of all.
 internal fun Flow<SessionState>.ends(): Flow<Unit> = flow {
     var before: SessionState = SessionState.Restoring
     collect { now ->

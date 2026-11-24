@@ -14,11 +14,6 @@ import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.common.util.UnstableApi
 import io.github.hazymorning.amsel.api.RepeatMode
 
-/**
- * How speaker [s] shows to Media3: the notification, the lock screen, the car and every other
- * controller read it. [phone] is This phone, whose volume and output are the phone's own;
- * [elapsedRealtime] moves the position on while it plays.
- */
 internal fun speakerState(s: SpeakerSnapshot?, phone: Boolean, elapsedRealtime: () -> Long): SimpleBasePlayer.State {
     val builder =
         SimpleBasePlayer.State
@@ -43,7 +38,7 @@ internal fun speakerState(s: SpeakerSnapshot?, phone: Boolean, elapsedRealtime: 
             // With repeat "one" MA can report the current item as next: duplicate uids throw.
             s.next?.takeIf { it.queueItemId != current.queueItemId }?.let { add(itemData(it, s, phone)) }
         }
-    // A play starting or a seek on its way buffers: the speaker will play, and does not yet.
+    // A play starting or a seek on its way buffers: the speaker will play but does not yet.
     val starting = s.playActionInProgress || s.seeking
     return builder
         .setPlaylist(playlist)
@@ -51,8 +46,8 @@ internal fun speakerState(s: SpeakerSnapshot?, phone: Boolean, elapsedRealtime: 
         .setPlayWhenReady(
             s.playing || starting,
             Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE,
-            // A stopped speaker holds its item and plays it on: ready, not idle, which the car reads as
-            // nothing to play and answers by closing its playback screen.
+            // A stopped speaker keeps its item, so READY: the car reads IDLE as nothing to play and
+            // closes its playback screen.
         ).setPlaybackState(if (starting) Player.STATE_BUFFERING else Player.STATE_READY)
         .setContentPositionMs(positionSupplier(s, elapsedRealtime))
         .setPlaybackParameters(PlaybackParameters(s.speed.toFloat()))

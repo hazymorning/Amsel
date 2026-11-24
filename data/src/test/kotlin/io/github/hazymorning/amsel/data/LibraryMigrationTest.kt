@@ -11,7 +11,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/** An index from before albums kept their later artists opens with its rows: only its albums sync again. */
 @RunWith(RobolectricTestRunner::class)
 class LibraryMigrationTest {
     private val context = RuntimeEnvironment.getApplication()

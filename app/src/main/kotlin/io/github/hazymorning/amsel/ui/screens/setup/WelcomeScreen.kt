@@ -22,12 +22,6 @@ import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 
-/**
- * The first screen: one sentence that says what the app is for, and one button. The sentence is
- * the screen's focal point, set in the Display style on the margin a little above the middle, as
- * the first line of a book. Android's local network prompt follows the button, so the reason for it
- * is already on screen.
- */
 @Composable
 fun WelcomeScreen(onFindServer: () -> Unit, modifier: Modifier = Modifier) {
     SetupPage(
@@ -62,6 +56,6 @@ fun WelcomeScreen(onFindServer: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** The sentence rests a little above the middle of the room the button leaves. */
+/** Spacer weights: the sentence sits a little above the middle of the space over the button. */
 private const val ABOVE = 0.42f
 private const val BELOW = 0.58f

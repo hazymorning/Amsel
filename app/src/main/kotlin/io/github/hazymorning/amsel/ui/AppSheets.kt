@@ -20,7 +20,7 @@ import io.github.hazymorning.amsel.ui.screens.player.TransferRoute
 import io.github.hazymorning.amsel.ui.screens.player.VolumeRoute
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 
-/** The sheet on screen. One shows at a time: a choice that needs another sheet closes its own first. */
+/** One sheet at a time: a choice that needs another sheet closes its own first. */
 sealed interface AppSheet {
     data class Actions(val target: ActionTarget) : AppSheet
 
@@ -32,7 +32,6 @@ sealed interface AppSheet {
 
     data object PlayOn : AppSheet
 
-    /** Play on at its group step. */
     data object Group : AppSheet
 
     data object SleepTimer : AppSheet
@@ -43,16 +42,14 @@ sealed interface AppSheet {
 
     data object Transfer : AppSheet
 
-    /** Which of the server's DJ hosts talks between the songs on the speaker that plays. */
     data object Dj : AppSheet
 
-    /** Signs in to Audiobookshelf, then downloads [then]. */
+    /** Downloads [then] once signed in to Audiobookshelf. */
     data class AbsSignIn(val then: MediaUi) : AppSheet
 
     data class RemoveDownload(val item: MediaUi) : AppSheet
 }
 
-/** Each sheet slides in and out; [AppSheet] changes wait for the one before to be gone. */
 @Composable
 internal fun AppSheets(sheet: MutableState<AppSheet?>, navigator: Navigator) {
     val shown = sheet.value ?: return

@@ -19,10 +19,7 @@ import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * The artwork Media3 shows (notification, lock screen, car) through the app's image loader: the
- * screens' OkHttp client and cache, instead of a second HTTP stack of Media3's own.
- */
+/** Media3's artwork through the app's image loader, sharing its OkHttp client and cache, not a second HTTP stack. */
 @OptIn(UnstableApi::class)
 class ArtworkLoader(private val context: Context, private val images: ImageLoader, private val scope: CoroutineScope) :
     BitmapLoader {

@@ -12,12 +12,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * The networks the phone's traffic takes, in one boot of the phone: the default network and, under
- * a VPN, the networks beneath it. Each connection to a network has a handle of its own, so the same
- * Wi-Fi joined again is another key.
+ * The default network's handle and, under a VPN, the handles of the networks under it, within one boot.
+ * A handle belongs to one connection: the same Wi-Fi joined again is another key.
  */
 data class NetworkKey(val boot: Int, val handles: List<Long>) {
-    /** As kept in the preferences. */
     val text: String get() = "$boot:" + handles.joinToString(",")
 
     companion object {
@@ -29,23 +27,21 @@ data class NetworkKey(val boot: Int, val handles: List<Long>) {
     }
 }
 
-/** Which network the phone is on, and whether plain http may leave the phone there. */
 interface PhoneNetwork {
-    /** Null while the phone has no network. */
     val current: StateFlow<NetworkKey?>
 
-    /** False on mobile data without a VPN, where a private address leads into the carrier's network. */
+    /** False on mobile data without a VPN, where a private address routes into the carrier's network. */
     fun plainHttpAllowed(): Boolean
 }
 
 class AndroidPhoneNetwork(context: Context) : PhoneNetwork {
     private val manager = context.getSystemService(ConnectivityManager::class.java)
 
-    // Android hands out handles from the same numbers again after the phone restarts.
+    // Network handles repeat after a reboot.
     private val boot = try {
         Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT)
     } catch (e: Settings.SettingNotFoundException) {
-        // A key kept by this run then matches no later one.
+        // Negative, so never a real boot count: keys stored in this run match no later one.
         Random.nextInt(Int.MIN_VALUE, 0)
     }
     private var default: Network? = null
@@ -66,7 +62,7 @@ class AndroidPhoneNetwork(context: Context) : PhoneNetwork {
                 override fun onLost(network: Network) = update { if (default == network) default = null }
             },
         )
-        // A request leaves VPNs out by itself, so this hears the networks beneath one.
+        // A NetworkRequest excludes VPNs by default (NOT_VPN), so this reports the networks under one.
         manager.registerNetworkCallback(
             NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build(),
             object : ConnectivityManager.NetworkCallback() {
@@ -77,7 +73,7 @@ class AndroidPhoneNetwork(context: Context) : PhoneNetwork {
         )
     }
 
-    // Asked as each plain http connection opens, not from the callbacks, which may come a moment late.
+    // Read at each plain http connection, not from the callbacks, which can lag behind.
     override fun plainHttpAllowed(): Boolean {
         val capabilities = manager.activeNetwork?.let(manager::getNetworkCapabilities) ?: return true
         return !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||

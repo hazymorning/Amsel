@@ -5,7 +5,6 @@ import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
 
-/** What a search for "blue" finds in the sample library (library matches first in each section). */
 object SearchSampleData {
     private fun art(key: String) = ArtRef("sample:$key")
 

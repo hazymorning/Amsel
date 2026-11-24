@@ -8,10 +8,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.widget.RemoteViews
 
-/**
- * The widget picker's pictures from Android 15: each kind as it would show what plays now, instead
- * of a drawing made once. Android takes a few of these an hour and ignores the rest.
- */
+/** Generated picker previews (Android 15); the system takes only a few setWidgetPreview calls an hour. */
 internal class WidgetPreviews(
     private val context: Context,
     private val draw: suspend (WidgetKind, WidgetContent) -> RemoteViews,
@@ -34,13 +31,13 @@ internal class WidgetPreviews(
                     views,
                 )
             } catch (e: RuntimeException) {
-                // A launcher that keeps no previews costs the picker its picture, nothing else.
+                // Refused by the system or the launcher: the picker keeps the static preview layout.
             }
         }
     }
 
     private companion object {
-        /** About as often as Android takes them. */
+        /** Within the system's rate limit for generated previews. */
         const val EVERY_MS = 60 * 60 * 1000L
     }
 }

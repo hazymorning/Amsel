@@ -55,25 +55,18 @@ internal data class SectionActions(
     val onWhat: () -> Unit,
     val onHow: () -> Unit,
     val onSectionMore: () -> Unit,
-    /** A new name for the section; blank gives back the option's own. */
+    /** Blank restores the option's own title. */
     val onRename: (String) -> Unit = {},
     /** Continue listening's play button. */
     val onResume: (MediaUi) -> Unit = onOpen,
-    /** TalkBack's moves, where there is a section to move past. */
+    /** TalkBack actions; null where there is no section to move past. */
     val onMoveUp: (() -> Unit)? = null,
     val onMoveDown: (() -> Unit)? = null,
-    /** Pinned's new order, after a pin was moved. */
+    /** Pinned's item keys in their new order. */
     val onArrange: (List<String>) -> Unit = {},
-    /** Search's field: opens Search, the keyboard up. */
     val onSearch: () -> Unit = {},
 )
 
-/**
- * One section. Outside edit mode its title is a section header (long-press it to edit); in edit
- * mode its title and sentence take the header's place, the title's capitals as far under the
- * section before as a header's. A held press on them picks the section up, and while it is carried
- * it is lifted on a band in the lifted row's tone. Pinned's pins move the same way inside it.
- */
 @Composable
 internal fun Section(
     section: SectionUi,
@@ -88,8 +81,8 @@ internal fun Section(
     val title = section.heading()
     if (!editing) {
         Column(modifier) {
-            // Without its heading a section stands 32 under the one before: a heading's room left a
-            // hole where nothing was named, a group's gap ran it into the section above.
+            // An untitled section stands 32 dp under the one before: a header's height left an empty
+            // gap, a group gap ran it into the section above.
             if (!section.titled) {
                 if (!first) Spacer(Modifier.height(with(LocalDensity.current) { spaced(Space.S8) }))
             } else {
@@ -177,7 +170,7 @@ private fun SectionBody(section: SectionUi, actions: SectionActions) {
     }
 }
 
-/** A row's band at section size: a tile's shape, as far past the margins as a text row's band. */
+// A tile's shape, reaching as far past the margins as a text row's band.
 private object SectionRowShape : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val inset = with(density) { (Keyline.Margin - Space.BandText).toPx() }
@@ -191,7 +184,6 @@ private object SectionRowShape : Shape {
     }
 }
 
-/** Its title: the person's own name for it, else its option's, with the speaker Played here shows after it. */
 @Composable
 internal fun SectionUi.heading(): String {
     val words = title ?: stringResource(sectionTitle(option, fallback))

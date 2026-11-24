@@ -22,13 +22,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * The person's likes, newer than the copies lists and queues carry. A queue keeps each item as it
- * was queued and the server never updates it after a like (server `players/controller.py` and the
- * official app's `MainDataSource` both say so), so the playing item is read again when it starts
- * ([refresh]), a change shows at once and is undone if refused ([set]), and the server's events
- * keep every item read here current.
- */
+// The server never updates a queued item after a like (docs/API-NOTES.md, "Queue fields used"), so
+// the playing item is read again ([refresh]) and events keep each item read here current.
 class FavoritesRepository(
     private val api: MaApi,
     private val library: LibraryRepository,
@@ -39,16 +34,14 @@ class FavoritesRepository(
 ) {
     private val _known = MutableStateFlow<Map<String, Boolean>>(emptyMap())
 
-    /** By the uri an item was read or changed under. */
+    /** Keyed by the uri each item was read or changed under. */
     val known: StateFlow<Map<String, Boolean>> = _known.asStateFlow()
 
-    /**
-     * The library uri a music service's uri resolved to: the server announces a like by the
-     * library row, while a queue names the song by the service it plays from.
-     */
+    // Service uri to library uri: the server announces a like under the library uri, while a queue
+    // names the song by the music service it plays from.
     private val libraryUris = ConcurrentHashMap<String, String>()
 
-    /** Bumped by every change made here, so a read that started before it cannot undo it. */
+    // Bumped on every change, so a read that started before it cannot overwrite it.
     private val changes = AtomicLong()
 
     init {
@@ -62,7 +55,7 @@ class FavoritesRepository(
                         apply(it.uri, it.favorite == true)
                     }
 
-                    // 2.10 sends the state with the item; 2.11 leaves it out (null) and sends favorite_updated.
+                    // 2.10 announces a like here; 2.11 sends null (docs/API-NOTES.md, "Events").
                     "media_item_updated" -> event.objectId?.takeIf(::followed)?.let { uri ->
                         event.decode(MediaItem.serializer())?.favorite?.let { apply(uri, it) }
                     }
@@ -73,7 +66,7 @@ class FavoritesRepository(
 
     fun of(uri: String, listed: Boolean): Boolean = _known.value[uri] ?: listed
 
-    /** Asks the server about [uri]; for a music service's item that is in the library, the library answers. */
+    /** For a music service's item that is in the library, the server answers with the library item. */
     suspend fun refresh(uri: String) {
         val asked = changes.get()
         val item = orNullOnFailure { api.itemByUri(uri) } ?: return
@@ -95,7 +88,7 @@ class FavoritesRepository(
                 e
             }
             changes.incrementAndGet()
-            // Back to what it was, unless a later tap has already changed it again.
+            // Reverted, unless a later tap has changed it since.
             _known.update { known ->
                 when {
                     known[uri] != favorite -> known
@@ -108,7 +101,7 @@ class FavoritesRepository(
         }
     }
 
-    /** Only items read or changed here follow the events; the index follows them on its own. */
+    // Only items read or changed here: the library index applies the events itself.
     private fun followed(uri: String): Boolean = uri in _known.value || libraryUris.containsValue(uri)
 
     private fun apply(uri: String, favorite: Boolean) {

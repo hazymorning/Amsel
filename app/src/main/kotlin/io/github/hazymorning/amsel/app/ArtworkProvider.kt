@@ -16,10 +16,7 @@ import io.github.hazymorning.amsel.playback.CarArtwork
 import java.io.FileNotFoundException
 import kotlinx.coroutines.runBlocking
 
-/**
- * The car's artwork ([CarArtwork]): the server's image through the app's image loader and its disk
- * cache. The car asks on a binder thread and shows a placeholder until the file is there.
- */
+// The car asks on a binder thread, so openFile may block; it shows a placeholder until the file is there.
 class ArtworkProvider : ContentProvider() {
     override fun onCreate(): Boolean = true
 
@@ -50,12 +47,8 @@ class ArtworkProvider : ContentProvider() {
         0
 }
 
-/**
- * Server image [proxyId] as the car takes it, a JPEG (the server sends an SVG as it is otherwise):
- * the file in [loader]'s disk cache, fetched into it first when it is not there; null when the
- * server has none. It goes through the loader each time, since the disk cache keeps the server's
- * refusals too.
- */
+// A JPEG, as the server sends an SVG unchanged otherwise. Always through the loader, not straight
+// from the disk cache, which keeps the server's refusals too.
 internal suspend fun carCover(
     context: Context,
     loader: ImageLoader,
@@ -68,7 +61,7 @@ internal suspend fun carCover(
         context,
     ).data(url).diskCacheKey(key).memoryCachePolicy(CachePolicy.DISABLED).build()
     if (loader.execute(request) !is SuccessResult) return null
-    // Opened while the entry is held, so an eviction right after cannot take the file away first.
+    // Opened while the snapshot is held, so an eviction cannot delete the file first.
     return loader.diskCache?.openSnapshot(key)?.use {
         ParcelFileDescriptor.open(it.data.toFile(), ParcelFileDescriptor.MODE_READ_ONLY)
     }

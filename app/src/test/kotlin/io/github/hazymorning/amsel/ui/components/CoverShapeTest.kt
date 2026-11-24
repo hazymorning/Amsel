@@ -38,7 +38,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** Every cover takes the one corner rule at its size, whatever it shows: no artwork is ever a circle. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
@@ -99,7 +98,7 @@ class CoverShapeTest {
         for (each in listOf(RowCover, PageCover)) {
             side = each
             val corner = corner(COVER)
-            // On a page, a quarter cut round would leave this point to the bare tone under it.
+            // A quarter clipped round would leave this point showing the bare background.
             assertTrue("four covers at $each are cut round", corner.alpha > 0.9f)
             assertTrue("four covers at $each leave their corner bare", corner != LightColors.surfaceContainerLow)
         }
@@ -122,7 +121,7 @@ class CoverShapeTest {
         }
     }
 
-    /** The point [Inset] in from the top start corner: a circle leaves it empty, the cover's corners keep it. */
+    /** The point [Inset] in from the top start corner, which a circle leaves empty and the cover's corners fill. */
     private fun corner(tag: String): Color {
         val inset = px(Inset)
         return compose.onNodeWithTag(tag).captureToImage().toPixelMap()[inset, inset]
@@ -131,7 +130,7 @@ class CoverShapeTest {
     private fun px(dp: Dp): Int = (dp.value * compose.density.density).toInt()
 }
 
-/** The colour that stands out most from [paper], [clear] pixels in from every edge, past the hairline. */
+/** The colour with the most contrast to [paper], [clear] px in from every edge, past the hairline. */
 private fun PixelMap.strongest(paper: Color, clear: Int): Color =
     (clear until width - clear).flatMap { x -> (clear until height - clear).map { y -> this[x, y] } }
         .maxBy { contrast(it, paper) }

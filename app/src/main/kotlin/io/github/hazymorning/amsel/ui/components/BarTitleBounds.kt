@@ -1,14 +1,11 @@
 package io.github.hazymorning.amsel.ui.components
 
-/** Where a bar's title stands: from [start] on, [width] wide, its words in the middle of that. */
 internal data class BarTitleBounds(val start: Int, val width: Int)
 
 /**
- * The title's room in a bar [width] wide, in pixels. It lies in the bar's middle and keeps [inset]
- * from the bar's sides: a glyph's room. Where the actions with their distance to the title take
- * more of a side ([taken]), it keeps that from both. Where even the title's shortest form
- * ([needed] wide) does not fit between such actions, it has all they leave, [from] the bar's start
- * on, so it is cut last.
+ * Centres the title, keeping [inset] or the end actions' share ([taken]), whichever is larger, from
+ * both sides. Where actions wider than [inset] leave too little for the shortest title ([needed]),
+ * it gets all the room from [from] to the actions instead, off centre, so it is cut last.
  */
 internal fun barTitleBounds(width: Int, inset: Int, taken: Int, from: Int, needed: Int): BarTitleBounds {
     val side = maxOf(inset, taken)

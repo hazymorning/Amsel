@@ -16,12 +16,7 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.spaced
 import kotlin.math.min
 
-/**
- * The artwork [BarToArt] under the bar, then what plays, the line of where it is and the controls,
- * each a fixed step under the last; the utilities at the foot of the screen, and what room is left
- * between them and the controls. On a short screen the artwork gives way first. The words, the line
- * and the controls take the width inside [NowPlayingInset].
- */
+// On a short screen the artwork shrinks first; the steps below it stay fixed.
 @Composable
 internal fun NowPlayingLayout(foot: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Layout(content, modifier) { measurables, constraints ->
@@ -60,12 +55,8 @@ internal fun NowPlayingLayout(foot: Dp, modifier: Modifier = Modifier, content: 
     }
 }
 
-/**
- * The bar to the artwork; the artwork to the title's capitals; the artist's baseline to the line;
- * the line to the controls. The footer's grounds end [FooterRoom] above the screen's foot
- * ([footRoom]), the margin their sides keep; its row, a touch target tall, reaches a little
- * further down.
- */
+// Bar to artwork, artwork to the title's cap top, the artist's baseline to the line, the line to the
+// controls.
 private val BarToArt = 28.dp
 private val ArtToTitle = 46.5.dp
 private val ArtistToLine = 29.5.dp
@@ -73,11 +64,8 @@ private val LineToControls = 32.dp
 private val FooterRoom = Keyline.Margin
 private val OverButtons = Space.S3
 
-/**
- * From the footer's grounds to the screen's foot: exactly as far as they stand from its sides, the
- * gesture handle lying in that room (a taller handle's room, where a phone has one); over
- * Android's buttons, their height and [OverButtons].
- */
+// The footer's grounds stand as far from the screen's foot as from its sides, with the gesture handle
+// inside that gap (or its inset, if taller); above 3-button navigation, its height plus [OverButtons].
 @Composable
 internal fun footRoom(): Dp {
     val density = LocalDensity.current

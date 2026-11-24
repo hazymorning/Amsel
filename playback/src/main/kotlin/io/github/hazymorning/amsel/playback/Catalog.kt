@@ -18,10 +18,7 @@ import io.github.hazymorning.amsel.api.recentlyPlayed
 import io.github.hazymorning.amsel.api.search
 import io.github.hazymorning.amsel.api.started
 
-/**
- * A row the car can show: an album, playlist, artist, track, book, podcast or episode. For a book
- * or an episode, [played] is how much of it is played (0 to 1); it is null for music.
- */
+/** [played] is the played fraction (0 to 1) of a book or an episode, null for music. */
 data class BrowseNode(
     val uri: String,
     val title: String,
@@ -33,33 +30,26 @@ data class BrowseNode(
     val finished: Boolean = false,
 )
 
-/** Library reads for the car, live from the server (each wakes the socket) and capped; [holds] asks the index. */
 interface Catalog {
     suspend fun recent(limit: Int): List<BrowseNode>
 
-    /** Books and episodes the person is in the middle of, most recent first. */
     suspend fun inProgress(limit: Int): List<BrowseNode>
 
-    /** Whether the library holds any of a tab's kind, such as "audiobook" or "podcast". */
+    /** [tab] is a media type such as "audiobook" or "podcast". */
     suspend fun holds(tab: String): Boolean
 
     suspend fun library(tab: String, offset: Int, limit: Int): List<BrowseNode>
 
     suspend fun children(parentUri: String, offset: Int, limit: Int): List<BrowseNode>
 
-    /**
-     * The uri a spoken "play [query]" means, or null when the server finds nothing. [focus] is the
-     * assistant's guess at the kind (MediaStore's `EXTRA_MEDIA_FOCUS`), when it has one.
-     */
+    /** [focus] is MediaStore's `EXTRA_MEDIA_FOCUS`; null when the server finds nothing. */
     suspend fun search(query: String, focus: String?): String?
 }
 
 /**
- * The car's library: live server reads, each list capped by the caller. Each read [wake]s the
- * session, since the car browses with the phone locked and nothing playing. [indexed] says whether
- * the library index holds any of a kind; [covers] gives an artist without a picture the first of
- * the album covers the index holds for it: one where the app shows four, as the car loads a cover
- * as one proxied picture.
+ * Each read [wake]s the session, as the car browses with the phone locked and nothing playing.
+ * [covers] gives an artist without a picture one of its album covers from the index, where the app
+ * shows four: the car loads a cover as one proxied image.
  */
 class DataCatalog(
     private val api: MaApi,
@@ -76,7 +66,7 @@ class DataCatalog(
 
     override suspend fun inProgress(limit: Int): List<BrowseNode> {
         wake()
-        // One that cannot be read again stays as listed, so it does not empty the list.
+        // One that cannot be read again stays as listed rather than emptying the list.
         return api.started(limit).map { (listed, fresh) -> (fresh ?: listed).node() }
     }
 
@@ -101,7 +91,7 @@ class DataCatalog(
             MediaType.Artist.api -> api.artistAlbums(parent.itemId, parent.provider, offset, limit)
             else -> return emptyList()
         }
-        // A server that cannot page a listing answers everything from the offset on.
+        // A server that cannot page a listing sends everything from the offset on.
         return page.items.take(limit).map { it.node() }
     }
 
@@ -141,8 +131,8 @@ class DataCatalog(
 }
 
 /**
- * What a spoken request names: of the kind the assistant heard, if it says, the item named exactly
- * so (an artist before an album, a playlist or a song), else the closest song.
+ * An exact name match first (of the kind the assistant names, else an artist before an album, a
+ * playlist or a song), then the first result of the named kind, or with none named the first song.
  */
 internal fun bestMatch(query: String, focus: String?, results: SearchResults): MediaItem? {
     val focused = when (focus) {
@@ -161,14 +151,11 @@ internal fun bestMatch(query: String, focus: String?, results: SearchResults): M
         ?: kinds.firstNotNullOfOrNull { it.firstOrNull() }
 }
 
-/** What opens as a folder in the car, as [DataCatalog.children] lists it; the rest plays. */
+/** Must match the kinds [DataCatalog.children] lists. */
 private val BROWSABLE = setOf(MediaType.Album, MediaType.Playlist, MediaType.Artist, MediaType.Podcast).map { it.api }
 
 /** Enough per kind to find an exact name among near ones. */
 private const val SEARCH_LIMIT = 5
 
-/**
- * MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE, deprecated with the playlists table; the assistant
- * still sends it as the focus.
- */
+/** MediaStore.Audio.Playlists.ENTRY_CONTENT_TYPE, deprecated with the playlists table; the assistant still sends it. */
 private const val PLAYLIST_FOCUS = "vnd.android.cursor.item/playlist"

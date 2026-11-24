@@ -30,23 +30,16 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/**
- * The least room a title gets, in ems of its own size, before the grid drops to one column: about
- * nine letters to a line, so a narrow phone keeps two columns and only large text takes one.
- */
+// Minimum title width for two columns, in ems of the title's font size (about nine letters a
+// line): a narrow phone keeps two columns, only large text drops to one.
 private const val TITLE_MIN_EMS = 4.5f
 
-/** Home's cards stand this far apart, both ways: close, so the grid reads as one block. */
 internal val CardGap = Space.S2
 
-/** A card's title stands this far from its cover and from the card's end. */
 private val CardPadding = Space.S3
 
-/**
- * Laid out by hand: a lazy grid inside a lazy column cannot measure. Each card is measured at its
- * column's width, never by intrinsics, which a title cut at a word cannot answer truly; a row is
- * as tall as its tallest card.
- */
+// A custom Layout because a lazy grid cannot be measured inside a lazy column. Cards are measured
+// at the column width, never by intrinsics, which Words cannot report correctly.
 @Composable
 internal fun CardGrid(
     count: Int,
@@ -74,22 +67,15 @@ internal fun CardGrid(
     }
 }
 
-/** Two cards to a row in [width], or one where large text would leave a title too few letters. */
 @Composable
 internal fun cardColumns(width: Dp): Int =
     cardColumns(width, with(LocalDensity.current) { MaterialTheme.typography.titleSmall.fontSize.toDp() })
 
-/** [cardColumns] for a title set [titleEm] large. */
 internal fun cardColumns(width: Dp, titleEm: Dp): Int {
     val titleRoom = (width - CardGap) / 2 - Sizes.RowArt - CardPadding * 2
     return if (titleRoom >= titleEm * TITLE_MIN_EMS) 2 else 1
 }
 
-/**
- * A cover and its title on a card of the first surface tone, two to a row: the cover is the card's
- * start, in the card's own corners, the title beside it on two lines at most. A card as tall as
- * its cover, so eight make a calm block. Long-press opens the item's actions, as on a tile.
- */
 @Composable
 internal fun HomeCard(item: MediaUi, onClick: () -> Unit, onMore: (() -> Unit)?, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.titleSmall

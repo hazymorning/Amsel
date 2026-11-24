@@ -17,11 +17,7 @@ import io.github.hazymorning.amsel.widget.WidgetSizes.WORDS_TO_CELLS
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-/**
- * One widget's views at each of its sizes. The cells and the words are added to each form's layout,
- * in the order the person set; here also the frame and the gaps around them, and in which tone they
- * show. Every view a form uses is set each time, as a launcher keeps the last ones' state.
- */
+/** Sets every property of every view a form uses, each time: a launcher can reapply onto views that keep earlier state. */
 internal class WidgetDrawing(
     private val context: Context,
     private val text: WidgetTextMetrics,
@@ -41,7 +37,7 @@ internal class WidgetDrawing(
         WidgetCellsViews(context, text, slots, id, setup, look, pictures, tone, ground.cover, taps, ::px)
     private val words = WidgetWordsViews(context, text, look, tone, ::px)
 
-    /** Bare buttons draw nothing at a row's ends, so their row reaches into the frame. */
+    /** Bare buttons draw no cell, so their row may reach into the frame. */
     private val side = if (setup.cells == WidgetCells.None) REACH else PADDING - GAP / 2
 
     fun views(fit: WidgetFit): RemoteViews = when (fit.form) {
@@ -52,14 +48,8 @@ internal class WidgetDrawing(
         WidgetForm.Player -> player(fit)
     }
 
-    /** What plays after the buttons: there are some, and the person wants it so. */
     private fun after(shown: List<IndexedSlot>) = setup.words == WidgetWordsPosition.After && shown.isNotEmpty()
 
-    /**
-     * What plays at the top and the cells at the foot, or the cells at the top and what plays at the
-     * foot, the room between them; a poster's cover over its words. One row high, what plays alone, in
-     * the middle.
-     */
     private fun column(fit: WidgetFit) = grounded(R.layout.widget_column).apply {
         val shown = cells.shown(fit)
         val after = after(shown)
@@ -69,8 +59,8 @@ internal class WidgetDrawing(
             after -> WordsAlign.Bottom
             else -> WordsAlign.Top
         }
-        // Words meet the frame by their ink, so their box reaches past it: by their lead on the side
-        // they align to, by half of it above and below in the middle; a cover meets it itself.
+        // The text's visible edge, not its box, meets the frame: the box reaches LEAD past it on the aligned
+        // side, LEAD / 2 above and below when centred. A poster's cover meets the frame itself.
         val top = when {
             align == WordsAlign.Top && !poster -> PADDING - LEAD
             align == WordsAlign.Middle -> PADDING - LEAD / 2
@@ -91,7 +81,6 @@ internal class WidgetDrawing(
         cellRows(shown, after, fit)
     }
 
-    /** The cover beside what plays, in its middle, above the cells or below them; the room between. */
     private fun player(fit: WidgetFit) = grounded(R.layout.widget_player).apply {
         val shown = cells.shown(fit)
         val after = after(shown)
@@ -102,16 +91,15 @@ internal class WidgetDrawing(
         cellRows(shown, after, fit)
     }
 
-    /** The cover and what plays, the cells after them or before them, as high as beside words. */
     private fun bar(fit: WidgetFit) = grounded(R.layout.widget_bar).apply {
         val shown = cells.shown(fit)
         val after = after(shown)
         art(fit, cap = false)
         val cell = minOf(fit.height - 2 * PADDING, CELL_HEIGHT)
         val target = target(cell, fit.height)
-        // The rows reach to REACH from the edge above and below (widget_bar.xml); the targets stand in their middle.
+        // The rows span to REACH from the top and bottom edges (widget_bar.xml); this centres the targets.
         val upright = px((fit.height - 2 * REACH - target) / 2)
-        // The words keep the gap from the cells, less the half gap their targets reach.
+        // WORDS_TO_CELLS from the cells, less the half GAP their targets reach past them.
         val gap = px(WORDS_TO_CELLS - GAP / 2)
         setViewPadding(R.id.widget_cells_start, 0, upright, gap, upright)
         setViewPadding(R.id.widget_cells_end, 0, upright, 0, upright)
@@ -124,18 +112,16 @@ internal class WidgetDrawing(
         cells.row(this, row, shown, R.layout.widget_cell_bar, inset = px((target - cell) / 2), cellSizePx(fit))
     }
 
-    /** Buttons alone, in rows in the frame's middle. */
     private fun pad(fit: WidgetFit) = grounded(R.layout.widget_pad).apply {
         val shown = cells.shown(fit)
         val rows = ceil(shown.size.toFloat() / fit.columns).toInt()
         val target = target(fit.cell, fit.height)
-        // Each row holds half a gap above and below its targets.
+        // Each row pads its targets by GAP / 2 above and below (widget_pad_row.xml).
         val upright = px((fit.height - rows * (target + GAP)) / 2)
         setViewPadding(R.id.widget_pad, px(side), upright, px(side), upright)
         cells.pad(this, R.id.widget_pad, shown, fit.columns, inset = px((target - fit.cell) / 2), cellSizePx(fit))
     }
 
-    /** [layout] on the widget's ground: its colour or the cover of what plays, and what a tap on it opens. */
     private fun grounded(@LayoutRes layout: Int) = RemoteViews(context.packageName, layout).apply { ground() }
 
     private fun RemoteViews.ground(clear: Boolean = false) {
@@ -162,10 +148,6 @@ internal class WidgetDrawing(
         words.views(fit.words, fit.size, align, width)?.let { addView(R.id.widget_words_box, it) }
     }
 
-    /**
-     * [shown] in [fit]'s rows before what plays where it comes [after] them, else after it; the other
-     * place gone. The rows as wide as the widget keep the cells in the frame.
-     */
     private fun RemoteViews.cellRows(shown: List<IndexedSlot>, after: Boolean, fit: WidgetFit) {
         val (rows, other) = rowsBy(after)
         clear(other)
@@ -174,11 +156,9 @@ internal class WidgetDrawing(
         cells.rows(this, rows, shown, fit.columns, cellSizePx(fit))
     }
 
-    /** The size of [fit]'s cells in px, which a Play … button's cover fills. */
     private fun cellSizePx(fit: WidgetFit): CellSize? =
         cellSize(fit, setup.cells == WidgetCells.None)?.let { (width, height) -> px(width) to px(height) }
 
-    /** The place for the cells, before what plays where it comes [after] them, and the other one. */
     private fun rowsBy(after: Boolean): Pair<Int, Int> {
         val (start, end) = R.id.widget_cells_start to R.id.widget_cells_end
         return if (after) start to end else end to start
@@ -189,10 +169,7 @@ internal class WidgetDrawing(
         shows(place, false)
     }
 
-    /**
-     * A bar's, a player's or a poster's cover, as high as its place in the layout; empty while nothing
-     * plays. A player's is [cap]ped at half its width, so the words keep their room in a tall one.
-     */
+    /** [cap]: a player's cover is limited to ART_SHARE of the width, so a tall player keeps space for the text. */
     private fun RemoteViews.art(fit: WidgetFit, cap: Boolean) {
         val side = px(fit.art)
         val picture = pictures.art[side]?.takeIf { playing }
@@ -223,10 +200,6 @@ internal class WidgetDrawing(
         }
     }
 
-    /**
-     * One cell: the whole tile is the button, its cell in the frame as every form's. A Play … button
-     * is its item's cover, a tile without buttons the cover of what plays.
-     */
     private fun tile(fit: WidgetFit) = RemoteViews(context.packageName, R.layout.widget_tile).apply {
         val first = setup.shown(look, 1).firstOrNull()
         val slot = first?.value?.takeIf { fit.buttons > 0 }
@@ -265,11 +238,10 @@ internal class WidgetDrawing(
     private fun px(dp: Float): Int = (dp * density).roundToInt().coerceAtLeast(0)
 
     private companion object {
-        /** From here an empty cover's glyph is the large one, as in Amsel. */
         const val LARGE_GLYPH_FROM = 128f
         const val LARGE_GLYPH = 32f
 
-        /** The room around an empty cover's glyph in its view (res/layout/widget_art.xml). */
+        /** The padding of the empty cover's glyph views in widget_art.xml and widget_column.xml. */
         const val ART_GLYPH_ROOM = 4f
     }
 }

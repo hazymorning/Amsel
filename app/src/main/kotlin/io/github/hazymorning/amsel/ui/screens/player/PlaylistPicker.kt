@@ -27,7 +27,7 @@ import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** "Add to playlist": the playlists you can change, one tap to add; [playlists] is null while they are read. */
+/** [playlists] is null while they load. */
 @Composable
 fun PlaylistPicker(playlists: List<MediaUi>?, onPick: (MediaUi) -> Unit, modifier: Modifier = Modifier) {
     val end = if (playlists.isNullOrEmpty()) Space.SheetEdge else sheetEnd(RowLead.Cover, twoLines = true)

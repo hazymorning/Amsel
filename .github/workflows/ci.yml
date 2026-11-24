@@ -1,14 +1,6 @@
 name: CI
 
-# Once per change, on its pull request. Main does not run it again after the squash merge, which
-# holds the tree the pull request tested, and a release does not run the tests again either. A
-# branch without a pull request runs nothing (start a run by hand from the Actions tab). A change
-# that touches only words and the release machinery (the README, docs, the licence, the notes, the
-# release and cleanup workflows) builds nothing, so it does not run.
-#
-# Each job runs one part of scripts/check.sh, which runs all of them before a pull request is
-# opened, so a run here is green the first time. A newer push does not cancel a run: every run
-# finishes, passed or failed.
+# Pull requests only: the squash merge puts the tree its pull request tested on main.
 on:
   pull_request:
     paths-ignore:
@@ -23,10 +15,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # The checks run side by side, each on a runner of its own: the slowest sets the time, not the sum.
-  # Their Gradle cache is main's, filled after each release (release.yml): the dependencies,
-  # Robolectric's Android and the build's outputs, so a run downloads next to nothing and builds
-  # and tests again only what its change touched.
+  # A pull request can read only main's Gradle cache, which the caches job in release.yml fills.
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -94,14 +83,13 @@ jobs:
           name: amsel-debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
-  # The M1 gate: the real client against real Music Assistant servers, both supported releases.
   live-server:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        # The servers scripts/check.sh runs by default.
+        # Keep in step with the servers scripts/check.sh runs by default.
         server: ['2.10.9', '2.11.0b7']
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0

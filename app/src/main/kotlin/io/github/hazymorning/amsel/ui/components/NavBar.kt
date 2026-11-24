@@ -41,40 +41,32 @@ import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** Over the places' glyphs, and under them at least, so they stand in the middle of their band. */
 private val AroundPlaces = 20.dp
 
-/** Under the glyphs where Android shows its buttons: they have their own room under that. */
+/** The gap above Android's navigation buttons, which take the inset below it. */
 private val UnderPlacesOverButtons = Space.S3
 
 private val TabGlyph = Sizes.Icon
 
-/** The speaker's dot while music plays on it, on its glyph's outline: a third of the glyph's size. */
 private val Dot = 8.dp
 
-/** The ring of the band's own tone around the dot, which parts it from the line it sits on. */
+/** A ring in the band's colour around the dot, separating it from the glyph's stroke. */
 private val DotRing = 2.dp
 
-/** How far the dot's centre lies outside the outline, away from the glyph's middle. */
 private val Outward = 2.dp
 private const val DIAGONAL = 0.70710677f
 
 /**
- * Where the speaker glyph's outline turns at its top end, on the glyph's 256 grid: half way round
- * the arc of its top, whose centre is (128, 88) and radius 64. The dot's centre lies there, on the
- * line, so the outline runs into its ring from over the top and down the side and the dot is one
- * with the glyph. The corner of the glyph's box would leave it in the air past the arc.
+ * The 45-degree point of the speaker glyph's top arc (centre (128, 88), radius 64 on its 256 grid),
+ * where the dot sits on the outline; at the corner of the glyph's box it would float off the glyph.
  */
 private const val ARC_X = 128f
 private const val ARC_Y = 88f
 private const val HALF_WAY = 64f * 0.70710677f
 
 /**
- * The bar at the dock's foot, a band a tone apart from what plays above it: the app's places, each
- * its glyph alone. The band runs on under the system's own bar: its gesture handle lies in the room
- * under the glyphs. Android's buttons stand under it on a tone of their own, the player's, so the
- * band reads as Amsel's and not as one block with them. The keyboard covers the dock, as it does
- * Material's navigation bar, leaving its room to what is typed.
+ * Extends under the system bar. Behind Android's navigation buttons it paints the player's tone, so
+ * the band does not read as one block with them.
  */
 @Composable
 fun NavBar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
@@ -103,7 +95,6 @@ fun NavBar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Un
     )
 }
 
-/** A place's room in the bar: over its glyph, and under it at least as much as the system's bar takes. */
 @Composable
 private fun Modifier.barItemPadding(): Modifier {
     val bars = WindowInsets.systemBars.union(WindowInsets.displayCutout)
@@ -114,11 +105,7 @@ private fun Modifier.barItemPadding(): Modifier {
     return padding(top = AroundPlaces, bottom = below)
 }
 
-/**
- * Inactive: the glyph in the secondary tone. Active: ink, and filled. TalkBack reads the place's
- * name; the whole strip from the band's top to the screen's edge takes the tap. A long press
- * ([onLongClick]) arranges the bar, as a long press on a heading edits Home.
- */
+/** The padding lies inside the click area, so the whole strip down to the screen's edge takes the tap. */
 @Composable
 fun RowScope.NavBarItem(
     selected: Boolean,
@@ -162,12 +149,7 @@ fun RowScope.NavBarItem(
     }
 }
 
-/**
- * The speaker's place in the band, after Home: its glyph in the secondary tone, as a place's, which
- * opens the speaker choice rather than a page. While music plays on the speaker in use, a moss dot
- * sits on the glyph's outline where it turns at the top end, cut free of the line by a ring of the
- * band's tone. TalkBack hears "Speaker: Kitchen, playing. Choose speaker".
- */
+/** A button, not a tab: it opens the speaker choice, not a page. */
 @Composable
 fun RowScope.NavBarSpeaker(
     speaker: SpeakerUi,
@@ -205,12 +187,12 @@ fun RowScope.NavBarSpeaker(
                 Modifier.drawWithContent {
                     drawContent()
                     if (dot > 0f) {
-                        // At the end side; the glyph is the same both ways round.
+                        // On the end side; the glyph is symmetric, so only the dot mirrors.
                         val ltr = layoutDirection == LayoutDirection.Ltr
                         val end = if (ltr) HALF_WAY else -HALF_WAY
                         val on =
                             glyphPoint(SpeakerButtonGlyph, TabGlyph, ARC_X + end, ARC_Y - HALF_WAY, trimHeight = true)
-                        // A little out along the same line, so its ring leaves the glyph's inner circle whole.
+                        // Pushed out along the diagonal, so its ring does not cut the glyph's inner circle.
                         val out = Outward.toPx() * DIAGONAL
                         val at = on + Offset(if (ltr) out else -out, -out)
                         drawCircle(band, Dot.toPx() / 2 + DotRing.toPx(), at, alpha = dot)

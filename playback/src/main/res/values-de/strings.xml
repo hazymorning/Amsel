@@ -14,7 +14,6 @@
     <string name="browse_not_found">Das wurde in Music\u00A0Assistant nicht gefunden</string>
     <string name="error_too_old">Diese Version von Music\u00A0Assistant ist zu\u00A0alt. Bitte zuerst aktualisieren.</string>
 
-    <!-- The notification's buttons for a book or an episode -->
     <plurals name="back_seconds">
         <item quantity="one">%1$d Sekunde zurück</item>
         <item quantity="other">%1$d Sekunden zurück</item>

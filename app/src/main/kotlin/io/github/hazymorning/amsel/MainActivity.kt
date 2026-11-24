@@ -29,28 +29,26 @@ import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    /** "Play X on Amsel", waiting for the player's connection. */
     private var search: Intent? = null
 
-    /** Where a shortcut or a link asked to go, until the app is there. */
     private var opening by mutableStateOf<DeepLink?>(null)
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
-        // With Android's buttons the system would lay a pale scrim over the dock's foot; the dock's
-        // paper runs under them instead, and the buttons take the theme's ink (AppRoot).
+        // No scrim under button navigation: the dock's background runs beneath the bar, and AppRoot
+        // sets the buttons' light or dark appearance.
         enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) window.isNavigationBarContrastEnforced = false
         super.onCreate(savedInstanceState)
         val graph = graph
-        // The system splash stays until the stored session and Home's snapshot are known: no flash of
-        // Setup, an empty Home or its default sections.
+        // Kept until the stored session and Home's snapshot are loaded, so neither Setup, an empty
+        // Home nor the default sections flash.
         splash.setKeepOnScreenCondition {
             graph.data.session.state.value == SessionState.Restoring || !graph.data.home.loaded.value
         }
-        // A recreated activity keeps a request still waiting; the one it started with has played.
-        // Reopened from Recents, the task's first intent comes again: an old request, not a new one.
+        // A recreated activity restores a waiting request; its launch intent has played already.
+        // Launched from Recents, Android delivers the task's first intent again: an old request.
         search = savedInstanceState?.let { BundleCompat.getParcelable(it, WAITING_SEARCH, Intent::class.java) }
             ?: intent.takeIf { savedInstanceState == null && it.isSearch && !it.fromHistory }
         opening = savedInstanceState?.getString(WAITING_OPENING)?.let(DeepLink::valueOf)
@@ -62,9 +60,8 @@ class MainActivity : ComponentActivity() {
                     graph.hints.start()
                     graph.playback.connect()
                     playSearch()
-                    // While Amsel is in front, the volume keys move the speaker even when it is paused: the
-                    // window sends them to the activity's media controller, and a paused session is not
-                    // otherwise the one the system routes them to.
+                    // The system may not route the volume keys to a paused session; as the activity's
+                    // media controller it gets them while Amsel is in front.
                     PlaybackService.current?.let {
                         mediaController =
                             MediaController(this@MainActivity, it.platformToken)

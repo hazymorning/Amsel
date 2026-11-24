@@ -27,22 +27,16 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
-/**
- * The service's view of `:data`: the selected speaker, its snapshots, commands and the car catalog.
- * [speakerName] names a speaker as the app's own sentences do.
- */
 @OptIn(UnstableApi::class)
 class DataPlaybackGraph(
     private val data: DataGraph,
     private val dispatcher: PlayDispatcher,
     seekDispatcher: SeekDispatcher,
-    /** The speaker the person picked, or This phone ([SpeakerSelection]). */
     override val target: StateFlow<PlaybackTarget>,
     override val scope: CoroutineScope,
     override val phone: PhoneSpeaker,
     override val local: LocalPlayback,
     override val artwork: BitmapLoader,
-    /** Now Playing's heart, which the app holds. */
     override val heart: StateFlow<Boolean?>,
     private val onHeart: () -> Unit,
     private val nameOf: (playerId: String) -> String,
@@ -59,7 +53,7 @@ class DataPlaybackGraph(
     override val sessionTarget: StateFlow<PlaybackTarget> =
         combine(target, phone.playerId, data.speakers.players, data.speakers.gone) { selected, phoneId, players, gone ->
             val phoneMusic = phoneId != null && phoneId !in gone && players[phoneId]?.hasMusic == true
-            // Anything the selected speaker shows is what the app's own buttons act on, through this session.
+            // The app's buttons act through this session: a selected speaker showing anything stays its target.
             val selectedShows =
                 selected.playerId?.let(players::get)?.let { it.hasMusic || it.currentMedia != null } == true
             if (!selected.isPhone && !selectedShows &&
@@ -73,19 +67,18 @@ class DataPlaybackGraph(
 
     override val phoneAudible: StateFlow<Boolean> get() = phone.audible
 
-    /** Whether the session's speaker plays, as the service reports it. */
     private val sessionPlaying = MutableStateFlow(false)
 
     private val _serviceCreated = MutableStateFlow(false)
 
-    /** Whether one of the app's services ran in this process, which its screens need not have. */
+    /** Stays true once a service was created: playback may run in this process without any screen. */
     val serviceCreated: StateFlow<Boolean> = _serviceCreated.asStateFlow()
 
     init {
         sessionPlaying.onEach(data.session::setPlaying).launchIn(scope)
         // This phone playing behind another speaker keeps the connection open too.
         phone.audible.onEach(data.session::setAudible).launchIn(scope)
-        // So does music paused on This phone (Session.setHolding).
+        // So does music paused on This phone: the server drops its queue once it leaves (Session.setHolding).
         combine(target, phone.playerId, data.speakers.queues) { selected, id, queues ->
             selected.isPhone && id != null && queues[id]?.queue?.currentItem != null
         }.distinctUntilChanged()
@@ -95,10 +88,6 @@ class DataPlaybackGraph(
 
     override val elapsedRealtime: () -> Long = SystemClock::elapsedRealtime
 
-    /**
-     * Since when, on [elapsedRealtime]'s clock, what the server said of the speakers is out of date
-     * (Session.stale); null while it is current.
-     */
     private val staleSince: StateFlow<Long?> =
         data.session.stale.map { stale -> if (stale) elapsedRealtime() else null }
             .stateIn(scope, SharingStarted.Eagerly, null)
@@ -155,7 +144,6 @@ class DataPlaybackGraph(
         return uri ?: throw NoSuchElementException("Nothing found for \"${query.orEmpty()}\"")
     }
 
-    /** Whether the session's speaker holds something to play on, once that is known: the speakers listed, This phone joined. */
     private suspend fun holdsSomething(): Boolean {
         data.session.wake()
         data.speakers.ensureListed()
@@ -166,8 +154,8 @@ class DataPlaybackGraph(
     }
 
     /**
-     * Out of reach for a while, a speaker rests where it was: nothing says it still plays, and one
-     * shown playing keeps the service in front and the lock screen's clock running.
+     * While the server is stale a speaker shows paused where it was: nothing says it still plays, and
+     * one shown playing would keep the service in the foreground and the lock screen's clock running.
      */
     @Synchronized
     override fun snapshots(playerId: String): StateFlow<SpeakerSnapshot?> = snapshotFlows.getOrPut(playerId) {

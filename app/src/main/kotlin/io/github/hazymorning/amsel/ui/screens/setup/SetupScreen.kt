@@ -34,11 +34,7 @@ import io.github.hazymorning.amsel.ui.rememberLocalNetworkGate
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * Setup as one flow: Welcome, Your server, Sign in, with Back going up one page at a time.
- * Home Assistant's sign-in page covers the flow while it is open. Its ViewModel lives while Setup
- * is shown, so signing out later starts again at Welcome.
- */
+/** The ViewModel lives only while Setup is shown, so signing out later starts again at Welcome. */
 @Composable
 fun SetupRoute(modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -48,10 +44,9 @@ fun SetupRoute(modifier: Modifier = Modifier) {
     val snackbar = remember { SnackbarHostState() }
     ShowMessages(graph.messages, snackbar)
 
-    // On Android 17 every way to a server on the local network needs the permission: the search,
-    // a found server and a typed address too (a denial at "Find my server" is asked again). The
-    // prompt follows the tap, so the line saying why is already on screen. If it is denied the
-    // search finds nothing and the address field appears; an address outside the network works.
+    // Android 17 needs the local network permission for the search, a found server and a typed address:
+    // each is gated, so after a denial the next one asks again. Denied, the search finds nothing and the
+    // address field appears; an address outside the local network still works.
     val findServer = rememberLocalNetworkGate(viewModel::findServer)
     val connect = rememberLocalNetworkGate(viewModel::onConnect)
     var clickedServer by rememberSaveable { mutableStateOf<String?>(null) }
@@ -106,8 +101,7 @@ fun SetupRoute(modifier: Modifier = Modifier) {
                 }
             }
         }
-        // Setup sits outside the app shell, so it shows its own messages ("Finish setting up Music
-        // Assistant first"), above the keyboard and the system bars.
+        // Setup is outside the app shell, so it hosts its own messages, above the keyboard and system bars.
         MessageHost(
             snackbar,
             Modifier.align(

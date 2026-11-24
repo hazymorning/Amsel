@@ -34,15 +34,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.controls
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/**
- * Where the music plays, at the start of Now Playing's footer: a pill as wide as its words, the
- * speaker's glyph ([SpeakerButtonGlyph]), as large as the name ([wordGlyph]), the name, and a
- * caret, for it opens the speaker choice. Roomier than the quiet pills and set in a larger, bolder type: choosing where
- * music plays is half of what the app is for. Where the room is short the pill gives up its [caret] before a
- * letter of the name; a name still longer ends in an ellipsis, and where there is no room for a
- * name at all, the pill is its glyph and caret ([named] false). TalkBack hears
- * "Speaker: Kitchen. Choose speaker", and "playing" while it plays.
- */
+/** Where room is short, the caller drops [caret] first, then the name ([named]) below [SpeakerPillLeast]. */
 @Composable
 fun SpeakerPill(
     speaker: SpeakerUi,
@@ -87,14 +79,10 @@ fun SpeakerPill(
     }
 }
 
-/**
- * What the button that opens the speaker choice carries, on the dock and in Now Playing, whatever
- * it plays on: one button, one glyph, so it is known again. What it plays on is its name.
- */
+/** One glyph whatever the speaker type, so the speaker button is always recognisable. */
 @DrawableRes
 internal val SpeakerButtonGlyph = R.drawable.ic_speaker
 
-/** The words of Now Playing's footer: the speaker's name and the volume's level. */
 @Composable
 @ReadOnlyComposable
 fun footerWords(): TextStyle = MaterialTheme.typography.titleSmall.copy(
@@ -104,22 +92,17 @@ fun footerWords(): TextStyle = MaterialTheme.typography.titleSmall.copy(
     fontWeight = FontWeight.Bold,
 )
 
-/** The speaker's name, and how many more play with it ("Kitchen +2"). */
 @Composable
 fun SpeakerUi.label(): String = displayName().let { if (others > 0) "$it +$others" else it }
 
-/**
- * The speaker's name in [color], and after it in the secondary tone how many more play with it
- * ("Kitchen +2"), so the name stays in front. The count stays whole where the name is cut: it says
- * the speaker leads a group.
- */
+/** Only the name is cut; the "+2" stays whole, as it shows that the speaker leads a group. */
 @Composable
 internal fun SpeakerName(
     speaker: SpeakerUi,
     style: TextStyle,
     color: Color,
     modifier: Modifier = Modifier,
-    /** After the name in the secondary tone, as the group's "+2": a level on Home's speakers. */
+    /** More text after the count, such as a volume level on Home's speakers. */
     after: String? = null,
 ) {
     val name = speaker.displayName()
@@ -147,7 +130,7 @@ internal fun SpeakerName(
     }
 }
 
-/** Under this, a pill with a name is only a few letters and an ellipsis: better none. */
+/** Below this width a name shows only a few letters and an ellipsis, so the pill goes without it. */
 val SpeakerPillLeast = 112.dp
 
 private val PillStart = 20.dp

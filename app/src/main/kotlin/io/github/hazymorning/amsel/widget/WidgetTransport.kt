@@ -1,8 +1,7 @@
 package io.github.hazymorning.amsel.widget
 
-/** What a widget's tap asks of Amsel. */
 interface WidgetTransport {
-    /** Opens the connection, as a command from outside the app does: what the speaker holds is known sooner. */
+    /** Opens the server connection ahead of the command, so the speaker's state arrives sooner. */
     fun wake()
 
     suspend fun play()

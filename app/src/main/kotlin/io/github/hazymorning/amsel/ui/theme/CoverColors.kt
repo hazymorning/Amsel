@@ -19,22 +19,13 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlinx.coroutines.withContext
 
-/**
- * A cover's dominant hue, the one colour the interface ever borrows: muted strongly, it tints Now
- * Playing's page by a few percent. Artwork may tint, never paint.
- */
+/** The only colour the interface takes from artwork, and only ever as a muted tint. */
 @Immutable
 data class CoverColors(val hue: Float, val saturation: Float) {
-    /**
-     * [surface] washed with the cover's hue: plainly coloured, yet quiet enough to read on. By day
-     * a shade deeper than the paper, at night a shade lighter than the dark, so the hue shows.
-     */
+    /** Darker than [surface] by day and lighter at night, so the hue shows either way. */
     fun tint(surface: Color, night: Boolean): Color = tint(surface, night, 1f)
 
-    /**
-     * A page's head under its cover: the same hue as [tint], plainer to see, as it covers only the
-     * top of a page that scrolls away, where Now Playing's tint lies under all of it.
-     */
+    /** Stronger than [tint], for a smaller area such as a page's head; the tint lies under all of Now Playing. */
     fun wash(surface: Color, night: Boolean): Color = tint(surface, night, WASH_STRENGTH)
 
     private fun tint(surface: Color, night: Boolean, by: Float): Color {
@@ -44,11 +35,9 @@ data class CoverColors(val hue: Float, val saturation: Float) {
         return lerp(surface, hsl(hue, saturation, lightness.coerceIn(0f, 1f)), TINT_SHARE)
     }
 
-    /** Covers with little colour lend little: a grey-blue sleeve tints less than a red one. */
     private val strength: Float get() = (saturation / FULL_SATURATION).coerceIn(0.4f, 1f)
 }
 
-/** Below this the cover counts as black and white, and the page stays plain. */
 private const val GREY = 0.12f
 private const val MIN_CHROMA = 0.035f
 private const val FULL_SATURATION = 0.45f
@@ -58,16 +47,14 @@ private const val TINT_SHARE = 0.7f
 private const val DAY_TINT_DEPTH = 0.035f
 private const val NIGHT_TINT_LIFT = 0.04f
 
-/** How much plainer a page's wash is than Now Playing's tint. */
 private const val WASH_STRENGTH = 1.6f
 
-/** Covers are sampled at this size: plenty for a palette, and cheap to decode. */
+/** Plenty for a palette, and cheap to decode. */
 private const val SAMPLE_PX = 64
 
-/** Hues per cover, so Now Playing and Home share one extraction. */
+/** Shared, so the screens showing one cover extract its hue once. */
 private val cache = LruCache<String, Hue>(64)
 
-/** A cover's hue, or [Grey] when it has none worth borrowing. */
 private sealed interface Hue {
     data class Colored(val colors: CoverColors) : Hue
 
@@ -75,9 +62,8 @@ private sealed interface Hue {
 }
 
 /**
- * Loads a small software bitmap of [art] with Coil and takes its dominant hue, or null when there is
- * no cover, it cannot be read, or it is black and white. The previous cover's hue stays while the
- * next one loads, so nothing flashes.
+ * Null without a cover, when it cannot be read, or when it is black and white. The previous cover's hue
+ * stays while the next one loads, so the tint does not flash.
  */
 @Composable
 fun rememberCoverColors(art: ArtRef?): CoverColors? {
@@ -100,17 +86,16 @@ fun rememberCoverColors(art: ArtRef?): CoverColors? {
             .build()
         val result = loader.execute(request) as? SuccessResult
         if (result == null) {
-            // Not cached: the next time this cover is shown, it is tried again.
+            // A failure is not cached, so the cover is tried again the next time it shows.
             value = null
             return@produceState
         }
-        // Off the main thread in the app; tests run Coil on an immediate dispatcher, so this does too.
+        // Coil's decoder context: off the main thread in the app, immediate in tests.
         val hue = withContext(loader.defaults.decoderCoroutineContext) {
             val palette = Palette.from(result.image.toBitmap())
                 .maximumColorCount(16)
-                // Palette's default filter also drops hues 10–37° (it guards photos of skin), which
-                // would leave brown and orange covers with no colour at all. Only skip near-black
-                // and near-white.
+                // Palette's default filter also drops hues 10–37° (a guard for skin), leaving brown and
+                // orange covers colourless; skip only near-black and near-white.
                 .clearFilters()
                 .addFilter { _, hsl -> hsl[2] in 0.05f..0.95f }
                 .generate()
@@ -122,11 +107,6 @@ fun rememberCoverColors(art: ArtRef?): CoverColors? {
     return colors
 }
 
-/**
- * The cover's dominant hue: each coloured area weighs by its size and how colourful it is, and the
- * strongest family of neighbouring hues wins. A pale sky or a dusty sleeve still has a hue; a cover
- * whose colour is too faint overall counts as black and white.
- */
 private fun hueOf(palette: Palette): Hue {
     val swatches = palette.swatches
     val total = swatches.sumOf { it.population }.toFloat().coerceAtLeast(1f)
@@ -157,10 +137,9 @@ private fun hueOf(palette: Palette): Hue {
     return Hue.Colored(CoverColors((hue + 360f) % 360f, bins.sumOf { saturation[it].toDouble() }.toFloat() / w))
 }
 
-/** Hue families of 30°, judged three at a time so a family split by a boundary still counts whole. */
+/** 30° bins, judged three at a time so a hue family split by a bin edge still counts whole. */
 private const val HUE_BINS = 12
 
-/** Below this average colourfulness a cover counts as black and white. */
 private const val MIN_COLOUR = 0.03f
 
 internal fun hsl(hue: Float, saturation: Float, lightness: Float) =

@@ -16,16 +16,13 @@ import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
 class HomeShots : ScreenshotTest() {
-    /** Pinned items as cards over the shelves; at 200 % the cards fall into one column. */
+    // At 200 % the cards drop to one column.
     @Test fun grid() = snap("home_grid", listOf(Light, LargeFont)) { Home(HomeSample.grid) }
 
     @Test fun asItComes() = snap("home_as_it_comes") { Home(HomeSample.asItComes) }
 
-    /**
-     * Continue listening with its title hidden, under Search's field: 32 under the
-     * field, not a heading's room, then the next section's heading as ever. At night its cards
-     * take their covers' hue.
-     */
+    // Untitled sections stand 32 dp apart, not a heading's height; at night the cards take their
+    // covers' hue.
     @Test fun untitled() = snap("home_untitled", listOf(Dark)) {
         val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)
         val listening = HomeSample.listening.sections.map { it.copy(titled = false) }
@@ -34,15 +31,12 @@ class HomeShots : ScreenshotTest() {
 
     @Test fun tip() = snap("home_tip") { Home(HomeSample.home, Tip.More) }
 
-    /**
-     * The longest names on a narrow phone: the longest choice still stands on its chip's one line,
-     * and at 200 % the title takes a second line, the chip's value wraps and the bar says "Bearbeiten".
-     */
+    // The longest choice fits its chip on one line; at 200 % the title takes a second line, the chip's
+    // value wraps and the bar shortens to "Bearbeiten".
     @Test fun editingLongNamesInGerman() = snap("home_edit_narrow_german", listOf(Light, LargeFont), "de-w360dp") {
         Home(longNames)
     }
 
-    /** What to show, at its top: every line a choice, the groups parted by space. */
     @Test fun whatSheet() = snapScreen("home_what") { OverEditing { What(SectionOption.Everything) } }
 
     @Test fun sectionMore() = snapScreen("home_edit_more") {
@@ -61,19 +55,18 @@ class HomeShots : ScreenshotTest() {
 private fun Home(state: HomeUiState, tip: Tip? = null) =
     HomeScreen(state, onOpen = {}, onMore = {}, onSeeAll = {}, onOpenWebUi = {}, tip = tip)
 
-/** A sheet of edit mode in its own window over it, as a chip or ⋯ opens it there. */
 @Composable
 private fun OverEditing(sheet: @Composable () -> Unit) {
     Home(HomeSample.editing)
     AmselSheet(onDismiss = {}) { sheet() }
 }
 
-/** What to show for a library that holds books and podcasts too: every choice there is. */
+// Books and podcasts too, so every choice is listed.
 @Composable
 private fun What(current: SectionOption) =
     WhatSheetContent(current, SpokenWord(books = true, podcasts = true, newEpisodes = true)) {}
 
-/** A name a household gives a section, and the longest choices and layouts. */
+// A long custom name, and the longest choices and layouts.
 private val longNames = HomeSample.editing.sections.let { sections ->
     HomeUiState(
         listOf(

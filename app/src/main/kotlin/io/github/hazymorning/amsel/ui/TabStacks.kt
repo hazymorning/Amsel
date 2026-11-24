@@ -16,10 +16,9 @@ import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.navigation.Tab
 
 /**
- * The three tabs' back stacks. Tapping a tab drops its pages back to the top, but each tab decorates
- * its own entries, so a top page keeps its scroll position while another tab is shown. Entry keys
- * carry the tab, so the same album open in two tabs is two pages, as is one opened again above
- * itself ([Route.Again]).
+ * Each tab decorates its own entries, so its root keeps its scroll position while another tab shows.
+ * Content keys carry the tab, so the same album open in two tabs is two pages, as is one opened again
+ * above itself ([Route.Again]).
  */
 @Stable
 internal class TabStacks(
@@ -59,5 +58,5 @@ internal fun rememberTabStacks(closePlayer: () -> Unit, slots: ShellSlots): TabS
     return TabStacks(stacks, navigators, decorated)
 }
 
-/** The tab a scene belongs to, by the first entry of its back stack. */
+/** Identifies the scene's tab: the content key of its stack's first entry. */
 internal fun Scene<*>.root(): Any = (previousEntries.firstOrNull() ?: entries.first()).contentKey

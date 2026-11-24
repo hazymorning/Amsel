@@ -30,10 +30,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 /**
- * Drag to reorder the items of a LazyColumn whose keys [movable] accepts, from a handle. While
- * dragging, items swap through [onSwap] (by key) as the dragged item's edge passes a movable
- * neighbour's middle; items around them (a header, a footer) never take part. A drop that moved the
- * item reports its key.
+ * [onSwap] is called during the drag, by key, each time the dragged item's edge passes a movable
+ * neighbour's middle; no further swap happens until the list shows it. [onDrop] only if the item moved.
  */
 @Stable
 class ReorderState internal constructor(
@@ -46,7 +44,7 @@ class ReorderState internal constructor(
     var draggingKey by mutableStateOf<Any?>(null)
         private set
 
-    /** The item that was just dropped, gliding into its slot. */
+    /** The dropped item while it animates into its slot. */
     var settlingKey by mutableStateOf<Any?>(null)
         private set
     val settleOffset = Animatable(0f)
@@ -56,17 +54,16 @@ class ReorderState internal constructor(
     private var startOffset by mutableIntStateOf(0)
     private var startIndex = -1
 
-    /** Where the last swap put the dragged item; no new swap until the list has laid it out there. */
+    /** Where the last swap put the dragged item; no further swap until the list has laid it out there. */
     private var pendingIndex: Int? = null
 
     private val dragged: LazyListItemInfo?
         get() = list.layoutInfo.visibleItemsInfo.firstOrNull { it.key == draggingKey }
 
-    /** How far the dragged item is drawn from where the list placed it, so it stays under the finger. */
+    /** The translation from the list's slot that keeps the dragged item under the finger. */
     val draggingOffset: Float
         get() = dragged?.let { startOffset + delta - it.offset } ?: 0f
 
-    /** Where [key] is drawn from its slot: under the finger, or gliding in after the drop. */
     fun offsetOf(key: Any): Float = when (key) {
         draggingKey -> draggingOffset
         settlingKey -> settleOffset.value
@@ -93,7 +90,7 @@ class ReorderState internal constructor(
             it.key != item.key && movable(it.key) && swapsWith(top, bottom, it.index - item.index, it.offset, it.size)
         }
         if (target != null) {
-            // The list follows its first visible item; pin it by index so it stays put while items swap.
+            // The list keeps its first visible item's key in place; pin it by index so a swap there does not scroll.
             if (item.index == list.firstVisibleItemIndex || target.index == list.firstVisibleItemIndex) {
                 list.requestScrollToItem(list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset)
             }
@@ -125,18 +122,15 @@ class ReorderState internal constructor(
     }
 }
 
-/** This list with the item at [from] moved to [to]; the others keep their order. */
 fun <T> List<T>.moved(from: Int, to: Int): List<T> {
     if (from == to || from !in indices || to !in indices) return this
     return toMutableList().apply { add(to, removeAt(from)) }
 }
 
 /**
- * Whether the dragged item, drawn from [top] to [bottom], swaps with the item [step] places away (1
- * the next, -1 the previous) that lies at [offset] with [size]: once its leading edge has passed
- * that item's middle. Moving back undoes a swap at the very point it was made, so items of any
- * heights swap once per crossing. A test on the neighbour's span would not: a taller neighbour,
- * moved up into the dragged item's old slot, holds the dragged item's middle again and swaps back.
+ * Swaps once the dragged item's leading edge passes the middle of the neighbour [step] away (1 next,
+ * -1 previous), so items of any height swap once per crossing. Testing the neighbour's span instead,
+ * a taller neighbour moved into the dragged item's old slot would hold its middle and swap straight back.
  */
 internal fun swapsWith(top: Float, bottom: Float, step: Int, offset: Int, size: Int): Boolean = when (step) {
     1 -> bottom > offset + size / 2f
@@ -170,7 +164,6 @@ fun rememberReorderState(
     return state
 }
 
-/** Makes this element the drag handle of the item [key]: a drag in any direction moves the item. */
 fun Modifier.reorderHandle(state: ReorderState, key: Any): Modifier = pointerInput(state, key) {
     detectDragGestures(
         onDragStart = { state.start(key) },
@@ -184,10 +177,8 @@ fun Modifier.reorderHandle(state: ReorderState, key: Any): Modifier = pointerInp
 }
 
 /**
- * Picks up what this element stands for once a press has held still for a moment ([onStart]); moving
- * then carries it ([onMove], by how far the finger went) until it is let go ([onEnd]). Until then,
- * taps and presses inside reach their own controls; from the pickup on, this element takes the whole
- * gesture, letting go included, so nothing inside answers it as well.
+ * After a long press ([onStart]), [onMove] gets each finger delta until release ([onEnd]). Before it,
+ * taps reach the controls inside; from the pickup on this element consumes the whole gesture, release included.
  */
 @Composable
 fun Modifier.holdToMove(
@@ -207,7 +198,7 @@ fun Modifier.holdToMove(
             start()
             try {
                 while (true) {
-                    // Ahead of everything inside, so a control under the finger never sees the gesture end.
+                    // Initial pass, ahead of the children, so a control under the finger never sees the release.
                     val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == held.id }
                         ?: break
                     val moved = change.positionChange()

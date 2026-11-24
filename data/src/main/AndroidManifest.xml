@@ -2,11 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- To reconnect when the default network returns. -->
+    <!-- Network callbacks: reconnecting when a network returns, the checked network, Wi-Fi-only downloads. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application>
-        <!-- Room's invalidation across processes: one process opens the index, so it never runs. -->
+        <!-- Room's multi-instance invalidation is unused: only one process opens the index. -->
         <service
             android:name="androidx.room.MultiInstanceInvalidationService"
             tools:node="remove" />

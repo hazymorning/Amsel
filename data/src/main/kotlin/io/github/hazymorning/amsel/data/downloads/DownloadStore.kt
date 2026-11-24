@@ -7,10 +7,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
-/**
- * A downloaded (or downloading) book or episode: where it comes from, its audio files in playing
- * order on one timeline, its chapters and cover. [uri] is Music Assistant's (`library://audiobook/3`).
- */
+/** [uri] is Music Assistant's (`library://audiobook/3`); [files] are in playing order on one timeline. */
 @Serializable
 data class DownloadManifest(
     val uri: String,
@@ -23,7 +20,6 @@ data class DownloadManifest(
     val durationSec: Double = 0.0,
     val files: List<DownloadFile> = emptyList(),
     val chapters: List<DownloadChapter> = emptyList(),
-    /** Every file is in place; until then the download goes on, also after a restart. */
     val complete: Boolean = false,
     val addedAt: Long = 0,
 ) {
@@ -42,15 +38,12 @@ data class DownloadFile(
 @Serializable
 data class DownloadChapter(val title: String, val startSec: Double, val endSec: Double)
 
-/** Where the person stopped in a download, on this phone; [updatedAt] in epoch ms. */
+/** [updatedAt] in epoch ms. */
 @Serializable
 data class LocalProgress(val seconds: Double, val updatedAt: Long, val finished: Boolean = false)
 
-/**
- * One folder per item under [root] (no backup: a book is hundreds of megabytes): its manifest, its
- * progress, its cover and its audio files. Every write goes to a temporary file first and is then
- * renamed, so a write cut short leaves the last good one.
- */
+// [root] is kept out of backups: a book is hundreds of megabytes. Writes go to a temporary file that is then
+// renamed, so a write cut short leaves the last good one.
 class DownloadStore(private val root: File) {
     fun dir(uri: String): File = root.resolve(key(uri))
 
@@ -83,7 +76,6 @@ class DownloadStore(private val root: File) {
         dir(uri).deleteRecursively()
     }
 
-    /** Bytes the downloads take on this phone. */
     fun used(): Long = root.walkBottomUp().filter { it.isFile }.sumOf { it.length() }
 
     private fun <T> read(file: File, serializer: KSerializer<T>): T? = try {
@@ -111,7 +103,7 @@ class DownloadStore(private val root: File) {
         // Three digits or more, of any script: String.format writes the number in the phone's own digits.
         private val FILE_NAME = Regex("""\p{Nd}{3,}\.[A-Za-z0-9]{1,10}""")
 
-        /** A folder name for [uri]: the uri itself holds slashes and colons. */
+        // Hashed: a uri holds slashes and colons.
         internal fun key(uri: String): String = MessageDigest.getInstance("SHA-256").digest(uri.toByteArray())
             .joinToString("") { "%02x".format(it) }
             .take(KEY_CHARS)

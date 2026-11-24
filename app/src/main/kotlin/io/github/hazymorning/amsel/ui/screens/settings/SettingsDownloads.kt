@@ -26,20 +26,15 @@ import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignInForm
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** Downloads as Settings shows them: the Audiobookshelf account, what is on the phone, Wi-Fi only. */
 @Immutable
 data class DownloadSettings(
     val account: AbsAccount? = null,
     val usedBytes: Long? = null,
     val wifiOnly: Boolean = true,
-    /** The server and name signed in with before, to sign in again. */
+    /** The account signed in with before, to fill in signing in again. */
     val last: AbsAccount? = null,
 )
 
-/**
- * The Downloads row's second line: who is signed in to Audiobookshelf where, and how much is on the
- * phone; or that no one is.
- */
 @Composable
 internal fun downloadsLine(account: AbsAccount?, usedBytes: Long? = null): String = if (account == null) {
     stringResource(R.string.abs_not_connected)
@@ -50,10 +45,6 @@ internal fun downloadsLine(account: AbsAccount?, usedBytes: Long? = null): Strin
     listOfNotNull(account.username, hostOf(account.url), used).filter { it.isNotBlank() }.dotted()
 }
 
-/**
- * Downloads, in their own sheet: signed out, what Audiobookshelf is for and its sign-in; signed in,
- * where, how much is on the phone, and Sign out; then whether downloads wait for Wi-Fi.
- */
 @Composable
 internal fun DownloadsSheetContent(
     state: DownloadSettings,
@@ -97,5 +88,4 @@ internal fun DownloadsSheetContent(
     }
 }
 
-/** The host alone, as Settings names Music Assistant's: `books.example.com`, `192.168.1.20`. */
 private fun hostOf(url: String): String = url.toUri().host ?: url

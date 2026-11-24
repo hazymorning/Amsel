@@ -24,7 +24,6 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
 
-/** A kind of hint the person can turn off: when it comes, and what it suggests then. */
 internal enum class HintKind(val key: String, @StringRes val situation: Int, @StringRes val suggests: Int) {
     Liked(HintController.HINT_LIKED, R.string.hints_liked, R.string.hints_liked_offer),
     Headphones(HintController.HINT_HEADPHONES, R.string.hints_headphones, R.string.hints_to_phone),
@@ -35,15 +34,9 @@ internal enum class HintKind(val key: String, @StringRes val situation: Int, @St
     Sleep(HintController.HINT_SLEEP, R.string.hints_sleep, R.string.hints_sleep_offer),
 }
 
-/** How many kinds of hint are on, given those [off]: all, none, or a count. */
 internal fun hintsOn(off: Set<String>): Int = if (HINTS_ALL in off) 0 else HintKind.entries.count { it.key !in off }
 
-/**
- * Suggestions: one switch for all of them, then one for each moment Amsel may suggest something,
- * its words the moment ("Headphones connected") over what it suggests then ("Bring the music to the
- * phone"), so each reads as a plain when-then. Turned off, a moment never brings its bar again;
- * the switch for all keeps each one's choice for when it is on again.
- */
+/** The switch for all has a key of its own, so each hint keeps its choice while all are off. */
 @Composable
 fun HintsScreen(off: Set<String>, onChange: (Set<String>) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val scroll = rememberScrollState()

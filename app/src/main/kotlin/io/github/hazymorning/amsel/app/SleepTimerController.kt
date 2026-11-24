@@ -36,28 +36,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** How a sleep timer ends: after some minutes, or at the end of the chapter or episode that plays. */
 @Immutable
 sealed interface SleepMode {
     data class Minutes(val minutes: Int) : SleepMode
 
+    /** The end of the chapter that plays, or of the episode or book without chapters. */
     data object EndOfItem : SleepMode
 }
 
 /**
- * A speaker's sleep timer: [mode] as set from this phone (null for one set elsewhere), and when it
- * stops the music in phone time ([endsAtMs], `System.currentTimeMillis`); null while an end-of-item
- * timer waits for the music to play again.
+ * [mode] is null for a timer set elsewhere. [endsAtMs] is `System.currentTimeMillis` time, null
+ * while an end-of-item timer waits for the music to play again.
  */
 @Immutable
 data class SleepTimerState(val mode: SleepMode?, val endsAtMs: Long?)
 
-/**
- * Sleep timers, one per speaker or group, kept by the server where it has them (2.11 on), so they
- * stop the music with the phone asleep or the app gone; on an older server this phone pauses the
- * speaker itself while the app runs, as it does a download playing from its own files. The sound fades over the chosen seconds before the end, a shake
- * sets a running timer back to its length, and with "Start with playback" every start sets one.
- */
+// Kept by the server where it has them, so they stop the music with the phone asleep or the app gone;
+// otherwise this phone pauses the speaker while the app runs (docs/API-NOTES.md, "Player commands").
 class SleepTimerController(
     context: Context,
     private val data: DataGraph,
@@ -69,15 +64,13 @@ class SleepTimerController(
     private val mine = MutableStateFlow<Map<String, SleepTimerState>>(emptyMap())
     private val followers = ConcurrentHashMap<String, Job>()
 
-    /** The timers the server keeps; the others this phone ends itself. */
     private val serverBacked = ConcurrentHashMap.newKeySet<String>()
 
-    /** When this phone last set each speaker's timer: the server's word may lag a moment behind. */
+    // The server's report may lag a moment behind a timer set here.
     private val setAt = ConcurrentHashMap<String, Long>()
 
     private val started = AtomicBoolean(false)
 
-    /** Each speaker's timer, from this phone or from the server. */
     val timers: StateFlow<Map<String, SleepTimerState>> =
         combine(mine, data.speakers.players) { local, players ->
             val server = players.mapNotNull { (id, player) ->
@@ -90,11 +83,10 @@ class SleepTimerController(
     private var listening = false
     private val shake = ShakeListener { onShake() }
 
-    /** Follows the speakers from now on; the app in front and its services start it. */
     fun start() {
         if (!started.compareAndSet(false, true)) return
         scope.launch {
-            // A timer the server ended, or one cleared elsewhere, is over here too.
+            // A timer the server ended, or one cleared elsewhere, ends here too.
             data.speakers.players.collect { players ->
                 val now = System.currentTimeMillis()
                 mine.value.forEach { (id, timer) ->
@@ -115,7 +107,6 @@ class SleepTimerController(
         scope.launch { followPlayback() }
     }
 
-    /** Sets [speakerId]'s timer to [mode]; a new one replaces what ran. */
     fun set(speakerId: String, mode: SleepMode) {
         if (mode is SleepMode.Minutes) remember(mode.minutes)
         val seconds = when (mode) {
@@ -131,18 +122,15 @@ class SleepTimerController(
             try {
                 data.session.api.clearSleepTimer(speakerId)
             } catch (e: MaCommandException) {
-                // An older server never had it.
+                // An older server has no sleep timer.
             } catch (e: MaConnectionException) {
                 messages.show(R.string.sleep_failed, retry = { clear(speakerId) })
             }
         }
     }
 
-    /**
-     * A start of playback is judged only against what the speaker did when last seen in a loaded
-     * list, so music that already played when the app opened is not one. An end-of-item timer
-     * follows the item meanwhile.
-     */
+    // A start counts only against the speaker's state when last seen in a loaded list, so music
+    // that already played when the app opened is not one.
     private suspend fun followPlayback() {
         var seen: Pair<String, Boolean>? = null
         combine(playing.nowPlaying, data.speakers.players, ::Pair).collect { (now, players) ->
@@ -193,12 +181,6 @@ class SleepTimerController(
         }
     }
 
-    /**
-     * Fades the speaker out before [endsAt], pauses it there unless the server does, and puts its
-     * volume back once it has stopped, or at once when the timer is changed during the fade. A group
-     * fades as one and comes back speaker by speaker: scaled down to nearly nothing, its balance
-     * would be lost.
-     */
     private suspend fun countDown(speakerId: String, endsAt: Long, onServer: Boolean) {
         val fadeMs = (data.prefs.prefs.value ?: Prefs()).sleepFadeSec * MS
         delay((endsAt - fadeMs - System.currentTimeMillis()).coerceAtLeast(0))
@@ -215,7 +197,6 @@ class SleepTimerController(
         serverBacked.remove(speakerId)
     }
 
-    /** A download on this phone fades and pauses here, and is as loud as before for the next play. */
     private suspend fun fadeHere(endsAt: Long, fadeMs: Long) = withContext(Dispatchers.Main) {
         try {
             while (fadeMs > 0) {
@@ -254,6 +235,8 @@ class SleepTimerController(
         } finally {
             if (from != null) {
                 withContext(NonCancellable) {
+                    // A group fades as one but comes back member by member: scaled down to nearly
+                    // nothing, its balance would be lost.
                     if (members.size > 1) {
                         members.forEach { (id, level) -> orNullOnFailure { api.setOwnVolume(id, level) } }
                     } else {
@@ -264,10 +247,6 @@ class SleepTimerController(
         }
     }
 
-    /**
-     * An end-of-item timer follows the music: a seek or a new chapter moves its end, a pause holds
-     * it until the music plays again.
-     */
     private fun followItem(speakerId: String, now: NowPlayingUi) {
         val timer = mine.value[speakerId] ?: return
         if (timer.mode != SleepMode.EndOfItem) return
@@ -275,7 +254,7 @@ class SleepTimerController(
             if (timer.endsAtMs != null) {
                 followers.remove(speakerId)?.cancel()
                 mine.update { it + (speakerId to SleepTimerState(SleepMode.EndOfItem, null)) }
-                // An older server never had it; on a paused speaker it would stop nothing.
+                // An older server has no timer to clear; on a paused speaker it would stop nothing.
                 scope.launch { orNullOnFailure { data.session.api.clearSleepTimer(speakerId) } }
             }
             return
@@ -287,7 +266,6 @@ class SleepTimerController(
         }
     }
 
-    /** What is left of the chapter that plays, or of the episode or book without chapters. */
     private fun itemLeftSec(now: NowPlayingUi? = playing.nowPlaying.value): Int? {
         val state = now?.takeIf { it.spoken } ?: return null
         val position = state.positionAt(SystemClock.elapsedRealtime())

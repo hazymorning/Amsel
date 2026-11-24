@@ -24,13 +24,10 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 /** One slow turn; a spinner says "still working", not "hurry". */
 private const val TURN_MS = 1_400
 
-/** The arc's share of the circle while it waits. */
+/** The waiting arc's sweep, in degrees. */
 private const val WAITING_SWEEP = 100f
 
-/**
- * Waiting with nothing to show yet: a thin arc turning at an unhurried pace. With [progress] it is
- * a still arc that fills, as pull to refresh does while it is pulled.
- */
+/** With [progress] the arc stands still and fills (pull to refresh while pulled); without, it turns. */
 @Composable
 fun Spinner(
     modifier: Modifier = Modifier,
@@ -49,7 +46,7 @@ fun Spinner(
     } else {
         null
     }
-    // Drawn every frame while it turns: what depends only on the size is made once.
+    // Redrawn every frame while it turns; drawWithCache builds what depends only on the size once.
     Spacer(
         modifier.size(size).drawWithCache {
             val width = Sizes.SpinnerStroke.toPx()

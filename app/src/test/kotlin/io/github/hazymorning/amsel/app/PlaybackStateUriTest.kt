@@ -35,9 +35,8 @@ class PlaybackStateUriTest {
         val snapshot = snapshotOf(Player("kitchen"), state, null, false, null, 0)
         val tap = PlayRequest("kitchen", listOf("library://album/4"), startItem = "library://track/9")
         assertEquals("library://track/9", playingUri(snapshot, tap))
-        // Play and Shuffle name the album: its tile answers, and no track keeps a ring the restart replaces.
+        // Play and Shuffle name the album: its tile is marked, not a track the start may replace.
         assertEquals("library://album/4", playingUri(snapshot, PlayRequest("kitchen", listOf("library://album/4"))))
-        // Once it ends, succeeded or failed, the speaker's word is back.
         assertEquals("library://track/10", playingUri(snapshot, null))
     }
 

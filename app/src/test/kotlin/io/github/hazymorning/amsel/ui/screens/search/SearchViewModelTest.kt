@@ -45,14 +45,13 @@ class SearchViewModelTest {
     private val asked = mutableListOf<String>()
     private val playing = MutableStateFlow<String?>(null)
 
-    /** What the server does for a query; by default it finds one song named after it. */
     private var server: suspend (String) -> SearchResults = { q -> SearchResults(tracks = listOf(track(q))) }
 
     @Before fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
 
     @After fun tearDown() = Dispatchers.resetMain()
 
-    /** The screen collecting the last view model's state; cancelled, Search is left. */
+    /** Collects the last view model's state as the screen does; cancel it to leave Search. */
     private lateinit var screen: Job
 
     private fun track(name: String) = MediaItem("1", "library", name, "library://track/$name", "track")
@@ -118,7 +117,7 @@ class SearchViewModelTest {
         advanceTimeBy(301)
         vm.onQueryChange("blues")
         advanceTimeBy(301)
-        // The newer query does not wait for the older one, which is dropped.
+        // "blue" has no answer yet, and "blues" does not wait for it.
         assertEquals(listOf("blue", "blues"), asked)
         assertEquals("blues", vm.state.value.topTitle())
         first.complete(SearchResults(tracks = listOf(track("stale"))))
@@ -219,7 +218,7 @@ class SearchViewModelTest {
 
         screen.cancel()
         advanceTimeBy(AWAY_MS)
-        // The book's progress, every 30 s.
+        // A playing book's progress, which rewrites the index every 30 s.
         listOf(0.2f, 0.3f, 0.4f).forEach { library.value = listOf(book(it)) }
         assertEquals(1, reads)
     }
@@ -227,7 +226,7 @@ class SearchViewModelTest {
     @Test fun aSearchAfterComingBackFindsNearMatchesInTheLibraryAsItIsThen() = runTest {
         server = { SearchResults() }
         val library = MutableStateFlow(listOf(album(1, "Blackbird Song")))
-        // Reading the index takes a while, longer than typing.
+        // The index read outlasts the typing, so the search has to wait for it.
         val vm = viewModel(
             library = flow {
                 delay(READ_MS)
@@ -258,7 +257,7 @@ class SearchViewModelTest {
     private fun SearchUiState.topTitle() = (results?.top as? TopResult.Song)?.track?.title
 
     private companion object {
-        /** Long enough away from Search for it to let the index go. */
+        /** Past the index's 5 s WhileSubscribed timeout. */
         const val AWAY_MS = 60_000L
         const val READ_MS = 1_000L
     }

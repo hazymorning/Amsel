@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Lays the app's screens out for the README, docs/design/readme/screens-{light,dark}.webp: four
-screenshots of each theme in a row on that theme's stone, with the header's corners. GitHub shows the
-one that matches its own theme. Dev tool: needs `pip install pillow`.
+"""Lays out docs/design/readme/screens-{light,dark}.webp, four screenshots each; needs pillow.
 
     scripts/design/readme-screens.py LIGHT1 LIGHT2 LIGHT3 LIGHT4 DARK1 DARK2 DARK3 DARK4
 
-The screenshots are a phone's whole screen, all of one size.
+Each screenshot is a phone's whole screen, all of one size.
 """
 import math
 import pathlib
@@ -16,12 +14,12 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs/design/readme"
 
-W, MARGIN, GAP = 1200, 60, 30  # the header's width; the screens' room from the card's edge and between them
+W, MARGIN, GAP = 1200, 60, 30  # W is the header's width; MARGIN around the screens, GAP between them
 SCALE, SUPERSAMPLE = 2, 4
 CORNER, SMOOTHING = 72, 0.6  # the header's continuous corners
 SCREEN_CORNER = 0.095  # of a screen's width, as a phone's display rounds
-# Stone and ink from ui/theme/Color.kt; a screen's edge is a cover's hairline, and by day it stands on a
-# large cover's shade (Elevation.kt: drop, blur, spread, alpha), at night on its own.
+# field and ink as in ui/theme/Color.kt, HAIRLINE as its HAIRLINE_ALPHA; by day the large cover shadow
+# of Elevation.kt (drop, blur, spread, alpha), at night none.
 THEMES = {
     "light": {"field": "#E9E8E1", "ink": "#191A17", "shades": ((1, 2, 0, 0.05), (24, 48, -24, 0.38))},
     "dark": {"field": "#1B1C19", "ink": "#E6E5DE", "shades": ()},

@@ -6,7 +6,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Every model decodes the real server output of both supported releases. */
 class FixtureDecodingTest {
     private val versions = listOf("2.10", "2.11")
 
@@ -20,7 +19,7 @@ class FixtureDecodingTest {
         assertTrue(players.isNotEmpty())
         assertTrue(players.all { it.shownName.isNotBlank() })
         assertTrue(players.any { it.isShownSpeaker(null) })
-        // On their own the recorded speakers are at 40, and their group volume reads 0.
+        // The recorded speakers, each on its own, are at 40 and send group_volume 0.
         assertTrue(players.all { it.volume == 40 && it.hasVolume })
         val playing = decodeOne(v, "players_get__playing", Player.serializer())
         assertTrue(playing.isPlaying)
@@ -86,7 +85,6 @@ class FixtureDecodingTest {
         assertTrue(station.providerMappings.any { it.providerDomain == BUILTIN_PROVIDER })
         val favourite = decodeList(v, "music_radios_library_items__favorites", MediaItem.serializer()).single()
         assertEquals(true, favourite.favorite)
-        // Playing it: the queue's item is the station, with no duration, and the speaker says so.
         val queue = decodeOne(v, "player_queues_get__radio", PlayerQueue.serializer())
         assertEquals("radio", queue.currentItem?.mediaItem?.mediaType)
         assertEquals(null, queue.currentItem?.duration)
@@ -99,7 +97,7 @@ class FixtureDecodingTest {
         assertEquals("$v smart", 8, smart.size)
         assertTrue(smart.all { it.owner == "Music Assistant" && !it.isEditable })
         assertEquals(listOf("Amsel Mix"), own.map { it.name })
-        // A playlist made in Music Assistant comes from the same provider, but is the user's own.
+        // A playlist made in Music Assistant: also builtin, but editable.
         val made = smart.first().copy(isEditable = true, owner = "Amsel Test")
         assertFalse(made.isSmartPlaylist)
     }

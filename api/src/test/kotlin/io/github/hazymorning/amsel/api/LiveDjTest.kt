@@ -7,9 +7,8 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
- * The AI Radio plugin's DJ on a real Music Assistant. Skipped unless MA_URL is set and the plugin
- * is loaded there; CI does not run it, since the plugin loads only with an AI and a speech engine
- * and CI's stock server has neither.
+ * Skipped unless MA_URL is set and the plugin is loaded, which takes an AI and a speech engine; CI's
+ * stock server has neither, so CI does not run it.
  */
 class LiveDjTest {
     private fun withDj(block: suspend (MaApi) -> Unit) = live { api, _ ->

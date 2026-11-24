@@ -25,11 +25,8 @@ import androidx.compose.ui.unit.sp
 import io.github.hazymorning.amsel.ui.theme.HAIRLINE_ALPHA
 
 /**
- * A cover set in type, where nothing has a picture: one letter of its name, larger than the cover
- * and cut by its edges, a tone pressed into the paper rather than a label; from [NameFrom] up the
- * name stands over it from the top corner, as a title page has it. Ink on the cover's own tone, so
- * a missing picture looks set rather than lost. Its letters keep their size at every font scale:
- * it is a picture, and the row or tile names it.
+ * Sizes follow the cover, not the font scale: it is a picture, and the row or tile around it carries
+ * the name for TalkBack.
  */
 @Composable
 internal fun TypeCover(name: String, side: Dp, modifier: Modifier = Modifier) {
@@ -81,10 +78,9 @@ private fun Monogram(letter: String, face: TextStyle) {
     )
 }
 
-/** The first letter or figure of the name as one capital: "Flitz&Suppe" is "F", "4AM Radio" is "4". */
 internal fun monogramOf(name: String): String? = name.firstOrNull { it.isLetterOrDigit() }?.uppercase()?.take(1)
 
-/** Below this a name would be too small to read, so the cover keeps its letter alone. */
+/** Below this the name would be too small to read, so only the letter shows. */
 private val NameFrom = 96.dp
 
 private const val MONOGRAM_SHARE = 1f

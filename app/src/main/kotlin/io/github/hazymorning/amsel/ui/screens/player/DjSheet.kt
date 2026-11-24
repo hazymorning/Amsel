@@ -27,10 +27,7 @@ import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.ActionsContext
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * The DJ that talks between the songs on [speaker]: Off, then the server's [hosts] under the names
- * they have in Music Assistant, in its order. [current] is the host that talks, null when none does.
- */
+/** [hosts] in the server's order; [current] is the active host's id, null for none. */
 @Composable
 fun DjSheetContent(
     speaker: String,
@@ -56,7 +53,6 @@ fun DjSheetContent(
     }
 }
 
-/** The DJ of the speaker that plays, whose queue Up next shows; a pick applies and closes. */
 @Composable
 fun DjRoute(onClose: () -> Unit) {
     val graph = LocalContext.current.graph
@@ -74,11 +70,8 @@ fun DjRoute(onClose: () -> Unit) {
     )
 }
 
-/**
- * Whether the server still has a DJ to choose, for the ⋮ sheet of [target]. Now Playing's reads
- * the hosts and each speaker's DJ again as it opens, so the DJ's sheet opens on what holds now:
- * 2.10 sends no event when either changes.
- */
+// Now Playing's ⋮ sheet reads the hosts and each speaker's DJ again as it opens, as 2.10 sends no
+// event when either changes (docs/API-NOTES.md, "Extras").
 @Composable
 internal fun djOffered(target: ActionTarget): Boolean {
     val graph = LocalContext.current.graph

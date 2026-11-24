@@ -17,7 +17,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Play on's groups: what counts as one, what is sent to change one, and what shows meanwhile. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SpeakerGroupControllerTest {
     private val players = MutableStateFlow<Map<String, Player>>(emptyMap())
@@ -60,7 +59,7 @@ class SpeakerGroupControllerTest {
         canGroupWith = with,
     )
 
-    /** The server says this now; the list of speakers follows it as Playing makes it. */
+    // The server's players now, and the speaker list built from them as PlaybackState.speakers does.
     private fun server(vararg all: Player, phoneLeads: Boolean = true, plays: Set<String> = emptySet()) {
         val phone = speaker("phone", with = if (phoneLeads) all.map { it.playerId } else emptyList())
         val map = (all.toList() + phone).associateBy { it.playerId }
@@ -80,7 +79,6 @@ class SpeakerGroupControllerTest {
 
     private val everyone = listOf("kitchen", "living", "bath", "office")
 
-    /** Kitchen leads the Living room and the Bath, and both reports say so; the Office is free. */
     private fun kitchenLeadsTwo() = server(
         speaker("kitchen", lists = listOf("kitchen", "bath", "living"), with = everyone),
         speaker("living", syncedTo = "kitchen"),
@@ -120,14 +118,14 @@ class SpeakerGroupControllerTest {
     }
 
     @Test fun aSpeakerTheServerNamesLaterIsLetGoThen() = runTest {
-        // Two seconds after the group was made: only the Living room has said it plays along.
+        // Two seconds after the group was made, only the Living room reports synced_to.
         server(speaker("kitchen"), speaker("living", syncedTo = "kitchen"), speaker("bath"))
         val groups = groups()
         groups.ungroupAll()
         runCurrent()
         assertEquals(listOf("kitchen +[] -[living]"), sent)
 
-        // The Living room is free, and now the Bath says so and the leader lists both.
+        // The Living room has left; now the Bath reports synced_to, and the leader lists both.
         val both = speaker("kitchen", lists = listOf("kitchen", "bath", "living"))
         server(both, speaker("living"), speaker("bath", syncedTo = "kitchen"))
         runCurrent()
@@ -148,7 +146,7 @@ class SpeakerGroupControllerTest {
         val groups = groups()
         groups.set("kitchen", add = listOf("living", "bath"), remove = emptyList())
         runCurrent()
-        // 2.11.0b7, two seconds on: the leader lists both, the Bath says so itself two seconds later still.
+        // The leader lists both before the Bath reports synced_to (docs/API-NOTES.md, "Player commands").
         val leader = speaker("kitchen", lists = listOf("kitchen", "bath", "living"), with = everyone)
         server(leader, speaker("living", syncedTo = "kitchen"), speaker("bath"), speaker("office"))
         groups.ungroupAll()
@@ -161,7 +159,7 @@ class SpeakerGroupControllerTest {
         val groups = groups()
         groups.set("kitchen", add = emptyList(), remove = listOf("living"))
         runCurrent()
-        // The Living room is out. Its leader lists it for two more seconds, and asking again is an error.
+        // The Living room is out, but its leader still lists it a while, and asking again is an error.
         val stale = speaker("kitchen", lists = listOf("kitchen", "bath", "living"), with = everyone)
         server(stale, speaker("living"), speaker("bath", syncedTo = "kitchen"), speaker("office"))
         groups.ungroupAll()
@@ -285,7 +283,7 @@ class SpeakerGroupControllerTest {
         assertEquals("kitchen", groups.playOnNow("phone").leader?.id)
     }
 
-    /** A widget's Group on This phone, which cannot lead a group: the step is for a speaker that can. */
+    // As from a widget's Group on This phone, which cannot lead a group.
     @Test fun whereTheSpeakerInUseCannotLeadTheStepIsForOneThatCan() = runTest {
         val three = listOf("bath", "kitchen", "living")
         server(*three.map { speaker(it, with = three) }.toTypedArray(), phoneLeads = false)
@@ -297,7 +295,7 @@ class SpeakerGroupControllerTest {
         server(*three.map { speaker(it, with = three) }.toTypedArray(), phoneLeads = false, plays = setOf("living"))
         assertEquals("living", groups.playOnNow("phone").leader?.id)
 
-        // None of them can lead: the list it is.
+        // None of them can lead: no group step, only the list.
         server(*three.map { speaker(it) }.toTypedArray(), phoneLeads = false)
         assertTrue(groups.playOnNow("phone").choices.isEmpty())
     }
@@ -324,7 +322,7 @@ class SpeakerGroupControllerTest {
     }
 
     @Test fun aSpeakerOutOfReachMakesNoGroupAndIsNeverSent() = runTest {
-        // The Hall was switched off in Music Assistant while it played along: its last word stays.
+        // The Hall was disabled in Music Assistant while it played along: it still reports synced_to.
         server(
             speaker("kitchen", lists = listOf("kitchen", "living", "garden")),
             speaker("living", syncedTo = "kitchen"),

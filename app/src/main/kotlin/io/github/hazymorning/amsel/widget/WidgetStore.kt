@@ -13,25 +13,18 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
-/**
- * What the widgets keep on this phone: each one's setup by its id, and what they showed last on each
- * speaker, so a restart draws them again without the server; their pictures come from Amsel's own
- * cover cache. Each file is written whole through a temporary one, so a crash midway leaves the last
- * good one.
- */
+/** Each file is written to a temporary one and renamed, so a crash leaves the last complete file. */
 class WidgetStore(private val dir: File) {
     private val json = Json { ignoreUnknownKeys = true }
     private val lock = Mutex()
 
-    /** Widget [id]'s setup; null until its page saved one. */
+    /** Null until the widget's page saved one. */
     suspend fun setup(id: Int): WidgetSetup? = lock.withLock { readAll()[id] }
 
     suspend fun setSetup(id: Int, setup: WidgetSetup): Unit = lock.withLock { writeAll(readAll() + (id to setup)) }
 
-    /** Widgets the launcher removed. */
     suspend fun forget(ids: Collection<Int>): Unit = lock.withLock { writeAll(readAll() - ids.toSet()) }
 
-    /** What the widgets showed last, by speaker: [AMSELS] for the one Amsel plays on. */
     suspend fun contents(): Map<String, WidgetContent> = lock.withLock {
         withContext(Dispatchers.IO) {
             read(looksFile)?.let { text -> decode { json.decodeFromString(ContentsSerializer, text) } }
@@ -49,7 +42,6 @@ class WidgetStore(private val dir: File) {
         }
     }
 
-    /** Signing out: what the last person played is not left on the home screen. */
     suspend fun forgetContents(): Unit = lock.withLock {
         withContext(Dispatchers.IO) {
             looksFile.delete()
@@ -60,7 +52,7 @@ class WidgetStore(private val dir: File) {
     private val setupsFile get() = File(dir, "setups.json")
     private val looksFile get() = File(dir, "looks.json")
 
-    /** Amsel 2026.11.50 kept one look, its blurred cover and the buttons' covers here. */
+    /** Written by Amsel 2026.11.50, with cover.png and thumbs/: read once, then deleted. */
     private val lastLookFile get() = File(dir, "look.json")
 
     private fun forgetEarlier() {
@@ -113,12 +105,12 @@ class WidgetStore(private val dir: File) {
         } catch (e: IOException) {
             false
         }
-        // Unwritten, the last good file stays, and the next change writes it whole.
+        // On failure the previous file stays; the next change rewrites it in full.
         if (!written) temp.delete()
     }
 
     companion object {
-        /** The looks' key for the speaker Amsel plays on. */
+        /** The key for the speaker Amsel plays on. */
         const val AMSELS = ""
 
         private val ContentsSerializer = MapSerializer(String.serializer(), WidgetContent.serializer())
@@ -136,9 +128,8 @@ private data class StoredWidget(
     val showsWords: Boolean = true,
 ) {
     /**
-     * Each button known; one a later Amsel no longer offers is left out. The buttons as they came
-     * before 2026.11.56, saved untouched, come as they come now: kept as they were, play and next
-     * would give way first.
+     * Drops buttons this version does not know. The default saved before 2026.11.56 becomes [DefaultSlots]:
+     * in its order [standing] would drop previous and next first.
      */
     fun setup(): WidgetSetup = WidgetSetup(
         style = WidgetStyle.of(style),

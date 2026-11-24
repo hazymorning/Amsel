@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The system splash in the page colour, so the first frame does not flash a different tone. -->
+    <!-- The page colour (Day.Background), so the first frame does not flash another tone. -->
     <color name="splash_background">#FFF2F1EC</color>
     <color name="ic_launcher_background">#FFF1E9DA</color>
 </resources>

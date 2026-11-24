@@ -9,7 +9,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Pin to Home and Unpin from Home in the ⋮ sheet. */
 class PinActionsTest {
     private val pinnable =
         listOf(SampleData.albums[0], SampleData.playlists[0], SampleData.artists[0], HomeSample.stations[0])

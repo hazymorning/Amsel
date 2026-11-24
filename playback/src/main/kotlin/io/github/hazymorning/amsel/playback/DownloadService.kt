@@ -27,9 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Runs the downloads in front of everything else ([DownloadRepository.work]), with a notification of what
- * comes down and how far, and a button that stops them: a book is hundreds of megabytes, and Android
- * ends background work long before that. It stops itself when nothing is left.
+ * Runs [DownloadRepository.work] in the foreground: a book is hundreds of megabytes, and Android ends
+ * background work long before that.
  */
 class DownloadService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -60,20 +59,20 @@ class DownloadService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val downloads = PlaybackGraph.instance.downloads
         if (downloads == null) {
-            // Asked to start in front, it must show itself before it may stop.
+            // Started with startForegroundService: it must call startForeground before it may stop.
             startForeground(notification(shownOf(emptyMap())))
             stopSelf()
             return START_NOT_STICKY
         }
         if (intent?.action == STOP) {
             val going = downloads.states.value.filterValues { it !is DownloadState.Done }.keys
-            // Removing deletes what came down so far: files, not the main thread's work.
+            // Removing deletes the partial files: not on the main thread.
             scope.launch(Dispatchers.IO) { going.forEach(downloads::remove) }
         }
         try {
             startForeground(notification(shownOf(downloads.states.value)))
         } catch (e: IllegalStateException) {
-            // Android 15 refuses once the day's six hours are spent: what waits goes on tomorrow.
+            // Android 15 refuses once the day's six hours of dataSync are spent; see onTimeout.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
                 e !is ForegroundServiceStartNotAllowedException
             ) {
@@ -84,11 +83,11 @@ class DownloadService : Service() {
         }
         if (work?.isActive != true) {
             work = scope.launch {
-                // Built only when what it says changes, not for every 512 KB that comes down.
+                // Rebuilt only when what it shows changes, not for every 512 KB that comes down.
                 val shown = launch {
                     downloads.states.map(::shownOf).distinctUntilChanged().collect { show(notification(it)) }
                 }
-                // Its files are written on IO, as everything Audiobookshelf answers is read there.
+                // Blocking file writes and network reads.
                 withContext(Dispatchers.IO) { downloads.work() }
                 shown.cancel()
                 stopForeground(STOP_FOREGROUND_REMOVE)
@@ -98,7 +97,7 @@ class DownloadService : Service() {
         return START_NOT_STICKY
     }
 
-    /** Android 15 gives a data sync six hours a day; what is left goes on at the next start of the app. */
+    /** Android 15 allows dataSync six hours a day; the rest goes on the next time the app is in the foreground. */
     override fun onTimeout(startId: Int, fgsType: Int) = stopSelf()
 
     override fun onDestroy() {
@@ -117,7 +116,6 @@ class DownloadService : Service() {
     private fun show(notification: Notification) =
         getSystemService(NotificationManager::class.java).notify(ID, notification)
 
-    /** What the notification says, which changes far more seldom than the bytes that come down. */
     private data class Shown(val left: Int, @StringRes val text: Int?, val progress: Int?)
 
     private fun shownOf(states: Map<String, DownloadState>): Shown {
@@ -130,7 +128,7 @@ class DownloadService : Service() {
             waiting?.forWifi == true -> R.string.download_waiting_wifi
             else -> null
         }
-        // A step of the bar worth showing: a tenth of a percent would redraw it hundreds of times.
+        // Whole percents: in tenths the notification would be rebuilt up to a thousand times.
         val progress = running?.let { (it.fraction * PROGRESS_MAX).toInt() / STEP * STEP }
         return Shown(left, text, progress)
     }
@@ -163,8 +161,8 @@ class DownloadService : Service() {
         private const val STEP = 10
 
         /**
-         * Starts the service, which then runs every download in line. From the background Android
-         * refuses that (12 on); the downloads then go on the next time the app is in front.
+         * Android 12+ refuses this from the background; the downloads then go on the next time the
+         * app is in the foreground.
          */
         fun start(context: Context) {
             try {

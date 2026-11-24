@@ -5,10 +5,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.saveable.Saver
 
-/**
- * Each kind's own place in its list, kept while another kind shows, as the pages of a pager keep
- * theirs: a swipe to the next kind and back returns to where the person was.
- */
 @Stable
 internal class LibraryScrollPositions(private val saved: Map<String, List<Int>> = emptyMap()) {
     private val lists = mutableMapOf<LibraryKind, LazyListState>()
@@ -25,10 +21,9 @@ internal class LibraryScrollPositions(private val saved: Map<String, List<Int>> 
     }
 
     /**
-     * Before [to] takes [from]'s place: the header stays where it stood, so a swipe or a chip never
-     * brings it back or takes it away. From where the header shows, [to] opens at the same height;
-     * from further down, [to] keeps its own place where that is past its header too, else it opens
-     * just past it.
+     * Call before [to] replaces [from], so a switch never shows or hides the header: with the header in
+     * view, [to] opens at the same offset; scrolled past it, [to] keeps its own place if that is past
+     * its header too, else opens just below it.
      */
     fun handOver(from: LibraryKind, to: LibraryKind) {
         val (index, offset) = place(from)

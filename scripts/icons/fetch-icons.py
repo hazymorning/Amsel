@@ -1,19 +1,8 @@
 #!/usr/bin/env python3
-"""Fetches the Phosphor icons listed in icons.txt, writes Android vector drawables and their ink table.
+"""Writes the icons in icons.txt as vector drawables, and their ink bounds as IconBounds.kt.
 
-Phosphor (MIT, github.com/phosphor-icons/core) at a pinned commit. A glyph's line is 1.5 dp at every
-size: Phosphor draws it 24, 16 and 12 units wide on its 256 grid in the Bold, Regular and Light
-cuts, which is 1.5 dp at 16, 24 and 32 dp. So each glyph comes in all three cuts (ic_<name>,
-ic_<name>_bold, ic_<name>_light), and AlignedGlyph draws the cut whose line is nearest 1.5 dp at the size
-it is drawn (GlyphMetrics.kt, `weighted`). Fill and Bold glyphs that icons.txt names come in that one cut.
-Every cut is one filled path, one path at 24 dp; a glyph drawn smaller than 16 dp is stroked from
-Phosphor's own line drawing (raw/regular) at the width it needs. Only the icons the app uses are
-copied in; no icon library is added (AGENTS.md, rule 6). The licence is copied to
-app/src/main/assets/licences/.
-
-The ink table (ui/components/IconBounds.kt) holds each drawable's measured ink bounds, so glyphs line up
-on keylines by their ink, not by their 24 dp box (docs/DESIGN.md, "Foundations"), and each glyph's
-cuts. Run it after editing icons.txt; it needs Python 3 and fonttools (`pip install fonttools`).
+The bounds let glyphs line up on keylines by their ink, not their 24 dp box (docs/DESIGN.md,
+"Foundations"). Needs fonttools.
 """
 import pathlib
 import re
@@ -30,7 +19,8 @@ LICENCES = ROOT / "app/src/main/assets/licences"
 COMMIT = "2b75f3ad12b420c9504ef05df8d2564a28f8500e"  # phosphor-icons/core
 BASE = f"https://raw.githubusercontent.com/phosphor-icons/core/{COMMIT}"
 
-# Phosphor's line in each cut, in units of its 256 grid.
+# Line width per cut on Phosphor's 256 grid: 1.5 dp at 24, 16 and 32 dp. Each icon comes in all three,
+# and AlignedGlyph draws the one whose line is nearest 1.5 dp at its size (GlyphMetrics.kt, `weighted`).
 CUTS = {"regular": 16, "bold": 24, "light": 12}
 # The heavy cut: a 1.5 dp line on a 12 dp glyph (the one inside a download's ring).
 HEAVY = 32
@@ -64,7 +54,6 @@ internal val IconWeightsTable: Map<Int, IconWeights> by lazy {
 
 
 def parse(line: str):
-    """`name icon [fill|bold] [mirrored] [custom] [heavy] [stroke:N]` -> a dict describing the entry."""
     words = line.split()
     name, icon, flags = words[0], words[1], words[2:]
     stroke = None
@@ -140,7 +129,6 @@ def as_path(tag: str, attrs: str):
 
 
 def strokes(svg: str, width: float):
-    """A line drawing as vector paths, every line [width] units wide, and its ink."""
     root = svg.split(">", 1)[0]
     # SVG fills a shape and strokes none unless the drawing or the shape says otherwise.
     fill_default, stroke_default = attr(root, "fill") or "#000", attr(root, "stroke") or "none"
@@ -172,7 +160,6 @@ def strokes(svg: str, width: float):
 
 
 def outline(icon: str, cut: str):
-    """Phosphor's filled outline of [icon] in [cut], and its ink."""
     suffix = "" if cut == "regular" else f"-{cut}"
     svg = fetch(f"assets/{cut}/{icon}{suffix}.svg")
     paths = re.findall(r'<path d="([^"]+)"', svg)
@@ -207,7 +194,7 @@ def cut_suffix(cut: str) -> str:
 
 
 def cut_entry(name: str, heavy: bool) -> str:
-    """One line of the cuts table, or one line for each of its parts where that is too long for ktlint."""
+    """One part per line where the whole entry would be too long for ktlint."""
     parts = [f"R.drawable.ic_{name}_bold", f"R.drawable.ic_{name}_light"]
     if heavy:
         parts.append(f"R.drawable.ic_{name}_heavy")
@@ -235,7 +222,6 @@ def main() -> int:
         if {"_bold", "_light"} <= suffixes:
             cuts.append(cut_entry(name, "_heavy" in suffixes))
         print(f"wrote ic_{name} ({len(made)})")
-    # Icons that left the list are deleted, so the folder always matches it.
     for old in OUT.glob("ic_*.xml"):
         if old.name not in written and not old.name.startswith("ic_launcher"):
             old.unlink()

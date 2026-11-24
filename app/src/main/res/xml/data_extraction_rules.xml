@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Nothing moves to a new phone or a backup: the token only opens with this phone's Keystore
-     key, and This phone's Sendspin identity must stay with this phone. -->
+<!-- Nothing goes to a backup or a new phone: the token opens only with this phone's Keystore key,
+     and This phone's Sendspin identity must stay on this phone. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" path="." />

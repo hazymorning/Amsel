@@ -5,7 +5,7 @@ import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.withFakeApi
 import kotlinx.serialization.json.JsonObject
 
-/** Runs [block] against a fake server answering every command with the recorded fixture. */
+/** A command with neither an override nor a recorded fixture answers null. */
 fun withRecordedServer(
     version: String = "2.10",
     overrides: (String, JsonObject?) -> List<JsonObject>? = { _, _ -> null },

@@ -36,10 +36,6 @@ import io.github.hazymorning.amsel.ui.navigation.rememberResume
 import io.github.hazymorning.amsel.ui.rememberRetry
 import kotlinx.coroutines.flow.combine
 
-/**
- * Home: the person's sections, as many as they add, each a sentence they set, "Show [what] as
- * [how]". A long press on a heading or a free spot edits them in place; Done or Back leaves.
- */
 @Composable
 fun HomeScreen(
     state: HomeUiState,
@@ -50,19 +46,16 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     editor: HomeEditor = HomeEditor.None,
     onRetry: () -> Unit = {},
-    /** Continue listening's play button: resume where the person stopped. */
+    /** Continue listening's play button. */
     onResume: (MediaUi) -> Unit = onOpen,
-    /** Settings behind a pull down at Home's top: null while they have a place of their own in the bar. */
+    /** Settings by a pull down at Home's top; null while Settings has its own place in the bar. */
     onSettings: (() -> Unit)? = {},
-    /** What to tell above the first section, put away by [onTipGone]. */
     tip: Tip? = null,
     onTipGone: (Tip) -> Unit = {},
-    /** Search's field: opens Search, the keyboard up. */
     onSearch: () -> Unit = {},
 ) {
     BackHandler(enabled = state.editing) { editor.doneEditing() }
-    // Home needs no header: content begins under the status bar, and only edit mode, a place of its
-    // own, names itself in a slim bar with its way out.
+    // Only edit mode has a top bar; otherwise content starts under the status bar.
     val bar: (@Composable BoxScope.() -> Unit)? = if (state.editing) {
         {
             PageTopBar(
@@ -128,7 +121,7 @@ fun HomeScreen(
                 onAction = onOpenWebUi,
             )
 
-            // Sections that found nothing are hidden; Edit Home is the way back to them.
+            // Sections without items are hidden; edit mode still shows them.
             state.libraryEmpty == false -> EmptyState(
                 R.drawable.ic_home,
                 stringResource(R.string.home_no_sections),
@@ -137,16 +130,13 @@ fun HomeScreen(
                 onAction = editor::startEditing,
             )
 
-            // Until the index answers, nothing rather than a sentence that may be wrong.
+            // Until the index answers, nothing rather than a message that may be wrong.
             else -> Spacer(body)
         }
     }
 }
 
-/**
- * Home, wired to the Home repository; or, [editOnly], its edit mode as a page of its own from
- * Settings, which goes back once Done or Back ends it.
- */
+/** [editOnly]: edit mode as a page of its own, opened from Settings, that goes back when editing ends. */
 @Composable
 fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boolean = false) {
     val graph = LocalContext.current.graph
@@ -175,7 +165,7 @@ fun HomeRoute(navigator: Navigator, modifier: Modifier = Modifier, editOnly: Boo
     val actions = LocalAppActions.current
     val tips = graph.tips
     val tip by tips.current.collectAsStateWithLifecycle()
-    // TalkBack names every long press as it reads, and finds Settings open: it needs no tips.
+    // TalkBack announces every long-press action and starts with the Settings band open: no tips.
     val told = touchExploration()
     val editor = remember(viewModel, tips) {
         object : HomeEditor by viewModel {

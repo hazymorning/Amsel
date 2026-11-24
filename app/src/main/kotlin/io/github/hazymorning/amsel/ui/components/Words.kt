@@ -32,16 +32,12 @@ import kotlin.math.roundToInt
 
 private const val ELLIPSIS = "…"
 
-/** Characters that separate names inside a title ("Live | Remastered", "Bach – Suites"). */
 private val Separators = setOf('|', '•', '·', '–', '—', '/', '-')
 
 /**
- * Text that never cuts a word: when it runs out of [maxLines], it ends after the last whole word
- * that fits, with an ellipsis; only a single word too long for a line is cut. Separators standing
- * between spaces are drawn in the faint tone, so the words carry the line. A [tail] follows on
- * the same line after a quiet dot, in the secondary tone (a guest artist after a title). When [text] needs
- * more than one line, [shorter] stands in for it (TalkBack still reads [text]). Baselines are the
- * text's, so it lines up as [androidx.compose.material3.Text] does.
+ * Cuts after the last whole word that fits, with an ellipsis; only a single word too long for a line
+ * is cut inside. Separators between spaces are drawn faint. [shorter] replaces [text] when that needs
+ * more than one line, while TalkBack still reads [text]. [tail] follows after a dot, in the secondary tone.
  */
 @Composable
 fun Words(
@@ -60,8 +56,8 @@ fun Words(
     val measurer = rememberTextMeasurer()
     // The colour is drawn, not laid out: a colour that animates measures the text once.
     val styled = remember(style, textAlign) { style.copy(textAlign = textAlign) }
-    // Text that runs out of lines fills each one before it is cut; balanced breaking would end the
-    // first line half way and cut far too early.
+    // Greedy breaking for text that overflows: balanced breaking would end the first line half way and
+    // cut far too early.
     val filled = remember(styled) { styled.copy(lineBreak = LineBreak.Simple) }
     fun joined(base: String) = if (tail.isNullOrBlank()) base else base + DOT_SEPARATOR + tail
     val spoken = joined(text)
@@ -101,8 +97,8 @@ fun Words(
                 ?: measure(whole, TextOverflow.Ellipsis)
         }
         shown = result
-        // As wide as what shows: a line cut with an ellipsis is laid out over all the room it had,
-        // and whatever follows it (a group's "+2") must stand right after its last letter.
+        // As wide as what shows: an ellipsized line is laid out over all its room, and what follows it
+        // (a group's "+2") must sit right after its last letter.
         val ink = if (textAlign == TextAlign.Start) {
             (0 until result.lineCount).maxOfOrNull { result.getLineRight(it) }?.let { ceil(it).toInt() }
         } else {
@@ -118,7 +114,7 @@ fun Words(
     }
 }
 
-/** Cuts [text] after the last word that still fits with an ellipsis; null when no word boundary helps. */
+/** Null when no word boundary on the last line helps; the caller then cuts inside the word. */
 private fun wordCut(
     text: String,
     full: TextLayoutResult,
@@ -145,11 +141,7 @@ private fun wordCut(
     return null
 }
 
-/**
- * This text, cut here, ended with an ellipsis. What stood after its last word goes with the cut: a
- * space, a separator, a comma or colon, and a full stop, which before an ellipsis reads as a
- * fourth dot ("1 Std…", not "1 Std.…").
- */
+/** Drops trailing spaces and punctuation before the ellipsis: a full stop would read as a fourth dot ("1 Std.…"). */
 internal fun String.cutShort(): String =
     trimEnd { it == ' ' || it == ',' || it == ':' || it == '.' || it in Separators } + ELLIPSIS
 

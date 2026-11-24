@@ -15,7 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** TalkBack, and the live first-run journey, find each field by its label. */
+/** TalkBack and the live first-run journey test find each field by its label. */
 @RunWith(RobolectricTestRunner::class)
 class SignInScreenTest {
     @get:Rule val compose = createComposeRule()

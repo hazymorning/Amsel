@@ -34,23 +34,21 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** A release this far along goes on to the next, or back. */
+/** Finger travel past which a release goes to the next or previous. */
 private val GoDistance = 64.dp
 
-/** How much of the finger's travel the content follows: it lags a little, as if held back. */
+/** The share of the finger's travel the content follows, so it lags behind the finger. */
 private const val FOLLOW = 0.6f
 
-/** How faint the content gets under the finger, at twice [GoDistance]. */
+/** The lowest alpha the content fades to, while dragged or after a swipe that holds. */
 private const val FAINTEST = 0.4f
 
-/** How long what a swipe asked for may take to come before it is no longer the swipe's. */
+/** How long a change of selection still counts as the swipe's result. */
 private const val GOING_MS = 2_000L
 
 /**
- * A sideways swipe that asks for the next of something, or the one before, as a visible control
- * does too (a skip, a chip): [detect] goes where the finger may start, [follow] on what moves with
- * it, lagging and fading. A release past [GoDistance] acts, with a tick, and what then takes its
- * place comes in from the side it lies on, along the pages' own short axis.
+ * A swipe for the next or previous, always beside a visible control that does the same (a skip, a
+ * chip). [detect] goes where the finger may start, [follow] on the content that moves with it.
  */
 @Stable
 class SideSwipeState internal constructor(
@@ -61,12 +59,12 @@ class SideSwipeState internal constructor(
     private var travel by mutableFloatStateOf(0f)
     private var shown by mutableFloatStateOf(1f)
 
-    /** Where the content stood when the finger came down: a swipe is measured from there. */
+    /** Where the content stood at touch down, possibly mid-animation; a swipe is measured from there. */
     private var from = 0f
     private var settling: Job? = null
     private var forgetting: Job? = null
 
-    /** The way of a swipe let go past the mark, until what it asked for is there: 1 forward, -1 back. */
+    /** Direction of an accepted swipe (1 forward, -1 back) until its result arrives, else 0. */
     internal var going = 0
         private set
 
@@ -74,16 +72,15 @@ class SideSwipeState internal constructor(
     internal var rtl = false
 
     /**
-     * Whether a swipe that acts carries on out of sight, faint, until what it asked for comes, rather
-     * than going back first: for a chosen one whose neighbours are at hand (the Library's kinds).
+     * An accepted swipe carries the content on, faint, until its result arrives, rather than springing
+     * back first: for a selection whose neighbours are known (an order, the Library's kinds).
      */
     internal var holds = false
 
-    /** Whether there is a next ([forward]) or one before, and the asking for it. */
     internal var canGo: (forward: Boolean) -> Boolean = { true }
     internal var onGo: (forward: Boolean) -> Unit = {}
 
-    /** For what moves with the finger. Read while drawing: a swipe recomposes nothing. */
+    /** Read only while drawing, so a swipe recomposes nothing. */
     val follow: Modifier = Modifier.graphicsLayer {
         translationX = travel
         alpha = shown
@@ -130,7 +127,6 @@ class SideSwipeState internal constructor(
         rest()
     }
 
-    /** On out the way it went, fading to the faintest, while the next is on its way. */
     private fun leave() = settle {
         val out = (travel - from).sign * goPx * 2 * FOLLOW
         launch { animate(shown, FAINTEST, animationSpec = Motion.effects()) { value, _ -> shown = value } }
@@ -142,17 +138,16 @@ class SideSwipeState internal constructor(
         settling = scope.launch(block = to)
     }
 
-    /** Back to rest, at the finger's own pace. */
     private fun rest() = settle {
         launch { animate(shown, 1f, animationSpec = Motion.effects()) { value, _ -> shown = value } }
         animate(travel, 0f, animationSpec = Motion.spatialSlow()) { value, _ -> travel = value }
     }
 
-    /** What was asked for is there: it fades in where it stands, for no finger moves it. */
+    /** The result has arrived: it fades in where it stands, without sliding. */
     internal fun enter() = settle {
         going = 0
         travel = 0f
-        // Where the last one stays in sight until this comes, this takes over from it as faint as it was.
+        // With [holds] the old content stayed in sight at [FAINTEST]; carry on from that alpha.
         shown = if (holds) FAINTEST else 0f
         launch { animate(shown, 1f, animationSpec = Motion.effects()) { value, _ -> shown = value } }
         animate(travel, 0f, animationSpec = Motion.spatial()) { value, _ -> travel = value }
@@ -160,11 +155,8 @@ class SideSwipeState internal constructor(
 }
 
 /**
- * A [SideSwipeState] over [selected]. With an [order], a swipe goes to [selected]'s neighbour in it and
- * every change of [selected] comes in from its side, a tapped chip's too. It stops at either end,
- * or, [endless], goes round: past the last to the first, which then comes in the swipe's own way.
- * Without an order (what plays), a swipe asks for the next or the one before while [enabled], and
- * only what a swipe brought comes in from the side. [onGo] is told which way: true for the next.
+ * With an [order], swipes stop at its ends unless [endless], and every change of [selected] fades in,
+ * a tapped chip's too. Without one (what plays), only a change a swipe brought fades in.
  */
 @Composable
 fun <T> rememberSideSwipeState(
@@ -207,8 +199,8 @@ fun <T> rememberSideSwipeState(
 }
 
 /**
- * The side [to] comes in from after [from]: the way of the swipe that led there, which round the
- * end of [order] is not the side its place lies on; else that side.
+ * The direction from [from] to [to]: the swipe's own ([going]) where it led there, even round the end
+ * of [order]; else by their positions.
  */
 internal fun <T> stepBetween(order: List<T>, from: T, to: T, going: Int): Int {
     val start = order.indexOf(from)

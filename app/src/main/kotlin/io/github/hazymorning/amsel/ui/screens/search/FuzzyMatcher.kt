@@ -3,10 +3,8 @@ package io.github.hazymorning.amsel.ui.screens.search
 import java.text.Normalizer
 
 /**
- * Forgiving matching over the library index, so a slip of the thumb still finds what was meant:
- * "beatls", "sigur ros" and "motorhead" find their albums and artists. Case, accents and
- * punctuation do not count; each word typed must start a word of the name or come within one or
- * two letters of it (one for short words, two for long).
+ * Typo-tolerant matching over the library index ("beatls", "sigur ros", "motorhead"). Ignores case,
+ * accents and punctuation; each typed word must start a word of the name or be a few edits from one.
  */
 internal object FuzzyMatcher {
     private val marks = Regex("\\p{Mn}+")
@@ -18,7 +16,7 @@ internal object FuzzyMatcher {
             .split(apart)
             .filter(String::isNotEmpty)
 
-    /** How well [query] fits [name], both as [words]; 0 is no match, higher is closer. */
+    /** [query] and [name] as [words]; 0 is no match, higher is closer. */
     fun score(query: List<String>, name: List<String>): Int {
         if (query.isEmpty() || name.isEmpty()) return 0
         var total = 0
@@ -38,7 +36,7 @@ internal object FuzzyMatcher {
             else -> 2
         }
         if (allowed == 0) return 0
-        // Against the whole word and its start, as a word may still be being typed.
+        // Also against the word's prefix of the same length: the query may be half typed.
         val apart = minOf(distance(typed, word), distance(typed, word.take(typed.length)))
         return when {
             apart == 0 -> EXACT
@@ -47,7 +45,7 @@ internal object FuzzyMatcher {
         }
     }
 
-    /** Edits between [a] and [b], a swap of two neighbours counting as one; three rows, not a table. */
+    /** Edit distance in which swapping two neighbouring letters counts as one edit. */
     fun distance(a: String, b: String): Int {
         var twoBack = IntArray(b.length + 1)
         var oneBack = IntArray(b.length + 1) { it }

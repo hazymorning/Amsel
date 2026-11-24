@@ -6,7 +6,7 @@ import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaUi
 
-/** An album page's header from the library index: the same fields the server fills, so nothing jumps. */
+// Fills the same fields as the server's header, so nothing jumps when the server answers.
 internal fun UiMapper.albumHeader(row: LibraryItemEntity) = AlbumUi(
     key = row.uri,
     title = row.name,
@@ -49,21 +49,15 @@ internal fun UiMapper.playlistHeader(item: MediaItem) = PlaylistUi(
     dynamic = item.isDynamic,
 )
 
-/**
- * Albums as a page lists them: newest first (undated last, otherwise the server's order), each
- * once, with the year as the secondary line; [except] leaves out the album the page is about.
- */
+/** Newest first, undated last, ties in the server's order; [except] leaves out the page's own album. */
 internal fun UiMapper.newestFirst(albums: List<MediaItem>, except: String? = null): List<MediaUi> = albums
     .filter { it.uri != except }
     .distinctBy { it.uri }
     .sortedByDescending { it.year ?: Int.MIN_VALUE }
     .map { media(it).copy(subtitle = it.year?.toString()) }
 
-/**
- * What the page of an artist with no picture, and none in the index, shows for it: the covers of
- * the [albums] it lists, newest first and compilations last, then of its popular [songs]' albums
- * (a song's own picture is often its file's copy of the album's, so it would repeat one album).
- */
+// Art for an artist without a picture: its [albums]' covers, compilations last, then its [songs]'
+// album covers, as a song's own picture is often its file's copy of the album's.
 internal fun UiMapper.pageCovers(albums: List<MediaItem>, songs: List<MediaItem>): ArtRef? = albumsArt(
     albums.sortedWith(compareBy<MediaItem> { it.isCompilation }.thenByDescending { it.year ?: Int.MIN_VALUE })
         .mapNotNull { it.cover?.proxyId } + songs.mapNotNull { (it.album?.cover ?: it.cover)?.proxyId },

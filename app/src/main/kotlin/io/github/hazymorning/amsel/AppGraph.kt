@@ -86,11 +86,6 @@ import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.OkHttpClient
 
-/**
- * Every app-wide singleton, built by hand (plain constructor injection, no DI framework), each
- * when first used; [start] starts what runs for as long as the app does. One OkHttpClient serves
- * the WebSocket, discovery and artwork.
- */
 class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenCipher()) {
     private val app = context.applicationContext
 
@@ -99,7 +94,7 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
 
     private val network: PhoneNetwork by lazy { AndroidPhoneNetwork(app) }
 
-    /** The app's rule for plain http, for what goes past its own client (Home Assistant's sign-in page). */
+    /** For traffic outside [http], such as the Home Assistant sign-in WebView. */
     fun plainHttpAllowed(): Boolean = network.plainHttpAllowed()
 
     val http: OkHttpClient by lazy {
@@ -117,13 +112,9 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
 
     private val started = AtomicBoolean(false)
 
-    /**
-     * Starts what runs for as long as the app does, once and in this order: forgetting what a
-     * session that ends leaves behind, the connection, the playback service's graph, the widgets
-     * following the music, and the sleep timer once the app is in front or one of its services runs.
-     */
     fun start() {
         if (!started.compareAndSet(false, true)) return
+        // Subscribed before the session starts, as data.ended replays nothing.
         scope.launch(start = CoroutineStart.UNDISPATCHED) { data.ended.collect { forgetSession() } }
         data.start()
         PlaybackGraph.instance = playbackGraph
@@ -134,7 +125,7 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
         }
     }
 
-    /** What one person searched, marked and saw goes with their session: the next may be another. */
+    // The next session may be another user's.
     private suspend fun forgetSession() {
         recentSearches.clear()
         bookmarks.clear()
@@ -143,7 +134,6 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
         withContext(Dispatchers.IO) { imageLoader.diskCache?.clear() }
     }
 
-    /** Downloads playing on this phone, built on first use. */
     val local: LocalPlayback by lazy { LocalPlayback(app, data.downloads, data.abs, network.current, scope) }
 
     private val seekDispatcher: SeekDispatcher by lazy {
@@ -163,7 +153,6 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
         )
     }
 
-    /** "This phone": built on first use; it connects while it is the selected speaker, or music moves away from it. */
     val phone: PhoneSpeaker by lazy {
         PhoneSpeaker(app, data, http, BuildConfig.VERSION_NAME, BuildConfig.DEBUG, scope)
     }
@@ -217,7 +206,6 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
         PlaybackState(app, data, selection.target, phone, dispatcher, local, mapper, favorites, scope)
     }
 
-    /** The home screen's widgets: what plays where, and the buttons each person set. */
     val widgets: WidgetController by lazy {
         WidgetController(
             app,
@@ -252,7 +240,6 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
     }
 
     private fun widgetSource() = object : WidgetSource {
-        /** Where the session stands, and whether what the server last said of the speakers holds. */
         private val heard = combine(data.session.state, data.session.upToDate, ::Pair)
 
         override val content =
@@ -363,7 +350,6 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
         )
     }
 
-    /** What the index holds of spoken word, for Home's and Library's choices. */
     val spokenWord: Flow<SpokenWord> by lazy {
         combine(data.library.heldTypes, data.session.state) { held, session ->
             val schema = (session as? SessionState.Ready)?.server?.schemaVersion ?: 0
@@ -396,10 +382,7 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
             .build()
     }
 
-    /**
-     * Whether [apk] is Amsel under this app's name and signed with a key this app holds: Android
-     * keeps an update to the same name and key, but would install another name as a new app.
-     */
+    // Android updates the app only from the same package name and key; another name installs as a new app.
     private fun isOurs(apk: File): Boolean {
         val pm = app.packageManager
         val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -415,10 +398,6 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
             signers.orEmpty().any { pm.hasSigningCertificate(app.packageName, it.toByteArray(), CERT_INPUT_RAW_X509) }
     }
 
-    /**
-     * Android's installer, on an update downloaded into the cache: it asks before it replaces the app,
-     * the first time also to let Amsel install apps. False where nothing on the phone installs one.
-     */
     private fun openInstaller(apk: File): Boolean = try {
         app.startActivity(
             Intent(Intent.ACTION_VIEW)
@@ -433,8 +412,7 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
 
 private const val APK_TYPE = "application/vnd.android.package-archive"
 
-/** In the cache, as `res/xml/updates.xml` shares it with the installer. */
+// In the cache: res/xml/updates.xml shares this path with the installer.
 private const val UPDATE_FOLDER = "update"
 
-/** The widgets' buttons and what they showed last, kept between runs. */
 private const val WIDGET_FOLDER = "widget"

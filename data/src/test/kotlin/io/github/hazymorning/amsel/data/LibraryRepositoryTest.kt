@@ -108,7 +108,7 @@ class LibraryRepositoryTest {
             val repo = LibraryRepository(db.dao(), api)
             repo.syncIfNeeded(info)
             val books = repo.observe(MediaType.Audiobook, LibrarySort.RecentlyPlayed).first()
-            // The book in progress leads, though its last play only moves once it is finished.
+            // The book in progress leads: a book's last play moves only once it is finished.
             assertEquals(listOf("The Lantern Road", "Single File Tale"), books.map { it.name })
             val book = books.first()
             assertEquals("Ada Quill", book.subtitle)

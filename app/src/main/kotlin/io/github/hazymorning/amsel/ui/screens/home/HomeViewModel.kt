@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** Edit mode's actions, so the screen can be drawn without a ViewModel. */
+/** Lets the screen be drawn without a ViewModel. */
 interface HomeEditor {
     fun startEditing() {}
 
@@ -60,38 +60,29 @@ interface HomeEditor {
 
     fun add() {}
 
-    /** A new person's sections again; the pins stay. */
+    /** The default sections again; the pins are kept. */
     fun reset() {}
 
-    /** The pins Home shows, in the order the person put them. */
+    /** [order]: pin URIs in their new order. */
     fun arrangePins(order: List<String>) {}
 
     object None : HomeEditor
 }
 
-/**
- * Home paints the cached sections at once (the first state is computed from them, so there is no
- * skeleton flash on launch) and follows them as they refresh. An edit shows at once: the changed
- * layout stands in for the stored one until the store has written it.
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
     private val handle: SavedStateHandle,
     private val home: HomeSource,
     session: StateFlow<SessionState>,
-    /** The library index is syncing: an index-backed section still empty on its first sync is loading. */
+    /** While syncing, an index-backed section still empty on its kind's first sync is loading. */
     indexSyncing: Flow<Boolean>,
     /** The kinds the index has synced at least once (LibraryRepository.synced). */
     indexSynced: Flow<Set<MediaType>>,
-    /** The library index holds nothing (LibraryRepository.isEmpty). */
     libraryEmpty: Flow<Boolean>,
     private val mapper: UiMapper,
     private val messages: MessageController,
-    /** What the library index holds of spoken word: What to show offers its options only then. */
     spokenWord: Flow<SpokenWord> = flowOf(SpokenWord()),
-    /** The speakers, to name the one Played here shows. */
     speakers: Flow<HomeSpeakers> = flowOf(HomeSpeakers()),
-    /** Home's edit mode as a page of its own (Settings, Home): it opens in edit mode. */
     editOnly: Boolean = false,
 ) : ViewModel(),
     HomeEditor {
@@ -117,6 +108,7 @@ class HomeViewModel(
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
+            // Computed from the cache, so launch shows no skeleton flash.
             homeState(
                 HomeInputs(
                     home.layout.value,
@@ -171,7 +163,7 @@ class HomeViewModel(
         }
     }
 
-    /** After an edit's new section failed to load: that section again, the others as they are. */
+    /** Reloads only the sections that failed to load after an edit. */
     private fun reloadFailed() {
         viewModelScope.launch {
             try {
@@ -196,10 +188,7 @@ internal data class HomeInputs(
     val speakers: HomeSpeakers = HomeSpeakers(),
 )
 
-/**
- * Every speaker and the one music plays on, by what names them alone: a song or a volume step on
- * any speaker changes nothing on Home, so it does not build Home again.
- */
+// Speakers reduced to their names, so a song or a volume step on any speaker does not rebuild Home.
 @Immutable
 data class HomeSpeakers(val all: List<SpeakerUi> = emptyList(), val inUse: SpeakerUi? = null) {
     fun named(id: String): SpeakerUi? = inUse?.takeIf { it.id == id } ?: all.firstOrNull { it.id == id }
@@ -211,18 +200,12 @@ data class HomeSpeakers(val all: List<SpeakerUi> = emptyList(), val inUse: Speak
     }
 }
 
-/**
- * Only a failed connection counts as offline. Waiting (restoring, or connecting right after
- * Sign in) shows the skeleton: "Can't reach Music Assistant" would be wrong while it connects.
- */
+// Only a failed connection counts: while restoring or connecting the skeleton shows, as "Can't reach
+// Music Assistant" would be wrong then.
 internal fun isOffline(session: SessionState): Boolean = session is SessionState.Offline
 
-/**
- * Home's state from the layout and each option's cached items. A section loads while nothing is
- * cached for its option, or while its option reads a kind the index syncs for the first time;
- * offline, nothing loads. Pins follow the layout at once, so an unpinned item leaves and a moved
- * one moves before the section reloads.
- */
+// Pins are filtered and ordered by the layout, so an unpin or a move shows before the section
+// reloads.
 internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -> MediaUi): HomeUiState {
     val layout = inputs.layout ?: HomeLayout()
     val sections = layout.sections.map { section ->
@@ -237,10 +220,10 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
         }
         val noPins = option == SectionOption.Pinned && layout.pinned.isEmpty()
         val waitingForIndex = list.isEmpty() && option.indexKind in inputs.firstSyncs
-        // Search waits for nothing.
+        // Search is a field and never loads.
         val loading =
             !inputs.offline && option != SectionOption.Search && !noPins && (cached == null || waitingForIndex)
-        // Edit mode shows every pin Home holds, so each can be put in its place.
+        // Edit mode shows every pin, so each can be arranged.
         val shown = if (editing &&
             option == SectionOption.Pinned
         ) {
@@ -268,57 +251,46 @@ internal fun homeState(inputs: HomeInputs, editing: Boolean, media: (HomeItem) -
     )
 }
 
-/** One sentence of Home, "Show [option] as [layout]", with the items its layout shows. */
 @Immutable
 data class SectionUi(
     val id: String,
     val option: SectionOption,
     val layout: SectionLayout,
-    /** What the layout shows, already cut to its size. */
+    /** Already cut to what the layout shows. */
     val items: List<MediaUi> = emptyList(),
     /** The option has more than the layout shows: See all. */
     val more: Boolean = false,
-    /** Nothing cached for it yet: its layout's skeleton. */
     val loading: Boolean = false,
     /** Recently played found nothing, so it shows the library's albums ("Your albums"). */
     val fallback: Boolean = false,
-    /** The person's own name for it, if they gave one. */
+    /** The user's own name for the section; null for the option's. */
     val title: String? = null,
     /** Its heading shows outside edit mode. */
     val titled: Boolean = option != SectionOption.Search,
-    /** Played here: the speaker whose plays it shows, named after its title. */
+    /** Played here's speaker, named after the title. */
     val heardOn: SpeakerUi? = null,
 ) {
     val isEmpty: Boolean get() = option != SectionOption.Search && !loading && items.isEmpty()
 }
 
-/**
- * Everything Home draws. Each section paints from its snapshot; offline, the snapshot stays on
- * screen and the shell's message says why. Outside edit mode an empty section is hidden.
- */
 @Immutable
 data class HomeUiState(
-    /** Every section in order, empty ones too (edit mode shows them). */
+    /** Empty sections included; see [visible]. */
     val sections: List<SectionUi> = emptyList(),
     val editing: Boolean = false,
-    /** Music Assistant can't be reached. Only changes the screen when nothing is cached. */
+    /** Changes the screen only when nothing is cached. */
     val offline: Boolean = false,
-    /** The library index has no music; null until it has answered, which only [showsNothing] asks. */
+    /** Null until the index answers, which is asked only while [showsNothing]. */
     val libraryEmpty: Boolean? = null,
-    /** What to show offers the options of what the library holds of spoken word. */
     val spoken: SpokenWord = SpokenWord(),
 ) {
-    /** The sections on screen: all of them while editing, otherwise those with something to show. */
     val visible: List<SectionUi> = if (editing) sections else sections.filterNot { it.isEmpty }
 
-    /** Outside edit mode no section has anything to show, so an empty state says why. */
     val showsNothing: Boolean = !editing && visible.isEmpty() && !offline && sections.isNotEmpty()
 
     val hasContent: Boolean = sections.any { it.items.isNotEmpty() }
 
-    /**
-     * Every section on screen is still loading: TalkBack hears "Loading" once for all of them.
-     * Never while editing, where each section's options and Add section must stay reachable.
-     */
+    // TalkBack hears "Loading" once for all sections; never while editing, where each section's
+    // chips and Add section must stay reachable.
     val loading: Boolean = !editing && visible.isNotEmpty() && visible.all { it.loading }
 }

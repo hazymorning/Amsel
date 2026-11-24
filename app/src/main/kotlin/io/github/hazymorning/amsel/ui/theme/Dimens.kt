@@ -11,23 +11,19 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 
-/* Values derive from the margin, the 4 dp grid and the radius scale; letters, not boxes, line up. */
+// Gaps are measured to the letters (cap tops and baselines), not to text boxes.
 
 object Keyline {
-    /** The one side margin: every left edge in the app sits on it, and every right edge on its mirror. */
+    /** The only side margin: every left edge sits on it, every right edge on its mirror. */
     val Margin = 24.dp
 }
 
-/** How far content dissolves where it meets an edge, never cut. */
 object Fade {
-    /** Under a bar, a row of chips past the screen, search results under the field. */
     val Long = 24.dp
 
-    /** A scrolled list's ends; the status strip, below the status bar. */
     val Short = 16.dp
 }
 
-/** Distances: 4, 8, 12, 16, 24, 32, 48, 64. Gaps run between letters and edges. */
 object Space {
     val S1 = 4.dp
     val S2 = 8.dp

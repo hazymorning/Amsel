@@ -5,12 +5,10 @@ import io.github.hazymorning.amsel.data.ItemPosition
 import io.github.hazymorning.amsel.data.SeekTracker
 import kotlinx.coroutines.CompletableDeferred
 
-/** The speakers' positions for a test: [calls] records what they are told; [currentItemStatus] is what the queue holds. */
 class FakeSeekTracker(var currentItemStatus: CurrentItemStatus? = null) : SeekTracker {
     val calls = mutableListOf<String>()
     var pausedPosition: ItemPosition? = null
 
-    /** Completes when the server has finished the play it is starting; null when it starts none. */
     var starting: CompletableDeferred<Unit>? = null
     private var tickets = 0L
 

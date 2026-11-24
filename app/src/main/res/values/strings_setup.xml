@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Welcome -->
     <string name="setup_welcome">Play music from Music\u00A0Assistant on any speaker in the house</string>
     <string name="setup_find_server">Find my server</string>
 
-    <!-- Your server -->
     <string name="setup_server_title">Your server</string>
     <string name="setup_searching">Looking for Music\u00A0Assistant on your network…</string>
     <string name="setup_choose">Choose your Music\u00A0Assistant</string>
@@ -20,7 +18,6 @@
     <string name="setup_error_https">Couldn’t reach Music\u00A0Assistant over https. For plain http at home, type http:// and the port too.</string>
     <string name="setup_finish_setup">Finish setting up Music\u00A0Assistant first</string>
 
-    <!-- Sign in -->
     <string name="setup_sign_in_home_assistant">Sign in with Home\u00A0Assistant</string>
     <string name="setup_or">or</string>
     <string name="setup_username">Username</string>
@@ -37,7 +34,6 @@
     <string name="setup_error_sign_in_unreachable">Couldn’t reach Music\u00A0Assistant. Try again.</string>
     <string name="setup_error_home_assistant">Signing in with Home\u00A0Assistant didn’t finish. Try again.</string>
 
-    <!-- Home Assistant's sign-in page -->
     <string name="setup_home_assistant" translatable="false">Home\u00A0Assistant</string>
     <string name="setup_opening_home_assistant">Opening Home\u00A0Assistant…</string>
     <string name="setup_error_home_assistant_page">Can’t reach Home\u00A0Assistant</string>

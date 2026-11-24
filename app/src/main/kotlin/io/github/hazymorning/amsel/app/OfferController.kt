@@ -12,40 +12,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
-/**
- * One thing to do now, in a bar that slides up over the dock with one big [button]: playing what
- * was tapped on the speaker in use, or a step that helps after what was just done. [about] is what
- * it is for; where [secondTapTakes], tapping that again takes it, so a second tap plays at once.
- */
 class Offer(
     val about: String,
     val title: String,
     @StringRes val button: Int,
     val art: ArtRef? = null,
     val kind: MediaKind = MediaKind.Track,
-    /** Where it is about a speaker or a setting, not an item: its glyph in place of a cover. */
     @DrawableRes val glyph: Int? = null,
-    /** Under the title; null names the speaker it plays on, and a tap there picks another. */
+    /** Null shows the speaker it plays on, where a tap picks another. */
     @StringRes val line: Int? = null,
     val lineArg: String? = null,
-    /** A button word with a number in it ("30 min"), in place of [button]'s plain word. */
     val buttonArg: Int? = null,
-    /**
-     * The kind of hint it is, where nothing was tapped for it: one passed up [GIVE_UP] times in a
-     * row is not offered again. Null for what answers a tap.
-     */
+    /** Set only on unasked offers: a kind passed up [GIVE_UP] times in a row is not offered again. */
     val hint: String? = null,
-    /** It answers a tap on [about], and a second tap there takes it; anything else asked again only shows anew. */
+    /** Answers a tap on [about]: a second tap there takes it instead of showing it again. */
     val secondTapTakes: Boolean = false,
     val take: () -> Unit,
 )
 
-/**
- * The offer showing, one at a time: a new one takes the place of the last. Offers are for whoever
- * has the app in front ([inFront]); one made while it is away is dropped, and the one showing goes
- * when it leaves. [passes] and [setPasses] keep how often each hint went untaken; [off] holds the
- * kinds the person turned off in Settings, or [HINTS_ALL].
- */
 class OfferController(
     private val inFront: StateFlow<Boolean> = MutableStateFlow(true),
     private val passes: () -> Map<String, Int> = { emptyMap() },
@@ -60,10 +44,7 @@ class OfferController(
         scope?.launch { inFront.filter { !it }.collect { _shown.value = null } }
     }
 
-    /**
-     * Shows [offer]; while one that answers a tap on the same thing shows, this second ask takes that
-     * one. False where nothing showed: the app is away, or the person keeps passing this hint up.
-     */
+    /** False where nothing showed: the app is away, or this kind of hint is passed up or turned off. */
     fun offer(offer: Offer): Boolean {
         val showing = _shown.value
         return when {
@@ -94,7 +75,6 @@ class OfferController(
         offer.take()
     }
 
-    /** [offer] went untaken: swiped away, or its time ran out. */
     fun dismiss(offer: Offer) {
         if (!_shown.compareAndSet(offer, null)) return
         offer.hint?.let { setPasses(it, (passes()[it] ?: 0) + 1) }

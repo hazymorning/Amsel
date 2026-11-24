@@ -29,10 +29,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
-/**
- * An artist without a picture wears its albums' covers through what changes the index: syncs, and
- * events about it and its albums. The recorded artists all have a picture, so Aurora Tone loses its.
- */
+// The recorded artists all have a picture, so the tests take Aurora Tone's away.
 @RunWith(RobolectricTestRunner::class)
 class LibraryCoversTest {
     private val db = Room.inMemoryDatabaseBuilder(RuntimeEnvironment.getApplication(), LibraryDb::class.java)
@@ -60,7 +57,7 @@ class LibraryCoversTest {
         assertTrue(repo.onEvent(updated(aurora.with("name", JsonPrimitive("Aurora")))))
         assertEquals("Aurora", repo.get(AURORA)?.name)
         assertEquals(covers, repo.covers(AURORA))
-        // 2.10 tells of a like this way.
+        // 2.10 reports a like as media_item_updated.
         assertTrue(repo.onEvent(updated(aurora.with("favorite", JsonPrimitive(true)))))
         assertEquals(true, repo.get(AURORA)?.favorite)
         assertEquals(covers, repo.covers(AURORA))
@@ -101,7 +98,6 @@ class LibraryCoversTest {
         }
     }
 
-    /** Syncs the recorded 2.11 library with these [albums] and [artists], then runs [block]. */
     private fun synced(
         albums: List<JsonObject> = albumListing,
         artists: List<JsonObject> = artistListing.map { if (it.uri == AURORA) aurora else it },

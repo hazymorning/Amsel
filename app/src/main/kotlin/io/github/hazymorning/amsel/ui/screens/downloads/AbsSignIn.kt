@@ -50,7 +50,6 @@ import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
 
-/** Why Audiobookshelf is asked for, at the top of its sign-in: read whole at any type size, as the sheet scrolls. */
 @Composable
 internal fun AbsIntro(text: String = stringResource(R.string.abs_intro)) {
     val style = MaterialTheme.typography.bodyLarge
@@ -58,6 +57,7 @@ internal fun AbsIntro(text: String = stringResource(R.string.abs_intro)) {
         text,
         style,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
+        // The sheet scrolls, so the text shows whole at any font scale.
         maxLines = Int.MAX_VALUE,
         modifier = Modifier
             .fillMaxWidth()
@@ -67,16 +67,9 @@ internal fun AbsIntro(text: String = stringResource(R.string.abs_intro)) {
     )
 }
 
-/** Signs in at an address with a username and password: null when it worked, else why not. */
+/** Returns null on success, else why it failed. */
 typealias AbsSignInAction = suspend (address: String, username: String, password: String) -> AbsException.Reason?
 
-/**
- * Signing in to Audiobookshelf, where downloads come from: its address, the username and the
- * password, then [button]. An address without a scheme is tried with https, then, where it is a
- * home address, with plain http, as a server at home answers; what went wrong shows under the
- * field it is about. [last] fills in the server and name signed in with before, so signing in
- * again asks only for the password.
- */
 @Composable
 internal fun AbsSignInForm(
     button: String,
@@ -93,11 +86,11 @@ internal fun AbsSignInForm(
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<AbsException.Reason?>(null) }
     val ready = address.isNotBlank() && username.isNotBlank() && password.isNotEmpty()
-    // Always in a sheet, which is in the fields' usual tone.
+    // Always shown in a sheet, whose background is the fields' default fill.
     val fill = MaterialTheme.colorScheme.surfaceContainerHigh
-    // An address on the home network needs that permission first on Android 17.
+    // Android 17 needs the local network permission before a home address can be reached.
     val send = rememberLocalNetworkGate {
-        // The keyboard's Done can ask again while it signs in, as the button cannot.
+        // The button is disabled while busy, but the keyboard's Done can still fire.
         if (!busy) {
             busy = true
             error = null
@@ -174,12 +167,10 @@ internal fun AbsSignInForm(
         val other = error?.takeIf { it.addressError == null && it != AbsException.Reason.WrongLogin }
         if (other != null) FieldNote(stringResource(R.string.abs_error_server), error = true)
         Spacer(Modifier.height(Space.Group))
-        // As Setup's: a spinner in place of its word while it signs in, which TalkBack says.
         SetupButton(button, send, enabled = ready, busy = busy, busyLabel = stringResource(R.string.setup_signing_in))
     }
 }
 
-/** What [AbsSignInForm] says under the address for this failure; null when it is not about the address. */
 private val AbsException.Reason.addressError: Int?
     get() = when (this) {
         AbsException.Reason.BadAddress -> R.string.abs_error_address
@@ -190,7 +181,6 @@ private val AbsException.Reason.addressError: Int?
         else -> null
     }
 
-/** Sign in to Audiobookshelf, asked for by the first download, which then starts: [then]. */
 @Composable
 fun AbsSignInRoute(then: MediaUi, onDone: () -> Unit) {
     val graph = LocalContext.current.graph
@@ -213,7 +203,6 @@ fun AbsSignInRoute(then: MediaUi, onDone: () -> Unit) {
     }
 }
 
-/** "Remove “Das dicke Buch” from this phone?": Remove, or Cancel. */
 @Composable
 fun RemoveDownloadRoute(item: MediaUi, onClose: () -> Unit) {
     val graph = LocalContext.current.graph

@@ -13,20 +13,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-/** Where the person is in a download. */
 internal data class DownloadPosition(val manifest: DownloadManifest, val progress: LocalProgress)
 
 /**
- * A playing download's place: kept on the phone every 10 s, and sent to Audiobookshelf each time it
- * stops playing and every 5 minutes while it plays, as each send wakes the phone's radio. After a
- * send fails, none goes while it plays until the phone is on another network: on a train a home
- * address answers no one. A start takes the newer of the two places, so nothing is lost meanwhile.
+ * Sends to Audiobookshelf only every 5 minutes while playing, as each wakes the phone's radio. After a
+ * failed send none goes while it plays until the network changes: a home address does not answer
+ * from elsewhere. See docs/API-NOTES.md, "Audiobookshelf for downloads".
  */
 internal class DownloadProgressSync(
-    /** Where the player lives: [place] is read there. */
+    /** The player's thread, where [place] must be read. */
     private val scope: CoroutineScope,
     private val network: StateFlow<NetworkKey?>,
-    /** Where the person is now; null once nothing is loaded. */
     private val place: () -> DownloadPosition?,
     private val keep: (DownloadPosition) -> Unit,
     private val send: suspend (DownloadPosition) -> Unit,
@@ -36,10 +33,9 @@ internal class DownloadProgressSync(
 
     @Volatile private var failed: Failure? = null
 
-    /** What started playing: a stop Media3 tells of once another item is loaded is not that one's. */
+    /** Media3 can report a stop after another item is loaded: that stop must not save the new one. */
     private var playingUri: String? = null
 
-    /** It started or stopped playing: saves every 10 s from now on, or once now and sent. */
     fun playing(playing: Boolean) {
         ticking?.cancel()
         if (playing) {
@@ -56,20 +52,18 @@ internal class DownloadProgressSync(
         }
     }
 
-    /** The item was let go: nothing of it is saved any more. */
     fun stop() {
         ticking?.cancel()
         playingUri = null
     }
 
-    /** Keeps the place on the phone, and with [send] sends it to Audiobookshelf. */
     fun save(send: Boolean) {
         val place = place() ?: return
         scope.launch(io) {
             try {
                 keep(place)
             } catch (e: IOException) {
-                // A full phone: the next save keeps it.
+                // Storage full: the next save tries again.
             }
             if (send) sendNow(place)
         }
@@ -87,13 +81,11 @@ internal class DownloadProgressSync(
 
     private fun waitsForNetwork(): Boolean = failed?.let { it.network == network.value } == true
 
-    /** A send failed while the phone was on [network]. */
     private class Failure(val network: NetworkKey?)
 
     companion object {
         const val SAVE_EVERY_MS = 10_000L
 
-        /** Every 30th save, once in 5 minutes, also goes to Audiobookshelf. */
         const val SEND_EVERY = 30
     }
 }

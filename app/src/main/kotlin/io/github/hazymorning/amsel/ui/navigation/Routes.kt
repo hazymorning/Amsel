@@ -23,7 +23,7 @@ import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import kotlinx.serialization.Serializable
 
-/** Every destination inside the tabs. Now Playing, Up next and sheets are layers, not routes. */
+/** Now Playing, Up next and sheets are layers over the tabs, not routes. */
 @Serializable
 sealed interface Route : NavKey {
     @Serializable data object Home : Route
@@ -32,7 +32,7 @@ sealed interface Route : NavKey {
 
     @Serializable data object Library : Route
 
-    /** One kind of the library alone, as a place of its own in the bar: Albums, Radio. */
+    /** One library kind as its own bar tab. */
     @Serializable data class Shelf(val kind: LibraryKind) : Route
 
     @Serializable data class Album(val key: String) : Route
@@ -45,59 +45,44 @@ sealed interface Route : NavKey {
 
     @Serializable data class Podcast(val key: String) : Route
 
-    /** The songs the server finds similar to the song [key], named [title]. */
     @Serializable data class SimilarSongs(val key: String, val title: String) : Route
 
-    /** "See all" from a Home section. */
     @Serializable data class SeeAll(val option: SectionOption, val title: String? = null) : Route
 
     @Serializable data object Settings : Route
 
-    /** Settings as a place of its own in the bar: its top has no way back, as every place's has none. */
+    /** Settings as a bar tab's root: no back arrow, as on every tab root. */
     @Serializable data object SettingsPlace : Route
 
-    /** Which places the bottom bar shows, and in what order. */
     @Serializable data object Bar : Route
 
-    /** Which controls the mini player shows beside what plays, and in what order. */
     @Serializable data object Dock : Route
 
-    /** Which helpful hints Amsel offers over the dock. */
     @Serializable data object Hints : Route
 
-    /** Whether Amsel opens on the speaker that plays, and which speakers it may pick. */
     @Serializable data object Follow : Route
 
-    /** What the Library shows as chips, and in what order. */
     @Serializable data object LibraryKinds : Route
 
-    /** Home's edit mode as a page of its own, from Settings: Done comes back. */
+    /** Home's edit mode opened from Settings as a page of its own; Done goes back. */
     @Serializable data object HomeEdit : Route
 
-    /** The theme, the language, and what Home, the Library and the bars show. */
     @Serializable data object Appearance : Route
 
-    /** How the sleep timer ends and when it starts by itself. */
     @Serializable data object SleepTimer : Route
 
-    /** Amsel's licence and source code, the privacy notice, and the licences of software by others. */
     @Serializable data object Licences : Route
 
     /**
-     * [route] opened again above itself (an artist, a similar one, the first again), for the
-     * [visit]th time: an entry of its own, so the page starts at its top and the one below keeps
-     * its place. Screens never see it ([page]).
+     * [route] opened again while already on the stack; [visit] counts its earlier entries. A distinct
+     * key gives the entry its own saved state: it starts at the top and the earlier one keeps its
+     * scroll position. Screens see only [page].
      */
     @Serializable data class Again(val route: Route, val visit: Int) : Route
 
-    /** The page this entry shows. */
     val page: Route get() = if (this is Again) route else this
 }
 
-/**
- * The places the bar can open, each with its own pages: Home, Search, the Library, any kind of the
- * library on its own, and Settings. Unselected their glyph is an outline, selected it is filled.
- */
 enum class Tab(
     val root: Route,
     @StringRes val label: Int,
@@ -136,7 +121,6 @@ enum class Tab(
     Settings(Route.SettingsPlace, R.string.settings, R.drawable.ic_settings, R.drawable.ic_settings_selected),
 }
 
-/** What screens may ask of navigation, on their tab's back stack. Back always goes up one level. */
 class Navigator(private val stack: NavBackStack<NavKey>, private val closePlayer: () -> Unit) {
     fun open(route: Route) {
         closePlayer()
@@ -151,7 +135,7 @@ class Navigator(private val stack: NavBackStack<NavKey>, private val closePlayer
     }
 }
 
-/** Opens an item's page; tracks, radio stations and episodes have none: a tap plays them. */
+/** Tracks, stations and episodes have no page: a tap plays them instead. */
 fun Navigator.openMedia(item: MediaUi) {
     when (item.kind) {
         MediaKind.Album -> open(Route.Album(item.key))
@@ -164,9 +148,8 @@ fun Navigator.openMedia(item: MediaUi) {
 }
 
 /**
- * Resumes a book or an episode where the person stopped, and opens Now Playing when it already
- * plays there. Where it [asks], a bar over the dock offers to resume it on the speaker in use
- * first, also one that rests there; only one playing right now opens Now Playing at once.
+ * Opens Now Playing when the item already plays. With [asks], an item not playing right now (paused
+ * on the speaker included) is first offered in a bar over the dock.
  */
 @Composable
 fun rememberResume(asks: Boolean = false): (MediaUi) -> Unit {
@@ -186,10 +169,9 @@ fun rememberResume(asks: Boolean = false): (MediaUi) -> Unit {
 }
 
 /**
- * What tapping an item does: its page opens; a radio station plays and an episode resumes, with
- * the tick every play has. Where it [asks] (covers on Home, which look like what opens a page),
- * a station or an episode is offered in a bar over the dock with the speaker it plays on, and
- * plays from its button or a second tap.
+ * A station plays and an episode resumes on tap; anything else goes to [openMedia]. [asks] is for covers
+ * on Home, where a tap is expected to open a page: there a station or an episode is first offered in a
+ * bar over the dock and plays from its button or a second tap.
  */
 @Composable
 fun rememberOpenItem(navigator: Navigator, asks: Boolean = false): (MediaUi) -> Unit {
@@ -225,15 +207,13 @@ fun rememberOpenItem(navigator: Navigator, asks: Boolean = false): (MediaUi) -> 
     }
 }
 
-/** Offers [offer]; a second tap that takes it ticks as every play does. */
+/** A second tap on the same item takes the offer, with the haptic tick every play gives. */
 private fun OfferController.offerOrTake(offer: Offer, haptics: HapticFeedback) {
     if (takes(offer)) haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
     offer(offer)
 }
 
-/** [this] offered to play on the speaker in use, with [button]. */
 private fun MediaUi.offer(@StringRes button: Int, take: () -> Unit) =
     Offer(about = key, title = title, button = button, art = art, kind = kind, secondTapTakes = true, take = take)
 
-/** Whether [key] plays on the speaker in use right now, not only rests there. */
 private fun PlaybackState.plays(key: String): Boolean = nowPlaying.value?.let { it.key == key && it.isPlaying } == true

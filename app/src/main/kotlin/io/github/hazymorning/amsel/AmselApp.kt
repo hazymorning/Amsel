@@ -25,14 +25,13 @@ open class AmselApp :
     override fun onCreate() {
         super.onCreate()
         startGraph()
-        // The socket stays open while the app is in front (or something plays; see PlaybackService).
+        // The socket stays open while the app is in front, or while something plays (DataPlaybackGraph).
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             object : DefaultLifecycleObserver {
                 override fun onStart(owner: LifecycleOwner) {
                     graph.data.session.setForeground(true)
-                    // Each time Amsel comes to the front, it can follow the music to the speaker that plays.
                     graph.scope.launch { if (graph.data.prefs.current().followPlaying) graph.playOn.followPlaying() }
-                    // The first time only: a start of the app, never a return to it.
+                    // Acts on the first call only: the app's start, not a return to it.
                     graph.updates.checkAtStart { graph.data.prefs.current().lookForUpdates }
                 }
 
@@ -42,8 +41,8 @@ open class AmselApp :
                 }
             },
         )
-        // While music plays the socket may have given up in the phone's sleep: the notification and
-        // the widgets catch up as the screen comes on, not when Amsel is opened next.
+        // During playback the socket can drop while the phone sleeps; reconnecting at screen-on updates
+        // the notification and widgets before the app is opened again.
         ContextCompat.registerReceiver(
             this,
             object : BroadcastReceiver() {
@@ -54,7 +53,7 @@ open class AmselApp :
         )
     }
 
-    /** Unit tests start nothing: each builds what it uses. */
+    /** Open for unit tests, which start nothing: each builds what it uses. */
     protected open fun startGraph() = graph.start()
 
     override fun newImageLoader(context: PlatformContext): ImageLoader = graph.imageLoader

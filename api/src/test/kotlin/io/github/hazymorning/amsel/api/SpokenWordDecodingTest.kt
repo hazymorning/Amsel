@@ -9,7 +9,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Books, podcasts and episodes decode on both releases, and an odd field never costs a queue. */
 class SpokenWordDecodingTest {
     private val versions = listOf("2.10", "2.11")
 
@@ -109,7 +108,6 @@ class SpokenWordDecodingTest {
         assertEquals(12L, item.position)
         assertNull(item.year)
         assertEquals(listOf("Ada", "Ben"), item.authors.map { it.name })
-        // Kept and read back, an author keeps its link.
         val kept = MaJson.decodeFromString(MediaItem.serializer(), MaJson.encodeToString(MediaItem.serializer(), item))
         assertEquals(item.authors, kept.authors)
     }
@@ -122,7 +120,7 @@ class SpokenWordDecodingTest {
         )
         fun chapter(position: Int?, start: Int, end: Int) =
             """{"position": $position, "name": "c", "start": $start.0, "end": $end.0}"""
-        // As 2.11.0b7 sent it after the book's chapters were edited in Audiobookshelf.
+        // The server's merge after a chapter edit in Audiobookshelf. See docs/API-NOTES.md, "Audiobooks and podcasts".
         val edited = book(
             listOf(chapter(1, 0, 90), chapter(2, 90, 180), chapter(3, 180, 270))
                 .plus((1..270).map { chapter(it, it - 1, it) })
@@ -164,7 +162,8 @@ class SpokenWordDecodingTest {
         )
         fun chapter(position: Int, start: Int, end: Int = start + 40) =
             """{"position": $position, "name": "Kapitel", "start": $start.0, "end": $end.0}"""
-        // As 2.10.9 sent it live for a book in local files (0-based) and in Audiobookshelf (1-based).
+        // A book's chapters from local files (0-based) merged with Audiobookshelf's (1-based).
+        // See docs/API-NOTES.md, "start_item".
         val merged =
             book(((0..29).map { chapter(it, it * 40) } + (1..30).map { chapter(it, (it - 1) * 40) }).joinToString())
         val chapters = merged.chapters
@@ -173,7 +172,7 @@ class SpokenWordDecodingTest {
         assertEquals(960.0, chapters[24].start, 0.0)
         assertEquals("24", merged.startItemFor(chapters[24]))
         assertEquals("0", merged.startItemFor(chapters[0]))
-        // After an edit in Audiobookshelf (2.11.0b7): the stale chapter 2 starts at 1:30, the new one at 0:01.
+        // After an edit in Audiobookshelf the stale chapter 2 starts at 1:30, the current one at 0:01.
         val edited = book(
             listOf(chapter(1, 0, 90), chapter(2, 90, 180), chapter(3, 180, 270))
                 .plus((1..30).map { chapter(it, it - 1, it) })

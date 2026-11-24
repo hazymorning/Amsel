@@ -6,9 +6,8 @@ import io.github.hazymorning.amsel.ui.model.ChapterUi
 import kotlin.math.roundToLong
 
 /**
- * A book's or episode's chapters in order. A chapter without an end of its own ends where the next
- * starts, the last one with the item. Each names what starts the book there, which after a merge of
- * chapter lists may not be its own position ([startItemFor]).
+ * Each chapter names the start item that plays it ([startItemFor]): after a merge of chapter lists its
+ * own position may start another. See docs/API-NOTES.md, "start_item".
  */
 fun chapterList(item: MediaItem): List<ChapterUi> {
     val sorted = item.chapters.sortedBy { it.start }

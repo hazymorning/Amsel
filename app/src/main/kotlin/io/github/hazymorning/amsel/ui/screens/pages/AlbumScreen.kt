@@ -60,7 +60,7 @@ fun AlbumScreen(
         val numbers = numberLeadWidth(state.tracks.maxOfOrNull { it.number ?: 0 } ?: 0)
         val trackInk = rowGlyphBottom(RowLead.Glyph, twoLines)
         val moreBy = album?.artist?.let { stringResource(R.string.pages_more_by, it) }
-        // A tile's caption ends on its ink; a track row runs on below it.
+        // A tile's caption ends at its last glyph; a track row extends below its last glyph.
         val endsOnShelf = moreBy != null && state.moreByArtist.isNotEmpty()
         val bottom = if (endsOnShelf) Space.ListEnd else Space.ListEnd - trackInk
         PageScaffold(album?.title, listState, onBack, modifier, bottom = bottom, art = album?.art) {
@@ -115,7 +115,7 @@ private fun AlbumTitle(state: AlbumUiState, onOpenArtist: (String) -> Unit) {
     )
 }
 
-/** The album page for [key] (`library://album/12`), wired to the server and the current speaker. */
+/** [key] is the album's URI, such as `library://album/12`. */
 @Composable
 fun AlbumRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -135,9 +135,9 @@ fun AlbumRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier)
             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
             graph.playback.play(listOf(key), startItem = track.key, title = track.title)
         },
-        // The album's own actions, and a "More by" tile's: another album by the same artist.
+        // This album's own ⋮ and a "More by" tile's, which is another album.
         onMore = { item -> actions.more(ActionTarget.Media(item, ownPage(item.key == key))) },
-        // "Go to album" would lead back to this page: left out.
+        // "Go to album" would lead back to this page, so it is left out.
         onMoreTrack = { track ->
             actions.more(ActionTarget.Track(track.copy(albumKey = track.albumKey.takeUnless { it == key })))
         },

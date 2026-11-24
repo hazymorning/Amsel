@@ -26,11 +26,6 @@ import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * Updates, in their own sheet: where Amsel stands, read whole at any type size, the one button that
- * moves it on (look, or install what was found, showing how far its download is), and whether to
- * look at each start.
- */
 @Composable
 internal fun UpdatesSheetContent(
     state: UpdateState,

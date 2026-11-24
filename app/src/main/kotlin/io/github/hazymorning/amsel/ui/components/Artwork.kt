@@ -60,12 +60,9 @@ import io.github.hazymorning.amsel.ui.theme.rememberPress
 private val LargeGlyphFrom = 128.dp
 
 /**
- * A cover in its continuous corners, the one shape every cover takes at its size, an artist's
- * picture as much as an album's (never a circle), with a hairline just inside its edge so a white sleeve never
- * bleeds into the page, and at night in the night's own range ([nightTone]). Without a picture it is set in
- * type from its [name]. Decorative: rows and tiles name what it shows. [dimmed] quiets something already played; a tile passes its
- * [interactionSource], so a press shows on the cover in its own shape. [shape] overrides the
- * outline where a container decides it (a card's corners).
+ * Decorative: the enclosing row or tile carries the label. Without a picture: a type cover of [name],
+ * else [glyph] or the kind's icon. [interactionSource] only draws an enclosing clickable's press;
+ * [shape] is for a container's corners (a card), never a circle.
  */
 @Composable
 fun Artwork(
@@ -75,11 +72,8 @@ fun Artwork(
     dimmed: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
     shape: Shape? = null,
-    /** A page's or Now Playing's one large cover stands off the page on a soft shade. */
     elevated: Boolean = false,
-    /** What it is called: without a picture, the cover is set in type ([TypeCover]). */
     name: String? = null,
-    /** Without a picture or a [name], this glyph rather than its kind's. */
     @DrawableRes glyph: Int? = null,
 ) {
     BoxWithConstraints(modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
@@ -111,7 +105,7 @@ fun Artwork(
             } else if (art != null) {
                 val px = with(LocalDensity.current) { side.roundToPx() }.coerceAtLeast(1)
                 val context = LocalContext.current
-                // A cover that changes in place (the next song) fades in over the last one, not over the empty tone.
+                // Placeholder: the last cover shown, so a cover changed in place (the next song) crossfades from it.
                 val shown = remember { ShownCover() }
                 val request = remember(art, px) {
                     coverRequest(context, art, px, shown.key ?: smallerCopy(context, art, px))
@@ -134,7 +128,6 @@ fun Artwork(
     }
 }
 
-/** Four covers two by two, edge to edge, in the cover's one outline. */
 @Composable
 private fun Quarters(parts: List<ArtRef>, side: Dp, tone: ColorFilter?) {
     val px = with(LocalDensity.current) { (side / 2).roundToPx() }.coerceAtLeast(1)
@@ -156,10 +149,7 @@ private fun Quarters(parts: List<ArtRef>, side: Dp, tone: ColorFilter?) {
     }
 }
 
-/**
- * What a cover [px] wide loads, in one place: Now Playing's is asked for ahead ([PreloadCover]) with
- * the same request, so it is in the cache when the sheet rises. [placeholder] is the cover it replaces.
- */
+/** Shared with [PreloadCover]: the preload only hits the memory cache if both build the same request. */
 internal fun coverRequest(context: Context, art: ArtRef, px: Int, placeholder: MemoryCache.Key? = null): ImageRequest {
     val load = if (art.mosaic) px * MOSAIC_SCALE else px
     return ImageRequest.Builder(context)
@@ -171,10 +161,7 @@ internal fun coverRequest(context: Context, art: ArtRef, px: Int, placeholder: M
         .build()
 }
 
-/**
- * A smaller copy of [art] already in memory, such as its tile's, for a larger cover [px] wide to
- * show until its own has loaded: a page opens with its cover in place, not an empty square.
- */
+/** Another size of [art] already in memory (its tile's), so a page opens with its cover in place. */
 private fun smallerCopy(context: Context, art: ArtRef, px: Int): MemoryCache.Key? {
     if (px <= TILE_PX || art.mosaic || art.base.startsWith("file:")) return null
     val cache = SingletonImageLoader.get(context).memoryCache ?: return null
@@ -182,14 +169,12 @@ private fun smallerCopy(context: Context, art: ArtRef, px: Int): MemoryCache.Key
     return cache.keys.firstOrNull { it.key.startsWith(sized) }
 }
 
-/** What a tile asks for at most: only a cover larger than that has a smaller copy to start from. */
+/** The largest size a tile requests; only a larger cover can find a smaller copy in memory. */
 private const val TILE_PX = 512
 
 /**
- * A cover at night, drawn between the first surface's tone and the ink: its black stands a step
- * above the page, as an empty sleeve does, so a dark cover keeps its edge with no line drawn round
- * it, and its white is the words' light, so a white sleeve never glares. Every tone between keeps
- * its place; by day a cover is drawn as it is.
+ * Maps a cover's channels linearly onto [floor]..[ceiling] at night: black stays distinct from the
+ * page and white is no brighter than the text.
  */
 @Composable
 private fun nightTone(floor: Color, ceiling: Color): ColorFilter = remember(floor, ceiling) {
@@ -209,20 +194,20 @@ private fun nightTone(floor: Color, ceiling: Color): ColorFilter = remember(floo
     )
 }
 
-/** A colour matrix's offsets count in steps of a channel's 0 to 255. */
+/** ColorMatrix offsets are on a 0..255 scale, not 0..1. */
 private const val CHANNEL = 255f
 
-/** The cover last shown, kept out of snapshot state: only the next request reads it, so a load recomposes nothing. */
+/** Not snapshot state: only the next request reads it, so a load recomposes nothing. */
 private class ShownCover {
     var key: MemoryCache.Key? = null
 }
 
-/** A cover's clip and its half-dp hairline in one outline, which everything drawn inside shares. */
+/** Clips to [shape] with a hairline inside its edge, so a white cover keeps its edge on a light page. */
 @Composable
 fun Modifier.coverFrame(shape: Shape): Modifier {
     val edge = MaterialTheme.colorScheme.onSurface.copy(alpha = HAIRLINE_ALPHA)
     return clip(shape).drawWithCache {
-        // Just inside the outline, so it never shifts the layout.
+        // Inset by half the stroke so the whole hairline lies inside the clip.
         val width = HairlineWidth.toPx()
         val outline = shape.createOutline(Size(size.width - width, size.height - width), layoutDirection, this)
         val stroke = Stroke(width)

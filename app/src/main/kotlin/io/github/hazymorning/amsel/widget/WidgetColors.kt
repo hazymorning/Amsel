@@ -11,10 +11,7 @@ import androidx.annotation.DrawableRes
 import androidx.core.graphics.ColorUtils
 import io.github.hazymorning.amsel.R
 
-/**
- * How a widget dresses: over the cover of what plays, blurred or sharp and darkened; plain in the
- * system's colours; or clear on the wallpaper.
- */
+/** Cover: the cover blurred; Darkened: the cover sharp under a dark veil; Plain: a flat background; Clear: none. */
 enum class WidgetStyle(val id: String) {
     Cover("cover"),
     Darkened("darkened"),
@@ -22,7 +19,6 @@ enum class WidgetStyle(val id: String) {
     Clear("clear"),
     ;
 
-    /** Over the cover of what plays, which gives play and pause its colour. */
     val covered: Boolean get() = this == Cover || this == Darkened
 
     companion object {
@@ -30,21 +26,18 @@ enum class WidgetStyle(val id: String) {
     }
 }
 
-/**
- * The colours of a widget's words and buttons, by resource, so the launcher switches day and night
- * itself: over a light cover or none, over a dark cover, plain, and clear in ink or in paper.
- */
+/** By resource, not ARGB, so the launcher resolves day and night itself. */
 internal enum class WidgetColors(
     @ColorRes val words: Int,
     @ColorRes val quiet: Int,
     @ColorRes val glyph: Int,
-    /** The glyph on play and pause's filled cell. */
+    /** The glyph on the filled play cell. */
     @ColorRes val onDisc: Int,
-    /** A button's cell, and play and pause's, filled; and the cell's colour for an empty cover. */
     @DrawableRes val cell: Int,
     @DrawableRes val playCell: Int,
+    /** The cell's colour, which also tints an empty cover. */
     @ColorRes val cellColor: Int,
-    /** A button without a cell, shaded while pressed. */
+    /** Transparent but for the cell's shade while pressed. */
     @DrawableRes val bare: Int,
 ) {
     Light(
@@ -99,7 +92,6 @@ internal enum class WidgetColors(
     ),
 }
 
-/** What lies under a widget's words: its ground, and the cover under a [veil] where it shows one. */
 internal class WidgetBackground(
     val tone: WidgetColors,
     @DrawableRes val background: Int,
@@ -107,10 +99,7 @@ internal class WidgetBackground(
     @DrawableRes val veil: Int = R.drawable.widget_veil_light,
 ) {
     companion object {
-        /**
-         * [style]'s ground with [cover] (under a cover's looks), on a wallpaper that wants ink
-         * ([clearInk], Clear only). Darkened, the words are paper whatever the cover, as on a dark one.
-         */
+        /** [clearInk] (dark text on the wallpaper) applies to [WidgetStyle.Clear] only. */
         fun of(style: WidgetStyle, cover: WidgetCover?, clearInk: Boolean): WidgetBackground = when (style) {
             WidgetStyle.Cover -> if (cover == null || cover.light) {
                 WidgetBackground(WidgetColors.Light, R.drawable.widget_background_cover, cover)
@@ -141,10 +130,6 @@ internal class WidgetBackground(
     }
 }
 
-/**
- * Whether the wallpaper wants dark words, as Android tells its own launcher: a clear widget's words
- * take ink there and paper elsewhere. Before Android 12, by how light the wallpaper's main colour is.
- */
 internal fun wallpaperWantsDarkText(context: Context): Boolean {
     val colors = wallpaperColors(context) ?: return false
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -153,20 +138,17 @@ internal fun wallpaperWantsDarkText(context: Context): Boolean {
     return ColorUtils.calculateLuminance(colors.primaryColor.toArgb()) > LIGHT_WALLPAPER
 }
 
-/** The wallpaper's main colour, for a widget's page to stand the widget on; null where Android does not say. */
 internal fun wallpaperColor(context: Context): Int? = wallpaperColors(context)?.primaryColor?.toArgb()
 
 private fun wallpaperColors(context: Context): WallpaperColors? = try {
     WallpaperManager.getInstance(context).getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
 } catch (e: RuntimeException) {
-    // A phone without a wallpaper service, or one that refuses: paper, as over most pictures.
+    // No wallpaper service, or it refuses: light text, which suits most wallpapers.
     null
 }
 
-/** Above this the words read better in ink, as Android's own hint judges a wallpaper. */
 private const val LIGHT_WALLPAPER = 0.5
 
-/** Tells [changed] when the home screen's wallpaper takes other colours, while it [listen]s. */
 internal class WallpaperColorsListener(private val context: Context, changed: () -> Unit) {
     private val listener = WallpaperManager.OnColorsChangedListener { _, which ->
         if (which and WallpaperManager.FLAG_SYSTEM != 0) changed()
@@ -181,7 +163,7 @@ internal class WallpaperColorsListener(private val context: Context, changed: ()
                 wallpapers.removeOnColorsChangedListener(listener)
             }
         } catch (e: RuntimeException) {
-            // A phone without a wallpaper service: a clear widget follows its wallpaper at the next song.
+            // No wallpaper service: a Clear widget picks up wallpaper changes at its next draw.
         }
     }
 }

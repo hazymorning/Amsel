@@ -4,10 +4,10 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
-    <!-- An update installs from Amsel itself: Android's installer refuses an app without this. -->
+    <!-- In-app updates: the package installer refuses an app without it. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- AndroidX core declares these for receivers registered not exported below Android 13; none is
-         (Media3's car observer registers its receiver exported). -->
+    <!-- AndroidX core adds these for receivers registered not exported below Android 13, and ContextCompat
+         throws without them: none may be (Media3's car observer registers its receiver exported). -->
     <permission
         android:name="${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         tools:node="remove" />
@@ -38,14 +38,11 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- "Play X on Amsel" from the assistant. -->
             <intent-filter>
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
-            <!-- amsel://search, amsel://now-playing, amsel://up-next, amsel://speakers and amsel://group
-                 (DeepLink): for the launcher's shortcuts and Amsel's widgets, and for a widget such as
-                 KWGT, which opens them as links. They only open a screen. -->
+            <!-- Shortcuts and widgets, KWGT's too, open these (DeepLink); a link only ever opens a screen. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -61,7 +58,6 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
-        <!-- A widget's page: the launcher opens it to change the widget, and on older Androids as it is placed. -->
         <activity
             android:name=".widget.WidgetSetupActivity"
             android:excludeFromRecents="true"
@@ -72,7 +68,7 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
-        <!-- The widget, three ways in by the size it starts at; the first keeps its name, so placed ones stay. -->
+        <!-- One widget at three starting sizes. AmselWidget keeps its original name, so placed widgets stay. -->
         <receiver
             android:name=".widget.AmselButtonWidget"
             android:exported="false"
@@ -106,22 +102,19 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_info" />
         </receiver>
-        <!-- The widget's buttons; only its own pending intents reach it. -->
         <receiver
             android:name=".widget.WidgetTapReceiver"
             android:exported="false" />
-        <!-- The widgets' looks at the speakers while Amsel's socket is closed (JobScheduler binds it). -->
         <service
             android:name=".widget.WidgetRefreshJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-        <!-- The car's artwork: not exported, the car is granted reading it when it connects. -->
+        <!-- Not exported: the car is granted read access when it connects (CarArtwork.allow). -->
         <provider
             android:name=".app.ArtworkProvider"
             android:authorities="${applicationId}.artwork"
             android:exported="false"
             android:grantUriPermissions="true" />
-        <!-- A downloaded update: not exported, the installer is granted reading it when it opens. -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.updates"

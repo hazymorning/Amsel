@@ -30,10 +30,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 
-/**
- * Play on's groups against a real Music Assistant and its fake speakers (scripts/test-server), the
- * server's events keeping the speakers current as in the app. Skipped unless MA_URL is set.
- */
+// Against scripts/test-server's Music Assistant and its fake speakers; skipped unless MA_URL is set.
 class SpeakerGroupControllerLiveTest {
     private class Live(
         val api: MaApi,
@@ -41,14 +38,13 @@ class SpeakerGroupControllerLiveTest {
         val groups: SpeakerGroupController,
         val sent: List<String>,
     ) {
-        /** The speakers in reach, Kitchen first. */
         val free = speakers.players.value.values.filter { it.canLeadGroup }
             .sortedBy { it.shownName != "Kitchen" }
             .map { it.playerId }
 
         fun grouped() = speakers.players.value.values.filter { it.syncedTo != null || it.groupMembers.isNotEmpty() }
 
-        /** The speakers asked to leave so far, one entry for each asking. */
+        // One entry per removal sent, so a speaker asked twice shows twice.
         fun letGo() = sent.flatMap { it.substringAfter("-[").removeSuffix("]").split(", ") }.filter { it.isNotEmpty() }
     }
 
@@ -101,7 +97,8 @@ class SpeakerGroupControllerLiveTest {
         groups.set(kitchen, add = listOf(living, bath), remove = emptyList())
         until { speakers.players.value.syncGroups() == mapOf(kitchen to setOf(living, bath)) }
 
-        // Its leader goes on listing it for two seconds, and asking it to leave again then is an error.
+        // Its leader goes on listing it a while, and asking it to leave again then is an error.
+        // See docs/API-NOTES.md, "Player commands".
         groups.set(kitchen, add = emptyList(), remove = listOf(living))
         delay(TAP_MS)
         groups.ungroupAll()
@@ -163,14 +160,14 @@ class SpeakerGroupControllerLiveTest {
     private companion object {
         const val CONNECT_MS = 15_000L
 
-        /** How soon after Done a quick finger is on Ungroup. */
+        // A quick tap on Ungroup after Done.
         const val TAP_MS = 700L
 
-        /** The server names a group's speakers two seconds apart. */
+        // The server names a group's speakers seconds apart (docs/API-NOTES.md, "Player commands").
         const val SETTLE_MS = 30_000L
         const val POLL_MS = 100L
 
-        /** Past the five seconds Ungroup follows the server's word for: what is free then stays free. */
+        // Past GROUP_CONFIRM_MS: what is free then stays free.
         const val QUIET_MS = 6_000L
 
         const val NANOS_PER_MS = 1_000_000L

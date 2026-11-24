@@ -52,13 +52,11 @@ import io.github.hazymorning.amsel.ui.theme.firm
 import io.github.hazymorning.amsel.ui.theme.lineHeight
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/** A label's ends stand this far in from a button's. */
 private val ButtonPadding = Space.Group
 
 /**
- * The body of every labelled button: a pill of [fill] with its label in [content], 48 dp tall. A
- * label is never cut: it wraps and the button grows. Not yet usable, any button is the quiet second
- * tone with a faint label, so it never outweighs what has to be done first.
+ * Labels wrap rather than truncate; the button grows. Disabled, any button takes the secondary fill
+ * with a faint label, so it never outweighs the step that has to come first.
  */
 @Composable
 private fun PillButton(
@@ -97,7 +95,7 @@ private fun PillButton(
     }
 }
 
-/** The one primary action of a screen: ink, with its label in the page colour. */
+/** For a screen's one primary action; any other takes [SecondaryButton]. */
 @Composable
 fun PrimaryButton(
     text: String,
@@ -115,10 +113,6 @@ fun PrimaryButton(
     content,
 )
 
-/**
- * A second action beside or under the primary one, which should not compete: the second surface
- * tone, the label in ink.
- */
 @Composable
 fun SecondaryButton(
     text: String,
@@ -136,11 +130,7 @@ fun SecondaryButton(
     content,
 )
 
-/**
- * A quiet action that is a glyph and a word: its layout is its ink from glyph to last letter, one
- * line tall; the 48 dp target reaches beyond. The glyph is as large as the word ([wordGlyph])
- * unless [iconSize] says otherwise.
- */
+/** Laid out at its visible bounds, glyph to last letter and one line tall; the 48 dp target overhangs them. */
 @Composable
 fun TextAction(
     text: String,
@@ -183,11 +173,7 @@ fun TextAction(
     }
 }
 
-/**
- * A two-state switch drawn as a glyph: in the secondary tone when off ([offTint]), in ink when on.
- * A glyph that looks the same both ways (shuffle) shows a [dot] under it when on; one with a filled
- * glyph for on (the heart) needs none. Not [enabled], it shows its state dimmed and takes no tap.
- */
+/** [dot] is for a glyph that looks the same in both states (shuffle), not one with a filled on-glyph (the heart). */
 @Composable
 fun ToggleIconButton(
     @DrawableRes icon: Int,
@@ -226,12 +212,6 @@ fun ToggleIconButton(
     }
 }
 
-/**
- * A round play or pause in ink, the focal action: Now Playing's 72 dp and a page's 56; [tonal], a
- * disc in the second tone with the glyph in ink, for a surface that is no page (the dock). The
- * triangle sits a little right of the centre of its box, so it looks centred in the circle. A light
- * tick answers.
- */
 @Composable
 fun PlayButton(
     playing: Boolean,
@@ -287,5 +267,5 @@ fun PlayButton(
     }
 }
 
-/** The play triangle moves right by this share of its width to look centred. */
+/** Optical centring: the play triangle moves right by its width divided by this. */
 private const val PLAY_SHIFT = 8

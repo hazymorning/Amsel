@@ -15,11 +15,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Commands for one speaker, each returning once the server replied, except [seek]. [previous]
- * restarts the track once more than 5 s have played: the server decides. The volume commands are
- * the group ones: a sync leader's whole group, a lone speaker's own volume, up and down in the
- * server's adaptive steps. [playMedia] returns once the play is handed to the PlayDispatcher, not
- * when playback starts, which can take tens of seconds.
+ * Each returns once the server replied; [seek] returns at once, [playMedia] once the play is handed to
+ * the PlayDispatcher. The server restarts the track on [previous] after 5 s. The volume commands are
+ * the group ones: a sync leader moves its whole group, a lone speaker its own volume.
  */
 interface SpeakerCommands {
     suspend fun play(playerId: String)
@@ -29,9 +27,8 @@ interface SpeakerCommands {
     suspend fun previous(playerId: String)
 
     /**
-     * Takes [playerId] to [positionSeconds] in what it holds and returns at once: the place shows at
-     * once, and the command follows ([SeekController]). [step] for a skip by seconds or a step to another
-     * chapter, which more may follow.
+     * Returns at once: the place shows at once and the command follows ([SeekController]). [step] for a
+     * skip by seconds or a chapter step, which more may follow.
      */
     fun seek(playerId: String, positionSeconds: Int, step: Boolean = false)
     suspend fun playIndex(playerId: String, queueItemId: String)
@@ -43,27 +40,25 @@ interface SpeakerCommands {
     suspend fun playMedia(request: PlayRequest)
 
     /**
-     * Playback on [playerId] is being started by other means than these commands (a play from a
-     * list, music moved there), or was asked again while it starts. Nothing is sent: a pause that
-     * still waits for a start gives way.
+     * Playback is starting by other means (a play from a list, music moved there), or was asked again:
+     * nothing is sent, and a pause waiting for a start is dropped.
      */
     fun starting(playerId: String) = Unit
 }
 
-/** A command or a play ([play]) that did not reach speaker [playerId], and how to send it again. */
 class CommandFailure(
     val playerId: String,
     val error: Throwable,
     val play: Boolean = false,
-    /** Sends it again; null where that would end the same. */
+    /** Null where a retry would fail the same way. */
     val retry: (() -> Unit)?,
 ) {
-    /** What to say; it may name the speaker (`%1$s`). */
+    /** May hold the speaker's name as `%1$s`. */
     @get:StringRes
     val text: Int get() = failureText(error, play)
 }
 
-/** The sentence for a server request that failed; [play] for a `play_media` that did not start. */
+/** [play] for a `play_media` that did not start. */
 @StringRes
 fun failureText(error: Throwable, play: Boolean = false): Int = when {
     error is PhoneNotReadyException && error.refused -> R.string.error_phone_refused
@@ -79,18 +74,15 @@ fun failureText(error: Throwable, play: Boolean = false): Int = when {
 }
 
 /**
- * "This phone" did not join the server, so a command for it could not be sent: not in time, or its
- * Sendspin client [stopped] for good, which only a new connection changes: turned away by the
- * server ([refused]: unpaired, not authorized, an incompatible protocol), or unable to start here.
+ * [stopped]: the Sendspin client stopped for good, and only a new connection changes that. [refused]:
+ * the server turned it away (unpaired, not authorized, an incompatible protocol).
  */
 class PhoneNotReadyException(val refused: Boolean = false, val stopped: Boolean = refused) :
     Exception("This phone has not joined the server")
 
 /**
- * Speaker commands on the real server, one each, as the official app sends them; play actions go
- * through the [PlayDispatcher] and seeks through [seekDispatcher]. Each one [wake]s the session first: a
- * command from the notification, a headset or the car may arrive after the socket's idle close,
- * and nothing else would reopen it.
+ * Each command [wake]s the session first: one from the notification, a headset or the car may come
+ * after the socket's idle close, and nothing else would reopen it.
  */
 class MaSpeakerCommands(
     private val api: MaApi,
@@ -100,7 +92,6 @@ class MaSpeakerCommands(
     private val seekDispatcher: SeekDispatcher,
     private val scope: CoroutineScope,
 ) : SpeakerCommands {
-    /** Seeks that did not reach their speaker. */
     val failures: SharedFlow<CommandFailure> get() = seekDispatcher.failures
 
     override suspend fun play(playerId: String) = controller(playerId).play { awake { api.play(playerId) } }
@@ -110,9 +101,8 @@ class MaSpeakerCommands(
     override suspend fun stop(playerId: String) = sendPauseOrStop(playerId) { api.stop(playerId) }
 
     /**
-     * A pause or a stop. One asked while the server starts a play is taken and then overrun
-     * ([SeekController]): the lane sends a pause after its own plays and seeks, and here it is told of a
-     * `play_media` on its way and of a start the server reports, once those are over.
+     * The server overruns a pause asked while it starts a play ([SeekController]): the controller is told
+     * here of a `play_media` on its way or a start the server reports, and pauses again after it.
      */
     private suspend fun sendPauseOrStop(playerId: String, command: suspend () -> Unit) {
         val controller = controller(playerId)
@@ -137,7 +127,7 @@ class MaSpeakerCommands(
     override fun seek(playerId: String, positionSeconds: Int, step: Boolean) =
         controller(playerId).seek(positionSeconds, step)
 
-    /** A seek in [place]'s item, which [queueId] is starting: a book started at a chapter no `start_item` leads to. */
+    /** For an item [queueId] is starting: a book started at a chapter, or a paused position moved by Play on. */
     fun seekIn(queueId: String, place: ItemPosition) = seekDispatcher.seekIn(queueId, place)
 
     override suspend fun playIndex(playerId: String, queueItemId: String) =
@@ -168,13 +158,8 @@ class MaSpeakerCommands(
     }
 }
 
-/** How long a play the server is starting may take before a pause stops waiting for it. */
 private const val START_WAIT_MS = 120_000L
 
-/**
- * Runs [send], which takes [queueId] to [place] (a book started at a chapter): the place is told
- * first, and whether the server answered or the command failed.
- */
 internal inline fun SeekTracker.trackSeek(queueId: String, place: ItemPosition, send: () -> Unit) {
     val ticket = startSeek(queueId, place)
     sent(queueId, ticket)

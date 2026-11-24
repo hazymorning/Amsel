@@ -24,7 +24,7 @@ class FollowTest {
     @Test fun `this phone wins whenever it plays itself`() {
         val players = of(speaker("kitchen", playing = true), speaker("phone", playing = true))
         assertNull(speakerToFollow(players, "phone", phoneAudible = false))
-        // Its own sound counts before the server has said so.
+        // Its own audio counts before the server reports it.
         val quiet = of(speaker("kitchen", playing = true), speaker("phone", playing = false))
         assertNull(speakerToFollow(quiet, "phone", phoneAudible = true))
     }
@@ -36,14 +36,13 @@ class FollowTest {
             speaker("bedroom", playing = true, syncedTo = "living"),
             speaker("phone", playing = false),
         )
-        // Kitchen alone is left in: the larger group no longer wins.
+        // Only Kitchen is left in, so the larger group no longer wins.
         assertEquals(
             "kitchen",
             speakerToFollow(players, "phone", false, skipped = setOf("living", "bedroom"))?.playerId,
         )
-        // The bedroom alone: it plays in the living room's group, so that group is followed.
+        // Only the bedroom: it plays in the living room's group, so that group is followed.
         assertEquals("living", speakerToFollow(players, "phone", false, skipped = setOf("living", "kitchen"))?.playerId)
-        // None of those left in plays: this phone.
         assertNull(speakerToFollow(players, "phone", false, skipped = setOf("living", "kitchen", "bedroom")))
     }
 

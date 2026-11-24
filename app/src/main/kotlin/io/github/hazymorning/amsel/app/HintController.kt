@@ -33,13 +33,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Small offers right after something the person did, or something that changed around them,
- * each with one button over the dock ([OfferController]): a song liked goes into a playlist too, a silent
- * or unreachable speaker is mended, music follows the person out of the house and back in, a
- * queue that ran out goes on, a book at night gets a sleep timer. Only while the app is in front,
- * one at a time; a kind passed up three times in a row does not come again.
- */
 class HintController(
     private val context: Context,
     private val data: DataGraph,
@@ -53,7 +46,7 @@ class HintController(
     private val sleepTimer: SleepTimerController,
     private val scope: CoroutineScope,
 ) {
-    /** When Wi-Fi beneath any VPN came up ([SystemClock.elapsedRealtime]); [LONG_AGO] if it was up before; null without. */
+    // elapsedRealtime when Wi-Fi, also beneath a VPN, came up; LONG_AGO if up before listening began; null without.
     @Volatile private var wifiSince: Long? = null
 
     private val wifis = ConcurrentHashMap.newKeySet<Network>()
@@ -68,21 +61,15 @@ class HintController(
 
     private var started = false
 
-    /**
-     * Listens from now on: to the plays and adds asked in the app, to the app coming back to the
-     * front, to a queue running out, to headphones and Wi-Fi. On the main thread, as the app's main
-     * screen first starts; later calls do nothing.
-     */
+    /** Main thread only; later calls do nothing. */
     fun start() {
         if (started) return
         started = true
-        // The speaker to go back to at home: the last one picked other than This phone.
         scope.launch {
             playing.speaker.map { it.id.takeUnless { _ -> it.isPhone } }.distinctUntilChanged().collect { id ->
                 if (id != null) data.prefs.setHomeSpeaker(id)
             }
         }
-        // Back in front: where is the music, and where is the person?
         scope.launch {
             data.session.foreground.drop(1).filter { it }.collect {
                 delay(SETTLE_MS)
@@ -102,7 +89,6 @@ class HintController(
         is PlaybackEvent.SpokenStarted -> spokenStarted(event.title, event.speakerId)
     }
 
-    /** [song] was just liked here: it can go into a playlist too, the last one used at one tap. */
     fun liked(song: MediaUi, choose: () -> Unit) {
         if (song.kind != MediaKind.Track) return
         scope.launch {
@@ -136,12 +122,10 @@ class HintController(
         }
     }
 
-    /** [title] at [uri] was unliked here: a mistaken tap is taken back with Undo. */
     fun unliked(uri: String, title: String) {
         messages.showUndo(R.string.hint_unliked, title) { favorites.set(uri, true) }
     }
 
-    /** A song went into [playlist]: said with its cover, and a way there where [open] leads. */
     private fun addedTo(playlist: MediaUi, open: (() -> Unit)?) {
         scope.launch { data.prefs.setLastPlaylist(playlist.key) }
         if (open == null) return messages.show(R.string.added_to_playlist, playlist.title)
@@ -158,10 +142,7 @@ class HintController(
         )
     }
 
-    /**
-     * A play was held back: [speaker] cannot be reached. It plays on This phone instead, at one tap
-     * ([again] once the phone is the speaker). Never passed up for good, as it stands in for the play.
-     */
+    // No hint kind, so passing it up never turns it off: it stands in for the play that was held back.
     private fun unreachable(speaker: SpeakerUi, again: () -> Unit) {
         val phone = playing.speakers.value.firstOrNull { it.isPhone } ?: return
         offers.offer(
@@ -181,7 +162,6 @@ class HintController(
         )
     }
 
-    /** Something just started on [speaker]: one that is all the way down is offered louder. */
     private fun started(speaker: SpeakerUi) {
         val silent = if (speaker.isPhone) phoneVolume() == 0 else speaker.volume == 0
         if (!silent) return
@@ -200,7 +180,6 @@ class HintController(
         )
     }
 
-    /** A book or an episode, [title], just started on [speakerId]: late in the evening a sleep timer is a tap away. */
     private fun spokenStarted(title: String, speakerId: String) {
         if (!atNight(LocalTime.now().hour)) return
         scope.launch {
@@ -227,16 +206,11 @@ class HintController(
         }
     }
 
-    /**
-     * The app is in front again: music left playing at home while the phone is away comes along at
-     * a tap, and music on the phone goes back to the speaker at home once the phone is there.
-     */
     private fun cameBack() {
         val now = playing.nowPlaying.value?.takeIf { it.isPlaying } ?: return
         val speaker = playing.speaker.value
         val wifi = wifiSince
         val away = wifi == null
-        // Just in from outside: Wi-Fi came up a little while ago, so a café's is rarely taken for home.
         val arrived = wifi != null && SystemClock.elapsedRealtime() - wifi < ARRIVED_MS
         when {
             away && !speaker.isPhone -> {
@@ -277,13 +251,11 @@ class HintController(
         }
     }
 
-    /** Headphones plugged in or paired while a speaker plays: the music can come to the phone. */
     private fun listenForHeadphones() {
         val audio = context.getSystemService(AudioManager::class.java) ?: return
         audio.registerAudioDeviceCallback(
             object : AudioDeviceCallback() {
-                // Android's first call names the devices already there, however long the main thread
-                // keeps it waiting: those were not just connected.
+                // Android's first call lists the devices already connected, however late it comes.
                 private var listed = false
 
                 override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) {
@@ -317,15 +289,11 @@ class HintController(
         )
     }
 
-    /**
-     * The speaker in use played its last song and stopped: where the server makes endless mixes,
-     * the music can go on with more like it.
-     */
     private suspend fun followQueueEnds() {
         var before: Pair<String, QueueState?>? = null
         combine(playing.speaker, data.speakers.queues) { speaker, queues -> speaker.id to queues[speaker.id] }
             .collect { now ->
-                // Only the same speaker's queue, before and after: picking another is no ending.
+                // Compares the same speaker's queue only: picking another speaker is not an ending.
                 val last = before?.takeIf { it.first == now.first }?.second
                 before = now
                 val state = now.second ?: return@collect
@@ -355,7 +323,7 @@ class HintController(
             }
     }
 
-    /** Wi-Fi or a cable beneath any VPN: a request leaves VPNs out by itself. */
+    // A NetworkRequest excludes VPNs by default, so this sees Wi-Fi or Ethernet beneath a VPN.
     private fun listenForWifi() {
         val manager = context.getSystemService(ConnectivityManager::class.java) ?: return
         val since = SystemClock.elapsedRealtime()
@@ -392,7 +360,7 @@ class HintController(
     }
 
     companion object {
-        /** The kinds of hint, as Settings turns them off and as their passes are counted. */
+        // Stored keys: the kinds Settings turns off and whose passes are counted.
         const val HINT_LIKED = "liked"
         const val HINT_SILENT = "silent"
         const val HINT_SLEEP = "sleep"
@@ -401,31 +369,27 @@ class HintController(
         const val HINT_HEADPHONES = "headphones"
         const val HINT_ENDED = "ended"
 
-        /** A level to hear, not to startle: the speaker's or the phone's, in percent. */
+        // Percent of the speaker's or the phone's range: audible without startling.
         private const val LOUDER = 30
 
-        /** Once a night: not again within this long. */
         private const val NIGHT_MS = 8 * 60 * 60 * 1000L
 
-        /** The speaker and what plays are known again this long after the app comes back. */
+        // Time for the speakers and what plays to be current again after the app comes back.
         private const val SETTLE_MS = 1_500L
 
-        /** Networks named this soon after listening began were there already. */
+        // Networks reported this soon after registering were up already.
         private const val ALREADY_THERE_MS = 1_000L
 
-        /** Wi-Fi that came up within this long before the app came back: the person just got home. */
+        // Wi-Fi this recent when the app comes back means the user just got home; a longer window
+        // would take a café's Wi-Fi for home more often.
         private const val ARRIVED_MS = 30 * 60 * 1000L
 
-        /** Wi-Fi that was up before the app listened: when it came is not known. */
+        // Wi-Fi already up when listening began: when it came is unknown.
         private const val LONG_AGO = Long.MIN_VALUE / 2
     }
 }
 
-/**
- * Whether a speaker's queue ran out on its own between [before] and [now]: it played, its last
- * song ran to its end, and it stopped with nothing after. Music that moved away, a pause or a stop
- * halfway is no ending, nor is a mix the server keeps flowing.
- */
+// No ending: a queue left empty (its music moved away) or a dynamic one, which the server keeps filling.
 internal fun queueEnded(before: QueueState, now: QueueState, nowMs: Long): Boolean {
     val queue = now.queue
     if (!before.queue.isPlaying || queue.state != IDLE || queue.isDynamic) return false
@@ -434,12 +398,10 @@ internal fun queueEnded(before: QueueState, now: QueueState, nowMs: Long): Boole
     return before.secondsAt(nowMs) >= length - END_SLACK_S
 }
 
-/** From nine in the evening until five in the morning: when a sleep timer is offered. */
 internal fun atNight(hour: Int): Boolean = hour >= EVENING || hour < MORNING
 
 private const val IDLE = "idle"
 
-/** A song stopped this close to its end ran to it. */
 private const val END_SLACK_S = 10
 
 private const val EVENING = 21

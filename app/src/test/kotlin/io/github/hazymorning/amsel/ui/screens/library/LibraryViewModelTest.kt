@@ -132,7 +132,6 @@ class LibraryViewModelTest {
             MutableStateFlow(listOf(entity(1, kind = "audiobook", name = "Moby-Dick")))
         val vm = viewModel(SavedStateHandle(mapOf("kind" to LibraryKind.Audiobooks.name)), held)
         assertEquals(listOf(LibraryKind.Playlists, LibraryKind.Albums, LibraryKind.Artists), vm.state.value.kinds)
-        // A chosen kind the library does not hold gives way to the first chip.
         assertEquals(LibraryKind.Playlists, vm.state.value.kind)
         held.value = setOf(MediaType.Audiobook)
         assertEquals(LibraryKind.Audiobooks, vm.state.value.kinds?.last())
@@ -155,9 +154,8 @@ class LibraryViewModelTest {
         val arranged = MutableStateFlow(listOf(LibraryKind.Artists, LibraryKind.Albums))
         val vm = viewModel(SavedStateHandle(mapOf("kind" to LibraryKind.Playlists.name)), arranged = arranged)
         assertEquals(listOf(LibraryKind.Artists, LibraryKind.Albums), vm.state.value.kinds)
-        // Playlists are no longer shown: the first chip shows instead.
         assertEquals(LibraryKind.Artists, vm.state.value.kind)
-        // Shown, but none in the library: the kind is still there, saying it is empty.
+        // Not held, but the only kind arranged: it still shows, as empty.
         arranged.value = listOf(LibraryKind.Podcasts)
         assertEquals(listOf(LibraryKind.Podcasts), vm.state.value.kinds)
         assertEquals(LibraryKind.Podcasts, vm.state.value.kind)
@@ -198,7 +196,6 @@ class LibraryViewModelTest {
         assertEquals(LibraryKind.Albums, vm.state.value.kind)
         assertEquals(LibrarySort.AToZ, vm.state.value.sort)
 
-        // A new process: the restored handle brings the same list back.
         asked.clear()
         val restored = viewModel(SavedStateHandle(mapOf("kind" to handle["kind"], "sort" to handle["sort"])))
         assertEquals(LibraryKind.Albums, restored.state.value.kind)
@@ -320,15 +317,13 @@ class LibraryViewModelTest {
         assertTrue(vm.state.value.loading)
     }
 
-    // The rules themselves.
-
     private val playlists = LibrarySelection(LibraryKind.Playlists, LibrarySort.RecentlyPlayed)
     private val one = listOf(MediaUi("library://playlist/1", MediaKind.Playlist, "Mornings"))
 
     @Test fun anEmptyListWhileSyncingOrConnectingIsTheFirstLoad() {
         val empty = LibraryPage(playlists, emptyList())
         assertTrue(libraryState(empty, syncing = true, ServerStatus.Connected, synced = false).loading)
-        // Synced before, an empty kind stays empty while the index syncs again or reconnects.
+        // Once synced, an empty kind stays empty during a re-sync or a reconnect.
         assertFalse(libraryState(empty, syncing = true, ServerStatus.Connected, synced = true).loading)
         assertFalse(libraryState(empty, syncing = false, ServerStatus.Connecting, synced = true).loading)
         assertTrue(libraryState(empty, syncing = false, ServerStatus.Connecting, synced = false).loading)

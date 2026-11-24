@@ -16,10 +16,6 @@ import coil3.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * Draws a widget: at each size the launcher gives it, with the pictures each size needs, made off the
- * main thread from Amsel's own cover cache and kept while they are wanted again.
- */
 internal class WidgetRenderer(private val context: Context, private val images: ImageLoader) {
     val views = WidgetViews(context)
     private val manager = AppWidgetManager.getInstance(context)
@@ -30,13 +26,9 @@ internal class WidgetRenderer(private val context: Context, private val images: 
     }
     private val blanks = HashMap<Int, Bitmap>()
 
-    /** The grounds of the covers shown, blurred or darkened, kept while they stay. */
     private val grounds = LruCache<String, WidgetCover>(GROUNDS)
 
-    /**
-     * The sizes widget [id] stands at, in dp: from Android 12 as the launcher lists them; before, its
-     * portrait and then its landscape; [kind]'s starting size until the launcher says.
-     */
+    /** In dp. Before Android 12: portrait (min width, max height), then landscape, the order [WidgetViews.build] needs. */
     fun sizes(id: Int, kind: WidgetKind): List<SizeF> {
         val options = manager.getAppWidgetOptions(id) ?: return listOf(kind.start)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -55,10 +47,7 @@ internal class WidgetRenderer(private val context: Context, private val images: 
         return listOf(SizeF(minWidth, maxHeight), SizeF(maxWidth, minHeight))
     }
 
-    /**
-     * Widget [id] with [setup], showing [look], at [sizes]; [taps] false for its page's picture. A
-     * clear widget's words take ink where the wallpaper wants it ([clearInk], asked of Android unless given).
-     */
+    /** [taps] false draws without click intents; [clearInk] null asks the wallpaper. */
     suspend fun draw(
         id: Int,
         setup: WidgetSetup,
@@ -73,7 +62,6 @@ internal class WidgetRenderer(private val context: Context, private val images: 
         return views.build(id, setup, look, fits, pictures, ink, taps)
     }
 
-    /** The covers [fits] show: the ground, what plays at each cover's side, a tile's Play … cover. */
     private suspend fun pictures(
         setup: WidgetSetup,
         look: WidgetContent,
@@ -89,7 +77,7 @@ internal class WidgetRenderer(private val context: Context, private val images: 
             ?.takeIf { it.button == WidgetButton.PlayItem }?.item?.art
         val buttoned = tiles.filter { it.buttons > 0 }.map { views.px(minOf(it.width, it.height)) }
         val tileArt = pictured(item, buttoned.distinct())
-        // The cover's shape: empty where nothing plays, and at night over every cover that fills a side.
+        // Blank shapes: the empty cover, and the night tint's mask over every cover shown.
         val shapes = covered + art.keys + tileArt.keys
         val ground = when {
             !playing -> null
@@ -106,7 +94,6 @@ internal class WidgetRenderer(private val context: Context, private val images: 
         )
     }
 
-    /** [setup]'s Play … buttons' covers, as large as their cells at each of [fits], by [faceKey]. */
     private suspend fun faces(setup: WidgetSetup, fits: List<WidgetFit>): Map<String, Bitmap> {
         val bare = setup.cells == WidgetCells.None
         val cells = fits.mapNotNull { cellSize(it, bare) }.map { (w, h) -> views.px(w) to views.px(h) }.distinct()
@@ -123,7 +110,6 @@ internal class WidgetRenderer(private val context: Context, private val images: 
         return sides.mapNotNull { side -> shaped(url, side)?.let { side to it } }.toMap()
     }
 
-    /** The cover at [url], [width] by [height] px in Amsel's cover corners; null when it cannot be read. */
     private suspend fun shaped(url: String, width: Int, height: Int = width): Bitmap? {
         val key = faceKey(url, width, height)
         shaped.get(key)?.let { return it }
@@ -137,7 +123,6 @@ internal class WidgetRenderer(private val context: Context, private val images: 
         blanks.getOrPut(side) { WidgetArt.blank(side, density) }
     }
 
-    /** The cover at [url], [px] square, laid down by [make]; null when there is none or it cannot be read. */
     private suspend fun ground(url: String?, px: Int, make: (Bitmap) -> WidgetCover): WidgetCover? {
         if (url == null) return null
         val key = "$url@$px"
@@ -153,23 +138,23 @@ internal class WidgetRenderer(private val context: Context, private val images: 
         return (images.execute(request) as? SuccessResult)?.image?.toBitmap()
     }
 
-    /** Signing out: no cover of the last person's music stays in memory. */
+    /** On sign-out: no cover of the previous user's music stays in memory; blanks hold none. */
     fun forget() {
         shaped.evictAll()
         grounds.evictAll()
     }
 
     private companion object {
-        /** About four players' and tiles' covers at two sizes each. */
+        /** About four sharp covers at two sizes each. */
         const val SHAPED_BYTES = 8 * 1024 * 1024
 
-        /** What plays now under each look, and what played before while it changes. */
+        /** The current and the previous background for each of the two cover styles. */
         const val GROUNDS = 4
 
-        /** A small face is made from a larger picture, so its corners and hairline stay crisp. */
+        /** A small cover is scaled down from at least this, which keeps the picture sharp. */
         const val MIN_SOURCE_PX = 128
     }
 }
 
-/** The forms that show what plays sharp, beside or above its words. */
+/** The forms with a sharp cover beside or above the text. */
 private val Covered = setOf(WidgetForm.Bar, WidgetForm.Player, WidgetForm.Poster)

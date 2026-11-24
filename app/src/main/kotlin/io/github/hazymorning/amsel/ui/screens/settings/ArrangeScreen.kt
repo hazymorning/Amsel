@@ -44,13 +44,9 @@ import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Sizes
 
 /**
- * A page that arranges things, the bar's places, the mini player's controls or the Library's
- * kinds: each a row with its glyph, its name, a switch and a handle, in the person's order, which a
- * switch never changes, so nothing jumps. The handle picks a row up at once, a held press anywhere
- * on it too, and moves it; TalkBack moves it through its actions. [fixed] has no switch: it always
- * stays ([fixedLine] under it). With none fixed, the last one shown stays, its switch dimmed and a
- * tap answered with a no; TalkBack hears [fixedLine]. With [max] shown, those left out wait the same
- * way until another goes; TalkBack hears why ([fullLine]). [note] says something under a row.
+ * A switch never changes the order, so no row jumps. [fixed] always stays and has no switch. With none
+ * fixed, the last row shown cannot be switched off ([fixedLine]); with [max] shown, the others cannot be
+ * switched on ([fullLine]).
  */
 @Composable
 internal fun <T> ArrangeScreen(
@@ -59,7 +55,6 @@ internal fun <T> ArrangeScreen(
     arrangement: OrderedToggles<T>,
     key: (T) -> String,
     label: @Composable (T) -> String,
-    /** The glyph's drawable for each thing. */
     icon: (T) -> Int,
     fixed: T?,
     fixedLine: String,
@@ -71,7 +66,7 @@ internal fun <T> ArrangeScreen(
     note: (T) -> String? = { null },
 ) {
     val haptics = LocalHapticFeedback.current
-    // The order while a drag swaps rows; the stored one replaces it once the drop is saved.
+    // The local order while a drag swaps rows; the stored one replaces it once the drop is saved.
     var order by remember(arrangement.order) { mutableStateOf(arrangement.order) }
     val list = rememberLazyListState()
     val keys = arrangement.order.map(key).toSet()
@@ -138,7 +133,7 @@ internal fun <T> ArrangeScreen(
                             if (last) stateDescription = fixedLine
                         },
                     subtitle = if (item == fixed) fixedLine else note(item),
-                    // A name or a note is read whole at any type size, as every setting's.
+                    // Never cut, at any font size, as in every setting.
                     titleLines = Int.MAX_VALUE,
                     subtitleLines = Int.MAX_VALUE,
                     lead = RowLead.Glyph,
@@ -146,7 +141,7 @@ internal fun <T> ArrangeScreen(
                     onClick = when {
                         item == fixed -> null
 
-                        // Full, or the last one shown: the row stays a switch, says why, and answers a tap with a no.
+                        // A held row stays a switch for TalkBack and answers a tap with a reject haptic.
                         held -> ({ haptics.performHapticFeedback(HapticFeedbackType.Reject) })
 
                         else -> (
@@ -161,11 +156,9 @@ internal fun <T> ArrangeScreen(
                     leading = { AlignedGlyph(icon(item), tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     trailing = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            // Those that wait, and the last one shown, have their switch dimmed; the hint says why.
                             if (item != fixed) {
                                 Box(Modifier.alpha(if (held) DISABLED_ALPHA else 1f)) { SettingSwitch(on) }
                             }
-                            // The handle: a press on it picks the row up at once.
                             Box(
                                 Modifier
                                     .size(Sizes.TouchTarget)

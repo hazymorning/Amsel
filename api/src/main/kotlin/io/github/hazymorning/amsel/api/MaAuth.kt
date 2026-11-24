@@ -22,11 +22,9 @@ public data class MaUser(
     public val shownName: String get() = displayName?.takeIf { it.isNotBlank() } ?: username
 }
 
-/** A sign-in method the server offers (`builtin`, `homeassistant`). */
 @Serializable
 public data class AuthProvider(@SerialName("provider_type") val providerType: String)
 
-/** What the Sign in screen needs to know about a server before anyone types anything. */
 public data class ServerProbe(val info: ServerInfo, val providers: List<AuthProvider>) {
     public val offersHomeAssistant: Boolean get() = providers.any { it.providerType == "homeassistant" }
 }
@@ -36,7 +34,6 @@ public sealed interface SignInResult {
 
     public data object WrongPassword : SignInResult
 
-    /** The server refuses this account for a while after failed attempts. */
     public data object TooManyAttempts : SignInResult
 
     public data object AccountDisabled : SignInResult
@@ -44,12 +41,10 @@ public sealed interface SignInResult {
     public data object Failed : SignInResult
 }
 
-/** Where the Home Assistant sign-in returns: localhost is always trusted, so no consent page. */
+/** localhost is always a trusted return URL, so the server shows no consent page. */
 public const val HA_RETURN_URL: String = "http://localhost/amsel-auth"
 
-/** One-shot sign-in flows, each on a short-lived socket of its own. */
 public class MaAuth(private val http: OkHttpClient) {
-    /** Connects without credentials and reads the server's info and sign-in methods. */
     public suspend fun probe(address: ServerAddress): ServerProbe {
         val socket = MaSocket(http, address)
         try {
@@ -59,7 +54,7 @@ public class MaAuth(private val http: OkHttpClient) {
                     MaJson.decodeFromJsonElement(AuthProvider.serializer(), it)
                 }
             } catch (e: MaCommandException) {
-                // Only a server older than the app supports lacks the command; its schema says so.
+                // Only a server too old for the app lacks the command, and its schema says so.
                 if (e.isSetupRequired) throw e else emptyList()
             }
             return ServerProbe(info, providers)
@@ -68,7 +63,7 @@ public class MaAuth(private val http: OkHttpClient) {
         }
     }
 
-    /** Who answers at [address] now, by its first frame; nothing is sent. */
+    /** Reads the first frame only; nothing is sent. */
     public suspend fun serverAt(address: ServerAddress): ServerInfo {
         val socket = MaSocket(http, address)
         try {
@@ -79,9 +74,8 @@ public class MaAuth(private val http: OkHttpClient) {
     }
 
     /**
-     * The Home Assistant sign-in page for an in-app WebView. The server runs the OAuth exchange
-     * itself and finally sends the browser to [HA_RETURN_URL] with the session token as `code`.
-     * Null when the server cannot offer it right now.
+     * For an in-app WebView: the server runs the OAuth exchange and finally sends the browser to
+     * [HA_RETURN_URL] with the session token as `code`. Null when the server cannot offer it now.
      */
     public suspend fun homeAssistantUrl(address: ServerAddress): String? {
         val socket = MaSocket(http, address)
@@ -103,9 +97,8 @@ public class MaAuth(private val http: OkHttpClient) {
     }
 
     /**
-     * Username and password, then a long-lived token named after the device, so the app never
-     * asks again. The password goes only to the server whose first frame names [serverId], the
-     * one probed.
+     * Ends with a long-lived token named [deviceName]. The password goes only to the server whose
+     * first frame names [serverId].
      */
     public suspend fun signIn(
         address: ServerAddress,
@@ -136,10 +129,7 @@ public class MaAuth(private val http: OkHttpClient) {
         }
     }
 
-    /**
-     * Turns a short-lived access token (password or Home Assistant sign-in) into a long-lived one,
-     * at the server whose first frame names [serverId].
-     */
+    /** A session token for a long-lived one, only at the server whose first frame names [serverId]. */
     public suspend fun exchangeToken(
         address: ServerAddress,
         serverId: String,
@@ -166,8 +156,8 @@ public class MaAuth(private val http: OkHttpClient) {
             // A guest cannot create a long-lived token (error 22): keep the session token instead.
             if (e.isPermissionError) return SignInResult.Success(accessToken) else throw e
         } ?: return SignInResult.Failed
-        // Switch this socket to the long-lived token, then retire the short-lived one. Signed in
-        // either way: a session token the server keeps runs out by itself.
+        // Re-authenticated first, so revoking the session token cannot close this socket. A failure
+        // is ignored: a session token left on the server expires by itself.
         orNullOnFailure {
             authenticate(socket, longLived)
             revokeToken(send, accessToken)
@@ -176,10 +166,9 @@ public class MaAuth(private val http: OkHttpClient) {
     }
 }
 
-/** Opens the socket; false when another server answers there, which then gets nothing. */
 private suspend fun MaSocket.opensAt(serverId: String): Boolean = open().serverId == serverId
 
-/** Why `auth/login` said no: 2.11 names it with a translation_key, 2.10 only in English. */
+/** 2.11 sends a `translation_key`; 2.10 only the English `error`. */
 private fun refusal(login: JsonObject): SignInResult {
     val key = (login["translation_key"] as? JsonPrimitive)?.contentOrNull
     val error = (login["error"] as? JsonPrimitive)?.contentOrNull.orEmpty()
@@ -190,14 +179,11 @@ private fun refusal(login: JsonObject): SignInResult {
     }
 }
 
-/** Sends one command: on a short-lived sign-in socket, or on the app's connection. */
 internal typealias CommandSender = suspend (command: String, args: JsonObject?) -> JsonElement?
 
-/** A long-lived token named [name] for whoever [send] is signed in as; null when none comes back. */
 internal suspend fun createToken(send: CommandSender, name: String): String? =
     (send("auth/token/create", buildJsonObject { put("name", name) }) as? JsonPrimitive)?.contentOrNull
 
-/** Retires [token] on the server, which closes every socket signed in with it. */
 internal suspend fun revokeToken(send: CommandSender, token: String) {
     val jti = TokenClaims.parse(token)?.tokenId ?: return
     send("auth/token/revoke", buildJsonObject { put("token_id", jti) })

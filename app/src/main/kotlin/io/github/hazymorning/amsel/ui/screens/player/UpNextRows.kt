@@ -35,12 +35,7 @@ import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * [played] songs are quiet: secondary title, dimmed cover. Only what comes next has a handle: the
- * current song carries the ring, and songs already played stay where they were. A long press opens
- * a song's actions ([onMore]; null where it has none). What the DJ says between two songs stands
- * under the server's name for it, over "DJ".
- */
+/** [reorder] is null for rows that cannot move; [onMore] is null for a row without actions. */
 @Composable
 internal fun QueueRow(
     item: QueueItemUi,
@@ -77,7 +72,7 @@ internal fun QueueRow(
     )
 }
 
-/** TalkBack's way to move and remove, since dragging and swiping are touch gestures. */
+// TalkBack actions to move and remove, as dragging and swiping are touch-only.
 @Composable
 internal fun rowActions(
     index: Int,

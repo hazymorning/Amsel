@@ -21,11 +21,7 @@ import io.github.hazymorning.amsel.ui.model.ChapterUi
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.tabular
 
-/**
- * A chapter as a track row: its number (the playing mark while it plays), its title and its length.
- * The chapter the person is in is the list's current one, selected for TalkBack and with what is
- * [left] of it in place of its length; one already [heard] is quiet. A tap plays from it.
- */
+/** [left]: seconds left in the current chapter, shown in place of its length. */
 @Composable
 fun ChapterRow(
     chapter: ChapterUi,
@@ -33,7 +29,7 @@ fun ChapterRow(
     playing: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    /** The number column, [numberLeadWidth] of the list's last chapter. */
+    /** [numberLeadWidth] of the last chapter, so all numbers share one column. */
     leadWidth: Dp = Sizes.Lead,
     left: Int? = null,
     heard: Boolean = false,
@@ -64,10 +60,8 @@ fun ChapterRow(
 }
 
 /**
- * Every chapter as a [ChapterRow], their numbers in one column [leadWidth] wide ([numberLeadWidth]);
- * [current] is the index of the chapter the person is in ([playing] while it plays), with what is
- * [left] of it; those before it are heard. Both are read in the rows, so the list is not built anew
- * each second while a book plays, and only the current row reads what is left.
+ * [current] and [left] are read inside the items, so the list is not rebuilt each second while a
+ * book plays; only the current row reads [left].
  */
 fun LazyListScope.chapterRows(
     chapters: List<ChapterUi>,
@@ -91,15 +85,10 @@ fun LazyListScope.chapterRows(
     }
 }
 
-/** The chapter's own title, or "Chapter 3" when it has none. */
 @Composable
 fun chapterTitle(chapter: ChapterUi): String =
     chapter.title.ifBlank { stringResource(R.string.spoken_chapter, chapter.number) }
 
-/**
- * "Chapter 3 · The Spouter-Inn", or the title alone when it already says which chapter it is, or
- * "Chapter 3" when it has none.
- */
 @Composable
 fun chapterLine(chapter: ChapterUi): String {
     val number = stringResource(R.string.spoken_chapter, chapter.number)
@@ -111,9 +100,8 @@ fun chapterLine(chapter: ChapterUi): String {
 }
 
 /**
- * The phone's clock (SystemClock.elapsedRealtime), moving on once a second while [running]: enough
- * for a chapter mark and the time left to follow playback without drawing every frame. It runs on
- * the frame clock, which Compose pauses in tests.
+ * SystemClock.elapsedRealtime, updated once a second while [running]: enough for chapter marks and
+ * time left, without recomposing every frame. Driven by the frame clock, which Compose tests pause.
  */
 @Composable
 fun rememberListeningClock(running: Boolean): State<Long> {

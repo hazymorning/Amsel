@@ -9,7 +9,6 @@ import io.github.hazymorning.amsel.testing.ShotVariant
 import org.junit.Test
 
 class LibraryShots : ScreenshotTest() {
-    /** Blue Hour plays (Lanterns, in the kitchen): its ring is the only colour besides the covers. */
     @Test fun albums() = snap("library_albums", listOf(ShotVariant.LargeFont)) {
         val playing = setOf(SampleData.albums.first().key)
         Library(LibraryUiState(LibraryKind.Albums, LibrarySort.RecentlyAdded, SampleData.albums, playing = playing))
@@ -17,7 +16,6 @@ class LibraryShots : ScreenshotTest() {
 
     @Test fun empty() = snap("library_empty") { Library(LibraryUiState(LibraryKind.Albums)) }
 
-    /** Albums as a place of their own in the bar: their name is the title, with no chips. */
     @Test fun alone() = snap("library_alone") {
         Library(
             LibraryUiState(
@@ -30,7 +28,6 @@ class LibraryShots : ScreenshotTest() {
         )
     }
 
-    /** Rows; none plays, as the music comes from an album. */
     @Test fun playlists() = snap("library_playlists") {
         Library(LibraryUiState(LibraryKind.Playlists, items = LibrarySampleData.playlists))
     }

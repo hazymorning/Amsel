@@ -64,11 +64,8 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
 import kotlin.math.roundToInt
 
-/**
- * A section's title line in edit mode: the title from its capitals to its last baseline, and ⋯ at
- * the line's end, its ink on the margin, centred on the first line's capitals. The ⋯ takes no room
- * of its own above or below, so the sentence follows the title, not the button.
- */
+// ⋯ is centred on the first line's capitals and overhangs by half a touch target, adding no height:
+// the sentence below follows the title, not the button.
 @Composable
 internal fun SectionTitleLine(
     title: String,
@@ -89,13 +86,6 @@ internal fun SectionTitleLine(
     }
 }
 
-/**
- * A section's title in edit mode, in its heading style, on a second line before it is cut. A tap
- * makes it a field to type a new name in ([renaming]), which takes the same lines in the same
- * place, so the tap moves nothing. The name is kept when the field loses focus or Done is pressed,
- * and when edit mode ends while typing. [moves] are TalkBack's way to move the section, which a
- * held press does by touch.
- */
 @Composable
 private fun SectionTitleField(
     title: String,
@@ -106,7 +96,7 @@ private fun SectionTitleField(
     moves: List<CustomAccessibilityAction>,
     modifier: Modifier = Modifier,
 ) {
-    // A heading Home does not show stands faint here, where it can still be named.
+    // A title Home hides is drawn faint here, where it can still be renamed.
     val ink = MaterialTheme.colorScheme.run { if (titled) onSurface else outline }
     val style = MaterialTheme.typography.titleLarge.copy(color = ink)
     if (!renaming) {
@@ -141,7 +131,7 @@ private fun SectionTitleField(
     val typed by rememberUpdatedState(text.text)
     val named by rememberUpdatedState(title)
     val rename by rememberUpdatedState(onRename)
-    // Losing focus ends the field and then disposes it: the name is sent once, not for each.
+    // Focus loss and the disposal that follows it both commit; the name is sent once.
     val sent = remember { arrayOfNulls<String>(1) }
     val commit = { name: String ->
         if (name.trim() != named && name != sent[0]) {
@@ -149,14 +139,14 @@ private fun SectionTitleField(
             rename(name)
         }
     }
-    // Leaving edit mode while typing keeps the name too.
+    // Leaving edit mode while typing commits the name too.
     DisposableEffect(Unit) { onDispose { commit(typed) } }
     LaunchedEffect(Unit) { field.requestFocus() }
     val label = stringResource(R.string.home_edit_rename)
     BasicTextField(
         text,
-        // The field wraps as the title does, but a name is one line of words: a line break is left
-        // out and ends the name, so Enter on a keyboard does what Done does.
+        // The field wraps like the title but takes no line break: Enter on a hardware keyboard
+        // commits, as Done does.
         onValueChange = {
             val words = it.text.filterNot { c -> c == '\n' || c == '\r' }
             text = it.copy(text = words)
@@ -188,14 +178,10 @@ private fun SectionTitleField(
     )
 }
 
-/** A name is whole where it is given: a section's title takes a second line in edit mode before it is cut. */
 private const val TITLE_LINES = 2
 
-/**
- * [capToBaseline] for the rename field. A name longer than the field's lines scrolls in it and takes its
- * baselines along, so the field is cut by what a line of [style] holds over its capitals and under
- * its baseline: its lines then stand where the title's stood, whatever it shows of the name.
- */
+// [capToBaseline] for the rename field. A scrolled field reports shifted baselines, so it is trimmed
+// by one line of [style] instead, which keeps its lines where the title's were.
 @Composable
 private fun Modifier.fieldCapToBaseline(style: TextStyle): Modifier {
     val measurer = rememberTextMeasurer()
@@ -209,11 +195,7 @@ private fun Modifier.fieldCapToBaseline(style: TextStyle): Modifier {
     }
 }
 
-/**
- * A section's sentence in edit mode on two lines alike, "Show [what ▾]" over "as [how ▾]": each a
- * word in one column and its chip, so the chips share an edge and changing either never moves what
- * follows.
- */
+// "Show [what ▾]" over "as [how ▾]": both words take one column, so the chips share an edge.
 @Composable
 internal fun SectionSentence(section: SectionUi, onWhat: () -> Unit, onHow: () -> Unit) {
     val sentence = Sentence.of(stringResource(R.string.home_edit_sentence))
@@ -231,7 +213,7 @@ internal fun SectionSentence(section: SectionUi, onWhat: () -> Unit, onHow: () -
         SentenceLine(sentence.before, lead) {
             DropdownChip(what, onWhat, it, contentDescription = stringResource(R.string.home_edit_what_is, whatName))
         }
-        // Search is a field and nothing else.
+        // Search has no layout to choose: it is always a field.
         if (section.option != SectionOption.Search) {
             SentenceLine(sentence.between, lead) {
                 DropdownChip(how, onHow, it, contentDescription = stringResource(R.string.home_edit_how_is, howName))
@@ -240,7 +222,6 @@ internal fun SectionSentence(section: SectionUi, onWhat: () -> Unit, onHow: () -
     }
 }
 
-/** One line of the sentence: its word in a column [lead] wide, then its chip, on the chip's first baseline. */
 @Composable
 private fun SentenceLine(word: String, lead: Dp, chip: @Composable (Modifier) -> Unit) {
     val style = MaterialTheme.typography.bodyLarge
@@ -251,7 +232,7 @@ private fun SentenceLine(word: String, lead: Dp, chip: @Composable (Modifier) ->
                 style = style,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                // By its ink, so the chip alone sets the line's height at any font size.
+                // Trimmed to its glyph bounds, so the chip alone sets the line height at any font size.
                 modifier = Modifier.capToBaseline(style).trimSideBearings(word, style),
             )
         }

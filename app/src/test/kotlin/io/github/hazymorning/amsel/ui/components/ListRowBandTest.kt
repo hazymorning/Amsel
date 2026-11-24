@@ -19,10 +19,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * The band a finger shows on a row, on a phone 411 dp wide: 16 from words and glyphs, 8 from a
- * cover, and whatever stands in the row on the margin.
- */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class ListRowBandTest {
@@ -44,7 +40,7 @@ class ListRowBandTest {
         }
     }
 
-    /** The row's band: what takes its touch. */
+    /** The merged row node's bounds, which are the band that takes the touch. */
     private fun band(row: String) = compose.onNodeWithText(row).getUnclippedBoundsInRoot()
 
     @Test fun aBandKeepsSixteenFromWordsAndGlyphs() {
@@ -77,5 +73,5 @@ private const val WIDTH = 411f
 private const val MARGIN = 24f
 private const val HALF_A_PIXEL = 1f / 6
 
-/** A first letter's ink stands on the margin; its box begins a pixel or two before. */
+/** The first glyph sits on the margin; its text box begins a pixel or two before. */
 private const val A_SIDE_BEARING = 0.7f

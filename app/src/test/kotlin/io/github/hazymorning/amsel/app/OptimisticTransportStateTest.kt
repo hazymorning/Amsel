@@ -14,12 +14,11 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** A tap on play, pause, shuffle, repeat or the volume shows before the speaker reports it. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class OptimisticTransportStateTest {
     private val id = "kitchen"
 
-    /** Playing, reported at 1 s in at clock 0; shuffle and repeat off; volume 40. */
+    // Plays at volume 40, as in SampleData.
     private val reported = SampleData.nowPlaying.copy(
         positionMs = 1_000,
         positionAtMs = 0,
@@ -102,7 +101,7 @@ class OptimisticTransportStateTest {
         assertEquals(4_000, shown.positionAtMs)
     }
 
-    /** The position ran on from the tap before, ahead of the sound: the speaker starts a moment later. */
+    // The speaker starts a moment after the tap; a running position would be ahead of the sound.
     @Test fun playShowsAtOnceAndItsPositionStandsUntilTheSpeakerPlays() = runTest {
         val t = transport()
         val paused = reported.copy(isPlaying = false, positionMs = 30_000, positionAtMs = 0)
@@ -113,7 +112,6 @@ class OptimisticTransportStateTest {
         assertFalse(shown.runs)
         advanceTimeBy(1_500)
         assertEquals(30_000, shown.positionAt(testScheduler.currentTime))
-        // The speaker reports that it plays: its own position shows, and runs.
         val playing = paused.copy(isPlaying = true, positionMs = 30_200, positionAtMs = 61_400)
         t.settle(id, playing)
         assertTrue(t.shown(playing).runs)
@@ -127,9 +125,8 @@ class OptimisticTransportStateTest {
         val shown = t.shown()
         assertEquals("Undertow", shown.title)
         assertEquals(0, shown.positionAt(2_000))
-        // It stands at its start until the speaker is there.
         assertEquals(0, shown.positionAt(4_000))
-        // The speaker's own controls stay its own.
+        // Volume and controls stay the speaker's, not the next item's.
         assertEquals(40, shown.volume)
         t.settle(id, reported)
         assertEquals("Undertow", t.shown().title)
@@ -137,7 +134,7 @@ class OptimisticTransportStateTest {
         assertTrue(t.pending.value.isEmpty())
     }
 
-    /** Where a seek goes comes with what the speaker reports (its position, standing): a pause keeps it. */
+    // The seek target comes with the speaker's report, standing (arriving); a pause keeps it.
     @Test fun aPauseDuringASeekStopsAtItsTarget() = runTest {
         val t = transport()
         val seeking = reported.copy(positionMs = 10_000, positionAtMs = 0, arriving = true)

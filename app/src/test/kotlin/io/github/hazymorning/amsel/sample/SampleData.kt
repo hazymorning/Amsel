@@ -7,10 +7,7 @@ import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
 
-/**
- * Sample library for screenshot tests. Artwork uses `sample:` URLs that the test image loader
- * paints as calm generated covers.
- */
+/** `sample:` art comes from SampleCovers, which ScreenshotTest installs. */
 object SampleData {
     private fun art(key: String) = ArtRef("sample:$key")
 

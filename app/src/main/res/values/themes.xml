@@ -5,7 +5,7 @@
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
 
-    <!-- The blackbird on its own ground, as on the launcher, not cut out of the page. -->
+    <!-- The icon on its launcher background colour, not cut out against the page. -->
     <style name="Theme.Amsel.Starting" parent="Theme.SplashScreen.IconBackground">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>

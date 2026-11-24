@@ -44,34 +44,19 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.dockLine
 
-/** The dock's play glyph, a step up from the next beside it. */
+/** Size of the seconds-skip glyphs of a book or an episode. */
 private val PlayGlyph = 28.dp
 
-/** The disc play stands on: the dock's own measure, under its cover's 48. */
 private val PlayDisc = 44.dp
 
-/**
- * Around what plays on the dock: the page's margin, so its cover stands on the margin as a page's
- * covers do, as far from its band's edges as in from the screen's.
- */
 private val Inset = Keyline.Margin
 
-/**
- * The skip's ink stands this far in from the screen's edge, off it, where a thumb finds it: the
- * controls are held, the cover only looked at.
- */
+/** The last control's glyph sits this far in from the screen edge, more than the margin: within thumb reach. */
 private val ControlsInset = Space.S10
 
-/** From the words to play's touch room: play stands apart from what it plays. */
 private val BeforePlay = Space.S6
 
-/**
- * What plays, on the dock's own surface, with no card around it: the cover on the margin, the
- * speaker's name over what plays, play and a skip, the skip's ink on the margin across. It stays
- * when nothing plays: where music goes can be chosen before the first song, and the speaker's
- * button stays where the person put it. A cover here, and one still empty, stands a tone above the
- * dock, as a cover does above the page.
- */
+/** Also shown when nothing plays, so a speaker can be chosen before the first song. */
 @Composable
 internal fun PlayerCard(
     nowPlaying: NowPlayingUi?,
@@ -88,6 +73,7 @@ internal fun PlayerCard(
     val last = remember { mutableStateOf(nowPlaying) }
     SideEffect { if (nowPlaying != null) last.value = nowPlaying }
     val colors = MaterialTheme.colorScheme
+    // Covers use surfaceContainerLow as their background, this band's own tone: raise it a step.
     val raised = remember(colors) { colors.copy(surfaceContainerLow = colors.surfaceContainerHigh) }
     MaterialTheme(colorScheme = raised) {
         Box(modifier.fillMaxWidth()) {
@@ -103,12 +89,6 @@ internal fun PlayerCard(
     }
 }
 
-/**
- * Nothing plays: an empty cover and the speaker's name over "Not playing". A tap anywhere on the
- * card opens the speaker choice, the one thing to do here, and TalkBack offers the card as that
- * button; the speaker's own button stays where the person keeps one in the mini player
- * ([speakerButton]). Play and the rest wait for something to play.
- */
 @Composable
 private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit, speakerButton: Boolean) {
     val type = MaterialTheme.typography
@@ -152,13 +132,6 @@ private fun IdleRow(speaker: SpeakerUi, onSpeaker: () -> Unit, speakerButton: Bo
     }
 }
 
-/**
- * Cover and words ([PlayerWords]), then the [controls] the person chose, in their order: play, and
- * as they like next and previous (by seconds for a book or an episode, as the notification has
- * them), the heart, the speaker, volume, the sleep timer or shuffle. A tap or a drag up opens Now
- * Playing; a sideways swipe goes to the next or the one before, the song's line following the
- * finger; a long press arranges the controls ([onArrange]).
- */
 @Composable
 private fun PlayerRow(
     state: NowPlayingUi,
@@ -177,7 +150,7 @@ private fun PlayerRow(
         onControl(if (forward) PlayerControl.Next else PlayerControl.Previous)
     }
     val swipe = rememberSideSwipeState(state.key ?: state.title, enabled = state.canSkip, onGo = skip)
-    // The last control's ink stands [ControlsInset] in from the screen's edge, whichever it is.
+    // The empty space beside the last control's glyph, so the glyph itself sits [ControlsInset] in.
     val endSpare = when (val end = controls.lastOrNull() ?: DockControl.PlayPause) {
         DockControl.PlayPause -> (Sizes.TouchTarget - PlayDisc) / 2
         DockControl.Next -> if (state.spoken) endReach(R.drawable.ic_skip_forward, PlayGlyph) else endReach(end.icon)
@@ -235,7 +208,6 @@ private fun PlayerRow(
     }
 }
 
-/** One of the mini player's controls, as [PlayerRow] lines them up. */
 @Composable
 private fun DockButton(
     control: DockControl,
@@ -246,9 +218,10 @@ private fun DockButton(
     val colors = MaterialTheme.colorScheme
     val ink = colors.onSurface
     when (control) {
-        // In ink, as every page's play: the dock's one focal point, which balances the cover at its start.
+        // Primary, as on every page: the dock's one focal point, balancing the cover at the start.
         DockControl.PlayPause -> PlayButton(state.isPlaying, { onControl(PlayerControl.PlayPause) }, size = PlayDisc)
 
+        // A book or an episode skips by seconds, as its notification does.
         DockControl.Next -> if (state.spoken) {
             val seconds = (SKIP_FORWARD_MS / 1000).toInt()
             SkipSeconds(
@@ -289,7 +262,6 @@ private fun DockButton(
             )
         }
 
-        // Only a song is a favourite here; a station, a book or an episode leaves the heart dimmed.
         DockControl.Favorite -> IconAction(
             if (state.favorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite,
             stringResource(
@@ -325,11 +297,7 @@ private fun DockButton(
     }
 }
 
-/**
- * The speaker it plays on, and under it what plays: title and artist ([byline]) on one line that
- * glides back and forth while it is longer than its room. [song] moves that line with a sideways
- * swipe; the speaker's name stays, for the speaker does.
- */
+/** [song] (the swipe's offset) moves only the song line: a skip changes the song, not the speaker. */
 @Composable
 private fun PlayerWords(state: NowPlayingUi, speaker: SpeakerUi, modifier: Modifier, song: Modifier, runs: Boolean) {
     val type = MaterialTheme.typography

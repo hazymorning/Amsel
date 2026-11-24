@@ -8,7 +8,7 @@ import io.github.hazymorning.amsel.data.home.SectionSource
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 
-/** A section's title: its option in plain words. The layout never appears in it. */
+/** The layout never appears in a section's title. */
 @get:StringRes
 internal val SectionOption.title: Int
     get() = when (this) {
@@ -35,10 +35,8 @@ internal val SectionOption.title: Int
         SectionOption.Search -> R.string.home_option_search
     }
 
-/**
- * The option as the sentence's first chip and its sheet say it. There each name has to say its kind
- * itself: "New albums" under "New in your library", "All stations" under "Radio".
- */
+// The name in the What sheet and the first chip's TalkBack label, where no heading gives the kind:
+// "New albums" for the title "New in your library", "All stations" for "Radio".
 @get:StringRes
 internal val SectionOption.choice: Int
     get() = when (this) {
@@ -48,7 +46,7 @@ internal val SectionOption.choice: Int
         else -> title
     }
 
-/** The title above the section: "Your albums" while Recently played falls back to them. */
+/** "Your albums" while Recently played falls back to the library's albums. */
 @StringRes
 internal fun sectionTitle(option: SectionOption, fallback: Boolean): Int =
     if (fallback && (option == SectionOption.Everything || option == SectionOption.PlayedHere)) {
@@ -57,10 +55,8 @@ internal fun sectionTitle(option: SectionOption, fallback: Boolean): Int =
         option.title
     }
 
-/**
- * The option as the sentence's first chip says it, where it stands after "Show": "Show your pins",
- * "Zeigt Angeheftetes". A title is a heading and a sheet's choice a name; the sentence needs its own words.
- */
+// The first chip's words after "Show" ("Show your pins", "Zeigt Angeheftetes"): a sentence needs
+// other words than a heading or a sheet's name.
 @get:StringRes
 internal val SectionOption.inSentence: Int
     get() = when (this) {
@@ -88,7 +84,7 @@ internal val SectionOption.inSentence: Int
         SectionOption.Search -> R.string.home_sentence_option_search
     }
 
-/** The layout as the sentence's second chip says it, after "as": "as a grid", "als große Cover". */
+// The second chip's words after "as": "as a grid", "als große Cover".
 @get:StringRes
 internal val SectionLayout.inSentence: Int
     get() = when (this) {
@@ -109,11 +105,8 @@ internal val SectionLayout.label: Int
         SectionLayout.List -> R.string.home_layout_list
     }
 
-/**
- * What to show's choices, in the groups and the order its sheet lists them: no name stands over a
- * group, so each holds one kind in one order, what there is, the favourites, the recently played,
- * then the kind's own. Books and podcasts are one group.
- */
+// The What sheet's groups have no heading, so each holds one kind, ordered: what there is,
+// favourites, recently played, then the kind's own. Books and podcasts share a group.
 internal val WhatGroups: List<List<SectionOption>> = listOf(
     listOf(
         SectionOption.Pinned,
@@ -139,10 +132,6 @@ internal val WhatGroups: List<List<SectionOption>> = listOf(
     listOf(SectionOption.NewAudiobooks, SectionOption.NewEpisodes, SectionOption.YourPodcasts),
 )
 
-/**
- * What to show offers an option for books or podcasts only while the library holds some, and New
- * episodes only where the server keeps that row.
- */
 internal fun SectionOption.isOffered(spoken: SpokenWord): Boolean = when {
     this == SectionOption.ContinueListening -> spoken.books || spoken.podcasts
     this == SectionOption.NewEpisodes -> spoken.newEpisodes
@@ -151,10 +140,8 @@ internal fun SectionOption.isOffered(spoken: SpokenWord): Boolean = when {
     else -> true
 }
 
-/**
- * "Show [what] as [how]": the word before each of the sentence's two chips, split from a format
- * string with %1$s and %2$s. The chips end their lines, so nothing follows the second.
- */
+// The words before each chip of a "%1$s … %2$s" template; text after %2$s is dropped, as the chips
+// end their lines.
 internal data class Sentence(val before: String, val between: String) {
     companion object {
         fun of(template: String): Sentence {

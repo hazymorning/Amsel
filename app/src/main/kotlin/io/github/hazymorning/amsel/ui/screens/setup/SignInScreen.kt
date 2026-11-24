@@ -163,7 +163,7 @@ private fun PasswordField(
     )
 }
 
-/** "Show" or "Hide" in words rather than an eye, so the toggle explains itself. */
+/** Words rather than an eye icon, so the toggle explains itself. */
 @Composable
 private fun ShowHideButton(visible: Boolean, onChange: (Boolean) -> Unit) {
     TextAction(
@@ -185,48 +185,36 @@ private val SignInError.message: Int
         SignInError.HomeAssistant -> R.string.setup_error_home_assistant
     }
 
-/** The two ways in: Home Assistant (when the server offers it) and username and password. */
 enum class SignInMethod { HomeAssistant, Password }
 
-/** What went wrong, said in plain sentences on screen; never a code. */
 enum class SignInError {
-    /** "That password didn't work": the server refused the username or password. */
+    /** The server refused the username or the password. */
     WrongPassword,
 
-    /** The server refuses the account for a while after failed attempts. */
     TooManyAttempts,
 
     AccountDisabled,
 
-    /** The server stopped answering while signing in. */
+    /** Any other failure: the server stopped answering, or the token could not be kept ([attempt]). */
     Unreachable,
 
-    /** Home Assistant's sign-in could not start, its page came back without a code, or the server refused the code. */
+    /** It could not start, the page returned without a code, or completing the sign-in failed. */
     HomeAssistant,
 }
 
-/**
- * Everything Sign in draws. The server was checked on the way here, so its name, address and
- * sign-in methods are always known. Tokens never appear: the app keeps a long-lived one itself.
- */
 @Immutable
 data class SignInUiState(
     val serverName: String,
-    /** For display, host only: `192.168.1.20` or `music.example.com`. Never a port. */
+    /** Host only, without scheme or port: for display. */
     val serverAddress: String,
-    /** The server lists Home Assistant among its sign-in methods. */
     val offersHomeAssistant: Boolean = false,
     val username: String = "",
     val password: String = "",
     val passwordVisible: Boolean = false,
-    /** The sign-in that is running, so its button shows progress; null when idle. */
     val busy: SignInMethod? = null,
-    /** Cleared when the person edits a field or starts again. */
     val error: SignInError? = null,
 ) {
-    /** Sign in is offered once both fields are filled, and not twice. */
     val canSignIn: Boolean get() = busy == null && username.isNotBlank() && password.isNotEmpty()
 
-    /** Fields stay put while a sign-in runs. */
     val editable: Boolean get() = busy == null
 }

@@ -48,20 +48,15 @@ enum class RowLead {
 
     Glyph,
 
-    /** A glyph centred in the 56 dp cover column, for lists that mix covers and glyphs. */
+    /** A glyph centred in the cover column, for lists that mix covers and glyphs. */
     GlyphUnderCover,
 
     None,
 }
 
 /**
- * The one row anatomy: a lead (cover, glyph or number) on the margin, the words 16 after it, and
- * an optional quiet trailing part. No menu: a tap opens the item, a long press is the shortcut to
- * its actions. [playing] puts the moss ring before the second line (a numbered lead shows its own);
- * [quiet] sets the title in the secondary tone (played). [band] fills the row's band (a row lifted
- * by a drag, a setting in its block); a finger shows it on any row. [titleLines] above 1 lets a
- * label wrap. A [selected] choice ([Role.RadioButton]) ends with a tick, whose room every choice
- * keeps.
+ * No menu button: a long press opens the item's actions. [playing] shows the play bars beside a
+ * cover or no lead; a glyph lead (a track number) shows its own mark.
  */
 @Composable
 fun ListRow(
@@ -74,11 +69,9 @@ fun ListRow(
     selected: Boolean = false,
     quiet: Boolean = false,
     band: Color? = null,
-    /** The band's shape, and the press's: a row in a block of rows takes its place's corners. */
+    /** Also the press shape; a row in a block of rows passes its position's corners. */
     bandShape: Shape = Shapes.Band,
-    /** How far the row's content keeps from its band's sides: a cover less than words and glyphs. */
     inset: Dp = if (lead == RowLead.Cover || lead == RowLead.GlyphUnderCover) Space.BandInset else Space.BandText,
-    /** Where the band's sides stand from the screen's; the content stays on the margin. */
     edge: Dp = Keyline.Margin - inset,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -87,11 +80,11 @@ fun ListRow(
     titleLines: Int = 1,
     subtitleLines: Int = 1,
     leadWidth: Dp = Sizes.Lead,
-    /** Short lines (a speaker's name and what it plays) stay this narrow; the tick keeps to the end. */
+    /** Caps the text column's width; the trailing part stays at the row's end. */
     textMaxWidth: Dp = Dp.Unspecified,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
-    /** Before the second line when nothing plays there: a book's or episode's download ([DownloadMarkGlyph]). */
+    /** A download mark ([DownloadMarkGlyph]); the play bars take its place while the item plays. */
     mark: (@Composable () -> Unit)? = null,
 ) {
     val tap = if (onClick != null) {
@@ -160,8 +153,8 @@ fun ListRow(
             trailing()
         } else if (role == Role.RadioButton) {
             Spacer(Modifier.width(Space.Sibling))
-            // Laid out in every choice and drawn in the chosen one, so a name breaks alike chosen or not.
-            // Its middle stands where a pill button's round end has its centre, so it lines up under one.
+            // Laid out in every choice, drawn only in the chosen one, so a name wraps the same either way.
+            // Centred where a pill button's round end has its centre, to line up under a button.
             AlignedGlyph(
                 R.drawable.ic_check,
                 Modifier
@@ -179,31 +172,26 @@ private fun rowHeight(lead: RowLead, twoLines: Boolean): Dp = when {
     else -> Sizes.CompactRowHeight
 }
 
-/** How far a row's first ink (the cover's top, or the title's cap top) sits below its top. */
+/** From a row's top to its first visible content: the cover's top or the title's cap top. */
 @Composable
 fun rowGlyphTop(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).top
 
-/** How far a row's last ink (the cover's bottom, or the last baseline) sits above its bottom. */
+/** From a row's last visible content (the cover's bottom or the last baseline) to its bottom. */
 @Composable
 fun rowGlyphBottom(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).bottom
 
-/** What a cover row adds under its cover when its text's lines need more than its 72 dp. */
 @Composable
 internal fun rowGrowth(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).growth
 
-/**
- * A row's band: [rowHeight], or the text's lines when large type needs more. Every cover row of a
- * list takes it, one line or two, so a list keeps one rhythm at every font size.
- */
 @Composable
 internal fun rowBand(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).band
 
 private class RowGeometry(val top: Dp, val bottom: Dp, val growth: Dp, val band: Dp, val capTop: Dp = top)
 
 /**
- * Text rows centre their ink (cap top to last baseline) and grow by their line boxes. A cover row
- * keeps its cover, and the text centred on it, 8 under its top at every font size; when its lines
- * need more room it grows below its band, so every gap to a first cover holds.
+ * Text rows centre cap top to last baseline and grow with their line boxes. A cover row keeps its
+ * cover [Space.S2] below its top at any font size and grows below its band instead, so the gap above
+ * a first cover never changes.
  */
 @Composable
 private fun rowGeometry(lead: RowLead, twoLines: Boolean): RowGeometry {
@@ -225,7 +213,7 @@ private fun rowGeometry(lead: RowLead, twoLines: Boolean): RowGeometry {
     }
 }
 
-/** What the line boxes add around the ink: room for accents above the capitals and descenders below. */
+/** What the line boxes add around cap top and baseline: room for accents above and descenders below. */
 private fun Density.linePad(title: TextStyle, second: TextStyle?): Dp {
     val above = (lineHeight(title) - capHeight(title)) / 2
     val last = second ?: title
@@ -233,9 +221,9 @@ private fun Density.linePad(title: TextStyle, second: TextStyle?): Dp {
 }
 
 /**
- * From a section heading's baseline to the top of the list's first row: a cover lands
- * [Space.HeadingToRow] under the baseline, as tiles do; a text row's capitals a group's distance
- * under it, so a pressed band never reaches the heading.
+ * From a section heading's baseline to the first row's top: a cover lands [Space.HeadingToRow] below
+ * the baseline, as tiles do; a text row's cap top [Space.Group] below, so a pressed band never
+ * reaches the heading.
  */
 @Composable
 fun headerToRow(lead: RowLead, twoLines: Boolean): Dp {
@@ -248,10 +236,7 @@ fun headerToRow(lead: RowLead, twoLines: Boolean): Dp {
     return offset.coerceAtLeast(Space.S1)
 }
 
-/**
- * The lead column for a list numbered up to [largest]: 24 dp, or its figures, tabular, when they
- * need more. Measured once per list and given to every row.
- */
+/** Measure once per list and pass to every row, so all numbers share one column. */
 @Composable
 fun numberLeadWidth(largest: Int): Dp {
     val widest = "0".repeat(largest.toString().length.coerceAtLeast(2))

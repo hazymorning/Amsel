@@ -21,10 +21,8 @@ import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 
 /**
- * The dock, two bands edge to edge with no card and no line: what plays ([PlayerCard]) a tone
- * above the page, and under it the app's places a tone above that. [openDrag] lets a drag up from
- * anywhere on the dock open Now Playing; while Now Playing lies over the dock it is [covered] and
- * nothing on it moves.
+ * [openDrag] is the drag that opens Now Playing, applied to the whole dock while something plays.
+ * [covered]: Now Playing lies over the dock, so its song line stops moving.
  */
 @Composable
 fun Dock(
@@ -46,7 +44,7 @@ fun Dock(
     Column(
         modifier
             .fillMaxWidth()
-            // Hit everywhere, so a touch between its controls never reaches the page under it.
+            // Hit-testable everywhere, so a touch between its controls never reaches the page below.
             .pointerInput(Unit) {}
             .then(if (nowPlaying != null) openDrag else Modifier),
     ) {

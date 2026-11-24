@@ -8,10 +8,9 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Music Assistant draws a smart playlist's cover as six by six album covers, too small to read;
- * this keeps its top left corner, two by two where that is as sharp as [px] needs (a tile), else
- * as many more as it takes (a page's cover, three by three), so a cover is never enlarged. Any
- * other picture stays whole. Either way the result is scaled to [px].
+ * Crops the server's six-by-six smart playlist collage to its top-left corner, as few covers across as
+ * stay sharp at [px] (two on a tile, three on its page), never enlarged; any other picture stays
+ * whole. See docs/API-NOTES.md, "Images".
  */
 internal class MosaicCrop(private val px: Int) : Transformation() {
     override val cacheKey: String = "mosaic-$px"
@@ -33,7 +32,7 @@ internal class MosaicCrop(private val px: Int) : Transformation() {
     override fun hashCode(): Int = px
 }
 
-/** Six even tiles across and down: the seams differ far more than the middles of the tiles. */
+/** A six-by-six grid: luma changes across its seams far more than across the middles of its tiles. */
 private fun isGrid(bitmap: Bitmap): Boolean {
     val w = bitmap.width
     val h = bitmap.height
@@ -57,7 +56,6 @@ private fun isGrid(bitmap: Bitmap): Boolean {
 
 private const val TILES = 6
 
-/** The fewest covers across a smart playlist's corner shows. */
 private const val FEWEST = 2
 private const val MIN_SIDE = 60
 private const val SQUARE_SLACK = 20
@@ -66,5 +64,5 @@ private const val SPAN = 2
 private const val MIN_SEAM = 10.0
 private const val CONTRAST = 3.0
 
-/** A smart playlist's cover keeps a third of its side or more, so it loads this much larger to stay sharp. */
+/** The crop keeps at least a third of the side (two of six covers), so a collage loads this much larger. */
 internal const val MOSAIC_SCALE = 3

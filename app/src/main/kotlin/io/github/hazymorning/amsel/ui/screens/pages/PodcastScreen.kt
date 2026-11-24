@@ -41,10 +41,6 @@ import io.github.hazymorning.amsel.ui.rememberRetry
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * A podcast: its cover and title as an album's, then its episodes, newest first. More come as the
- * list nears its end.
- */
 @Composable
 fun PodcastScreen(
     state: PodcastUiState,
@@ -56,7 +52,7 @@ fun PodcastScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     onRetryMore: () -> Unit = {},
-    /** Episodes on the phone, or on their way there, by uri. */
+    /** Download states by episode URI. */
     downloads: Map<String, DownloadState> = emptyMap(),
 ) {
     if (state.showUnavailable) {
@@ -131,7 +127,6 @@ private fun PodcastTitle(podcast: MediaUi?) {
 
 private const val MORE_BLOCKS = 2
 
-/** Where the next episodes would be: why they are not, and Retry, which stays until it is used. */
 @Composable
 private fun MoreFailed(onRetry: () -> Unit) {
     val style = MaterialTheme.typography.bodyMedium
@@ -151,8 +146,8 @@ private fun MoreFailed(onRetry: () -> Unit) {
 }
 
 /**
- * The podcast page for [key] (`library://podcast/2`). An episode plays on its own, resumed by the
- * server; the one on the current speaker plays and pauses there.
+ * [key] is the podcast's URI, such as `library://podcast/2`. An episode plays on its own, and the
+ * server resumes it (docs/API-NOTES.md, "Audiobooks and podcasts").
  */
 @Composable
 fun PodcastRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier) {
@@ -163,7 +158,7 @@ fun PodcastRoute(navigator: Navigator, key: String, modifier: Modifier = Modifie
         PodcastViewModel(key, graph.pageSource(), graph.mapper, graph.playing.playingUri, graph.messages)
     }
     val state by vm.state.collectAsStateWithLifecycle()
-    // This page's episodes alone: each step of a download elsewhere would draw the whole page again.
+    // Only this page's episodes, so download progress elsewhere does not recompose the page.
     val all = graph.downloading.states.collectAsStateWithLifecycle()
     val keys = remember(state.episodes) { state.episodes.mapTo(HashSet()) { it.key } }
     val downloads by remember(keys) { derivedStateOf { all.value.filterKeys(keys::contains) } }

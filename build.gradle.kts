@@ -11,13 +11,12 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
 }
 
-// The root's own scripts too, and build-logic's, which as an included build no task name reaches.
+// build-logic is an included build, whose tasks a task name given at the root does not reach.
 ktlint { version.set(libs.versions.ktlint.get()) }
 tasks.named("ktlintCheck") { dependsOn(gradle.includedBuild("build-logic").task(":ktlintCheck")) }
 
 subprojects {
-    // The vendored Sendspin module is a verbatim upstream copy: never linted or reformatted, and its
-    // compiler warnings are upstream's to fix. Everywhere else they fail the build, as lint's do.
+    // :sendspin is a verbatim upstream copy: not linted, and its compiler warnings are upstream's to fix.
     if (path != ":sendspin") {
         apply(plugin = "org.jlleitschuh.gradle.ktlint")
         extensions.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {

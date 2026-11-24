@@ -11,7 +11,7 @@ import io.github.hazymorning.amsel.api.orNullOnFailure
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
-/** Media ids in the browse tree. A track row carries its parent so play_media can use start_item. */
+/** A track row's id carries its parent ("parent|track"), so its play can use start_item. */
 object BrowseIds {
     const val ROOT = "root"
     const val RECENT = "tab:recent"
@@ -22,16 +22,15 @@ object BrowseIds {
     const val PODCASTS = "tab:podcast"
     const val LIBRARY = "folder:library"
 
-    /** What a media button resumes while Amsel is closed: whatever the speaker holds (RemotePlayer). */
+    /** A media-button resume while Amsel is closed: the speaker resumes what it holds; nothing is queued. */
     const val RESUME = "resume"
     private const val SEP = "|"
 
     fun track(parentUri: String, trackUri: String) = "$parentUri$SEP$trackUri"
 
     /**
-     * The play on [queueId] the car asks for. The item at [startIndex] decides: `album|track` plays
-     * the album from that track; plain uris play in order from it (the server's start_item works
-     * only within an album or a playlist).
+     * The item at [startIndex] decides: `parent|track` plays the parent from that track; plain uris
+     * play in order from it, as the server's start_item works only within an album or a playlist.
      */
     fun toPlayRequest(queueId: String, mediaIds: List<String>, startIndex: Int): PlayRequest? {
         val ids = mediaIds.drop(startIndex.coerceIn(0, mediaIds.lastIndex.coerceAtLeast(0))).filter {
@@ -46,27 +45,17 @@ object BrowseIds {
     }
 }
 
-/**
- * What each page of the car's tree lists, read live from [catalog]: the tabs, a tab's or a
- * folder's items, and Recently played. [BrowseTree] answers the car with them; [text] reads the
- * titles from `:playback`'s strings, and covers are [artwork] URIs.
- */
 @OptIn(UnstableApi::class)
 internal class BrowsePages(
     private val catalog: Catalog,
     private val text: (Int) -> String,
     private val artwork: CarArtwork,
 ) {
-    /**
-     * Page [page] of [parentId]'s items, at most [MAX_PAGE] of them; the root lists [rootTabs] tabs,
-     * as many as the browser shows. Android Auto does not page (Media3 asks it for page 0 of
-     * Int.MAX_VALUE), so a folder shows its first [MAX_PAGE] items there.
-     */
+    /** Android Auto does not page (Media3 asks for page 0 of Int.MAX_VALUE): a folder shows its first [MAX_PAGE]. */
     suspend fun children(parentId: String, page: Int, pageSize: Int, rootTabs: Int?): List<MediaItem> {
         val limit = pageSize.coerceAtMost(MAX_PAGE)
-        // Counted in what each page returns: a browser paging in larger steps skips nothing.
+        // Counted in capped pages, so a browser asking for more than MAX_PAGE a page skips nothing.
         val offset = page * limit
-        // The tabs and Recently played are not paged: page 0 holds them, as much as a page holds.
         if (page > 0 && parentId in UNPAGED) return emptyList()
         return when (parentId) {
             BrowseIds.ROOT -> tabs().take(rootTabs ?: ROOT_TABS)
@@ -104,7 +93,6 @@ internal class BrowsePages(
         )
     }
 
-    /** Audiobooks (their covers in a grid) and Podcasts, each only while the library holds some. */
     private suspend fun spokenTabs(): List<MediaItem> = buildList {
         if (holds(BrowseIds.AUDIOBOOKS)) {
             val grid = MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_GRID_ITEM
@@ -118,12 +106,8 @@ internal class BrowsePages(
 
     private suspend fun holds(tab: String) = catalog.holds(tab.substringAfter(':'))
 
-    /**
-     * Books and episodes to continue come first under their own heading, then the music. Both are
-     * asked at once: one after the other, an unreachable server would keep the car waiting twice.
-     */
+    /** Both lists are asked at once: one after the other, an unreachable server would keep the car waiting twice. */
     private suspend fun recent(limit: Int): List<MediaItem> = coroutineScope {
-        // Music still lists when the books and episodes in progress cannot be read.
         val reading = async { orNullOnFailure { catalog.inProgress(CONTINUE_LIMIT) }.orEmpty() }
         val music = catalog.recent(limit)
         val started = reading.await()
@@ -181,14 +165,13 @@ internal class BrowsePages(
         const val MAX_PAGE = 100
         const val CONTINUE_LIMIT = 10
 
-        /** Root tabs where a browser names no limit: Android Auto shows four. */
+        /** For a browser that names no limit: Android Auto shows four. */
         const val ROOT_TABS = 4
 
         val UNPAGED = setOf(BrowseIds.ROOT, BrowseIds.LIBRARY, BrowseIds.RECENT)
     }
 }
 
-/** A folder; [playableStyle] sets how its playable children show (a list unless given). */
 @OptIn(UnstableApi::class)
 internal fun folder(
     id: String,
@@ -212,7 +195,6 @@ internal fun folder(
             ).build(),
     ).build()
 
-/** Media3's media type for an MA one; a browsable item that is not a book or podcast lists as an album. */
 internal fun media3Type(mediaType: String, browsable: Boolean): Int = when (mediaType) {
     MediaType.Audiobook.api -> MediaMetadata.MEDIA_TYPE_AUDIO_BOOK
     MediaType.Podcast.api -> MediaMetadata.MEDIA_TYPE_PODCAST

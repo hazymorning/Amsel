@@ -22,12 +22,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The long-lived token goes only to the server it was given for, whatever answers at its address. */
 class MaClientTest {
     private val ours = fixture("2.11", "server_info").getValue("response").jsonObject
     private val ourId = ours.getValue("server_id").jsonPrimitive.content
 
-    /** Another Music Assistant, or anything that says it is one, at the same address. */
     private val stranger = JsonObject(ours + ("server_id" to JsonPrimitive("someone-else")))
 
     private fun withClient(
@@ -83,7 +81,7 @@ class MaClientTest {
     @Test fun `a refusal before the server names itself never signs out`() =
         withClient(ours, sameNetwork = true, first = listOf(refusal)) { client, fake ->
             client.start(fake.address, "token", ourId)
-            // Whatever answers there first refuses: each try ends, and nothing is given up or sent.
+            // Each try ends at the refusal: nothing is sent, and the client does not sign out.
             while (fake.server.requestCount < 2) delay(50)
             assertEquals(ConnectionState.Offline, client.state.value)
             assertTrue(fake.received.toString(), fake.received.isEmpty())
@@ -116,7 +114,7 @@ class MaClientTest {
     }
 
     @Test fun `a user it cannot read still connects`() = runBlocking {
-        // A later server changes its user object: the app connects, knowing less about who it is.
+        // A user object a later server changed must not fail the connection.
         val oddUser = FakeMaServer.result(buildJsonObject { put("user", buildJsonObject { put("user_id", "u1") }) })
         val fake = FakeMaServer(ours) { command, _ -> if (command == "auth") listOf(oddUser) else emptyList() }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Sort order -->
     <string name="library_sort_recently_played">Zuletzt gehört</string>
     <string name="library_sort_recently_added">Zuletzt hinzugefügt</string>
     <string name="library_sort_a_to_z">A–Z</string>
     <string name="library_sort_description">Sortierung: %1$s. Reihenfolge ändern</string>
 
-    <!-- A–Z scrubber, for TalkBack -->
     <string name="library_scrubber">Zu einem Buchstaben springen</string>
 
-    <!-- States -->
     <string name="library_loading">Bibliothek wird geladen</string>
     <string name="library_refresh_failed">Die Bibliothek konnte nicht aktualisiert werden</string>
     <string name="library_empty_playlists">Noch keine Playlists</string>

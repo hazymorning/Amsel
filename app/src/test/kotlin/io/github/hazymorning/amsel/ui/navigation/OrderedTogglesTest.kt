@@ -4,7 +4,6 @@ import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** What is stored for the bar and the mini player, read back, from this version and an earlier one. */
 class OrderedTogglesTest {
     @Test fun theOrderKeepsWhatIsLeftOutWhereItStands() {
         val bar = BarItem.arrangement(null).with(BarItem.Search, on = false)

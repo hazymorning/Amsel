@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Album, artist and playlist pages -->
     <string name="pages_more_by">More by %1$s</string>
     <string name="pages_popular">Popular</string>
     <string name="pages_similar_artists">Similar artists</string>
-    <!-- The page of songs like one song; %1$s is that song -->
     <string name="pages_similar_to">Similar to “%1$s”</string>
     <string name="pages_similar_none">Nothing similar found</string>
     <string name="pages_playlist_by">By %1$s</string>
@@ -21,7 +19,6 @@
     <string name="pages_length_hours">%1$d\u00A0h</string>
     <string name="pages_length_hours_minutes">%1$d\u00A0h %2$d\u00A0min</string>
 
-    <!-- Audiobook and podcast pages -->
     <string name="pages_audiobook_unavailable">This audiobook isn’t available</string>
     <string name="pages_podcast_unavailable">This podcast isn’t available</string>
     <string name="pages_podcast_empty">No episodes yet</string>

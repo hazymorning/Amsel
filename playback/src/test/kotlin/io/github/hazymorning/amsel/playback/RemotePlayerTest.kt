@@ -80,7 +80,7 @@ class RemotePlayerTest {
         assertTrue(p.isCommandAvailable(Player.COMMAND_SET_DEVICE_VOLUME_WITH_FLAGS))
     }
 
-    /** A speaker not heard from yet (Amsel was closed); [onPlay] is what a play makes it report. */
+    /** A speaker not heard from yet (Amsel was closed); [onPlay] is what it reports after a play. */
     private fun silent(
         calls: MutableList<String>,
         onPlay: SpeakerSnapshot?,
@@ -188,7 +188,7 @@ class RemotePlayerTest {
         idle()
         assertEquals(listOf("stop"), speaker.calls)
         assertFalse(p.playWhenReady)
-        // Stopped, it keeps its song and plays it on: the car keeps its playback screen.
+        // Stopped, it keeps its song: the car keeps its playback screen.
         assertEquals(Player.STATE_READY, p.playbackState)
         assertEquals("q1", p.currentMediaItem?.mediaId)
     }

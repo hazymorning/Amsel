@@ -26,66 +26,58 @@ private val Context.store: DataStore<Preferences> by preferencesDataStore(
     corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
 )
 
-/** The Audiobookshelf server and name signed in with last, to sign in there again. */
 fun Prefs.lastAbsAccount(): AbsAccount? = absLastUrl?.let { AbsAccount(it, absLastUser.orEmpty()) }
 
-/** The handful of things the app remembers. Settings stay this small on purpose (rule 4). */
 data class Prefs(
     val serverUrl: String? = null,
     val serverId: String? = null,
     val serverName: String? = null,
     /** "system", "light" or "dark". */
     val theme: String = "system",
-    /** The speaker the user last picked; null means "This phone". */
+    /** Null means This phone. */
     val speakerId: String? = null,
-    /** Its name, shown until the server lists the speaker again. */
+    /** Shown until the server lists the speaker again. */
     val speakerName: String? = null,
-    /** "This phone"'s Music Assistant player id (its Sendspin public key), once known. */
+    /** This phone's player id: its Sendspin public key. */
     val phonePlayerId: String? = null,
-    /** The session's token, sealed (see [TokenCipher]). */
     val sealedToken: String? = null,
-    /** The sleep timer last chosen, in minutes. */
     val sleepMinutes: Int = 30,
-    /** How long the sound fades before the sleep timer stops it; 0 for no fade. */
+    /** 0 for no fade. */
     val sleepFadeSec: Int = 30,
-    /** A shake sets a running sleep timer back to its full length. */
+    /** Shaking the phone restarts a running sleep timer. */
     val sleepShake: Boolean = true,
-    /** Every start of playback sets the sleep timer to [sleepMinutes]. */
+    /** Each start of playback sets the sleep timer to [sleepMinutes]. */
     val sleepOnPlay: Boolean = false,
-    /** Opening the app picks the speaker that plays (a group's leader), else This phone. */
+    /** Opening the app selects the speaker that plays (a group's leader), else This phone. */
     val followPlaying: Boolean = false,
-    /** The speakers following the music leaves out; none at first, so it follows every one. */
+    /** Speakers [followPlaying] leaves out; empty means it follows every one. */
     val followSkipped: Set<String> = emptySet(),
-    /** Above this level a speaker plays louder only after Amsel asked; 0 for no limit. */
+    /** Above this level a volume change needs a confirmation; 0 for no limit. */
     val volumeLimit: Int = 0,
-    /** Each start of the app asks GitHub for a newer version. */
     val lookForUpdates: Boolean = false,
-    /** Downloads wait for Wi-Fi (or another network that costs nothing per byte). */
+    /** Any unmetered network counts as Wi-Fi. */
     val downloadOnWifi: Boolean = true,
-    /** The Audiobookshelf server downloads come from, and who signed in there. */
     val absUrl: String? = null,
     val absUser: String? = null,
-    /** The last Audiobookshelf server and name signed in with, kept after signing out to sign in again. */
+    /** Kept after signing out, for the next sign-in. */
     val absLastUrl: String? = null,
     val absLastUser: String? = null,
-    /** The tips that are not shown again, and the day (since the epoch) the last one shown left. */
     val tipsSeen: Set<String> = emptySet(),
+    /** An epoch day on which no further tip is shown. */
     val tipRestDay: Long? = null,
-    /** How often in a row each kind of hint went untaken; one passed up three times is not shown again. */
+    /** Times in a row each kind of hint went untaken; at three it is not shown again. */
     val hintPasses: Map<String, Int> = emptyMap(),
-    /** The speaker last picked other than This phone, to go back to at home. */
+    /** The last speaker picked other than This phone, to return to at home. */
     val homeSpeakerId: String? = null,
-    /** The playlist a song was last added to. */
     val lastPlaylistKey: String? = null,
-    /** When the sleep timer was last offered (ms since the epoch): once a night. */
+    /** Epoch ms; the sleep timer is offered once a night. */
     val sleepOfferedAt: Long? = null,
-    /** The places the bar shows, in its order, by their ids; null for the bar as it comes. */
+    /** Null for the default bar. */
     val barPlaces: List<String>? = null,
-    /** The mini player's controls in their order, those left out marked; null for the defaults. */
+    /** The mini player's controls in order, left-out ones marked; null for the defaults. */
     val dockControls: List<String>? = null,
-    /** What the Library shows, as chips, in their order, those left out marked; null for the defaults. */
+    /** The Library's chips in order, left-out ones marked; null for the defaults. */
     val libraryKinds: List<String>? = null,
-    /** The kinds of hint the person turned off; [HINTS_ALL] among them turns every one off. */
     val hintsOff: Set<String> = emptySet(),
 )
 
@@ -131,15 +123,15 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         )
     }
 
-    /** Read once at start and kept, so a screen opens on what is stored; null until then. */
+    /** Collected from the start, so a screen opens on what is stored; null until the first read. */
     val prefs: StateFlow<Prefs?> = stored.stateIn(scope, SharingStarted.Eagerly, null)
 
-    /** What is stored now, every finished edit included. */
+    /** Includes every finished edit, which [prefs] may not show yet. */
     suspend fun current(): Prefs = stored.first()
 
     suspend fun saveServer(url: String, id: String, name: String?, sealedToken: String) {
         store.edit {
-            // Speakers belong to their server.
+            // A speaker id belongs to its server.
             if (it[SERVER_ID] != id) {
                 it.remove(SPEAKER)
                 it.remove(SPEAKER_NAME)
@@ -163,7 +155,7 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         store.edit { it.remove(TOKEN) }
     }
 
-    /** Where the server last answered as itself ([NetworkKey.text]): kept out of [Prefs], as no screen reads it. */
+    /** [NetworkKey.text]; kept out of [Prefs], as no screen reads it. */
     suspend fun checkedNetwork(): String? = store.data.first()[CHECKED_NETWORK]
 
     suspend fun saveCheckedNetwork(text: String?) {
@@ -210,7 +202,6 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         store.edit { it[SLEEP_ON_PLAY] = on }
     }
 
-    /** Turned on, following takes in every speaker again. */
     suspend fun setFollowPlaying(on: Boolean) {
         store.edit {
             it[FOLLOW_PLAYING] = on
@@ -241,7 +232,7 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         store.edit { it[DOWNLOAD_ON_WIFI] = on }
     }
 
-    /** The Audiobookshelf refresh token, sealed: kept out of [Prefs], which screens read. */
+    /** Sealed; kept out of [Prefs], which screens read. */
     suspend fun absToken(): String? = store.data.first()[ABS_TOKEN]
 
     suspend fun saveAbs(url: String, user: String, sealedToken: String) {
@@ -266,7 +257,6 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         }
     }
 
-    /** Whether the download of the book or episode at [uri] was offered already: each is offered once. */
     suspend fun downloadOffered(uri: String): Boolean = uri in store.data.first()[DOWNLOADS_OFFERED].orEmpty().lines()
 
     suspend fun setDownloadOffered(uri: String) {
@@ -276,7 +266,7 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         }
     }
 
-    /** Hint [kind] went untaken [passes] times in a row (0 once taken). */
+    /** [passes] in a row; 0 once the hint is taken. */
     suspend fun setHintPasses(kind: String, passes: Int) {
         store.edit {
             val others = it[HINT_PASSES].orEmpty().lines().filterNot { line ->
@@ -298,7 +288,7 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
         store.edit { it[SLEEP_OFFERED_AT] = atMs }
     }
 
-    /** Tip [id] is not shown again; with a [restDay], no other tip is shown on that day. */
+    /** With a [restDay], no other tip is shown on that day. */
     suspend fun setTipSeen(id: String, restDay: Long?) {
         store.edit {
             it[TIPS_SEEN] = it[TIPS_SEEN].orEmpty() + id
@@ -307,7 +297,7 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
     }
 
     private companion object {
-        /** More than anyone has in progress; the oldest are forgotten. */
+        // More than anyone has in progress; the oldest are dropped.
         const val OFFERS_KEPT = 300
         val DOWNLOADS_OFFERED = stringPreferencesKey("downloads_offered")
         val SERVER_URL = stringPreferencesKey("server_url")
@@ -346,5 +336,5 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
     }
 }
 
-/** In [Prefs.hintsOff]: every hint is off, whatever the others say. */
+/** In [Prefs.hintsOff], turns every hint off. */
 const val HINTS_ALL = "all"

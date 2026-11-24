@@ -8,11 +8,7 @@ import coil3.intercept.Interceptor
 import coil3.request.ImageResult
 import coil3.request.SuccessResult
 
-/**
- * Paints `sample:` artwork URLs with public-domain paintings from test resources (covers/, see its
- * CREDITS.txt), so screenshots look like a real library without network. A key with no file of its
- * own takes one of its kind's by hash, then any.
- */
+/** Serves `sample:` art from the public-domain paintings in test resources covers/ (see covers/CREDITS.txt). */
 class SampleCovers : Interceptor {
     override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
         val key = chain.request.data.toString().removePrefix("sample:").substringBefore('?').replace('/', '_')

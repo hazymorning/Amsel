@@ -5,7 +5,6 @@
     <string name="download_cancel">Stop download</string>
     <string name="download_remove">Remove download</string>
     <string name="download_remove_question">Remove “%1$s” from this phone? It can be downloaded again.</string>
-    <!-- A message, once for a book or an episode, the first time it plays on this phone -->
     <string name="download_offer">Download “%1$s” to listen on the go?</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading_percent">Downloading · %1$d %%</string>
@@ -21,7 +20,6 @@
     <string name="download_failed_space">Couldn’t save “%1$s”. Is there space left on this phone?</string>
     <string name="download_not_saved">Couldn’t save the download. Is there space left on this phone?</string>
 
-    <!-- Audiobookshelf, where downloads come from -->
     <string name="abs_intro">Books and podcasts from Audiobookshelf can be downloaded to listen without a connection. Sign in once with your Audiobookshelf account.</string>
     <string name="abs_address">Audiobookshelf address</string>
     <string name="abs_address_example">For example books.example.com or 192.168.1.20:13378</string>

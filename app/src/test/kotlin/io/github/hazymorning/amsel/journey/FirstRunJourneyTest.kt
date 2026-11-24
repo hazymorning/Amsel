@@ -52,17 +52,16 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.shadows.ShadowNetworkCapabilities
 
-/** The app with an in-memory token vault: Robolectric has no Android Keystore. */
+/** The app with a pass-through token cipher: Robolectric has no Android Keystore. */
 class JourneyApp : AmselApp() {
-    // Robolectric runs no App Startup provider, so the process lifecycle never tells the session
-    // that the app is in front; the activity under test is.
     override fun onCreate() {
-        // Robolectric's phone is on mobile data, where no plain http leaves it.
+        // Robolectric's default network is mobile data, where plain http may not leave the phone.
         val connectivity = getSystemService(ConnectivityManager::class.java)
         val wifi = ShadowNetworkCapabilities.newInstance()
         shadowOf(wifi).addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
         shadowOf(connectivity).setNetworkCapabilities(requireNotNull(connectivity.activeNetwork), wifi)
         super.onCreate()
+        // Robolectric runs no App Startup provider, so ProcessLifecycleOwner never reports the app in front.
         graph.data.session.setForeground(true)
     }
 
@@ -76,24 +75,16 @@ class JourneyApp : AmselApp() {
     )
 }
 
-/**
- * The household test's first tasks, driven through the real app against a real Music Assistant
- * (scripts/test-server with the fake Kitchen speaker): set the app up by typed address, sign in,
- * open Library, open an album, play it on Kitchen, move within the song while it plays and while
- * it rests, take it along to Living Room, start an endless mix of the album from its menu, and
- * open the songs similar to one of its songs.
- * Skipped unless MA_URL is set.
- */
+/** Runs against scripts/test-server at MA_URL, with the user, library and fake speakers live.sh sets up. */
 @RunWith(RobolectricTestRunner::class)
-// Legacy graphics by default: on GitHub's JDK the native graphics runtime aborts when this test
-// runs alone (JniConstants: Class not found: java/nio/FloatBuffer). Set AMSEL_JOURNEY_SHOTS=1
-// (with -Drobolectric.graphicsMode=NATIVE) to record the step screenshots locally.
+// LEGACY: on GitHub's JDK native graphics aborts when this test runs alone (JniConstants: Class not
+// found: java/nio/FloatBuffer). Shots need AMSEL_JOURNEY_SHOTS=1 and -Drobolectric.graphicsMode=NATIVE.
 @GraphicsMode(GraphicsMode.Mode.LEGACY)
 @Config(sdk = [36], application = JourneyApp::class, qualifiers = "w411dp-h891dp-xxhdpi")
 class FirstRunJourneyTest {
     val compose = createAndroidComposeRule<MainActivity>()
 
-    /** Robolectric binds services only when told how: hand it the real PlaybackService's binder. */
+    /** Robolectric binds a service only to a binder it is handed: the real PlaybackService's. */
     private val playbackService = object : ExternalResource() {
         override fun before() {
             val app = ApplicationProvider.getApplicationContext<Application>()
@@ -112,21 +103,20 @@ class FirstRunJourneyTest {
 
     private val url: String? = System.getenv("MA_URL")
 
-    /** Pictures of the real journey for review (not compared): app/build/outputs/journey/. */
     private fun shot(name: String) {
         if (System.getenv("AMSEL_JOURNEY_SHOTS") != "1") return
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("build/outputs/journey/$name.png")
     }
 
-    /** Words on screen, or a glyph's label: Shuffle and Play are glyphs on a page, the speaker one in the dock. */
+    /** Text or a content description: Shuffle, Play and the dock's speaker are icons. */
     private fun waitFor(text: String, timeoutMs: Long = 20_000) = compose.waitUntil(timeoutMs) {
         compose.onAllNodes(hasText(text, substring = true) or hasContentDescription(text, substring = true))
             .fetchSemanticsNodes()
             .isNotEmpty()
     }
 
-    /** Until [done], with the main thread's work run meanwhile: taps reach the session through it. */
+    /** Idles the main thread while waiting: controls reach the session through it. */
     private fun await(timeoutMs: Long = 10_000, done: () -> Boolean) = compose.waitUntil(timeoutMs) {
         compose.waitForIdle()
         done()
@@ -135,7 +125,6 @@ class FirstRunJourneyTest {
     @Test fun `set up, sign in, play an album on Kitchen, move within it and take it along`() {
         assumeTrue("MA_URL not set", url != null)
 
-        // 1. Set the app up.
         waitFor("Find my server")
         shot("01_welcome")
         compose.onNodeWithText("Find my server").performClick()
@@ -160,26 +149,23 @@ class FirstRunJourneyTest {
             hasText("Sign in") and !hasSetTextAction() and androidx.compose.ui.test.hasClickAction(),
         ).performClick()
 
-        // Home says its first tip above the sections; closed, it is gone for good. Its row fades
-        // out first, which a fast server's library can outrun.
+        // The tip's row fades out, which a fast server's library can outrun: wait until it is gone.
         waitFor("Long-press a heading", 30_000)
         compose.onNodeWithContentDescription("Dismiss tip").performClick()
         compose.waitUntil(5_000) {
             compose.onAllNodesWithContentDescription("Dismiss tip").fetchSemanticsNodes().isEmpty()
         }
 
-        // Home, with the server's library.
         waitFor("New in your library", 30_000)
         compose.onNodeWithContentDescription("Dismiss tip").assertDoesNotExist()
         Thread.sleep(1500)
         shot("04_home")
 
-        // Pick Kitchen as the speaker (the Play on sheet is covered by its own tests).
+        // Kitchen is set directly; the Play on sheet has its own tests.
         val graph = compose.activity.graph
         val kitchen = runBlocking { graph.data.session.api.players().first { it.shownName == "Kitchen" } }
         runBlocking { graph.data.prefs.setSpeaker(kitchen.playerId) }
 
-        // 2. Find an album and play it.
         compose.onNodeWithContentDescription("Library").performClick()
         waitFor("Albums")
         compose.onNodeWithText("Albums").performClick()
@@ -189,13 +175,12 @@ class FirstRunJourneyTest {
         waitFor("Shuffle")
         Thread.sleep(1000)
         shot("06_album")
-        // The page's play, over the dock's own: the speaker may hold a song from before.
+        // The topmost Play is the page's; the dock has one too while the speaker holds a song.
         val plays = compose.onAllNodes(hasContentDescription("Play") and androidx.compose.ui.test.hasClickAction())
         val page = plays.fetchSemanticsNodes().withIndex().minBy { it.value.boundsInRoot.top }.index
         plays[page].performClick()
 
-        // The mini player shows the music on Kitchen (its card names the speaker whatever plays, so
-        // the pause is what says it), and the server agrees.
+        // The dock names the speaker whatever plays, so Pause is what shows the music playing.
         compose.waitUntil(30_000) {
             compose.onAllNodes(hasContentDescription("Pause")).fetchSemanticsNodes().isNotEmpty()
         }
@@ -205,8 +190,8 @@ class FirstRunJourneyTest {
         fun server() = runBlocking { graph.data.session.api.queues().first { it.queueId == kitchen.playerId } }
         compose.waitUntil(30_000) { server().state == "playing" }
 
-        // 3. Move within the song, as the line under the words does: the place shows at once,
-        // standing, the speaker goes there, and the server's old time on top of it never shows.
+        // A seek shows its target at once, never the server's old time added to it.
+        // See docs/API-NOTES.md, "Position after a seek or a play".
         val shown = CopyOnWriteArrayList<NowPlayingUi>()
         val watching = graph.scope.launch { graph.playing.nowPlaying.collect { it?.let(shown::add) } }
         val song = server().currentItem?.queueItemId
@@ -216,8 +201,7 @@ class FirstRunJourneyTest {
         await(20_000) { graph.playing.nowPlaying.value?.arriving == false }
         shot("08_sought")
         val passedMs = (System.nanoTime() - sought) / 1_000_000
-        // The songs are seconds long: a server slow to restart the stream is in the next one by
-        // now, whose own time is right. What is checked is the song sought in.
+        // The songs are seconds long, so a slow server may be in the next one by now; only the sought one counts.
         val from = shown.indexOfFirst { it.arriving && it.positionMs == 4_000L }
         val after = shown.drop(from).takeWhile { it.key == shown[from].key }.map { it.positionMs }
         assertTrue("shown after the seek: $after", after.all { it in 4_000..4_500 + passedMs })
@@ -227,7 +211,8 @@ class FirstRunJourneyTest {
             now.currentItem?.queueItemId != song || now.elapsedTime in 3.5..(6.5 + passedMs / 1000.0),
         )
 
-        // 4. Pause, move again: the speaker stays paused and is sent nothing; play starts there.
+        // A seek while paused is not sent; the next play starts there.
+        // See docs/API-NOTES.md, "A seek starts playback".
         await(20_000) { server().let { it.state == "playing" && it.elapsedTime >= 2.0 } }
         compose.runOnUiThread { graph.playback.control(PlayerControl.PlayPause) }
         await(20_000) { server().state != "playing" }
@@ -245,8 +230,7 @@ class FirstRunJourneyTest {
         await(20_000) { server().let { it.state == "playing" && it.elapsedTime in 0.5..(rested - 0.5) } }
         watching.cancel()
 
-        // 5. Choose another speaker from the dock: music that plays in a room is asked about, then
-        // goes along, and the room it left holds nothing.
+        // Choosing another speaker while music plays offers Take it along; the transfer empties the old queue.
         compose.onNodeWithContentDescription("Speaker: Kitchen, playing. Choose speaker").performClick()
         waitFor("Play on")
         compose.onNodeWithText("Living Room").performClick()
@@ -264,8 +248,6 @@ class FirstRunJourneyTest {
         waitFor("Speaker: Living Room, playing. Choose speaker")
         shot("10_on_living_room")
 
-        // 6. An endless mix of the album, from the menu on its page: the server makes the mix in
-        // place of what played, and the app names it.
         await { graph.data.extras.offered.value.mix }
         compose.onNodeWithContentDescription("More options for First Light").performClick()
         waitFor("Endless mix")
@@ -277,8 +259,8 @@ class FirstRunJourneyTest {
         await(20_000) { graph.playing.nowPlaying.value?.mix == "First Light" }
         shot("11_endless_mix")
 
-        // 7. While the mix plays, the album's menu leaves out what the server would only take as
-        // one more source of it.
+        // During the mix the album's menu leaves out what the server would only add as another source of it.
+        // See docs/API-NOTES.md, "Play next and Add to Up next in a mix".
         compose.onNodeWithContentDescription("More options for First Light").performClick()
         waitFor("Endless mix")
         compose.onNodeWithText("Add to Up next").assertDoesNotExist()
@@ -287,7 +269,6 @@ class FirstRunJourneyTest {
             .performSemanticsAction(SemanticsActions.Dismiss)
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Endless mix").fetchSemanticsNodes().isEmpty() }
 
-        // 8. A song's menu leads to the songs like it: a page of its own, named for the song.
         val firstSong = runBlocking {
             val album = api.libraryItems(MediaType.Album).first { it.name == "First Light" }
             api.albumTracks(album.itemId, album.provider).first().name

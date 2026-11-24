@@ -34,10 +34,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * An audiobook page: the header from the library index and the chapters it showed last time at
- * once, then the server's book with its chapters. The person's progress follows the index's row, which events keep current; [playing]
- * is what plays on the current speaker, so the page follows the book while it is there. A book on
- * the phone ([download]) shows from its download where neither is there, as without a connection.
+ * Progress follows the index row, which events keep current; [playing] is what plays on the current
+ * speaker. Without the server and the index, as offline, a downloaded book shows from its [download].
  */
 class AudiobookViewModel(
     private val key: String,
@@ -49,7 +47,7 @@ class AudiobookViewModel(
     private val page = MutableStateFlow(AudiobookUiState(loading = true))
     private var loading: Job? = null
 
-    /** The book on the speaker, as the page draws it: not each change to the volume or the speaker. */
+    // Reduced to what the page draws, so a volume or speaker change does not update the page.
     private val onSpeaker = playing.map { now ->
         now?.takeIf { it.key == key }?.let(::BookPlayback)
     }.distinctUntilChanged()
@@ -73,7 +71,7 @@ class AudiobookViewModel(
 
     init {
         load(first = true)
-        // A book the index does not hold has no row to follow: marks and plays arrive here.
+        // A book the index does not hold has no row to follow, so marks and plays come from here.
         viewModelScope.launch {
             source.progress.filter { it.uri == key }.collect { update ->
                 page.update {
@@ -94,7 +92,7 @@ class AudiobookViewModel(
         downloadable = true,
     )
 
-    /** The [first] load paints what the page showed last time while the server is asked. */
+    /** Only the [first] load shows the cached page while the server is asked. */
     private fun load(first: Boolean = false) {
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
@@ -126,25 +124,22 @@ class AudiobookViewModel(
     }
 }
 
-/** What an audiobook page shows above its chapters. */
 @Immutable
 data class AudiobookUi(
     val key: String,
     val title: String,
     val art: ArtRef? = null,
     val author: String? = null,
-    /** The first author's page, when Music Assistant knows them as an artist. */
+    /** The first author's artist URI, when Music Assistant holds the author as an artist. */
     val authorKey: String? = null,
     val narrator: String? = null,
     val durationSec: Int? = null,
-    /** Where the person stopped. */
     val resumeMs: Long? = null,
     val fullyPlayed: Boolean = false,
     val favorite: Boolean = false,
-    /** From Audiobookshelf, so it can be downloaded; known once the server has sent the book. */
+    /** From Audiobookshelf, so it can be downloaded; known only once the server has sent the book. */
     val downloadable: Boolean = false,
 ) {
-    /** The book as an item, for its ⋮ sheet. */
     val media: MediaUi get() = MediaUi(
         key,
         MediaKind.Audiobook,
@@ -158,7 +153,7 @@ data class AudiobookUi(
     )
 }
 
-/** Whether the book plays on the speaker, and where it was at a known moment. */
+/** [positionMs] was the position at [positionAtMs]. */
 @Immutable
 data class BookPlayback(
     val isPlaying: Boolean,
@@ -166,7 +161,7 @@ data class BookPlayback(
     val positionAtMs: Long,
     val speed: Float,
     val durationMs: Long,
-    /** The position moves on with time: it plays, and is not still on its way to a place sought. */
+    /** The position advances: playing, and not waiting for a seek to complete. */
     val runs: Boolean = isPlaying,
 ) {
     constructor(now: NowPlayingUi) :
@@ -175,38 +170,29 @@ data class BookPlayback(
     fun positionAt(nowMs: Long): Long = positionAt(positionMs, positionAtMs, nowMs, runs, speed.toDouble(), durationMs)
 }
 
-/**
- * Everything an audiobook page draws. The library index usually knows the book, so the header
- * paints at once and only the chapters wait for the server.
- */
 @Immutable
 data class AudiobookUiState(
     val book: AudiobookUi? = null,
     val chapters: List<ChapterUi> = emptyList(),
-    /** The book as it plays, or is paused, on the current speaker; null while it is not there. */
+    /** Null while the book is not on the current speaker. */
     val playback: BookPlayback? = null,
-    /** The book is being fetched: the first load, or a Retry. */
     val loading: Boolean = false,
-    /** The book could not be loaded from the server. */
     val unavailable: Boolean = false,
-    /** How far its download has come; null when it is not on the phone, nor on its way. */
+    /** Null when the book is neither downloaded nor downloading. */
     val download: DownloadState? = null,
 ) {
-    /** The page offers the download: the book is from Audiobookshelf, or some of it is on the phone. */
     val offersDownload: Boolean = download != null || book?.downloadable == true
 
-    /** As an album's page: nothing to list, so the page says so and offers Retry; a downloaded book still plays. */
+    // A fully downloaded book still plays, so it is never shown as unavailable.
     val showUnavailable: Boolean = unavailable && chapters.isEmpty() && download != DownloadState.Done
 
     val chaptersLoading: Boolean = chapters.isEmpty() && loading
 
-    /** Started and not finished, or on the speaker now: the button resumes. */
     val started: Boolean = playback != null || ((book?.resumeMs ?: 0) > 0 && book?.fullyPlayed != true)
 
-    /** Where the book stands at [nowMs]: the speaker's position while it is current, else the resume point. */
     fun positionAt(nowMs: Long): Long? = playback?.positionAt(nowMs) ?: book?.takeIf { started }?.resumeMs
 
-    /** The chapter the person is in at [nowMs], by index, or -1. */
+    /** The chapter's index at [nowMs], or -1. */
     fun chapterAt(nowMs: Long): Int {
         val position = positionAt(nowMs) ?: return -1
         return ChapterNavigation.indexAt(chapters.map { it.startMs }, position)

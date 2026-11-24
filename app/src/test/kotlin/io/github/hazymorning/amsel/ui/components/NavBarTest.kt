@@ -21,10 +21,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/**
- * The speaker's dot sits on its glyph's outline, half way round the arc of its top, so it is one
- * with the glyph: not out in the corner of the glyph's box, where the round top leaves only air.
- */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
@@ -48,7 +44,7 @@ class NavBarTest {
             .captureToImage()
             .toPixelMap()
 
-        // The glyph's ink by its line's tone and the dot by its moss, each where it is drawn whole.
+        // The glyph by its stroke colour and the dot by its own, each where it is drawn at full colour.
         var left = Int.MAX_VALUE
         var right = -1
         var top = Int.MAX_VALUE
@@ -73,9 +69,9 @@ class NavBarTest {
         assertTrue("no glyph drawn", right > left)
         assertTrue("no dot drawn", dots > 0)
 
-        // On its 256 grid the glyph's ink runs from 56 to 200 across and from 16 down; the line of
-        // its top's arc (centre 128, 88, radius 64) is half way round at (173.25, 42.75). The dot's
-        // centre lies 2 dp further out along that radius.
+        // On its 256 grid the glyph spans 56 to 200 across and starts 16 down; its top arc (centre
+        // 128, 88, radius 64) is half way round at (173.25, 42.75). The dot's centre lies 2 dp further
+        // out along that radius.
         val unit = (right - left) / 144.0
         val out = 2 * compose.density.density * 0.70710677
         val wantX = right - (200 - 173.25) * unit + out

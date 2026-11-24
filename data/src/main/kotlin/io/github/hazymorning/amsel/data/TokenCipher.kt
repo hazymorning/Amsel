@@ -12,7 +12,6 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/** Seals the session's token with an AES-GCM key that never leaves the Android Keystore. */
 interface TokenCipher {
     fun seal(token: String): String
 
@@ -40,7 +39,7 @@ class KeystoreTokenCipher : TokenCipher {
         return Base64.encodeToString(bytes, Base64.NO_WRAP)
     }
 
-    /** Null when the token cannot be opened (the Keystore lost its key, or it is not a sealed token): sign in again. */
+    // Null when the Keystore lost its key or the text is not a sealed token: the user signs in again.
     override fun open(sealed: String): String? = try {
         val bytes = Base64.decode(sealed, Base64.NO_WRAP)
         val cipher = Cipher.getInstance(TRANSFORMATION)

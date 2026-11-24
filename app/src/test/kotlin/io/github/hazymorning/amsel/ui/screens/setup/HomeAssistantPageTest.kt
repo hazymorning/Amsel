@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
-/** Home Assistant's page holds Music Assistant's session token: the end of its step destroys it. */
+/** The page holds Music Assistant's session token, so the end of its step must destroy it. */
 @RunWith(RobolectricTestRunner::class)
 class HomeAssistantPageTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
@@ -30,7 +30,7 @@ class HomeAssistantPageTest {
     }
 
     @Test fun theEndOfTheStepDestroysThePage() {
-        // The page waits behind a spinner that never stops here: frames run only when asked.
+        // The waiting spinner animates forever, so frames advance only by hand.
         compose.mainClock.autoAdvance = false
         compose.setContent {
             if (signingIn) HomeAssistantSignIn(URL, onCode = {}, onFailed = {}, onClose = {}, plainHttp = { true })

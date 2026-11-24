@@ -40,7 +40,7 @@ fun PlaylistScreen(
     onShuffle: () -> Unit,
     onPlayTrack: (index: Int, track: TrackUi) -> Unit,
     onMore: (MediaUi) -> Unit,
-    /** A row's actions, with its index: a playlist can hold the same track twice. */
+    /** With the row's index, as a playlist can hold the same track twice. */
     onMoreTrack: (index: Int, track: TrackUi) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -64,7 +64,7 @@ fun PlaylistScreen(
             bottom =
                 Space.ListEnd - rowGlyphBottom(RowLead.Cover, true),
             art = playlist?.art,
-            // An empty playlist has no row for Play, so its ⋮ waits in the bar.
+            // An empty playlist has no actions row, so its ⋮ goes in the bar.
             actions = {
                 playlist?.takeIf { state.isEmpty }?.let { MoreButton(it.title, onClick = { onMore(it.media) }) }
             },
@@ -127,7 +127,7 @@ private fun PlaylistTitle(state: PlaylistUiState) {
     )
 }
 
-/** The playlist page for [key] (`library://playlist/7`), wired to the server and the current speaker. */
+/** [key] is the playlist's URI, such as `library://playlist/7`. */
 @Composable
 fun PlaylistRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -148,7 +148,8 @@ fun PlaylistRoute(navigator: Navigator, key: String, modifier: Modifier = Modifi
         onShuffle = { play(shuffle = true) },
         onPlayTrack = { index, track ->
             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-            // The server starts a playlist at the first copy of start_item: a later copy plays from itself.
+            // The server starts a playlist at start_item's first copy, so a later copy plays as a list
+            // from there (docs/API-NOTES.md, "play_media").
             if (state.tracks.take(index).none { it.key == track.key }) {
                 graph.playback.play(listOf(key), startItem = track.key, title = track.title)
             } else {
@@ -157,8 +158,8 @@ fun PlaylistRoute(navigator: Navigator, key: String, modifier: Modifier = Modifi
         },
         onMore = { item -> actions.more(ActionTarget.Media(item, ownPage(item.key == key))) },
         onMoreTrack = { index, track ->
-            // The server edits only a library playlist by its id; a music service's own is read-only here.
-            // Positions hold only once every page is in: a removal before then could name the wrong row.
+            // Edits need a library playlist's id (docs/API-NOTES.md, "Playlist editing"), and positions
+            // hold only once every page is in: a removal before then could name the wrong row.
             val target = if (state.playlist?.editable == true && state.complete &&
                 ItemUri.parse(key)?.isLibraryItem == true
             ) {

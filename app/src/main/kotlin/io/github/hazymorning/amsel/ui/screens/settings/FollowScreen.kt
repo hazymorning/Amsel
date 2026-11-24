@@ -33,15 +33,9 @@ import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
 
-/** A speaker following the music may pick. */
 @Immutable
 data class FollowSpeaker(val id: String, val name: String)
 
-/**
- * Follow the music, a page of its own as Suggestions has: one switch for following, then, while it
- * is on, every speaker on a row of its own with its switch. Leaving all but one out follows that one
- * alone; the last one in stays, its switch dimmed and a tap answered with a no.
- */
 @Composable
 fun FollowScreen(
     on: Boolean,
@@ -112,14 +106,13 @@ fun FollowScreen(
     }
 }
 
-/** What Settings says under Follow the music: off, every speaker, or those it follows by name. */
 @Composable
 internal fun followLine(on: Boolean, speakers: List<FollowSpeaker>, skipped: Set<String>): String {
     val followed = speakers.filter { it.id !in skipped }
     return when {
         !on -> stringResource(R.string.follow_off)
 
-        // No speaker known yet, or only ones left out that are gone since: following is on all the same.
+        // No speaker known yet, or the followed ones have gone and only skipped ones remain: still on.
         followed.isEmpty() -> stringResource(R.string.follow_on)
 
         followed.size == speakers.size -> stringResource(R.string.follow_all)
@@ -128,7 +121,7 @@ internal fun followLine(on: Boolean, speakers: List<FollowSpeaker>, skipped: Set
     }
 }
 
-/** Every speaker, in a group or not, by name: following can pick it whenever it plays, or plays along. */
+/** Grouped speakers are listed too: following may pick a speaker that plays along in a group. */
 @Composable
 internal fun rememberFollowSpeakers(): List<FollowSpeaker> {
     val graph = LocalContext.current.graph

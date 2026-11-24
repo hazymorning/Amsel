@@ -18,14 +18,9 @@ import io.github.hazymorning.amsel.ui.screens.library.isHeld
 import io.github.hazymorning.amsel.ui.screens.library.label
 import kotlinx.coroutines.launch
 
-/**
- * What the Library shows as chips, and in what order. One always stays; one the library has none
- * of says it shows once there is some.
- */
 @Composable
 fun LibraryKindsScreen(
     kinds: OrderedToggles<LibraryKind>,
-    /** The kinds the Library has anything of now (LibraryKind.isHeld). */
     held: Set<LibraryKind>,
     onChange: (OrderedToggles<LibraryKind>) -> Unit,
     onBack: () -> Unit,

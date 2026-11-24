@@ -68,7 +68,7 @@ internal fun LazyListScope.header(header: LibraryHeader) {
 
 internal fun LazyGridScope.header(header: LibraryHeader) {
     item(key = "header", span = { GridItemSpan(maxLineSpan) }, contentType = "header") {
-        // The header keeps the screen's margins; the grid's own padding would double them.
+        // Overhangs the grid's padding, which would double the header's own margins.
         Box(Modifier.overhang(start = Keyline.Margin, end = Keyline.Margin, bottom = Space.TileRows - SortToList)) {
             header.Content()
         }
@@ -87,7 +87,6 @@ internal fun RowList(
     itemActions: Modifier,
 ) {
     val scrubber = state.letters.isNotEmpty()
-    // Artists have no second line; playlists do as soon as one names its owner.
     val twoLines = remember(state.items) { state.items.twoLines() }
     Box(modifier) {
         LazyColumn(
@@ -123,7 +122,6 @@ internal fun CoverGrid(
     itemActions: Modifier,
 ) {
     val scrubber = state.letters.isNotEmpty()
-    // Stations have no second line: "Radio" under each would say what the chip says.
     val twoLines = remember(state.items) { state.items.twoLines() }
     Box(modifier) {
         TileGrid(
@@ -147,10 +145,7 @@ internal fun CoverGrid(
     }
 }
 
-/**
- * One glyph, one sentence under the header; every kind but playlists also points to where music is added.
- * It scrolls (by nothing) so it can be pulled: right after adding music is when a refresh is wanted.
- */
+/** Scrollable by nothing, so pull to refresh works: right after adding music is when a refresh is wanted. */
 @Composable
 internal fun KindEmptyState(
     kind: LibraryKind,
@@ -191,10 +186,7 @@ internal fun KindEmptyState(
     }
 }
 
-/**
- * The order in words, its capitals 16 under the chips; a tap moves to the next order. Its layout
- * ends on its baseline, so what follows measures from the letters.
- */
+/** The layout ends on the baseline, so the spacing below is measured from the text. */
 @Composable
 private fun SortWords(sort: LibrarySort, onSort: (LibrarySort) -> Unit) {
     val style = MaterialTheme.typography.bodyMedium
@@ -220,10 +212,9 @@ private fun SortWords(sort: LibrarySort, onSort: (LibrarySort) -> Unit) {
     }
 }
 
-/** A thin space and a downward arrow: the list runs from the top of this order down. */
+/** A thin space (U+2009), then a downward arrow. */
 private const val ARROW = " ↓"
 
-/** The orders in the order a tap steps through them; one order for the whole library. */
 private val SORTS = listOf(LibrarySort.RecentlyPlayed, LibrarySort.RecentlyAdded, LibrarySort.AToZ)
 
 private fun LibrarySort.next(): LibrarySort = SORTS[(SORTS.indexOf(this) + 1) % SORTS.size]
@@ -236,20 +227,16 @@ private val LibrarySort.label: Int
         LibrarySort.AToZ -> R.string.library_sort_a_to_z
     }
 
-/**
- * The title, the chips and the order: the top of every list on this screen; with nothing to sort,
- * no order. One kind alone, a place of its own in the bar, is the title and has no chips.
- */
 internal class LibraryHeader(
     private val title: String,
     private val state: LibraryUiState,
     private val onSelectKind: (LibraryKind) -> Unit,
     private val onSort: (LibrarySort) -> Unit,
-    /** One for every kind's list: the chips are one row to the eye, whichever list holds them. */
+    /** Shared by every kind's list, so the chip row keeps its scroll position across kinds. */
     private val chips: ChipRowState,
     private val onTitleHeight: (Int) -> Unit = {},
 ) {
-    /** Downloads keep one order, the newest first: no order to choose. */
+    /** Downloads have a fixed order, newest first, so they offer no sort. */
     @Composable
     fun Content(sortable: Boolean = state.kind != LibraryKind.Downloads) {
         Column {
@@ -260,7 +247,7 @@ internal class LibraryHeader(
             )
             val kinds = state.kinds
             if (state.single) {
-                // No chips to choose from: the order stands under the title as it does under them.
+                // A single kind has no chips; the sort follows the title directly.
             } else if (kinds != null) {
                 ChoiceChipRow(
                     kinds,
@@ -271,7 +258,7 @@ internal class LibraryHeader(
                     state = chips,
                 )
             } else {
-                // Its place is kept, unseen, until the kinds are known: nothing below moves when they come.
+                // An invisible row keeps the space until the kinds are known, so nothing below shifts.
                 ChoiceChipRow(
                     libraryKinds(LibraryKind.Default.visible, held = emptySet()),
                     selected = state.kind,
@@ -286,9 +273,9 @@ internal class LibraryHeader(
     }
 }
 
-/** From the order's baseline to the first cover's edge. */
+/** From the sort's baseline to the first cover's top edge. */
 internal val SortToList = Space.LabelToContent
 
-/** From the title's baseline to the tabs, and from the tabs to the order's capitals. */
+// From the title's baseline to the chips, and from the chips to the top of the sort's capitals.
 private val TitleToTabs = 20.dp
 private val TabsToSort = 20.dp

@@ -17,10 +17,7 @@ import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/**
- * A small glyph inside a ring, as a 48 dp button, the way a download shows on its way: the ring
- * fills with [progress], or turns while there is none yet; the glyph says what a tap does.
- */
+/** Without [progress] the ring turns; with it, the ring fills. */
 @Composable
 fun RingAction(
     @DrawableRes icon: Int,
@@ -47,5 +44,4 @@ fun RingAction(
     }
 }
 
-/** The glyph inside the ring: half its size, so the ring stays clear of it. */
 private val RingGlyph = 12.dp

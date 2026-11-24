@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Home -->
     <string name="home_no_sections">Noch nichts auf der Startseite</string>
 
-    <!-- Section titles: what a section shows, in plain words -->
     <string name="home_option_pinned">Angeheftet</string>
     <string name="home_your_albums">Deine Alben</string>
     <string name="home_option_smart_playlists">Intelligente Playlists</string>
@@ -27,14 +25,12 @@
     <string name="home_option_played_here_choice">Zuletzt hier gehört</string>
     <string name="home_option_search">Suche</string>
 
-    <!-- How a section shows its items -->
     <string name="home_layout_grid">Raster</string>
     <string name="home_layout_small">Kleine Cover</string>
     <string name="home_layout_row">Reihe</string>
     <string name="home_layout_big">Große Cover</string>
     <string name="home_layout_list">Liste</string>
 
-    <!-- Editing Home: each section is a sentence; %1$s is what it shows, %2$s how -->
     <string name="home_edit">Startseite bearbeiten</string>
     <string name="home_edit_short">Bearbeiten</string>
     <string name="home_edit_done">Fertig</string>
@@ -44,7 +40,7 @@
     <string name="home_edit_what_is">Inhalt: %1$s</string>
     <string name="home_edit_how_is">Anzeigen als: %1$s</string>
 
-    <!-- The sentence's chips: what and how as the sentence says them ("Show your pins as a grid") -->
+    <!-- The parts of home_edit_sentence, worded to fit into it: "Show your pins as a grid" -->
     <string name="home_sentence_option_pinned">Angeheftetes</string>
     <string name="home_sentence_option_everything">zuletzt Gehörtes</string>
     <string name="home_sentence_option_played_here">hier zuletzt Gehörtes</string>
@@ -79,7 +75,6 @@
     <string name="home_section_empty">Hier ist noch nichts</string>
     <string name="home_section_empty_pinned">Noch nichts angeheftet. Halte ein Album, eine Playlist, einen Künstler, einen Sender, ein Hörbuch oder einen Podcast gedrückt und wähle „An die Startseite anheften“.</string>
 
-    <!-- Pins, from any item's ⋮ sheet -->
     <string name="home_action_pin">An die Startseite anheften</string>
     <string name="home_action_unpin">Von der Startseite lösen</string>
     <string name="home_pinned">An die Startseite angeheftet</string>
@@ -93,7 +88,6 @@
     <string name="move_earlier">Nach vorne</string>
     <string name="move_later">Nach hinten</string>
 
-    <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
     <string name="tip_edit_home">Halte eine Überschrift oder eine freie Stelle gedrückt, um die Startseite zu bearbeiten.</string>
     <string name="tip_settings">Zieh die Startseite nach unten, um die Einstellungen zu öffnen.</string>
     <string name="tip_more">Halte ein Album, eine Playlist oder einen Titel gedrückt, um weitere Optionen zu sehen.</string>

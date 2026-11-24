@@ -30,51 +30,38 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
-/** What Home last showed, per option, for one server: painted from disk before anything else. */
 @Serializable
 internal data class HomeSnapshot(val serverId: String, val sections: Map<SectionOption, SectionItems>)
 
-/** What Home reads and changes: [HomeRepository] in the app, a fake in tests. */
+// An interface so tests can use a fake.
 interface HomeSource {
     val layout: StateFlow<HomeLayout?>
     val items: StateFlow<Map<SectionOption, SectionItems>?>
 
-    /**
-     * Each option Home has just loaded or changed. Home keeps only its first items, so this is how
-     * a page of all of it learns that more than those may have changed.
-     */
+    /** Each option just loaded or changed: Home keeps only the first items, so a See all page reloads on it. */
     val changes: Flow<SectionOption>
 
     suspend fun edit(change: (HomeLayout) -> HomeLayout)
 
-    /** Reloads every section. */
     suspend fun refresh()
 
-    /** Loads again only the options whose last load failed, as a Retry after an edit. */
     suspend fun reloadFailed()
 }
 
-/**
- * Home: the person's layout for the signed-in server ([HomeLayoutStore]) and the last items of
- * every option on it. Each section paints from its snapshot on launch, then refreshes; the
- * snapshot is keyed by option, so a section that only changes its layout redraws at once.
- */
+// The snapshot is keyed by option, not by section, so a section whose layout changes redraws at once.
 class HomeRepository(
     private val sources: SectionLoader,
     private val layouts: HomeLayoutStore,
     file: File,
     private val serverIds: Flow<String?>,
     scope: CoroutineScope,
-    /** The speaker music plays on: Played here loads again for each new one. */
+    // Played here reloads for each new speaker.
     speakers: Flow<String?>,
 ) : HomeSource {
     private val _layout = MutableStateFlow<HomeLayout?>(null)
     private val snapshot = AtomicFile(file)
 
-    /**
-     * The layout of the server in the preferences, null until read. Home is its only writer, so
-     * it is read once per server and an edit shows here at once, before it is stored.
-     */
+    /** Null until read. Home is its only writer: read once per server, it shows each edit before it is saved. */
     override val layout: StateFlow<HomeLayout?> = _layout.asStateFlow()
 
     private val layoutEdits = Mutex()
@@ -97,21 +84,20 @@ class HomeRepository(
 
     override val changes: Flow<SectionOption> = _changes.asSharedFlow()
 
-    /** Each option's last items; null until something has been cached (the very first run). */
+    /** Null until the snapshot or a first load provides items. */
     override val items: StateFlow<Map<SectionOption, SectionItems>?> = _items.asStateFlow()
 
     private val writes = Mutex()
 
-    /** Options whose last load failed ([reloadFailed]). */
     private val failed: MutableSet<SectionOption> = ConcurrentHashMap.newKeySet()
 
     private val _loaded = MutableStateFlow(false)
 
-    /** [load] has run: the splash stays until then, so Home's first frame is the person's own. */
+    /** The splash screen stays until [load] has run, so Home's first frame shows the stored layout and items. */
     val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
 
     init {
-        // After the snapshot, which only paints while nothing else has.
+        // After [load]: the snapshot applies only while there are no items yet.
         scope.launch {
             speakers.distinctUntilChanged().collect { speaker ->
                 loaded.first { it }
@@ -124,7 +110,6 @@ class HomeRepository(
         }
     }
 
-    /** Reads the layout and the snapshot; Home's first frame waits for this, not for the server. */
     suspend fun load() {
         try {
             layout.filterNotNull().first()
@@ -146,17 +131,13 @@ class HomeRepository(
         }
     }
 
-    /**
-     * Loads every option on Home, side by side; one that fails keeps what it had, and the first
-     * failure is thrown once all are done. Random albums stay as they are: they change only out of
-     * sight ([reshuffle]).
-     */
+    /** Throws the first failure once every option has loaded. Random albums change only by [reshuffle]. */
     override suspend fun refresh() {
         val current = layout.filterNotNull().first()
         load(current, current.sections.map { it.option }.toSet(), reshuffle = false)
     }
 
-    /** New random albums for the next visit to Home, picked while it is out of sight, never under the person's eyes. */
+    /** Call while Home is not visible: random albums never change on screen. */
     suspend fun reshuffle() {
         val current = layout.filterNotNull().first()
         if (current.sections.any { it.option == SectionOption.RandomAlbums }) {
@@ -169,16 +150,12 @@ class HomeRepository(
         load(current, current.sections.map { it.option }.filter { it in failed }.toSet(), reshuffle = false)
     }
 
-    /** Re-reads the options that come from the library index, after it has synced. */
     suspend fun refreshIndexed() {
         val current = layout.filterNotNull().first()
         load(current, current.sections.map { it.option }.filter { it.readsIndex }.toSet(), reshuffle = false)
     }
 
-    /**
-     * Changes the layout; options new to Home load at once. What leaves Home is forgotten: brought
-     * back, it loads afresh rather than showing what it had then.
-     */
+    /** An option removed from Home loses its items: brought back, it loads afresh instead of showing old ones. */
     override suspend fun edit(change: (HomeLayout) -> HomeLayout) {
         val next = changeLayout(change) ?: return
         val shown = next.sections.map { it.option }.toSet()
@@ -190,7 +167,6 @@ class HomeRepository(
         load(next, shown - _items.value.orEmpty().keys, reshuffle = false)
     }
 
-    /** Shows [change] at once, then stores it; a failed write puts the layout back and throws. */
     private suspend fun changeLayout(change: (HomeLayout) -> HomeLayout): HomeLayout? = layoutEdits.withLock {
         val id = serverIds.first() ?: return null
         val before = layout.filterNotNull().first()
@@ -207,7 +183,6 @@ class HomeRepository(
 
     fun isPinned(uri: String): Boolean = layout.value?.isPinned(uri) == true
 
-    /** [uri] is finished: off Continue listening at once; the next load agrees. */
     fun finished(uri: String) {
         val listening = _items.value?.get(SectionOption.ContinueListening)
         if (listening == null || listening.items.none { it.uri == uri }) return
@@ -219,7 +194,6 @@ class HomeRepository(
         _changes.tryEmit(SectionOption.ContinueListening)
     }
 
-    /** Continue listening joins a Home made before it existed, once (HomeLayout.offerListening). */
     suspend fun offerListening() {
         if (layout.filterNotNull().first().listeningOffered) return
         val next = changeLayout { it.offerListening() } ?: return
@@ -230,11 +204,11 @@ class HomeRepository(
 
     suspend fun unpin(uri: String) = editPins { it.unpin(uri) }
 
-    /** Up to [limit] items of [option], for its See all page; not cached. */
+    /** For See all; not cached. */
     suspend fun all(option: SectionOption, limit: Int): SectionItems =
         sources.load(option, limit, layout.value?.pinned.orEmpty(), _items.value?.get(option))
 
-    /** Forgets the snapshot after signing out; layouts stay, so signing back in finds the same Home. */
+    /** Layouts stay, so signing back in finds the same Home. */
     suspend fun clear() = withContext(Dispatchers.IO) {
         writes.withLock {
             _items.value = null
@@ -242,7 +216,7 @@ class HomeRepository(
         }
     }
 
-    /** The pin is the change asked for; a Pinned section that cannot reload keeps what it showed. */
+    // Never throws a reload failure: the pin is stored, and a Pinned section that cannot reload keeps what it showed.
     private suspend fun editPins(change: (HomeLayout) -> HomeLayout) {
         val next = changeLayout(change) ?: return
         loadAll(next, setOf(SectionOption.Pinned), reshuffle = false)
@@ -252,7 +226,6 @@ class HomeRepository(
         loadAll(layout, options, reshuffle).firstOrNull()?.let { throw it }
     }
 
-    /** Loads [options] side by side and returns what failed. */
     private suspend fun loadAll(layout: HomeLayout, options: Set<SectionOption>, reshuffle: Boolean): List<Exception> {
         if (options.isEmpty()) return emptyList()
         val id = serverIds.first() ?: return emptyList()
@@ -263,7 +236,6 @@ class HomeRepository(
         return failures
     }
 
-    /** Loads one option; on failure it keeps what it had and returns the failure. */
     private suspend fun load(layout: HomeLayout, option: SectionOption, reshuffle: Boolean): Exception? {
         val previous = _items.value?.get(option)
         if (option == SectionOption.RandomAlbums && !reshuffle && !previous?.items.isNullOrEmpty()) return null
@@ -289,7 +261,7 @@ class HomeRepository(
         writes.withLock {
             val sections = _items.value ?: return@withLock
             val text = MaJson.encodeToString(HomeSnapshot.serializer(), HomeSnapshot(serverId, sections))
-            // The snapshot only speeds up the next launch, which then paints the older one.
+            // The snapshot only speeds up the next launch, which then shows the older one.
             val out = try {
                 snapshot.startWrite()
             } catch (e: IOException) {

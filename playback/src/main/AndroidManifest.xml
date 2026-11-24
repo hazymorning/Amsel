@@ -4,11 +4,11 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <!-- Whether the network is metered: This phone then asks for Opus first. -->
+    <!-- isActiveNetworkMetered: This phone asks for Opus first on a metered network. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- Wake and Wi-Fi locks while "This phone" plays with the screen off. -->
+    <!-- Wake locks while This phone (with a Wi-Fi lock) or a download plays with the screen off. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- Downloads of books and episodes run in front, with a notification of their progress. -->
+    <!-- DownloadService: downloads run as a foreground service with a progress notification. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -21,8 +21,8 @@
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"
             tools:ignore="ExportedService">
-            <!-- Exported without a permission on purpose: Android Auto, SystemUI and Bluetooth
-                 controllers bind it. BrowseTree.onConnectAsync keeps the library to those. -->
+            <!-- Exported without a permission: Android Auto, SystemUI and Bluetooth controllers bind
+                 it. BrowseTree.onConnectAsync gives browsing and control only to trusted ones and cars. -->
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaLibraryService" />
                 <action android:name="android.media.browse.MediaBrowserService" />
@@ -32,9 +32,8 @@
             android:name=".DownloadService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-        <!-- Media buttons (a headset, a widget such as KWGT) reach Amsel while it is closed, as they
-             reach any player: Android sends them to the app that played last. Exported without a
-             permission on purpose, since the system and other apps send them. -->
+        <!-- Exported without a permission: the system and other apps (a headset, a widget such as
+             KWGT) send media buttons to the app that played last, also while it is closed. -->
         <receiver
             android:name="androidx.media3.session.MediaButtonReceiver"
             android:exported="true"

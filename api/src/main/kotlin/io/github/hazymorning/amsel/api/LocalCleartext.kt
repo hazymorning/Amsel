@@ -16,12 +16,9 @@ import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 
 /**
- * Plain http reaches only the local network or a VPN: Android allows cleartext to every host or to
- * none, and a password or token must never cross the internet unencrypted. Checked where a socket
- * connects, which every call passes, WebSockets included (OkHttp runs no network interceptor for
- * those). Plain http goes direct: through a proxy the check would see the proxy's address, and the
- * proxy would carry the token on in cleartext. [cleartext] says whether the connection about to
- * open is plain http. The rule of [plainHttpOnlyWhen] goes on to the new client.
+ * Plain http ([cleartext] for the connection about to open) reaches only local and VPN addresses:
+ * Android allows cleartext to all hosts or none. Checked at socket connect, as WebSockets skip
+ * network interceptors. Never proxied: the check would see the proxy's address, the proxy the token.
  */
 public fun OkHttpClient.localCleartext(cleartext: () -> Boolean = { true }): OkHttpClient {
     val permitted = (socketFactory as? PlainSocketFactory)?.permitted ?: { true }
@@ -32,16 +29,14 @@ public fun OkHttpClient.localCleartext(cleartext: () -> Boolean = { true }): OkH
 }
 
 /**
- * This client with the app's rule for plain http: none leaves the phone while [permitted] says
- * no, whatever the address. Every client [localCleartext] and [forUrl] make from it keeps the rule.
+ * Carries the app's rule for plain http: in clients made from this one with [localCleartext] or
+ * [forUrl], no plain http connects while [permitted] is false, whatever the address.
  */
 public fun OkHttpClient.plainHttpOnlyWhen(permitted: () -> Boolean): OkHttpClient =
     newBuilder().socketFactory(PlainSocketFactory(permitted)).build()
 
-/** This client for [url] over TLS; for plain http, one that connects only to local addresses. */
 public fun OkHttpClient.forUrl(url: HttpUrl): OkHttpClient = if (url.isHttps) this else localCleartext()
 
-/** Whether plain http may go to [address]: the local network, a VPN, or this device. */
 public fun InetAddress.isLocal(): Boolean = isLoopbackAddress || isLinkLocalAddress || isSiteLocalAddress ||
     when (this) {
         // 100.64.0.0/10, where VPNs such as Tailscale put their peers.
@@ -53,7 +48,7 @@ public fun InetAddress.isLocal(): Boolean = isLoopbackAddress || isLinkLocalAddr
         else -> false
     }
 
-/** Sockets as the system makes them; the client carries [permitted] on to those derived from it. */
+/** Plain sockets without checks; it only carries [permitted] on to the clients derived from this one. */
 private open class PlainSocketFactory(val permitted: () -> Boolean) : SocketFactory() {
     override fun createSocket(): Socket = Socket()
 
@@ -90,7 +85,7 @@ private class LocalCleartextSocketFactory(private val cleartext: () -> Boolean, 
     }
 }
 
-/** Equal for the same [proxies], so the clients [forUrl] makes share their plain-http connections. */
+/** Equal for equal [proxies]: OkHttp reuses a pooled connection only for an equal proxy selector. */
 private data class DirectCleartextProxySelector(private val proxies: ProxySelector) : ProxySelector() {
     override fun select(uri: URI): List<Proxy> =
         if (uri.scheme == "http") listOf(Proxy.NO_PROXY) else proxies.select(uri)

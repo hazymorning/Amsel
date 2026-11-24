@@ -32,10 +32,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import okhttp3.OkHttpClient
 
-/**
- * This phone's Sendspin client on its own HTTP engine, playing through the phone's audio. [config]
- * says which server it joins, or null to leave; [approvePairing] asks the server to pair it.
- */
 internal fun sendspinPlayer(
     app: Context,
     okHttp: OkHttpClient,
@@ -53,8 +49,8 @@ internal fun sendspinPlayer(
             sink = AudioTrackSink(app, ElapsedRealtimeClock),
             decoders = AndroidDecoderFactory(),
             keyStore = SharedPreferencesSendspinKeyStore(app),
-            // An engine we own: no close() anywhere can shut down the shared OkHttp dispatcher.
-            // Its server changes with the session, so plain http is told apart per connection.
+            // Its own engine, so closing it cannot shut down the shared OkHttp dispatcher. The server
+            // changes with the session, so whether a connection is plain http is read for each one.
             httpClient = HttpClient(
                 OkHttp.create {
                     preconfigured = okHttp.newBuilder().pingInterval(5, TimeUnit.SECONDS).build()
@@ -77,10 +73,7 @@ internal fun sendspinPlayer(
     )
 }
 
-/**
- * The client's configuration for [server] at [address] with [token], 16 bit: FLAC, else Opus; on a
- * [metered] network Opus first, a fraction of FLAC's data.
- */
+/** On a [metered] network Opus first: a fraction of FLAC's data. */
 internal fun sendspinConfig(
     address: ServerAddress,
     token: String,
@@ -99,19 +92,14 @@ internal fun sendspinConfig(
 private val FLAC_FIRST = listOf(AudioCodec.FLAC, AudioCodec.OPUS)
 private val OPUS_FIRST = listOf(AudioCodec.OPUS, AudioCodec.FLAC)
 
-/** The name the phone has in Android's settings, which the server shows for it. */
 internal fun deviceName(app: Context): String =
     Settings.Global.getString(app.contentResolver, Settings.Global.DEVICE_NAME)?.takeIf { it.isNotBlank() }
         ?: Build.MODEL
 
 /**
- * Which server Sendspin connects to: the control socket's while the phone is [wanted].
- * While the control socket reconnects (Connecting, Offline) it keeps the [last] one, so a
- * Wi-Fi blip, a missed ping or a token rotation does not stop the phone's audio; the
- * module reconnects by itself. That holds only while its retries can reach no one but the
- * server ([retriesSafe]): its first frame is the token, which over plain http on another
- * network could go to whatever answers at a home address, so there it waits for the control
- * socket to connect. A closed (Idle), signed-out or unsupported session stops it.
+ * While the control socket reconnects, Sendspin keeps the [last] server and reconnects by itself, so a
+ * Wi-Fi blip does not stop the audio; only if [retriesSafe], as its first frame is the token, which
+ * over plain http on another network could reach whatever answers at a home address.
  */
 internal fun sendspinServer(
     wanted: Boolean,
@@ -125,11 +113,6 @@ internal fun sendspinServer(
     else -> null
 }
 
-/**
- * Whether audio plays or is about to, so the CPU and Wi-Fi must stay awake with the screen
- * off: while it streams or buffers, and while the connection comes back with sound still in
- * the buffer. A new connection attempt keeps the last answer ([was]); anything else is off.
- */
 internal fun awakeFor(state: PlayerState, was: Boolean): Boolean = when (state) {
     is PlayerState.Connected -> state.audio.phase != AudioPhase.Idle
     is PlayerState.Reconnecting -> state.audio.phase != AudioPhase.Idle && !state.audio.starved
@@ -138,12 +121,9 @@ internal fun awakeFor(state: PlayerState, was: Boolean): Boolean = when (state) 
 }
 
 /**
- * The phone's player id once it has joined: its Sendspin client is connected and the server
- * lists the player as available, not as an entry left over from before it was dropped ([gone]).
- * After the client leaves, the server keeps the entry, unavailable, and registers the player again
- * about 2 s after the client is back; a command before that is refused ("Player ... is not
- * available", 2.10.9 and 2.11.0b7 live). A client stopped for good will not join until the next
- * connection, so the wait ends at once.
+ * The server lists a phone that left as unavailable, refusing commands, until it registers the player
+ * again after the client is back (see docs/API-NOTES.md, "This phone (Sendspin)"). A failed client
+ * joins only on a new connection, so the wait ends at once.
  */
 internal fun joinedId(sendspin: PlayerState, players: Map<String, Player>, gone: Set<String>): String? {
     if (sendspin is PlayerState.Failed) {
@@ -153,7 +133,7 @@ internal fun joinedId(sendspin: PlayerState, players: Map<String, Player>, gone:
     return connected?.takeIf { players[it]?.available == true && it !in gone }
 }
 
-/** The server's Sendspin dialect (official app's rule): 1.0 from schema 96 or 2.10.7. */
+/** The official app's rule. */
 internal fun wireFor(server: ServerInfo): WireVersion {
     if (server.schemaVersion >= 96) return WireVersion.SPEC_1_0
     val patch = Regex("""^2\.10\.(\d+)""").find(server.serverVersion)?.groupValues?.get(1)?.toIntOrNull()

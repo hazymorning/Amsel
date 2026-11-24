@@ -14,10 +14,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/**
- * The widgets' volume, shuffle, repeat and heart, as Amsel's own buttons do them: shown at once
- * ([OptimisticTransportState], [FavoritesRepository]), sent to the speaker, and taken back if it refuses.
- */
 internal class OptimisticWidgetActions(
     private val context: Context,
     private val data: DataGraph,
@@ -28,11 +24,10 @@ internal class OptimisticWidgetActions(
 ) : WidgetActions {
     override fun volumeLimit(): Int = data.prefs.prefs.value?.volumeLimit ?: 0
 
-    /** The server's setting (null: its ladder) and when it was read: it rarely changes. */
+    /** The server's volume_step (null: its ladder) and the elapsedRealtime it was read at. */
     @Volatile private var step: Pair<Int?, Long>? = null
     private var asking: Job? = null
 
-    /** What the server said last, else its ladder; read again in the background while a tap goes on. */
     override fun volumeStep(level: Int): Int {
         val known = step
         val stale = known == null || SystemClock.elapsedRealtime() - known.second >= STEP_KEPT_MS
@@ -41,7 +36,7 @@ internal class OptimisticWidgetActions(
                 try {
                     step = data.session.api.volumeStep() to SystemClock.elapsedRealtime()
                 } catch (e: MaException) {
-                    // A refusal (no right to read settings) stands; no answer is asked again at the next tap.
+                    // A refusal (no config.core.read) is kept as the ladder; no answer is retried at the next tap.
                     if (e is MaCommandException) step = null to SystemClock.elapsedRealtime()
                 }
             }

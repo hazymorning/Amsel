@@ -11,10 +11,7 @@ import io.github.hazymorning.amsel.data.QueueState
 import io.github.hazymorning.amsel.data.isSourceOf
 import kotlin.math.roundToLong
 
-/**
- * One Music Assistant speaker as [snapshotOf] reads it from its player and queue, a new instance per
- * server event. [elapsedSeconds] is the position at [elapsedAtMs] on the phone's monotonic clock.
- */
+/** [elapsedSeconds] is the position at [elapsedAtMs] on the phone's monotonic clock. */
 data class SpeakerSnapshot(
     val name: String,
     val available: Boolean,
@@ -33,18 +30,12 @@ data class SpeakerSnapshot(
     val canSkip: Boolean = false,
     val shuffle: Boolean = false,
     val repeat: RepeatMode = RepeatMode.Off,
-    /**
-     * Shuffle and repeat can be changed: they order a queue of songs. Not a mix the server keeps
-     * flowing, which has them fixed, nor a station, which is one stream, nor what another source
-     * plays on the speaker.
-     */
+    /** False for a dynamic queue (the server fixes its shuffle and repeat), a station or another source. */
     val canShuffle: Boolean = true,
     val speed: Double = 1.0,
 ) {
-    /** The position moves on with time. */
     val runs: Boolean get() = playing && !seeking
 
-    /** Where the speaker is at [nowMs] on the phone's monotonic clock. */
     fun positionAt(nowMs: Long): Long = positionAt(
         (elapsedSeconds * 1000).toLong(),
         elapsedAtMs,
@@ -54,7 +45,6 @@ data class SpeakerSnapshot(
         (current?.durationSeconds ?: 0) * 1000L,
     )
 
-    /** As last heard, at rest where it was at [nowMs]: not playing, nothing starting. */
     fun standingAt(nowMs: Long): SpeakerSnapshot = copy(
         playing = false,
         playActionInProgress = false,
@@ -64,20 +54,12 @@ data class SpeakerSnapshot(
     )
 }
 
-/**
- * A position reported at [atMs], moved on to [nowMs] at [speed] while [playing]; within [durationMs]
- * when that is known.
- */
 fun positionAt(positionMs: Long, atMs: Long, nowMs: Long, playing: Boolean, speed: Double, durationMs: Long): Long {
     val moved = if (playing) positionMs + ((nowMs - atMs).coerceAtLeast(0) * speed).toLong() else positionMs
     return if (durationMs > 0) moved.coerceIn(0, durationMs) else moved.coerceAtLeast(0)
 }
 
-/**
- * A `QueueItem`, or what another source (an external input, AirPlay) reports playing. [queueItemId]
- * is the stable identity (never the track id; for another source its uri or title). [artist] is a
- * book's authors and an episode's podcast.
- */
+/** [queueItemId] is the identity, never the track id; for another source its uri or title. */
 data class QueueEntry(
     val queueItemId: String,
     val uri: String,
@@ -85,21 +67,17 @@ data class QueueEntry(
     val artist: String?,
     val album: String?,
     val durationSeconds: Int?,
-    /** `/imageproxy/<proxy_id>?size=512` on the connection base. */
     val artworkUrl: String?,
-    /** The item's `media_type`: "track", "radio", "audiobook" or "podcast_episode". */
     val mediaType: String = MediaType.Track.api,
-    /** A book's or episode's chapter starts, ascending. */
+    /** Ascending, as ChapterNavigation needs them. */
     val chapterStartsMs: List<Long> = emptyList(),
 ) {
-    /** A book or an episode: it skips by seconds, and next and previous step by chapter. */
     val spoken: Boolean get() = MediaType.isSpokenWord(mediaType)
 
     /**
-     * The second a seek to [positionMs] goes to. The server cuts a seek to whole seconds, refuses
-     * one to the very end, and takes 0 on a book or an episode as "resume from the bookmark", so a
-     * spoken item never seeks below 1 s. [intoSecond] rounds up, so a chapter's start lands inside
-     * that chapter, not at the end of the one before.
+     * The server cuts a seek to whole seconds, refuses one to the very end and takes 0 on a spoken item
+     * as "resume" (docs/API-NOTES.md, "Seek"). [intoSecond] rounds up into a chapter that starts
+     * mid-second.
      */
     fun seekSeconds(positionMs: Long, intoSecond: Boolean = false): Int {
         val floor = if (spoken) 1 else 0
@@ -109,11 +87,7 @@ data class QueueEntry(
     }
 }
 
-/**
- * One speaker as the session and Now Playing see it; an inactive queue's item is not what plays.
- * [state] is its queue and where that is, [mediaPosition] the place of what the speaker reports
- * playing.
- */
+/** An inactive queue's item is not what plays: then the player's current media and [mediaPosition] count. */
 fun snapshotOf(
     player: Player,
     state: QueueState?,
@@ -154,7 +128,6 @@ fun snapshotOf(
     )
 }
 
-/** Another source plays (an external input, AirPlay, Spotify Connect): only what it reports. */
 private fun entryOf(media: PlayerMedia, images: ImageUrls?) = QueueEntry(
     queueItemId = media.queueItemId ?: media.uri ?: media.title.orEmpty(),
     uri = media.uri.orEmpty(),

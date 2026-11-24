@@ -14,10 +14,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 
-/** The real Music Assistant the live tests run against (scripts/test-server); null where there is none. */
+/** Set by scripts/test-server/live.sh. */
 internal val liveUrl: String? = System.getenv("MA_URL")
 
-/** Runs [block] signed in to [liveUrl] as the test server's admin; skipped unless MA_URL is set. */
 internal fun live(block: suspend (MaApi, ServerInfo) -> Unit) = runBlocking {
     assumeTrue("MA_URL not set", liveUrl != null)
     val address = ServerAddress.parse(liveUrl!!)!!
@@ -42,7 +41,7 @@ internal fun live(block: suspend (MaApi, ServerInfo) -> Unit) = runBlocking {
 
 internal suspend fun MaApi.queue(queueId: String): PlayerQueue? = queues().firstOrNull { it.queueId == queueId }
 
-/** The fake speakers appear about 15 s after they connect to a fresh server. */
+/** The fake speakers appear only seconds after they connect. See docs/API-NOTES.md, "Test server recipe". */
 internal suspend fun waitForSpeakers(api: MaApi): List<Player> = waitFor(60_000) {
     api.players().filter {
         it.isShownSpeaker(null) && it.available

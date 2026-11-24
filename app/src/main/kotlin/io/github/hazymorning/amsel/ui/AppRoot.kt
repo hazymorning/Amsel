@@ -77,12 +77,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
-/** What screens may ask of the app shell, wherever they are. Provided by [AppRoot]. */
 class AppActions(
     private val context: Context,
     private val graph: AppGraph,
     private val sheet: MutableState<AppSheet?>,
-    /** Asks for notifications, which show a download's progress, where Android needs asking. */
     private val askNotifications: () -> Unit = {},
 ) {
     fun open(next: AppSheet) {
@@ -90,8 +88,8 @@ class AppActions(
     }
 
     /**
-     * What comes before downloading [item]: the first time, the sheet that signs in to
-     * Audiobookshelf, which then downloads it; otherwise null, once notifications were asked for.
+     * Null once the download may start (notifications asked for); without an Audiobookshelf account,
+     * the sign-in sheet, which downloads [item] itself after signing in.
      */
     fun beforeDownload(item: MediaUi): AppSheet? {
         if (graph.downloading.account.value == null) return AppSheet.AbsSignIn(item)
@@ -99,25 +97,21 @@ class AppActions(
         return null
     }
 
-    /** Downloads [item] from its page. */
     fun download(item: MediaUi) {
         val first = beforeDownload(item)
         if (first != null) open(first) else graph.downloading.download(item.key)
     }
 
-    /** Opens the ⋮ sheet (also the long-press shortcut). */
     fun more(target: ActionTarget) = open(AppSheet.Actions(target))
 
     fun playOn() = open(AppSheet.PlayOn)
 
     fun group() = open(AppSheet.Group)
 
-    /** Opens Music Assistant's web UI in the browser. */
     fun openWebUi() {
         graph.data.session.address.value?.let { openLink(it.toString()) }
     }
 
-    /** Opens [url] in the browser. */
     fun openLink(url: String) {
         try {
             context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
@@ -129,17 +123,13 @@ class AppActions(
 
 val LocalAppActions = staticCompositionLocalOf<AppActions> { error("AppActions not provided") }
 
-/**
- * The whole app: Setup until signed in, then the tabs, mini player, Now Playing and sheets.
- * [opening] is where a shortcut or a link asked to go; [onOpened] once the app is there, or
- * cannot go (no one signed in).
- */
+/** [onOpened] runs once [opening] has been handled, and also when it cannot be (signed out). */
 @Composable
 fun AppRoot(graph: AppGraph, opening: DeepLink? = null, onOpened: () -> Unit = {}) {
     val prefs by graph.data.prefs.prefs.collectAsStateWithLifecycle()
     val stored = prefs?.theme
     val context = LocalContext.current
-    // Only once read: the System that stands in before then is not the person's choice.
+    // Only once the prefs are read: the System default before that is not the user's choice.
     LaunchedEffect(stored) { if (stored != null) context.applyNightMode(ThemeMode.of(stored)) }
     AmselTheme(ThemeMode.of(stored)) {
         SystemBarsFollowTheme()
@@ -147,7 +137,7 @@ fun AppRoot(graph: AppGraph, opening: DeepLink? = null, onOpened: () -> Unit = {
         val signedOut = session == SessionState.NeedsSetup || session == SessionState.Unsupported
         LaunchedEffect(signedOut, opening) { if (signedOut && opening != null) onOpened() }
         when (session) {
-            // The system splash stays on screen meanwhile (MainActivity).
+            // MainActivity keeps the system splash on screen meanwhile.
             SessionState.Restoring -> Unit
 
             SessionState.NeedsSetup -> SetupRoute()
@@ -163,13 +153,13 @@ fun AppRoot(graph: AppGraph, opening: DeepLink? = null, onOpened: () -> Unit = {
                 onAction = graph.data.session::reconnect,
             )
 
-            // Waiting, Ready and Offline share this one call: the screens stay while the connection comes and goes.
+            // Waiting, Ready and Offline share one call, so the screens survive the connection coming and going.
             else -> Main(graph, opening, onOpened)
         }
     }
 }
 
-/** The status and navigation bars' glyphs follow the app's own theme, which may differ from the system's. */
+/** The bars' icons follow the app's theme, which may differ from the system's. */
 @Composable
 private fun SystemBarsFollowTheme() {
     val window = LocalActivity.current?.window ?: return
@@ -188,14 +178,14 @@ private fun Main(graph: AppGraph, opening: DeepLink?, onOpened: () -> Unit) {
     val nowPlaying by graph.playing.nowPlaying.collectAsStateWithLifecycle()
     val speaker by graph.playing.speaker.collectAsStateWithLifecycle()
     val offer by graph.offers.shown.collectAsStateWithLifecycle()
-    // Kept through a rotation, not past the activity: a later launch never reopens it.
+    // Survives a rotation but not the activity, so a later launch never reopens a sheet.
     val sheet = retain { mutableStateOf<AppSheet?>(null) }
     val snackbar = remember { SnackbarHostState() }
     val askNotifications = rememberNotificationAsk()
     val actions = remember(graph, context, askNotifications) { AppActions(context, graph, sheet, askNotifications) }
 
     ShowMessages(graph.messages, snackbar)
-    // Search, Now Playing and Up next come up in front of whatever sheet was open; the speaker picker is one.
+    // These links close any open sheet; the speaker picker links open a sheet themselves.
     LaunchedEffect(opening) {
         if (opening == DeepLink.Search || opening == DeepLink.NowPlaying ||
             opening == DeepLink.UpNext
@@ -203,9 +193,8 @@ private fun Main(graph: AppGraph, opening: DeepLink?, onOpened: () -> Unit) {
             sheet.value = null
         }
     }
-    // On Android 17 a server on the local network is out of reach until the person allows it,
-    // also for a phone set up before the update (Setup asked only then). Unreachable with the
-    // permission missing: ask, once per launch; Retry asks again, or reconnects at once.
+    // Android 17 blocks a local server until the user grants local network access, also on a phone
+    // set up before the update (only Setup asks). While offline without it, ask once per launch.
     val reconnect = rememberRetry()
     var asked by rememberSaveable { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -216,7 +205,6 @@ private fun Main(graph: AppGraph, opening: DeepLink?, onOpened: () -> Unit) {
                     it is SessionState.Offline
                 }.distinctUntilChanged().collectLatest { offline ->
                     if (!offline) {
-                        // Back again: a message about it would only be old news.
                         graph.messages.withdraw(reconnect)
                         return@collectLatest
                     }
@@ -224,20 +212,20 @@ private fun Main(graph: AppGraph, opening: DeepLink?, onOpened: () -> Unit) {
                         asked = true
                         reconnect()
                     }
-                    // A socket that drops and comes back (the network changing, the phone waking) says nothing.
+                    // A brief drop (a network change, the phone waking) reconnects within the delay and shows nothing.
                     delay(OFFLINE_NOTICE_MS)
                     graph.messages.show(PlaybackR.string.error_not_connected, retry = reconnect)
                 }
             } finally {
-                // Its Retry asks through this activity's launcher, gone once it stops; the next
-                // start says it again with its own.
+                // Retry uses this activity's permission launcher, invalid once it stops; the next
+                // start shows the message again with its own.
                 graph.messages.withdraw(reconnect)
             }
         }
     }
 
-    // Started behind a dialog (Android's own, asking for notifications), the download service may
-    // be refused: what waits goes on as soon as the app is in front again.
+    // The download service may be refused while the notification permission dialog covers the app;
+    // pending downloads resume once the app is in front again.
     LaunchedEffect(graph, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { graph.downloading.resume() }
     }
@@ -320,5 +308,4 @@ private fun RouteContent(route: Route, navigator: Navigator) {
     }
 }
 
-/** How long Music Assistant stays out of reach before the app says so. */
 private const val OFFLINE_NOTICE_MS = 8_000L

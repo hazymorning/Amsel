@@ -29,7 +29,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The DJ's sheet: a pick shows before the server answers, and a refusal takes it back. */
 class QueueDjControllerTest {
     private var loaded = true
     private var status = FakeMaServer.recorded(V, "ai_radio_queue_dj_status")
@@ -49,7 +48,6 @@ class QueueDjControllerTest {
         fun asked(command: String): Int = server.received.count { it["command"]?.jsonPrimitive?.content == command }
     }
 
-    /** The recorded server with the DJ's plugin, [loaded] or gone; Kitchen's DJ is as [status] says. */
     private fun withDj(block: suspend Fixture.() -> Unit) =
         withFakeApi(V, { command, _ -> listOf(answer(command)) }) { api, server ->
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

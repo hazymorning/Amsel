@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
-/** The Audiobookshelf account in [prefs], its token sealed by [vault] as the session's is. */
 class PrefsAbsAccountStore(private val prefs: PrefsStore, private val vault: TokenCipher, scope: CoroutineScope) :
     AbsAccountStore {
     override val account: StateFlow<AbsAccount?> = prefs.prefs.map { p ->
@@ -19,7 +18,7 @@ class PrefsAbsAccountStore(private val prefs: PrefsStore, private val vault: Tok
 
     override suspend fun refreshToken(): String? = prefs.absToken()?.let(vault::open)
 
-    // Each returns once [account] shows the change: a download asked for right after needs it.
+    // save and clear return once [account] shows the change: a download asked for right after needs it.
     override suspend fun save(account: AbsAccount, refreshToken: String) {
         prefs.saveAbs(account.url, account.username, vault.seal(refreshToken))
         this.account.first { it == account }

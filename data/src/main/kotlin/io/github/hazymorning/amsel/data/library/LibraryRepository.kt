@@ -33,7 +33,6 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** The kinds the library index holds: the Library tab's, and radio stations for Home. */
 val INDEXED_TYPES =
     listOf(
         MediaType.Playlist,
@@ -44,47 +43,34 @@ val INDEXED_TYPES =
         MediaType.Radio,
     )
 
-/**
- * The library index: a paged full sync on first connect, kept current from media-item events,
- * and re-synced when the server, its schema, or a provider sync says so.
- * Kinds sync side by side, so a large album library does not hold up the artists.
- */
+// Kinds sync side by side, so a large album library does not hold up the artists.
 class LibraryRepository(
     private val dao: LibraryDao,
     private val api: MaApi,
-    /** The signed-in person's id: progress events arrive for every user. */
+    // Progress events arrive for every user.
     private val userId: () -> String? = { null },
 ) {
     private val locks = INDEXED_TYPES.associateWith { Mutex() }
     private val running = MutableStateFlow(emptySet<MediaType>())
 
-    /**
-     * The events heard while each kind's listing is on its way: the listing can be older than they
-     * are, so they apply again once it has replaced the kind.
-     */
+    // Events heard while a kind's listing loads; the listing can be older, so they are applied again over it.
     private val heard = HashMap<MediaType, MutableList<MaEvent>>()
     private val _failures = MutableStateFlow<Map<MediaType, Exception>>(emptyMap())
 
-    /** Why each kind's last sync failed; a kind leaves once it syncs. */
     val failures: StateFlow<Map<MediaType, Exception>> = _failures.asStateFlow()
 
     private val _replaced = MutableSharedFlow<MediaType>(extraBufferCapacity = INDEXED_TYPES.size)
 
-    /** Each kind a sync has just replaced in the index. */
     val replaced: SharedFlow<MediaType> = _replaced.asSharedFlow()
     private val _progress =
         MutableSharedFlow<ProgressUpdate>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** Books and episodes the signed-in person moved through, finished or marked, as it happens. */
+    /** Only the signed-in user's progress. */
     val progress: SharedFlow<ProgressUpdate> = _progress.asSharedFlow()
 
-    /** True while any kind syncs; the UI shows skeletons only when the list is also empty. */
     val syncing: Flow<Boolean> = running.map { it.isNotEmpty() }.distinctUntilChanged()
 
-    /**
-     * The kinds synced from this server at least once: an empty one of them is empty, where one
-     * still on its first sync is loading.
-     */
+    /** Kinds synced at least once: one of them that is empty is really empty, any other is still loading. */
     val synced: Flow<Set<MediaType>> =
         dao.syncedTypes().map { names -> INDEXED_TYPES.filter { it.api in names }.toSet() }.distinctUntilChanged()
 
@@ -94,7 +80,6 @@ class LibraryRepository(
         LibrarySort.RecentlyPlayed -> dao.byPlayed(type.api)
     }
 
-    /** The first [limit] of [type] in [sort] order, for a Home section. */
     suspend fun firstRows(type: MediaType, sort: LibrarySort, limit: Int): List<LibraryItemEntity> = when (sort) {
         LibrarySort.AToZ -> dao.firstByName(type.api, limit)
         LibrarySort.RecentlyAdded -> dao.firstByAdded(type.api, limit)
@@ -105,47 +90,33 @@ class LibraryRepository(
 
     suspend fun random(type: MediaType, limit: Int): List<LibraryItemEntity> = dao.random(type.api, limit)
 
-    /**
-     * Smart playlists A-Z: the Smart Playlists plugin's are the ones a person made, so Music
-     * Assistant's built-in set fills in only for someone who has none.
-     */
+    // The Smart Playlists plugin's are the ones the user made; Music Assistant's built-in set shows only without them.
     suspend fun smartPlaylists(limit: Int): List<LibraryItemEntity> =
         dao.smartPlaylists(pluginOnly = true, limit).ifEmpty { dao.smartPlaylists(pluginOnly = false, limit) }
 
-    /** The user's and the music services' playlists, last played first. */
+    /** Every playlist that is not smart: the user's and the music services'. */
     suspend fun ownPlaylists(limit: Int): List<LibraryItemEntity> = dao.ownPlaylists(limit)
 
-    /** The kinds the index holds any of; books and podcasts are offered only then. */
     val heldTypes: Flow<Set<MediaType>> =
         dao.mediaTypes().map { kinds -> INDEXED_TYPES.filter { it.api in kinds }.toSet() }.distinctUntilChanged()
 
-    /** The index holds nothing: a library without music, or one whose first sync has not finished. */
     val isEmpty: Flow<Boolean> = dao.isEmpty().distinctUntilChanged()
 
     suspend fun get(uri: String): LibraryItemEntity? = dao.get(uri)
 
-    /** The rows the index holds for [uris], by uri, in one lookup rather than one each. */
     suspend fun rows(uris: Collection<String>): Map<String, LibraryItemEntity> = dao.rowsOf(uris)
 
-    /** Every item in the index, again after each change to it, for Search's forgiving matches. */
     val everything: Flow<List<LibraryItemEntity>> = dao.observeAll()
 
-    /** The row for [uri] as it changes: a book page's header and progress. */
     fun observeRow(uri: String): Flow<LibraryItemEntity?> = dao.observeRow(uri).distinctUntilChanged()
 
-    /** The index's albums whose first artist is [artistUri]: an artist page's first paint. */
     suspend fun albumsBy(artistUri: String): List<LibraryItemEntity> = dao.albumsBy(artistUri)
 
-    /** For each of [uris] that is an artist without a picture, the album covers it wears, with no server call. */
     suspend fun albumCovers(uris: Collection<String>): Map<String, List<String>> = dao.coversOf(uris)
 
-    /** Playlists the user can add to, A-Z (built-in smart playlists are not editable). */
     suspend fun editablePlaylists(): List<LibraryItemEntity> = dao.editablePlaylists()
 
-    /**
-     * Syncs every kind whose index is missing, belongs to another server or schema, or no longer
-     * adds up to the server's: items or favorites changed while no socket was open to hear it.
-     */
+    // Counts that differ mean items or favourites changed while no socket was open to hear it.
     suspend fun syncIfNeeded(server: ServerInfo) = syncTypes(server) { type ->
         val state = dao.syncState(type.api)
         state == null || state.serverId != server.serverId || state.schema != server.schemaVersion ||
@@ -155,10 +126,8 @@ class LibraryRepository(
 
     suspend fun syncAll(server: ServerInfo) = syncTypes(server) { true }
 
-    /** Syncs one kind again now (Library's pull to refresh), after any sync of it already running. */
     suspend fun syncType(type: MediaType, server: ServerInfo) = sync(type, server)
 
-    /** Syncs the kinds [needed] picks side by side; a kind that fails leaves the others alone. */
     private suspend fun syncTypes(server: ServerInfo, needed: suspend (MediaType) -> Boolean) {
         val failures = supervisorScope {
             INDEXED_TYPES.map { type -> async { if (needed(type)) sync(type, server) } }
@@ -178,8 +147,8 @@ class LibraryRepository(
         running.update { it + type }
         synchronized(heard) { heard[type] = mutableListOf() }
         try {
-            // The recently-played ranks are asked alongside the full listing, not after it. Without
-            // them the kind would sort A to Z by its recently played order until counts change.
+            // Asked with the listing, not after it: without the ranks, Recently played would sort A to Z until
+            // the counts change.
             val (added, played) = coroutineScope {
                 val played = async { recentlyPlayed(type) }
                 api.allLibraryItems(type, LibrarySort.RecentlyAdded) to played.await()
@@ -205,11 +174,8 @@ class LibraryRepository(
         }
     }
 
-    /**
-     * The server's recently-played order, of what has been played: the rest sorts by name after it.
-     * A book's last play only moves when it is finished, so the books in progress come first, last
-     * played first.
-     */
+    // A book's last play moves only once it is finished, so the books in progress come first, last played first.
+    // See docs/API-NOTES.md, "Audiobooks and podcasts".
     private suspend fun recentlyPlayed(type: MediaType): List<MediaItem> {
         val played = api.libraryItems(type, LibrarySort.RecentlyPlayed, playedOnly = true)
         if (type != MediaType.Audiobook) return played
@@ -218,11 +184,7 @@ class LibraryRepository(
         return (started + played).distinctBy { it.uri }
     }
 
-    /**
-     * Applies one item, favourite or progress event; returns true when it changed the index. A provider
-     * sync's `music_sync_completed` is answered with [syncAll], which DataGraph runs off its event
-     * loop so the player and queue events behind it are not held up.
-     */
+    /** True when the event changed the index. `music_sync_completed` is DataGraph's: [syncAll], off the event loop. */
     suspend fun onEvent(event: MaEvent): Boolean {
         // Replayed over its own kind's listing only: over every kind's, a play would count again for each.
         val kind = event.objectId?.let(ItemUri::parse)?.mediaType
@@ -238,16 +200,16 @@ class LibraryRepository(
                 val item = event.decode(MediaItem.serializer()) ?: return false
                 if (!item.isLibraryItem || item.mediaType !in TYPE_NAMES) return false
                 val existing = dao.get(item.uri)
-                // The index holds album artists, as the sync and the count do; the server also adds
-                // every track's artist and every author to the library, and announces each.
+                // The index holds album artists only, as the sync and the count do; the server also adds every
+                // track's artist and every author to the library, and announces each.
                 if (existing == null && item.mediaType == MediaType.Artist.api) return false
                 val addedRank = existing?.addedRank ?: ((dao.minAddedRank(item.mediaType) ?: 0) - 1)
                 val entity = item.toEntityOver(existing, addedRank)
-                // A metadata refresh often changes nothing the row holds: rewritten, it would re-run
-                // every query that observes the index.
+                // A metadata refresh often changes nothing in the row; a rewrite would re-run every query that
+                // observes the index.
                 if (entity == existing) return false
                 dao.upsert(listOf(entity))
-                // An album lends its cover to its artists; an artist that lost its picture wears its albums'.
+                // An album's cover goes to its artists without a picture, and to an artist that lost its picture.
                 val lostPicture = existing?.imageProxyId != null && entity.imageProxyId == null
                 if (item.mediaType == MediaType.Album.api || (item.mediaType == MediaType.Artist.api && lostPicture)) {
                     dao.coverArtists()
@@ -285,7 +247,7 @@ class LibraryRepository(
         dao.setFavorite(uri, favorite)
     }
 
-    /** A book the server just sent: its row takes the person's progress from it. */
+    /** For a book from a direct request, whose progress is the calling user's, unlike an item event's. */
     suspend fun rememberProgress(item: MediaItem) {
         if (item.mediaType != MediaType.Audiobook.api || !item.isLibraryItem) return
         dao.setProgress(item.uri, item.resumePositionMs, item.fullyPlayed)
@@ -297,9 +259,8 @@ class LibraryRepository(
     }
 
     /**
-     * Optimistic "Mark as finished" or "unfinished"; the server's `playlog_updated` confirms it.
-     * Returns what puts back [before], where the person stood, for when the server refuses the
-     * mark: an episode or a book from Search has no row, only the pages showing it.
+     * Optimistic mark; the server's `playlog_updated` confirms it. Returns the undo for a refused mark, which restores
+     * [before] also where the index has no row (an episode, or a book from Search).
      */
     suspend fun setPlayedLocally(uri: String, played: Boolean, before: ProgressUpdate): suspend () -> Unit {
         val row = dao.get(uri)
@@ -323,5 +284,4 @@ class LibraryRepository(
     }
 }
 
-/** Where the signed-in person stands in a book or episode. */
 data class ProgressUpdate(val uri: String, val fullyPlayed: Boolean, val positionMs: Long)

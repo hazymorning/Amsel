@@ -8,13 +8,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The order of the steps when music moves to and from This phone. */
 class SpeakerStepsTest {
     private val phone = SpeakerUi("phone-1", "This phone", isPhone = true)
     private val kitchen = SpeakerUi("kitchen", "Kitchen")
     private val office = SpeakerUi("office", "Office")
 
-    /** Records each step; "keep{" and "}" mark the span This phone is kept on the server. */
+    // "keep{" and "}" mark the span This phone is kept on the server.
     private class Recorder(private val phoneJoins: String? = "phone-1", private val transferFails: Boolean = false) :
         SpeakerSteps {
         val steps = mutableListOf<String>()

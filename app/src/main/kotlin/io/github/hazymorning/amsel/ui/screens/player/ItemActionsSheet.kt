@@ -73,7 +73,6 @@ fun ItemActionsSheetContent(state: ItemActionsUiState, onAction: (ItemAction) ->
     }
 }
 
-/** "Remove “Lanterns” from Sunday Morning?": Remove, or Cancel back to the actions. */
 @Composable
 fun RemoveFromPlaylistQuestion(
     song: String,
@@ -162,18 +161,13 @@ private val ItemAction.label: Int
         ItemAction.Dj -> R.string.dj
     }
 
-/**
- * The ⋮ sheet. An action that needs more (a playlist, a bookmark, the sleep timer, a speaker to move
- * to, the DJ, the question before a removal) closes it and names the sheet that comes next ([onClose]);
- * the others run in the app's scope and close it. Moving the music shows only when another speaker
- * is in reach, the DJ only while the server has one to choose.
- */
+/** [onClose] names the sheet that comes next for an action that needs more; the others run in the app's scope. */
 @Composable
 fun ItemActionsRoute(target: ActionTarget, navigator: Navigator, onClose: (next: AppSheet?) -> Unit) {
     val graph = LocalContext.current.graph
     val app = LocalAppActions.current
-    // A removal from this playlist failed: its page reads the playlist again, so a position counted
-    // before then could name another song.
+    // After a failed removal the page reloads the playlist, so this sheet's position could name another
+    // song: it closes.
     LaunchedEffect(target) {
         val playlist = (target as? ActionTarget.Track)?.playlistKey ?: return@LaunchedEffect
         graph.playlists.edits.first { it is PlaylistEdit.Failed && it.playlistKey == playlist }
@@ -213,7 +207,6 @@ fun ItemActionsRoute(target: ActionTarget, navigator: Navigator, onClose: (next:
     )
 }
 
-/** "Add to playlist": the playlists the person may change, once they are read; the one picked is a tap away after. */
 @Composable
 fun PlaylistsRoute(target: ActionTarget, navigator: Navigator, onClose: () -> Unit) {
     val graph = LocalContext.current.graph
@@ -227,7 +220,6 @@ fun PlaylistsRoute(target: ActionTarget, navigator: Navigator, onClose: () -> Un
     )
 }
 
-/** The item an action is about, as a row or a tile would show it. */
 private fun ActionTarget.song(): MediaUi = when (this) {
     is ActionTarget.Media -> item
     is ActionTarget.Track -> MediaUi(track.key, MediaKind.Track, track.title, track.artist, track.art)
@@ -247,7 +239,6 @@ fun RemoveFromPlaylistRoute(target: ActionTarget.Track, navigator: Navigator, on
     )
 }
 
-/** The bookmarks of a book or an episode, or of all of a podcast's episodes. */
 @Composable
 fun BookmarksRoute(item: MediaUi, onClose: () -> Unit) {
     val graph = LocalContext.current.graph
@@ -267,7 +258,6 @@ fun BookmarksRoute(item: MediaUi, onClose: () -> Unit) {
     )
 }
 
-/** The sleep timer of the speaker that plays. */
 @Composable
 fun SleepRoute() {
     val graph = LocalContext.current.graph

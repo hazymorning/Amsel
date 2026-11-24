@@ -34,11 +34,6 @@ import io.github.hazymorning.amsel.ui.model.positionAt
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * Chapters, where music has Up next: every chapter of the book or episode playing, the list opening
- * on the chapter before the one it is in. A tap goes to that chapter's start. One without chapters
- * says so.
- */
 @Composable
 fun ChaptersSheetContent(state: NowPlayingUi, onPick: (ChapterUi) -> Unit, modifier: Modifier = Modifier) {
     val now by rememberListeningClock(state.isPlaying)
@@ -74,7 +69,6 @@ fun ChaptersSheetContent(state: NowPlayingUi, onPick: (ChapterUi) -> Unit, modif
     }
 }
 
-/** The chapters of what plays; a pick goes to its start and closes the sheet. */
 @Composable
 fun ChaptersRoute(onClose: () -> Unit) {
     val graph = LocalContext.current.graph

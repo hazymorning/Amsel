@@ -6,10 +6,8 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.playback.R as PlaybackR
 
 /**
- * What the bottom bar can hold: Home, Search, the Library, any kind of the library on its own,
- * Settings, and the speaker's button, which opens Play on. The person chooses which it shows, [MAX]
- * at most, and in what order (Settings, Bottom bar); Home always stays, for the way back is under it.
- * With Settings out of the bar, a pull down at Home's top opens them.
+ * [Speaker] has no tab: it opens Play on. Home always shows, as back navigation ends there; without
+ * [Settings] in the bar, a pull down at the top of Home opens them.
  */
 enum class BarItem(val id: String, @StringRes val label: Int, @DrawableRes val icon: Int, val tab: Tab?) {
     Home("home", R.string.tab_home, R.drawable.ic_home, Tab.Home),
@@ -26,26 +24,23 @@ enum class BarItem(val id: String, @StringRes val label: Int, @DrawableRes val i
     ;
 
     companion object {
-        /** Five places at most: past five each would be too narrow to find by its glyph. */
+        /** More than five makes each item too narrow to recognise by its icon. */
         const val MAX = 5
 
-        /** The bar as it comes: Home, the speaker, Search, the Library and, at its end, Settings. */
         val Default: List<BarItem> = listOf(Home, Speaker, Search, Library, Settings)
 
-        /** Every place in the person's order, those in the bar shown, Home always among them. */
         fun arrangement(tokens: List<String>?): OrderedToggles<BarItem> {
             val defaults = OrderedToggles(Default + (entries - Default.toSet()), Default.toSet())
             val stored = OrderedToggles.of(tokens, entries, BarItem::id, defaults)
-            // A stored bar without Home gets it back first, where the way back belongs.
+            // A stored bar without Home gets it back at the front.
             val homeless = tokens != null && tokens.none { it.removePrefix(OrderedToggles.HIDDEN) == Home.id }
             val order = if (homeless) listOf(Home) + (stored.order - Home) else stored.order
-            // A bar stored before Settings could stand in it takes them at its end, where there is room.
+            // Bars stored before Settings could be in the bar get it at the end, if fewer than MAX are shown.
             val settingsNew = tokens != null && tokens.none { it.removePrefix(OrderedToggles.HIDDEN) == Settings.id }
             val shown = stored.shown + Home
             return OrderedToggles(order, if (settingsNew && shown.size < MAX) shown + Settings else shown)
         }
 
-        /** The bar from what is stored ([tokens]; null for [Default]): the places shown, in order. */
         fun of(tokens: List<String>?): List<BarItem> = arrangement(tokens).visible
     }
 }

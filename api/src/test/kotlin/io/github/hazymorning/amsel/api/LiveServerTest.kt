@@ -13,8 +13,8 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
- * End to end against a real Music Assistant (scripts/test-server, with the fake speakers
- * "Kitchen" and "Living Room"). Skipped unless MA_URL is set; CI runs it on 2.10 and 2.11.
+ * Needs scripts/test-server/live.sh, with its fake speakers "Kitchen" and "Living Room"; skipped
+ * unless MA_URL is set.
  */
 class LiveServerTest {
     @Test fun `library, pages and search`() = live { api, _ ->
@@ -31,10 +31,9 @@ class LiveServerTest {
         val playlists = api.allLibraryItems(MediaType.Playlist)
         val mix = playlists.first { it.name == "Amsel Mix" }
         assertTrue(api.playlistTracks(mix.itemId, mix.provider).items.isNotEmpty())
-        // MA's own smart playlists are told apart from the library's playlist.
         assertEquals(8, playlists.count { it.isSmartPlaylist })
         assertTrue(!mix.isSmartPlaylist)
-        // The test library has no radio stations; the listing answers, sorted, in both versions.
+        // The test library has no stations: this checks only that every sort is accepted.
         LibrarySort.entries.forEach { sort ->
             assertTrue(api.libraryItems(MediaType.Radio, sort).all { it.mediaType == "radio" })
         }
@@ -76,7 +75,7 @@ class LiveServerTest {
 
         api.setVolume(living.playerId, 25)
         waitFor { api.players().firstOrNull { it.playerId == living.playerId }?.takeIf { it.volumeLevel == 25 } }
-        // Louder takes the server's step: its setting, or its ladder's 2 between 10 and 30.
+        // The server's step setting, else its ladder's 2 between 10 and 30.
         val louder = 25 + (api.volumeStep() ?: 2)
         api.volumeUp(living.playerId)
         waitFor { api.players().firstOrNull { it.playerId == living.playerId }?.takeIf { it.volumeLevel == louder } }
@@ -94,10 +93,10 @@ class LiveServerTest {
             api.setMembers(kitchen, add = listOf(living), remove = emptyList())
             waitFor { api.groups().takeIf { it == mapOf(kitchen to setOf(living)) } }
 
-            // As Ungroup sends it, whichever speaker is in use: leader and members from the server's word.
+            // As Ungroup sends it: leader and members as the server reports them.
             api.groups().forEach { (leader, members) -> api.setMembers(leader, emptyList(), members.toList()) }
             waitFor { api.players().takeIf { all -> all.none { it.syncedTo != null || it.groupMembers.isNotEmpty() } } }
-            // Not for a moment only: the leader's stream is its own again and goes on.
+            // Still playing 2 s later, not only for a moment.
             delay(2_000)
             assertTrue(checkNotNull(api.queue(kitchen)).isPlaying)
         } finally {
@@ -114,7 +113,7 @@ class LiveServerTest {
         suspend fun named() = api.groups()[leader].orEmpty()
         try {
             api.setMembers(leader, add = members, remove = emptyList())
-            // The first sign of the group, which is when Ungroup shows: seconds before all are named.
+            // Ungroup shows once the first member is named, seconds before all are.
             waitFor { named().takeIf { it.isNotEmpty() } }
             val gone = mutableSetOf<String>()
             var quiet = 0
@@ -164,13 +163,12 @@ class LiveServerTest {
         )
         val group = checkNotNull(created.decodeOrNull(Player.serializer())).playerId
         try {
-            // At rest it lists its speakers, and they stay on their own.
             waitFor { api.players().firstOrNull { it.playerId == group }?.takeIf { it.groupMembers.size == 2 } }
             assertTrue(api.groups().isEmpty())
             assertTrue(api.players().none { it.activeGroup != null })
 
             api.playMedia(group, listOf(api.libraryItems(MediaType.Album).first().uri))
-            // While it plays, one of its speakers leads the other in step, and it runs them both.
+            // Playing, one member is synced to the other, both with active_group set.
             val playing = waitFor { api.players().takeIf { all -> all.any { it.syncedTo != null } } }
             assertEquals(members.toSet(), playing.filter { it.activeGroup == group }.map { it.playerId }.toSet())
             assertTrue(playing.associateBy { it.playerId }.syncGroups().isEmpty())
@@ -200,20 +198,18 @@ class LiveServerTest {
             assertEquals(RepeatMode.Off, mix.repeatMode)
             assertTrue(mix.shuffleEnabled)
 
-            // Play next and Add to Up next go to the server as ever; in a mix it places them and stays one.
             val songs = api.albumTracks(albums.first().itemId, albums.first().provider).map { it.uri }
             api.playMedia(kitchen, songs.take(1), QueueOption.Next)
             waitFor { api.queued(kitchen).takeIf { songs.first() in it } }
             api.playMedia(kitchen, listOf(albums.first().uri), QueueOption.Add)
-            // The album stays a source only until its songs are all in Up next, which is at once
-            // unless they were played lately: never seen on a fresh server.
+            // The album leaves the sources once all its songs are queued, so either may be seen.
+            // See docs/API-NOTES.md, "Play next and Add to Up next in a mix".
             waitFor {
                 api.queue(kitchen)?.takeIf { it.isDynamic && it.isPlaying }?.takeIf { now ->
                     now.sources.size == 2 || api.queued(kitchen).containsAll(songs)
                 }
             }
 
-            // A second mix finds the first holding the queue and still starts.
             api.playEndlessMix(kitchen, albums.first().uri)
             waitFor { api.queue(kitchen)?.takeIf { it.endlessMixOf == albums.first().name } }
 

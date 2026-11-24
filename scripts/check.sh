@@ -1,20 +1,10 @@
 #!/usr/bin/env bash
-# CI's checks, run here as CI runs them. Each CI job runs one part; before a pull request all of them
-# run here, so the pull request's CI passes the first time.
-#
-# Usage: scripts/check.sh [part ...]
-#   lint          ktlint and Android lint
-#   tests         the unit tests and the screenshots
-#   budgets       permissions, dependencies and APK size
-#   apk           the debug APK
-#   live:<tag>    the live tests against Music Assistant <tag> in Docker (scripts/test-server/live.sh)
-# Without parts, all of them, against both servers CI tests with. Every part runs; those that failed
-# are named at the end.
+# Usage: scripts/check.sh [lint|tests|budgets|apk|live:<tag> ...]; each part is one job in ci.yml.
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 if [[ $# -eq 0 ]]; then
-  # The servers of CI's live-server matrix.
+  # Keep in step with the live-server matrix in ci.yml.
   set -- lint tests budgets apk live:2.10.9 live:2.11.0b7
 fi
 

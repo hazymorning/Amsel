@@ -14,18 +14,16 @@ import androidx.compose.ui.platform.LocalContext
 import io.github.hazymorning.amsel.graph
 
 /**
- * True when this Android version gates local network access (API 37) and Amsel does not have it
- * yet. Without it the control socket, discovery and This phone's Sendspin socket to a server on
- * the local network all fail as "Can't reach".
+ * Without local network access (gated from API 37), the control socket, discovery and This phone's
+ * Sendspin socket to a server on the local network all fail as unreachable.
  */
 fun Context.needsLocalNetwork(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.CINNAMON_BUN &&
     checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED
 
 /**
- * [action], which connects to the server, behind the permission: where the system needs it, the
- * prompt comes first (following the tap, so the reason is on screen), then the action runs
- * whatever the answer, since a server outside the local network works without it. Elsewhere it
- * runs at once. Bound to one action, so the answer still runs it after the activity is recreated.
+ * Runs [action] after the local network prompt where one is needed, whatever the answer: a server
+ * outside the local network works without it. The launcher is bound to this one action, so the
+ * answer still runs it after the activity is recreated.
  */
 @Composable
 fun rememberLocalNetworkGate(action: () -> Unit): () -> Unit {
@@ -40,9 +38,8 @@ fun rememberLocalNetworkGate(action: () -> Unit): () -> Unit {
 }
 
 /**
- * Retry after a load failed: asks for local network access where it is missing, tries an
- * unreachable server at once instead of waiting out the backoff, then runs [load]; a screen that
- * reloads by itself on reconnecting leaves it out.
+ * Retries an unreachable server at once instead of waiting out the backoff, then runs [load]; a
+ * screen that reloads by itself on reconnecting leaves [load] out.
  */
 @Composable
 fun rememberRetry(load: () -> Unit = {}): () -> Unit {

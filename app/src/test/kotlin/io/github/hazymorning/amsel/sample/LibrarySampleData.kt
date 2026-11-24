@@ -4,13 +4,12 @@ import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 
-/** Longer lists for the Library screen: a full A–Z artist list and a realistic set of playlists. */
 object LibrarySampleData {
     private fun art(key: String) = ArtRef("sample:$key")
 
     private fun albums(i: Int) = List(4) { art("album/${(i + it) % 11 + 1}") }.let { it.first().copy(quarters = it) }
 
-    /** In A–Z order by sort name (a leading "The" is ignored, as Music Assistant does). */
+    /** Kept in A–Z order of sort name, which ignores a leading "The" as Music Assistant does. */
     private val artistNames = listOf(
         "4AM Radio", "Ada Lindqvist", "Aino Rautio", "Anouk Meyer", "Basil Grant", "Bea Morrow",
         "The Bellwethers", "Cass Delaney", "Clara Voss", "Dorothea Hale", "Dunmore", "Edie Sandoval",
@@ -22,7 +21,7 @@ object LibrarySampleData {
     )
 
     val artistsAToZ = artistNames.mapIndexed { i, name ->
-        // Every seventh artist has no photo: one in two wears four of its albums, the other its initials.
+        // Every seventh artist lacks a photo: half show four album covers, half their initials.
         val photo = when {
             i % 14 == 3 -> null
             i % 7 == 3 -> albums(i)

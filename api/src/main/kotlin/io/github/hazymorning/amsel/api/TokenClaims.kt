@@ -4,14 +4,10 @@ import java.util.Base64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The claims of a Music Assistant JWT that the app needs: its id, for revoking, and its expiry,
- * for rotating a long-lived token before its 365 days run out.
- */
 @Serializable
 public data class TokenClaims(
     @SerialName("jti") val tokenId: String? = null,
-    /** Expiry, seconds since the epoch. */
+    /** Epoch seconds. */
     val exp: Long? = null,
     @SerialName("is_long_lived") val isLongLived: Boolean = false,
 ) {

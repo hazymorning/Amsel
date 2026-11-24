@@ -15,11 +15,8 @@ import io.github.hazymorning.amsel.ui.theme.spaced
 import kotlin.math.ceil
 
 /**
- * A tile's words under its cover, two lines high: [title], set in [titleStyle] a caption's gap under
- * the cover, and [second] (in [secondStyle]) right under it. A title too long for one line takes the
- * second line's place, so two titles that begin alike still read apart, and the second line gives
- * way: what matters least goes first. Every caption is as high, so the tiles of a shelf or a grid
- * stand alike and none grows as it comes into view. Without [second], the title keeps to one line.
+ * A title that wraps takes the second line's place, so titles that begin alike still read apart.
+ * Every caption has the same height, so tiles align and none grows as it scrolls into view.
  */
 @Composable
 internal fun TileCaption(
@@ -30,7 +27,7 @@ internal fun TileCaption(
 ) {
     val (oneLine, room) = with(LocalDensity.current) {
         val top = spaced(Space.Caption) + capHeight(titleStyle)
-        // The title's ink with one line, and the caption's: the longer of a second title line and the second line.
+        // A one-line title's height, and the caption's: room for a second title line or the second line.
         top.toPx() to ceil((top + max(lineHeight(titleStyle), secondLine(secondStyle))).toPx()).toInt() + 1
     }
     Layout(

@@ -31,7 +31,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Touch and TalkBack paths through the Library screen. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class LibraryScreenTest {
@@ -124,7 +123,7 @@ class LibraryScreenTest {
         val named = MediaUi("library://playlist/1", MediaKind.Playlist, "Dinner", subtitle = "Anna")
         val plain = MediaUi("library://playlist/2", MediaKind.Playlist, "Road trip")
         show(LibraryUiState(LibraryKind.Playlists, items = listOf(named, plain)))
-        // One playlist names its owner, so the other says what it is.
+        // One row has a subtitle, so the other falls back to its kind's word.
         compose.onNodeWithText("Anna").assertExists()
         compose.onNodeWithText("Playlist").assertExists()
     }
@@ -150,7 +149,7 @@ class LibraryScreenTest {
         compose.onNodeWithText("Marlene Vogt").assertIsDisplayed()
     }
 
-    /** The thumb lingers after a scroll; only it takes a touch, so a long press on a row still opens its actions. */
+    /** Only the scrubber's thumb takes touches, so a row's long press works while the thumb shows. */
     @Test fun aRowsActionsStayInReachWhileTheThumbShows() {
         var more: MediaUi? = null
         compose.mainClock.autoAdvance = false

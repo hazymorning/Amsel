@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** A section's title in edit mode: a heading that a tap turns into a field without moving anything. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class SectionTitleTest {
@@ -64,7 +63,7 @@ class SectionTitleTest {
         val field = compose.onNodeWithContentDescription("Section name")
         val typed = field.textLayout()
         assertEquals(2, typed.lineCount)
-        // A title's target reaches past its capitals and its last baseline by as much.
+        // A title's touch target extends equally above its capitals and below its last baseline.
         val reach = (oneLine.height.value - CAPITALS) / 2
         val fieldTop = field.getUnclippedBoundsInRoot().top.value
         val density = compose.density.density
@@ -96,7 +95,7 @@ class SectionTitleTest {
         compose.onNode(title("Pinned")).assert(isHeading())
     }
 
-    /** A section's title: it alone carries TalkBack's moves. */
+    // The section's title node is the only one carrying TalkBack's move actions.
     private fun title(text: String) = hasText(text) and SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions)
 
     private fun control(description: String) =
@@ -114,5 +113,5 @@ class SectionTitleTest {
 
 private const val A_PIXEL = 0.34f
 
-/** The capitals of a section's title, 20.5 sp, in dp at this test's font size. */
+// titleLarge's cap height: 20.5 sp times the font's 0.713 cap ratio, in dp at font scale 1.
 private const val CAPITALS = 20.5f * 0.713f

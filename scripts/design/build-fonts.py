@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-"""Builds Amsel's typeface as small static fonts (docs/DESIGN.md, "Type").
+"""Builds the static fonts of docs/DESIGN.md, "Type"; needs fonttools.
 
-Dev tool: needs `pip install fonttools`. Downloads each variable source, checks its hash, pins
-every axis at the weights the type scale uses and writes Latin and Latin Extended subsets to
-app/src/main/res/font, with each family's licence in app/src/main/assets/licences.
-
-Commissioner 1.012 (upstream, for its tabular figures), Flair 25 for titles, 0 for text.
+The source is upstream Commissioner 1.012, pinned by hash, for its tabular figures.
 """
 import hashlib
 import io
@@ -34,7 +30,6 @@ SOURCES = {
 TEXT = (400, 440, 500, 520, 560, 600, 700)
 TITLES = (650, 700)
 
-# (output name, source, axes)
 OUTPUTS = (
     [(f"commissioner_{w}.ttf", "commissioner", {"wght": w, "FLAR": 0, "VOLM": 0, "slnt": 0}) for w in TEXT]
     + [(f"commissioner_title_{w}.ttf", "commissioner", {"wght": w, "FLAR": 25, "VOLM": 0, "slnt": 0}) for w in TITLES]
@@ -48,7 +43,7 @@ UNICODES = (
     "U+20A0-20AB,U+20AD-20C0,U+2113"
 )
 
-# Must be in every output: German, and the typography Amsel's strings use.
+# German and the typography Amsel's strings use.
 REQUIRED = "ÄÖÜäöüß„“”‚‘’–—…·×−↓↑ 0123456789"
 
 

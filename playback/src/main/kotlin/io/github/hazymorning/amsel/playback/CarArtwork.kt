@@ -6,9 +6,9 @@ import android.content.Intent
 import android.net.Uri
 
 /**
- * Artwork as the car reads it: only content:// URIs, from the browsing app's own provider
- * (developer.android.com/training/cars/media/create-media-browser/media-artwork). A server image is
- * `content://<package>.artwork/<proxy_id>`, which the app's ArtworkProvider serves.
+ * The car loads artwork only from content:// URIs of the browsing app's own provider
+ * (developer.android.com/training/cars/media/create-media-browser/media-artwork): the app's
+ * ArtworkProvider serves `content://<package>.artwork/<proxy_id>`.
  */
 class CarArtwork(private val context: Context) {
     private val root = Uri.Builder().scheme(
@@ -17,7 +17,7 @@ class CarArtwork(private val context: Context) {
 
     fun uri(proxyId: String): Uri = root.buildUpon().appendPath(proxyId).build()
 
-    /** Lets the car's browser [packageName] read every artwork URI: the provider is not exported. */
+    /** A prefix grant for every artwork URI, as the provider is not exported. */
     fun allow(packageName: String) = context.grantUriPermission(
         packageName,
         root,
@@ -28,7 +28,6 @@ class CarArtwork(private val context: Context) {
         /** The car's tiles are at most this wide. */
         const val SIZE = 256
 
-        /** The server image an artwork [uri] names. */
         fun proxyId(uri: Uri): String? = uri.pathSegments.singleOrNull()
     }
 }

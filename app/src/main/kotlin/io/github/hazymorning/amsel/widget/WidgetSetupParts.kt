@@ -43,11 +43,7 @@ import io.github.hazymorning.amsel.ui.screens.settings.blockShape
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Sizes
 
-/**
- * A row of the widget's page for one of its parts: what plays, or the button at [place] in the
- * saved order. A button's key is what it does, and which of the same it is, so a row keeps its key
- * when the order is saved anew.
- */
+/** A button's key is its kind, item and occurrence, not its [Button.place], so a row keeps it across a reorder. */
 @Immutable
 internal sealed interface WidgetPart {
     val key: String
@@ -59,7 +55,6 @@ internal sealed interface WidgetPart {
     data class Button(val place: Int, override val key: String) : WidgetPart
 }
 
-/** [slots] in their saved order, what plays before them or after them as it stands [at]. */
 internal fun widgetParts(slots: List<WidgetSlot>, at: WidgetWordsPosition): List<WidgetPart> {
     val seen = mutableMapOf<WidgetSlot, Int>()
     val buttons = slots.mapIndexed { place, slot ->
@@ -70,16 +65,9 @@ internal fun widgetParts(slots: List<WidgetSlot>, at: WidgetWordsPosition): List
     return if (at == WidgetWordsPosition.After) buttons + WidgetPart.Words else listOf(WidgetPart.Words) + buttons
 }
 
-/** Where what plays lands when let go at [index] of [parts]: at the nearer end. */
 internal fun wordsPositionAt(index: Int, parts: Int): WidgetWordsPosition =
     if (index < parts / 2f) WidgetWordsPosition.Before else WidgetWordsPosition.After
 
-/**
- * The widget's [parts] in their order, each moved by its handle, a held press anywhere on it, or
- * TalkBack's actions: what plays, before the buttons or after them, shown or left out by its
- * switch; and the buttons, each to change or take away. Those the widget's size cannot hold say so;
- * one more while there are fewer than eight. The widget keeps at least one part.
- */
 internal fun LazyListScope.partRows(
     state: WidgetSetupUiState,
     parts: List<WidgetPart>,
@@ -99,7 +87,6 @@ internal fun LazyListScope.partRows(
         Liftable(reorder, part.key) {
             if (index > 0) Spacer(Modifier.height(BetweenRows))
             when (part) {
-                // Without buttons, what plays is all the widget shows, with nothing to move past.
                 WidgetPart.Words -> WordsRow(
                     shown = words,
                     alone = slots.isEmpty(),
@@ -145,7 +132,6 @@ internal fun LazyListScope.partRows(
     }
 }
 
-/** A row lifted under the finger while it is dragged, or gliding into place. */
 @Composable
 private fun LazyItemScope.Liftable(reorder: ReorderState, key: String, content: @Composable ColumnScope.() -> Unit) {
     val lifted = reorder.draggingKey == key || reorder.settlingKey == key
@@ -157,10 +143,7 @@ private fun LazyItemScope.Liftable(reorder: ReorderState, key: String, content: 
     Column(modifier, content = content)
 }
 
-/**
- * What plays, its switch and its handle; TalkBack moves it to the other end. [alone], it is all the
- * widget shows: it stays, and has nothing to move past.
- */
+/** [alone]: there are no buttons, so the text must stay shown and has nothing to move past. */
 @Composable
 private fun WordsRow(
     shown: Boolean,
@@ -258,7 +241,6 @@ private fun ButtonRow(
                 onEnd = reorder::end,
             )
             .semantics { customActions = moves },
-        // Those the widget's size cannot hold say so where they stand.
         subtitle = if (fits) null else stringResource(R.string.widget_larger),
         glyph = slot.button.glyph,
         onClick = { onSlot(part.place) },
@@ -277,7 +259,7 @@ private fun ButtonRow(
     )
 }
 
-/** A row's handle: a press on it picks the row up at once. */
+/** Drags at once, without the long press the rest of the row needs. */
 @Composable
 private fun Handle(reorder: ReorderState, key: String) {
     Box(

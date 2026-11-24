@@ -18,8 +18,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * After the 60 s idle close nothing else reopens the socket, so a transport command from the
- * lock screen and every car read must wake the session themselves.
+ * After the idle close nothing else reopens the socket, so a transport command from the lock screen
+ * and every car read must wake the session themselves.
  */
 class WakeTest {
     private fun withClosedSocket(block: suspend (MaApi, wake: () -> Unit, FakeMaServer) -> Unit) = runBlocking {
@@ -61,7 +61,6 @@ class WakeTest {
     }
 }
 
-/** These commands go to speakers only. */
 internal object NoPhone : LocalOutput {
     override val id: String? = null
 

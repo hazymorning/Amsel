@@ -46,7 +46,7 @@ class HomeUiStateTest {
     }
 
     @Test fun aChoiceIsNamedDifferentlyOnlyWhereItsTitleDoesNotSayItsKind() {
-        // Played here's title is Recently played's; Home names the speaker after it.
+        // Played here's title is Recently played's; Home adds the speaker's name after it.
         assertEquals(
             listOf(SectionOption.PlayedHere, SectionOption.NewAlbums, SectionOption.AllStations),
             SectionOption.entries.filter { it.choice != it.title },

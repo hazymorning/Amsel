@@ -26,7 +26,6 @@ import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** What a speaker's commands send to the server, from the app, the notification, a headset or the car. */
 class SpeakerCommandsTest {
     private val seeks = FakeSeekTracker(CurrentItemStatus(BOOK, playing = true))
 
@@ -45,14 +44,12 @@ class SpeakerCommandsTest {
     private var held = emptySet<String>()
     private var server: FakeMaServer? = null
 
-    /** The server answers the [command] it held: the play has started. */
     private fun answer(command: String) {
         val fake = checkNotNull(server)
         val asked = fake.received.last { it["command"]?.jsonPrimitive?.content == command }
         fake.push(JsonObject(FakeMaServer.result(null) + ("message_id" to asked.getValue("message_id"))))
     }
 
-    /** Runs [block] against a fake server; what it was sent, as "seek kitchen 985" and "play kitchen". */
     private fun withCommands(
         phone: LocalOutput = NoPhone,
         block: suspend CoroutineScope.(MaSpeakerCommands, sent: () -> List<String>) -> Unit,
@@ -84,7 +81,6 @@ class SpeakerCommandsTest {
         }
     }
 
-    /** A command the server received, as "seek kitchen 985"; null for one these tests do not look at. */
     private fun sentAs(message: JsonObject): String? {
         val args = message["args"]?.jsonObject
         val id = args?.get("player_id")?.jsonPrimitive?.content
@@ -132,10 +128,7 @@ class SpeakerCommandsTest {
         assertEquals(ItemPosition(BOOK, 330.0), seeks.pausedPosition)
     }
 
-    /**
-     * The server takes a pause while it starts a play, and the speaker plays all the same (2.10.9
-     * and 2.11.0b7, live): once it has started, the pause goes out again.
-     */
+    /** The server overruns a pause sent while it starts a play (docs/API-NOTES.md, "A pause or a stop"). */
     @Test fun aPauseWhileAPlayStartsIsSentAgainOnceItHasStarted() {
         held = setOf("players/cmd/play")
         withCommands { commands, sent ->
@@ -196,7 +189,7 @@ class SpeakerCommandsTest {
         assertEquals(listOf("pause kitchen"), sent())
     }
 
-    /** The server forgets a phone that left: its seek waits for the join, goes to the id it joined with, and is heard. */
+    /** The server forgets a phone that left: the seek waits for the join and goes to the id it joined with. */
     @Test fun aSeekForThisPhoneWaitsUntilItHasJoinedAndReleasesItsOutput() {
         val phone = Phone("phone-1")
         withCommands(phone) { commands, sent ->
