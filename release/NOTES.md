@@ -1,17 +1,10 @@
-# Preening
-
-## New
-
-- **Licences and privacy:** Settings now shows Amsel's licence, the software it builds on, and in plain words where your data goes: only to your own servers, never tracked.
+# Homing instinct
 
 ## Better
 
-- **Groomed inside:** Amsel preened every feather. Clearer names, a simpler start, half the comments, short docs. It looks the same and is easier to keep well.
-- **Widgets at rest:** live while Amsel is connected, otherwise a look every half hour, gentle on the battery.
-- **This phone on mobile data:** it streams in Opus there, which needs far less data than FLAC.
+- **Updates speak up:** when Android does not install an update, Amsel now says so itself and offers to try again, instead of leaving you with a bare error from Android's installer.
 
 ## Fixed
 
-- **Starts on older phones:** Amsel 1.1 closed at once on Android 9 to 12L. Now it starts.
-- **Volume limit:** the volume keys never step past it, whatever step the server uses.
-- **Play here:** when a speaker is out of reach, one tap plays on this phone.
+- **Updates inside Amsel:** on Android 16, Amsel found the new version, but Android's installer then refused it. Amsel now hands updates to Android the way Android asks apps to, and hears back how it went. Amsel 1.2 still uses the old way, so install this version once from the APK below: it installs over Amsel and keeps everything, your sign-ins included.
+- **Updates on Android 9 and 10:** they no longer stop at "not signed as Amsel".
