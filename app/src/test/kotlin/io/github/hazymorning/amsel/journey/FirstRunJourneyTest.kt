@@ -136,7 +136,7 @@ class FirstRunJourneyTest {
             compose.onNodeWithText("Type an address").performClick()
         }
         compose.waitUntil(5_000) { compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty() }
-        compose.onAllNodes(hasSetTextAction()).onFirst().performTextInput(url!!.removePrefix("http://"))
+        compose.onAllNodes(hasSetTextAction()).onFirst().performTextInput(checkNotNull(url).removePrefix("http://"))
         shot("02_server_address")
         compose.onNodeWithText("Connect").performClick()
 

@@ -29,9 +29,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class HintController(
     private val context: Context,
@@ -156,6 +158,8 @@ class HintController(
                 take = {
                     scope.launch {
                         playOn.select(phone)
+                        // The selection reaches the play's target a hop later, through the stored preferences.
+                        withTimeoutOrNull(SELECT_WAIT_MS) { playing.speaker.first { it.isPhone } } ?: return@launch
                         withContext(Dispatchers.Main) { again() }
                     }
                 },
@@ -377,6 +381,8 @@ class HintController(
 
         // Time for the speakers and what plays to be current again after the app comes back.
         private const val SETTLE_MS = 1_500L
+
+        private const val SELECT_WAIT_MS = 2_000L
 
         // Networks reported this soon after registering were up already.
         private const val ALREADY_THERE_MS = 1_000L

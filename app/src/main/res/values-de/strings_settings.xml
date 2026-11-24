@@ -10,7 +10,7 @@
     <string name="settings_connecting">Wird verbunden…</string>
     <string name="settings_unreachable">Nicht erreichbar</string>
     <string name="settings_sign_out_title">Abmelden?</string>
-    <string name="settings_sign_out_question">Amsel vergisst den Server und seine Bibliothek auf diesem Handy. Um sie wieder zu nutzen, musst du dich erneut anmelden.</string>
+    <string name="settings_sign_out_question">Amsel vergisst deine Anmeldung und die Bibliothek des Servers auf diesem Handy. Um den Server wieder zu nutzen, musst du dich erneut anmelden.</string>
     <string name="settings_theme">Design</string>
     <string name="settings_theme_system">System</string>
     <string name="settings_theme_light">Hell</string>

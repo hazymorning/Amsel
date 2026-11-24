@@ -340,7 +340,8 @@ class RemotePlayer(
         const val CONFIRM_TIMEOUT_MS = 3_000L
         const val CONFIRM_VOLUME_MS = 1_500L
 
-        const val MAX_SERVER_STEP = 5
+        /** The largest volume_step the server can be set to. See docs/API-NOTES.md, 5.3 "Player commands". */
+        const val MAX_SERVER_STEP = 10
 
         /** How long a seek's target may take to show in the snapshot: one hop between threads. */
         private const val SHOWN_TIMEOUT_MS = 500L
