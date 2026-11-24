@@ -2,7 +2,6 @@
 # Copies upstream sendspin-kmp (Apache-2.0) verbatim into sendspin/: never edit it there, run this again.
 # Usage: vendor-sendspin.sh [<ref> [<dest>]], ref a full 40-char commit SHA or a tag, PINNED_REF by default;
 # SENDSPIN_UPSTREAM overrides the repository. sendspin/build.gradle.kts is Amsel's and never overwritten.
-# See docs/notes/sendspin-vendoring.md.
 set -euo pipefail
 
 PINNED_REF="d4a7256c3b6a8c8ef3d30f986d4ac90e4e9c86bc"

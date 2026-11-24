@@ -73,7 +73,7 @@ private fun style(family: FontFamily, weight: FontWeight, size: Float, line: Int
 /**
  * One Material name per role: displaySmall screen titles, headlineSmall Now Playing's title, titleLarge
  * headings, titleMedium a slim bar's title, titleSmall captions and chips, bodyLarge list titles, buttons
- * and sentences, bodyMedium second lines, labelLarge the mini player's title, labelMedium times, labelSmall tabs.
+ * and sentences, bodyMedium second lines, labelLarge the mini player's title, labelMedium times.
  */
 private fun typography(faces: FontFamilies): Typography {
     // Tracking in sp, as docs/DESIGN.md gives it.

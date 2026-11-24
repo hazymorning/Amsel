@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * A widget click's broadcast exempts Amsel from background start limits for 10 s (docs/notes/widget.md),
+ * A widget click's broadcast exempts Amsel from background start limits for 10 s (docs/API-NOTES.md, §12),
  * time for the playback service to start in the foreground.
  */
 class WidgetTapReceiver : BroadcastReceiver() {

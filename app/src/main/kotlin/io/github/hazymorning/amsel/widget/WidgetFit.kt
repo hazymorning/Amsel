@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import kotlin.math.ceil
 import kotlin.math.floor
 
-/** See docs/notes/widget.md, "Forms". */
 enum class WidgetForm {
     Tile,
 
