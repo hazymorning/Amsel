@@ -35,18 +35,18 @@ import io.github.hazymorning.amsel.ui.theme.Space
 internal fun UpdatesSheetContent(
     state: UpdateState,
     version: String,
-    lookAtStart: Boolean,
-    onLookAtStart: (Boolean) -> Unit,
-    onLook: () -> Unit,
+    checkAtStart: Boolean,
+    onCheckAtStartChange: (Boolean) -> Unit,
+    onCheck: () -> Unit,
     onInstall: (UpdateState.Available) -> Unit,
 ) {
     val style = MaterialTheme.typography.bodyLarge
     val sentence = when (state) {
         UpdateState.Unknown -> stringResource(R.string.updates_current, version)
-        UpdateState.Looking -> stringResource(R.string.updates_looking)
+        UpdateState.Checking -> stringResource(R.string.updates_looking)
         UpdateState.Newest -> stringResource(R.string.updates_newest, version)
         is UpdateState.Available -> stringResource(R.string.updates_available, state.version)
-        is UpdateState.Loading -> stringResource(R.string.updates_downloading, state.update.version)
+        is UpdateState.Downloading -> stringResource(R.string.updates_downloading, state.update.version)
         UpdateState.Failed -> stringResource(R.string.updates_failed)
     }
     Column(
@@ -73,19 +73,19 @@ internal fun UpdatesSheetContent(
         PrimaryButton(
             when (state) {
                 is UpdateState.Available -> stringResource(R.string.updates_install)
-                is UpdateState.Loading -> stringResource(R.string.downloading_percent, (state.share * 100).toInt())
+                is UpdateState.Downloading -> stringResource(R.string.downloading_percent, (state.share * 100).toInt())
                 else -> stringResource(R.string.updates_look)
             },
-            onClick = { if (state is UpdateState.Available) onInstall(state) else onLook() },
-            enabled = state != UpdateState.Looking && state !is UpdateState.Loading,
+            onClick = { if (state is UpdateState.Available) onInstall(state) else onCheck() },
+            enabled = state != UpdateState.Checking && state !is UpdateState.Downloading,
             modifier = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth(),
         )
         Spacer(Modifier.height(Space.Group))
         PlainToggleRow(
             stringResource(R.string.updates_at_start),
             stringResource(R.string.updates_at_start_detail),
-            lookAtStart,
-            onLookAtStart,
+            checkAtStart,
+            onCheckAtStartChange,
         )
     }
 }

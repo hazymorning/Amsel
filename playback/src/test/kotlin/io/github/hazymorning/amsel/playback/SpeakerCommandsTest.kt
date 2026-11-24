@@ -5,8 +5,8 @@ import io.github.hazymorning.amsel.api.FakeMaServer
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaClient
 import io.github.hazymorning.amsel.api.fixture
+import io.github.hazymorning.amsel.data.CurrentItemStatus
 import io.github.hazymorning.amsel.data.ItemPosition
-import io.github.hazymorning.amsel.data.QueueStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +28,7 @@ import org.junit.Test
 
 /** What a speaker's commands send to the server, from the app, the notification, a headset or the car. */
 class SpeakerCommandsTest {
-    private val seeks = FakeSeekTracker(QueueStatus(BOOK, playing = true))
+    private val seeks = FakeSeekTracker(CurrentItemStatus(BOOK, playing = true))
 
     private class Phone(override val id: String?) : LocalOutput {
         val joined = CompletableDeferred<String>()
@@ -117,7 +117,7 @@ class SpeakerCommandsTest {
 
     /** Except where the queue was put somewhere the server does not know of: there the play is a seek. */
     @Test fun aPlayStartsAParkedQueueWhereItWasPut() = withCommands { commands, sent ->
-        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = false)
         seeks.pausedPosition = ItemPosition(BOOK, 7230.6)
         commands.play("kitchen")
         assertEquals(listOf("seek kitchen 7230"), sent())
@@ -181,7 +181,7 @@ class SpeakerCommandsTest {
     /** A play someone else asked for, or one from Up next: the server says that it starts one. */
     @Test fun aPauseWhileTheServerSaysItStartsAPlayIsSentAgainOnceThatIsOver() = withCommands { commands, sent ->
         val starting = CompletableDeferred<Unit>()
-        seeks.queueStatus = QueueStatus(BOOK, playing = true, starting = true)
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = true, starting = true)
         seeks.starting = starting
         commands.pause("kitchen")
         delay(300)

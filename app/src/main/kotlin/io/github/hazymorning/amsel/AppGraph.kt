@@ -54,8 +54,8 @@ import io.github.hazymorning.amsel.playback.LocalPlayback
 import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
 import io.github.hazymorning.amsel.playback.PlaybackGraph
+import io.github.hazymorning.amsel.playback.PlaybackTarget
 import io.github.hazymorning.amsel.playback.SeekDispatcher
-import io.github.hazymorning.amsel.playback.SelectedSpeaker
 import io.github.hazymorning.amsel.playback.SpeakerSelection
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
@@ -236,7 +236,7 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
                 } else {
                     SpeakerTransport(
                         wakeSession = data.session::wake,
-                        player = { playbackGraph.playerFor(SelectedSpeaker(speaker, isPhone = false)) },
+                        player = { playbackGraph.playerFor(PlaybackTarget(speaker, isPhone = false)) },
                         showPlaying = { on -> playing.optimistic.playing(speaker, on) },
                     )
                 }

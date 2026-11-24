@@ -1,12 +1,12 @@
 package io.github.hazymorning.amsel.playback
 
+import io.github.hazymorning.amsel.data.CurrentItemStatus
 import io.github.hazymorning.amsel.data.ItemPosition
-import io.github.hazymorning.amsel.data.QueueStatus
 import io.github.hazymorning.amsel.data.SeekTracker
 import kotlinx.coroutines.CompletableDeferred
 
-/** The speakers' positions for a test: [calls] records what they are told; [queueStatus] is what the queue holds. */
-class FakeSeekTracker(var queueStatus: QueueStatus? = null) : SeekTracker {
+/** The speakers' positions for a test: [calls] records what they are told; [currentItemStatus] is what the queue holds. */
+class FakeSeekTracker(var currentItemStatus: CurrentItemStatus? = null) : SeekTracker {
     val calls = mutableListOf<String>()
     var pausedPosition: ItemPosition? = null
 
@@ -14,7 +14,7 @@ class FakeSeekTracker(var queueStatus: QueueStatus? = null) : SeekTracker {
     var starting: CompletableDeferred<Unit>? = null
     private var tickets = 0L
 
-    override fun queueStatus(queueId: String): QueueStatus? = queueStatus
+    override fun currentItemStatus(queueId: String): CurrentItemStatus? = currentItemStatus
 
     override fun startSeek(queueId: String, place: ItemPosition): Long {
         pausedPosition = null
@@ -40,7 +40,7 @@ class FakeSeekTracker(var queueStatus: QueueStatus? = null) : SeekTracker {
 
     override fun pausedPosition(queueId: String): ItemPosition? = pausedPosition
 
-    override suspend fun started(queueId: String) {
+    override suspend fun awaitStarted(queueId: String) {
         starting?.await()
     }
 }

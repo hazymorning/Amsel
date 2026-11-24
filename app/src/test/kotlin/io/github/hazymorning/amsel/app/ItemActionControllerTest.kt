@@ -174,7 +174,7 @@ class ItemActionControllerTest {
             null -> emptyList()
         }
 
-    @Test fun `Now PlaybackState offers the DJ for a song as its third speaker row, where the server has hosts`() {
+    @Test fun `Now Playing offers the DJ for a song as its third speaker row, where the server has hosts`() {
         val speaker = listOf(ItemAction.SleepTimer, ItemAction.TransferPlayback, ItemAction.Dj)
         assertEquals(speaker + ItemAction.PlayNext, menu(SampleData.nowPlaying).take(4))
         assertFalse(ItemAction.Dj in menu(SampleData.nowPlaying, extras))
@@ -198,7 +198,7 @@ class ItemActionControllerTest {
         assertFalse(ItemAction.Dj in menu(sound))
     }
 
-    @Test fun `what the DJ says can only be removed from Up next, and Now PlaybackState keeps the speaker's rows`() {
+    @Test fun `what the DJ says can only be removed from Up next, and Now Playing keeps the speaker's rows`() {
         val words = TrackUi("ai_radio://sound_effect/dj_005", "Artist fact + Transition", "", djBreak = true)
         assertEquals(listOf(ItemAction.RemoveFromUpNext), of(words, ActionsContext.UpNext))
         assertEquals(emptyList<ItemAction>(), of(words))

@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 data class WidgetSpeaker(val id: String, val name: String)
 
 @Immutable
-data class WidgetSetupUi(
+data class WidgetSetupUiState(
     val setup: WidgetSetup = WidgetSetup(),
     val look: WidgetContent = WidgetContent(),
     /** The widget as it will show, at its size; null until drawn. */
@@ -65,12 +65,12 @@ class WidgetSetupViewModel(
         }
         .onStart { emit(null) }
 
-    val state: StateFlow<WidgetSetupUi> =
+    val state: StateFlow<WidgetSetupUiState> =
         combine(setup.filterNotNull(), look, picture, speakers, volumeLimit) { setup, look, picture, rooms, limit ->
             val fits = widgets.views.fit(size.width, size.height, setup).buttons
             val standing = standing(setup.slots.indices.toList(), fits) { setup.slots[it].button }.toSet()
-            WidgetSetupUi(setup, look, picture, size, fits, standing, rooms, limit)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), WidgetSetupUi(size = size))
+            WidgetSetupUiState(setup, look, picture, size, fits, standing, rooms, limit)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MS), WidgetSetupUiState(size = size))
 
     init {
         viewModelScope.launch { setup.value = widgets.setup(widgetId) }
@@ -87,7 +87,7 @@ class WidgetSetupViewModel(
     fun showWords(on: Boolean) = change { if (!on && it.slots.isEmpty()) it else it.copy(showsWords = on) }
 
     /** What plays moves before the buttons or after them. */
-    fun moveWords(place: WidgetWordsPlace) = change { it.copy(words = place) }
+    fun moveWords(place: WidgetWordsPosition) = change { it.copy(words = place) }
 
     /** Button [index] does [button]; one past the last adds it. */
     fun choose(index: Int, button: WidgetButton) = put(index, WidgetSlot(button))

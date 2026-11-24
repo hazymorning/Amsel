@@ -144,7 +144,7 @@ private data class StoredWidget(
         style = WidgetStyle.of(style),
         speaker = speaker,
         cells = WidgetCells.of(cells),
-        words = WidgetWordsPlace.of(words),
+        words = WidgetWordsPosition.of(words),
         showsWords = showsWords,
         slots = if (slots.map { it.button } == EarlierDefault) {
             DefaultSlots

@@ -37,7 +37,7 @@ class DataPlaybackGraph(
     private val dispatcher: PlayDispatcher,
     seekDispatcher: SeekDispatcher,
     /** The speaker the person picked, or This phone ([SpeakerSelection]). */
-    override val target: StateFlow<SelectedSpeaker>,
+    override val target: StateFlow<PlaybackTarget>,
     override val scope: CoroutineScope,
     override val phone: PhoneSpeaker,
     override val local: LocalPlayback,
@@ -56,7 +56,7 @@ class DataPlaybackGraph(
     override val downloads: DownloadRepository get() = data.downloads
     private val snapshotFlows = mutableMapOf<String, StateFlow<SpeakerSnapshot?>>()
 
-    override val sessionTarget: StateFlow<SelectedSpeaker> =
+    override val sessionTarget: StateFlow<PlaybackTarget> =
         combine(target, phone.playerId, data.speakers.players, data.speakers.gone) { selected, phoneId, players, gone ->
             val phoneMusic = phoneId != null && phoneId !in gone && players[phoneId]?.hasMusic == true
             // Anything the selected speaker shows is what the app's own buttons act on, through this session.
@@ -65,7 +65,7 @@ class DataPlaybackGraph(
             if (!selected.isPhone && !selectedShows &&
                 phoneMusic
             ) {
-                SelectedSpeaker(phoneId, isPhone = true)
+                PlaybackTarget(phoneId, isPhone = true)
             } else {
                 selected
             }

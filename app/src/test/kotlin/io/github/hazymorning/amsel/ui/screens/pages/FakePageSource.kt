@@ -22,7 +22,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonObject
 
 /** A [PageSource] the page tests fill by hand, with gates that hold its answers. */
-internal class FakeSource(gated: Boolean = false, popularHeld: Boolean = false, similarHeld: Boolean = false) :
+internal class FakePageSource(gated: Boolean = false, popularHeld: Boolean = false, similarHeld: Boolean = false) :
     PageSource {
     private var gate = CompletableDeferred<Unit>().apply { if (!gated) complete(Unit) }
 

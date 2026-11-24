@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.data.home.SectionOption
-import io.github.hazymorning.amsel.ui.components.Reorderable
+import io.github.hazymorning.amsel.ui.components.ReorderState
 import io.github.hazymorning.amsel.ui.components.SearchEntry
 import io.github.hazymorning.amsel.ui.components.SectionHeader
 import io.github.hazymorning.amsel.ui.components.holdToMove
@@ -81,7 +81,7 @@ internal fun Section(
     editing: Boolean,
     lifted: Boolean,
     actions: SectionActions,
-    reorder: Reorderable,
+    reorder: ReorderState,
     modifier: Modifier = Modifier,
     home: DragScrollArea? = null,
 ) {

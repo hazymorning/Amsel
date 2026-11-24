@@ -120,7 +120,7 @@ private fun toSecond(atMs: Long): Long = Math.floorDiv(atMs + SECOND_MS / 2, SEC
 private const val SECOND_MS = 1000L
 
 /**
- * [content], each clock that moved by a second and a half or less since [shown] kept as shown: the
+ * [looks], each clock that moved by a second and a half or less since [shown] kept as shown: the
  * reports a playing song sends on its way jitter, and the widgets would be drawn again for nothing.
  */
 internal fun steadyClocks(

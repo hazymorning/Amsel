@@ -1,8 +1,8 @@
 package io.github.hazymorning.amsel.playback
 
 import io.github.hazymorning.amsel.api.MaCommandException
+import io.github.hazymorning.amsel.data.CurrentItemStatus
 import io.github.hazymorning.amsel.data.ItemPosition
-import io.github.hazymorning.amsel.data.QueueStatus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -19,7 +19,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SeekControllerTest {
     private val scope = TestScope()
-    private val seeks = FakeSeekTracker(QueueStatus(BOOK, playing = true))
+    private val seeks = FakeSeekTracker(CurrentItemStatus(BOOK, playing = true))
 
     /** What reached the server, in order. */
     private val sent = mutableListOf<String>()
@@ -118,7 +118,7 @@ class SeekControllerTest {
     }
 
     @Test fun `a speaker that does not play is sent nothing, and its next play starts where it was put`() {
-        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = false)
         controller.seek(960, step = false)
         controller.seek(990, step = true)
         after(5_000)
@@ -130,13 +130,13 @@ class SeekControllerTest {
     }
 
     @Test fun `a play of a queue at its own place is a play`() {
-        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = false)
         play()
         assertEquals(listOf("play"), sent)
     }
 
-    @Test fun `a place pausedPosition at the start of a book plays from its first second`() {
-        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+    @Test fun `a paused position at the start of a book plays from its first second`() {
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = false)
         seeks.pausedPosition = ItemPosition(BOOK, 0.4)
         play()
         assertEquals(listOf("seek 1"), sent)
@@ -152,7 +152,7 @@ class SeekControllerTest {
         assertEquals(listOf("seek 130"), sent)
     }
 
-    @Test fun `a pause while a seek is on its way rests at its place, and pauses once it has streamStarted`() {
+    @Test fun `a pause while a seek is on its way keeps its place, and pauses once the stream has started`() {
         answer = CompletableDeferred()
         controller.seek(500, step = false)
         after(0)
@@ -177,7 +177,7 @@ class SeekControllerTest {
     }
 
     /** The speaker reports its pause a moment later; until then it still says it plays. */
-    @Test fun `a seek right after a pause is pausedPosition, though the speaker still reports playing`() {
+    @Test fun `a seek right after a pause becomes the paused position, though the speaker still reports playing`() {
         controller.paused()
         controller.seek(300, step = false)
         after(1_000)
@@ -186,7 +186,7 @@ class SeekControllerTest {
     }
 
     @Test fun `a seek right after a play goes out, though the speaker does not report playing yet`() {
-        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = false)
         play()
         controller.seek(300, step = false)
         after(0)
@@ -211,14 +211,14 @@ class SeekControllerTest {
 
     @Test fun `a skip made on an item that has since ended is dropped`() {
         controller.seek(130, step = true)
-        seeks.queueStatus = QueueStatus(OTHER, playing = true)
+        seeks.currentItemStatus = CurrentItemStatus(OTHER, playing = true)
         after(5_000)
         assertTrue(sent.isEmpty())
         assertEquals("failed 1", seeks.calls.last())
     }
 
     @Test fun `a seek into a book that is only starting goes out`() {
-        seeks.queueStatus = QueueStatus(OTHER, playing = true)
+        seeks.currentItemStatus = CurrentItemStatus(OTHER, playing = true)
         controller.seekIn(ItemPosition(BOOK, 961.0))
         after(0)
         assertEquals(listOf("seek 961"), sent)
@@ -227,7 +227,7 @@ class SeekControllerTest {
 
     /** AirPlay, or one of the speaker's inputs: the queue is not what plays, and the seek is the source's. */
     @Test fun `while another source plays, a seek goes out and nothing is shown from here`() {
-        seeks.queueStatus = null
+        seeks.currentItemStatus = null
         controller.seek(40, step = true)
         controller.seek(70, step = true)
         after(SeekController.SETTLE_MS)
@@ -300,7 +300,7 @@ class SeekControllerTest {
         assertEquals(listOf("start"), sent)
     }
 
-    @Test fun `a pause told of a start elsewhere pauses once that has streamStarted, and once only`() {
+    @Test fun `a pause told of a start elsewhere pauses once the stream has started, and once only`() {
         controller.paused(starting = true)
         repeat(2) {
             scope.launch { controller.streamStarted() }
@@ -326,8 +326,8 @@ class SeekControllerTest {
         assertEquals(ItemPosition(BOOK, 961.0), seeks.pausedPosition)
     }
 
-    @Test fun `a play of a pausedPosition queue that fails stays pausedPosition`() {
-        seeks.queueStatus = QueueStatus(BOOK, playing = false)
+    @Test fun `a play from a paused position that fails keeps the paused position`() {
+        seeks.currentItemStatus = CurrentItemStatus(BOOK, playing = false)
         seeks.pausedPosition = ItemPosition(BOOK, 7230.6)
         refuse = MaCommandException("players/cmd/seek", 5, "unavailable")
         play()

@@ -97,7 +97,7 @@ class PlayOnController(
      * from this phone. Not another source's music (AirPlay, an input), nor a play still on its way.
      */
     private fun held(speaker: SpeakerUi): NowPlayingUi? = playing.nowPlaying.value?.takeIf {
-        val own = playing.playsDownload(speaker.id) || data.speakers.queueStatus(speaker.id) != null
+        val own = playing.playsDownload(speaker.id) || data.speakers.currentItemStatus(speaker.id) != null
         own && speaker.id !in dispatcher.pending.value
     }
 

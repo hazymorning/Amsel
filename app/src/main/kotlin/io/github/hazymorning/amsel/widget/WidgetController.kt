@@ -43,7 +43,7 @@ interface WidgetSource {
 /**
  * Amsel's widgets: drawn anew whenever what they show changes, while Amsel follows the music and a
  * widget is on the home screen; while its socket is closed they look at the speakers now and then
- * ([look]); and their taps.
+ * ([refresh]); and their taps.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WidgetController(
@@ -71,7 +71,7 @@ class WidgetController(
     private val previews =
         WidgetPreviews(context) { kind, look -> render.draw(0, kind.setup, look, listOf(kind.start), false) }
     private val manager = AppWidgetManager.getInstance(context)
-    private val render = WidgetRender(context, images)
+    private val render = WidgetRenderer(context, images)
     private val drawing = Mutex()
     private var following: Job? = null
 
@@ -105,7 +105,7 @@ class WidgetController(
     fun follow() {
         if (following?.isActive == true || ids().isEmpty()) return
         val source = source()
-        plan.keep()
+        plan.schedulePeriodic()
         following = scope.launch {
             loadSetups()
             launch { source.failures.collect(::sayFailure) }
@@ -129,7 +129,7 @@ class WidgetController(
 
     /** A look at the speakers while Amsel's socket is closed ([WidgetRefreshJobService]): read on a glance and drawn. */
     suspend fun refresh() {
-        if (ids().isEmpty()) return plan.stop()
+        if (ids().isEmpty()) return plan.cancelAll()
         follow()
         if (connected() || !looking.tryLock()) return
         try {
@@ -148,8 +148,8 @@ class WidgetController(
 
     /** Drawn at rest from what they showed (the phone or Amsel started anew, a widget placed): look once. */
     fun refreshSoon() {
-        plan.keep()
-        if (!connected()) plan.once()
+        plan.schedulePeriodic()
+        if (!connected()) plan.scheduleOnce()
     }
 
     private fun sayFailure(failure: Pair<String, String>) {
@@ -158,7 +158,7 @@ class WidgetController(
         said.value = shown.withoutFailure() to text
     }
 
-    /** [content], the one a tap went wrong on with its sentence. */
+    /** [looks], the one a tap went wrong on with its sentence. */
     private fun withFailure(looks: Map<String, WidgetContent>, failure: Pair<WidgetContent, String>?) =
         looks.mapValues { (_, look) -> if (look == failure?.first) look.copy(failure = failure.second) else look }
 
@@ -190,7 +190,7 @@ class WidgetController(
         if (ids().isNotEmpty()) return
         following?.cancel()
         following = null
-        plan.stop()
+        plan.cancelAll()
         wallpaper.listen(false)
     }
 

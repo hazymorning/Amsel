@@ -16,9 +16,9 @@ import kotlinx.coroutines.launch
  * the speaker only reports back through the server, a few hundred milliseconds later (a second on
  * some). Each request stands until the speaker reports the same or its time runs out, so a command
  * that never arrives shows the speaker's own state again instead of one it never reached. Where a
- * seek goes is not kept here: the speakers' own positions show it at once (`Seeks`).
+ * seek goes is not kept here: the speakers' own positions show it at once (`SeekTracker`).
  */
-internal class OptimisticTransport(
+internal class OptimisticTransportState(
     private val scope: CoroutineScope,
     private val elapsedRealtime: () -> Long,
     private val timeoutMs: Long,

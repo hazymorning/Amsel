@@ -89,13 +89,13 @@ enum class WidgetCells(val id: String, @StringRes val label: Int) {
 }
 
 /** Where what plays stands: before the buttons (above them, or at the start of a bar), or after them. */
-enum class WidgetWordsPlace(val id: String) {
+enum class WidgetWordsPosition(val id: String) {
     Before("before"),
     After("after"),
     ;
 
     companion object {
-        fun of(id: String?): WidgetWordsPlace = entries.firstOrNull { it.id == id } ?: Before
+        fun of(id: String?): WidgetWordsPosition = entries.firstOrNull { it.id == id } ?: Before
     }
 }
 
@@ -110,7 +110,7 @@ data class WidgetSetup(
     val speaker: String? = null,
     val slots: List<WidgetSlot> = DefaultSlots,
     val cells: WidgetCells = WidgetCells.Play,
-    val words: WidgetWordsPlace = WidgetWordsPlace.Before,
+    val words: WidgetWordsPosition = WidgetWordsPosition.Before,
     val showsWords: Boolean = true,
 )
 

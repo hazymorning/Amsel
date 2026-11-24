@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /** What a tap on a speaker in Play on does, by what the current speaker and the tapped one do. */
-class SpeakerChoiceTest {
+class PlayOnActionTest {
     private fun tap(fromPhone: Boolean, holds: Boolean, plays: Boolean, targetPlays: Boolean, same: Boolean = false) =
         choiceOf(same, fromPhone, holds, plays, targetPlays)
 

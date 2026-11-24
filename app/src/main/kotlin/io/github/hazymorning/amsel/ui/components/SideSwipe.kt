@@ -53,7 +53,7 @@ private const val GOING_MS = 2_000L
  * place comes in from the side it lies on, along the pages' own short axis.
  */
 @Stable
-class SideSwipe internal constructor(
+class SideSwipeState internal constructor(
     private val scope: CoroutineScope,
     private val haptics: HapticFeedback,
     private val goPx: Float,
@@ -160,26 +160,26 @@ class SideSwipe internal constructor(
 }
 
 /**
- * A [SideSwipe] over [selected]. With an [order], a swipe goes to [selected]'s neighbour in it and
+ * A [SideSwipeState] over [selected]. With an [order], a swipe goes to [selected]'s neighbour in it and
  * every change of [selected] comes in from its side, a tapped chip's too. It stops at either end,
  * or, [endless], goes round: past the last to the first, which then comes in the swipe's own way.
  * Without an order (what plays), a swipe asks for the next or the one before while [enabled], and
  * only what a swipe brought comes in from the side. [onGo] is told which way: true for the next.
  */
 @Composable
-fun <T> rememberSideSwipe(
+fun <T> rememberSideSwipeState(
     selected: T,
     order: List<T>? = null,
     enabled: Boolean = true,
     endless: Boolean = false,
     onGo: (forward: Boolean) -> Unit,
-): SideSwipe {
+): SideSwipeState {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val swipe = remember(density, haptics) {
-        with(density) { SideSwipe(scope, haptics, GoDistance.toPx()) }
+        with(density) { SideSwipeState(scope, haptics, GoDistance.toPx()) }
     }
     SideEffect {
         swipe.enabled = enabled

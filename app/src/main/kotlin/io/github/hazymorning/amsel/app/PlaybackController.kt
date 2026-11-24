@@ -307,7 +307,7 @@ class PlaybackController(
     }
 
     /**
-     * Transport from the app's own controls. The tap shows at once ([OptimisticTransport]); play
+     * Transport from the app's own controls. The tap shows at once ([OptimisticTransportState]); play
      * and pause follow what the button shows, so a second tap before the speaker answers undoes
      * the first rather than repeating it.
      */

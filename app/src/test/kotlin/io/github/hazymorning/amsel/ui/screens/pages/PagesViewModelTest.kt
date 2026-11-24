@@ -41,7 +41,7 @@ class PagesViewModelTest {
     private fun TestScope.worker() = UnconfinedTestDispatcher(testScheduler)
 
     @Test fun `an album paints its cached header, then tracks and more by its artist`() = runTest {
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             rows.value =
                 row(
                     "library://album/4",
@@ -81,7 +81,7 @@ class PagesViewModelTest {
 
     @Test fun `an album made a favorite anywhere else is one on its open page`() = runTest {
         val indexed = row("library://album/4", "album", "First Light")
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             rows.value = indexed
             item = one("music_albums_get")
             tracks = list("music_albums_album_tracks")
@@ -94,7 +94,7 @@ class PagesViewModelTest {
     }
 
     @Test fun `an album that no longer exists says so, and Retry loads it again`() = runTest {
-        val source = FakeSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
+        val source = FakePageSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
         val vm = AlbumViewModel(ALBUM, source, mapper, playing, messages)
         val state = watch(vm.state)
         assertTrue(state.value.showUnavailable)
@@ -109,12 +109,12 @@ class PagesViewModelTest {
     }
 
     @Test fun `a missing item is unavailable even when the server answers`() = runTest {
-        val state = watch(AlbumViewModel(ALBUM, FakeSource(), mapper, playing, messages).state)
+        val state = watch(AlbumViewModel(ALBUM, FakePageSource(), mapper, playing, messages).state)
         assertTrue(state.value.showUnavailable)
     }
 
     @Test fun `the playing track is highlighted`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_albums_get")
             tracks = list("music_albums_album_tracks")
         }
@@ -136,7 +136,7 @@ class PagesViewModelTest {
     }
 
     @Test fun `a playlist keeps each track's position, and a removal shifts the rest up`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             rows.value = row("library://playlist/9", "playlist", "Amsel Mix", subtitle = "Local files", editable = true)
             item = one("music_playlists_get")
             tracks = list("music_playlists_playlist_tracks")
@@ -161,7 +161,7 @@ class PagesViewModelTest {
     }
 
     @Test fun `a song added from another sheet shows on the open playlist page`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_playlists_get")
             tracks = list("music_playlists_playlist_tracks").take(4)
         }
@@ -175,7 +175,7 @@ class PagesViewModelTest {
     }
 
     @Test fun `a refused removal whose reload fails shows the page's error, not the trimmed list`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_playlists_get")
             tracks = list("music_playlists_playlist_tracks")
         }
@@ -191,7 +191,7 @@ class PagesViewModelTest {
 
     @Test fun `a long playlist shows its first rows at once, and counts once every page is in`() = runTest {
         val track = list("music_playlists_playlist_tracks").first()
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_playlists_get")
             tracks = List(FIRST_ROWS + MaApi.PAGE + 1) { track.copy(uri = "library://track/$it", position = it + 1L) }
             held[FIRST_ROWS] = CompletableDeferred()
@@ -223,7 +223,7 @@ class PagesViewModelTest {
 
     @Test fun `a page that keeps its rows says why the rest failed, with Retry`() = runTest {
         val track = list("music_playlists_playlist_tracks").first()
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_playlists_get")
             tracks = List(FIRST_ROWS + 1) { track.copy(uri = "library://track/$it", position = it + 1L) }
             held[FIRST_ROWS] = CompletableDeferred()
@@ -253,7 +253,7 @@ class PagesViewModelTest {
     }
 
     @Test fun `a playlist with no tracks is empty, not loading`() = runTest {
-        val source = FakeSource().apply { item = one("music_playlists_get") }
+        val source = FakePageSource().apply { item = one("music_playlists_get") }
         val state = watch(
             PlaylistViewModel("library://playlist/9", source, mapper, playing, emptyFlow(), messages, worker()).state,
         ).value

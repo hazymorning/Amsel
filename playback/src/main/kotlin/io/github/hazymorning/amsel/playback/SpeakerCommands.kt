@@ -117,14 +117,14 @@ class MaSpeakerCommands(
     private suspend fun sendPauseOrStop(playerId: String, command: suspend () -> Unit) {
         val controller = controller(playerId)
         val play = dispatcher.pending.value[playerId]
-        val starting = play != null || seeks.queueStatus(playerId)?.starting == true
+        val starting = play != null || seeks.currentItemStatus(playerId)?.starting == true
         controller.paused(starting)
         awake { command() }
         if (!starting) return
         scope.launch {
             withTimeoutOrNull(START_WAIT_MS) {
                 if (play != null) dispatcher.pending.first { it[playerId] != play }
-                seeks.started(playerId)
+                seeks.awaitStarted(playerId)
             } ?: return@launch
             controller.streamStarted()
         }

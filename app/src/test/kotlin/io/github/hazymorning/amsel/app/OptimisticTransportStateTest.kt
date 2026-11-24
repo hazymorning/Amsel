@@ -16,7 +16,7 @@ import org.junit.Test
 
 /** A tap on play, pause, shuffle, repeat or the volume shows before the speaker reports it. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class OptimisticTransportTest {
+class OptimisticTransportStateTest {
     private val id = "kitchen"
 
     /** Playing, reported at 1 s in at clock 0; shuffle and repeat off; volume 40. */
@@ -27,14 +27,14 @@ class OptimisticTransportTest {
         repeat = RepeatMode.Off,
     )
 
-    private fun TestScope.transport() = OptimisticTransport(
+    private fun TestScope.transport() = OptimisticTransportState(
         backgroundScope,
         elapsedRealtime = { testScheduler.currentTime },
         timeoutMs = 3_000,
         volumeTimeoutMs = 1_500,
     )
 
-    private fun OptimisticTransport.shown(np: NowPlayingUi = reported) = overlay(np, pending.value[id])
+    private fun OptimisticTransportState.shown(np: NowPlayingUi = reported) = overlay(np, pending.value[id])
 
     @Test fun everyTapShowsBeforeTheSpeakerAnswers() = runTest {
         val t = transport()

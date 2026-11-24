@@ -71,7 +71,7 @@ class SeekTrackerTest {
     private fun SpeakerRepository.shown(): Double = at().seconds
 
     /** A seek asked for and sent at once. */
-    private fun SpeakerRepository.flyNow(seconds: Double, uri: String = BOOK): Long =
+    private fun SpeakerRepository.startAndSendSeek(seconds: Double, uri: String = BOOK): Long =
         startSeek(PHONE, ItemPosition(uri, seconds)).also { sent(PHONE, it) }
 
     /** The live trace of a seek to 600 s, 7.4 s after the stream before it started. */
@@ -79,7 +79,7 @@ class SeekTrackerTest {
         val s = speakers()
         s.onEvent(queue("playing", 6.3, inProgress = false))
         now = 7_960
-        val ticket = s.flyNow(600.0)
+        val ticket = s.startAndSendSeek(600.0)
         assertEquals(PositionAnchor(600.0, 7_960), s.at())
         assertTrue(s.state().seeking)
         now = 7_970
@@ -119,7 +119,7 @@ class SeekTrackerTest {
         val s = speakers(scope)
         s.onEvent(queue("playing", 2.1, inProgress = false))
         now = 100
-        val ticket = s.flyNow(4.0)
+        val ticket = s.startAndSendSeek(4.0)
         now = 110
         s.onEvent(queue("playing", 4.0, inProgress = true))
         s.onEvent(queue("playing", 6.148, inProgress = false))
@@ -147,7 +147,7 @@ class SeekTrackerTest {
         val s = speakers(scope)
         s.onEvent(queue("playing", 5.0, inProgress = false))
         now = 9_670
-        val ticket = s.flyNow(2_000.0)
+        val ticket = s.startAndSendSeek(2_000.0)
         now = 9_680
         s.onEvent(queue("idle", 2_000.0, inProgress = true))
         now = 10_150
@@ -168,7 +168,7 @@ class SeekTrackerTest {
         val s = speakers(scope)
         s.onEvent(queue("playing", 1_106.65, inProgress = false))
         // Chapter 25 of 30 starts at 16:00.
-        val ticket = s.flyNow(960.0)
+        val ticket = s.startAndSendSeek(960.0)
         assertEquals(960.0, s.shown(), 0.0)
         now = 20
         s.onEvent(queue("playing", 1_109.07, inProgress = true))
@@ -199,7 +199,7 @@ class SeekTrackerTest {
     @Test fun `a report of 0 while the new stream starts is not taken for where the book is`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        val ticket = s.flyNow(985.0)
+        val ticket = s.startAndSendSeek(985.0)
         s.answered(PHONE, ticket)
         now = 300
         s.onEvent(time(0.0))
@@ -217,7 +217,7 @@ class SeekTrackerTest {
     @Test fun `a seek the server answers late stands at its target until it answers`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        val ticket = s.flyNow(7_100.0)
+        val ticket = s.startAndSendSeek(7_100.0)
         now = 300
         s.onEvent(queue("playing", 0.0, inProgress = true))
         now = PendingSeek.WINDOW_MS * 3
@@ -237,7 +237,7 @@ class SeekTrackerTest {
     @Test fun `a target the server never reports gives way to what it says after the window`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        val ticket = s.flyNow(985.0)
+        val ticket = s.startAndSendSeek(985.0)
         s.answered(PHONE, ticket)
         now = 300
         s.onEvent(time(12.0))
@@ -254,7 +254,7 @@ class SeekTrackerTest {
         val scope = TestScope()
         val s = speakers(scope)
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        val ticket = s.flyNow(985.0)
+        val ticket = s.startAndSendSeek(985.0)
         s.answered(PHONE, ticket)
         now = 300
         s.onEvent(time(12.0))
@@ -273,7 +273,7 @@ class SeekTrackerTest {
         s.onEvent(queue("playing", 400.0, inProgress = false))
         val before = s.at()
         now = 2_000
-        val ticket = s.flyNow(985.0)
+        val ticket = s.startAndSendSeek(985.0)
         s.failed(PHONE, ticket)
         assertEquals(before, s.at())
         assertFalse(s.state().seeking)
@@ -282,7 +282,7 @@ class SeekTrackerTest {
     @Test fun `of two seeks only the later one's answer counts`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        val first = s.flyNow(985.0)
+        val first = s.startAndSendSeek(985.0)
         now = 500
         val second = s.startSeek(PHONE, ItemPosition(BOOK, 1_500.0))
         // The first seek's answer and its stream: neither is where the second one goes.
@@ -308,7 +308,7 @@ class SeekTrackerTest {
     @Test fun `another item's time is its own`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false, uri = OTHER))
-        val ticket = s.flyNow(960.0)
+        val ticket = s.startAndSendSeek(960.0)
         // The other item still plays while the book starts: its time stays as reported.
         assertEquals(400.0, s.shown(), 0.0)
         assertFalse(s.state().seeking)
@@ -328,7 +328,7 @@ class SeekTrackerTest {
     @Test fun `a seek on an item the queue has left is forgotten`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        s.flyNow(985.0)
+        s.startAndSendSeek(985.0)
         now = 200
         s.onEvent(queue("playing", 0.0, inProgress = false, uri = OTHER, type = "track"))
         assertEquals(0.0, s.shown(), 0.0)
@@ -369,7 +369,7 @@ class SeekTrackerTest {
         assertEquals(960.0, s.shown(), 0.0)
         // The play is a seek there.
         now = 20_000
-        val ticket = s.flyNow(960.0)
+        val ticket = s.startAndSendSeek(960.0)
         assertNull(s.pausedPosition(PHONE))
         now = 20_500
         s.onEvent(queue("playing", 960.25, inProgress = false))
@@ -380,7 +380,7 @@ class SeekTrackerTest {
     }
 
     /** The owner's wish: a skip, then a pause before the skip went out. The pause takes a moment to show. */
-    @Test fun `a place pausedPosition with a pause on its way outlasts the server's last playing reports`() {
+    @Test fun `a paused position set with a pause on its way outlasts the server's last playing reports`() {
         val s = speakers()
         s.onEvent(queue("playing", 100.0, inProgress = false))
         now = 1_000
@@ -405,7 +405,7 @@ class SeekTrackerTest {
         assertNull(s.pausedPosition(PHONE))
     }
 
-    @Test fun `a pause that never reached the speaker does not hold a pausedPosition place`() {
+    @Test fun `a pause that never reached the speaker does not hold a paused position`() {
         val s = speakers()
         s.onEvent(queue("playing", 100.0, inProgress = false))
         s.setPausedPosition(PHONE, ItemPosition(BOOK, 130.0))
@@ -415,7 +415,7 @@ class SeekTrackerTest {
         assertNull(s.pausedPosition(PHONE))
     }
 
-    @Test fun `a pausedPosition place belongs to its item`() {
+    @Test fun `a paused position belongs to its item`() {
         val s = speakers()
         s.onEvent(queue("paused", 120.0, inProgress = false))
         s.setPausedPosition(PHONE, ItemPosition(BOOK, 960.0))
@@ -426,24 +426,24 @@ class SeekTrackerTest {
 
     @Test fun `what a queue holds, and whether it plays or is about to`() {
         val s = speakers()
-        assertNull(s.queueStatus(PHONE))
+        assertNull(s.currentItemStatus(PHONE))
         s.onEvent(queue("paused", 120.0, inProgress = false))
-        assertEquals(QueueStatus(BOOK, playing = false), s.queueStatus(PHONE))
+        assertEquals(CurrentItemStatus(BOOK, playing = false), s.currentItemStatus(PHONE))
         s.onEvent(queue("idle", 120.0, inProgress = true))
-        assertEquals(QueueStatus(BOOK, playing = true, starting = true), s.queueStatus(PHONE))
+        assertEquals(CurrentItemStatus(BOOK, playing = true, starting = true), s.currentItemStatus(PHONE))
         s.onEvent(queue("idle", 120.0, inProgress = false))
-        s.flyNow(500.0)
-        assertEquals(QueueStatus(BOOK, playing = true), s.queueStatus(PHONE))
+        s.startAndSendSeek(500.0)
+        assertEquals(CurrentItemStatus(BOOK, playing = true), s.currentItemStatus(PHONE))
     }
 
     @Test fun `a start the server is making is over once it says so`() = runBlocking {
         val s = speakers()
         s.onEvent(queue("idle", 120.0, inProgress = true))
-        val over = async(start = CoroutineStart.UNDISPATCHED) { s.started(PHONE) }
+        val over = async(start = CoroutineStart.UNDISPATCHED) { s.awaitStarted(PHONE) }
         assertFalse(over.isCompleted)
         s.onEvent(queue("playing", 120.0, inProgress = false))
         withTimeout(1_000) { over.await() }
-        s.started(PHONE)
+        s.awaitStarted(PHONE)
     }
 
     /** AirPlay or an input has the speaker: a seek there is that source's, not the queue's. */
@@ -451,11 +451,11 @@ class SeekTrackerTest {
         val s = speakers()
         s.onEvent(queue("idle", 120.0, inProgress = false, active = false))
         s.onEvent(player(activeSource = "airplay"))
-        assertNull(s.queueStatus(PHONE))
+        assertNull(s.currentItemStatus(PHONE))
         s.onEvent(player(activeSource = PHONE))
-        assertEquals(QueueStatus(BOOK, playing = false), s.queueStatus(PHONE))
+        assertEquals(CurrentItemStatus(BOOK, playing = false), s.currentItemStatus(PHONE))
         s.onEvent(player(activeSource = PHONE, powered = false))
-        assertNull(s.queueStatus(PHONE))
+        assertNull(s.currentItemStatus(PHONE))
     }
 
     /** The owner's case, live on 2.10.9: chapter 25 picked, the connection lost while it played. */
@@ -492,7 +492,7 @@ class SeekTrackerTest {
         val s = speakers()
         s.rebuiltAfterChapter25()
         now = 20_000
-        val ticket = s.flyNow(7230.0)
+        val ticket = s.startAndSendSeek(7230.0)
         s.onEvent(queue("idle", 7230.0, inProgress = true))
         now = 21_000
         s.onEvent(queue("playing", 7230.0, inProgress = false))
@@ -528,7 +528,7 @@ class SeekTrackerTest {
     @Test fun `a place left while a seek was on its way is the seek's target`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
-        s.flyNow(7_100.0)
+        s.startAndSendSeek(7_100.0)
         now = 4_000
         s.left(PHONE)
         s.rejoined(PHONE)

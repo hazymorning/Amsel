@@ -6,7 +6,7 @@ import io.github.hazymorning.amsel.api.PlayerQueue
 data class ItemPosition(val uri: String, val seconds: Double)
 
 /** What a queue holds, and whether it plays or is about to; [starting] while the server starts a play there. */
-data class QueueStatus(val uri: String, val playing: Boolean, val starting: Boolean = false)
+data class CurrentItemStatus(val uri: String, val playing: Boolean, val starting: Boolean = false)
 
 /**
  * Where the app puts a speaker's queue, told before the command goes out, so every screen, the
@@ -18,7 +18,7 @@ data class QueueStatus(val uri: String, val playing: Boolean, val starting: Bool
  */
 interface SeekTracker {
     /** What [queueId] holds; null when it holds nothing, is not known, or is not what its speaker plays. */
-    fun queueStatus(queueId: String): QueueStatus?
+    fun currentItemStatus(queueId: String): CurrentItemStatus?
 
     /** [queueId] is on its way to [place]: it shows there, standing still, until the server reports it there. */
     fun startSeek(queueId: String, place: ItemPosition): Long
@@ -39,11 +39,11 @@ interface SeekTracker {
     fun pausedPosition(queueId: String): ItemPosition?
 
     /** Returns once the server is not starting a play on [queueId], or no longer is. */
-    suspend fun started(queueId: String)
+    suspend fun awaitStarted(queueId: String)
 
     companion object {
         val None: SeekTracker = object : SeekTracker {
-            override fun queueStatus(queueId: String): QueueStatus? = null
+            override fun currentItemStatus(queueId: String): CurrentItemStatus? = null
 
             override fun startSeek(queueId: String, place: ItemPosition): Long = 0
 
@@ -57,7 +57,7 @@ interface SeekTracker {
 
             override fun pausedPosition(queueId: String): ItemPosition? = null
 
-            override suspend fun started(queueId: String) = Unit
+            override suspend fun awaitStarted(queueId: String) = Unit
         }
     }
 }

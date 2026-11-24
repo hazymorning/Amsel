@@ -90,20 +90,20 @@ class WidgetControllerTest {
 
     /** The looks asked of Android. */
     private class Plans : WidgetRefreshScheduler {
-        var kept = 0
-        var stopped = 0
+        var periodic = 0
+        var cancelled = 0
         var once = 0
 
-        override fun keep() {
-            kept++
+        override fun schedulePeriodic() {
+            periodic++
         }
 
-        override fun once() {
+        override fun scheduleOnce() {
             once++
         }
 
-        override fun stop() {
-            stopped++
+        override fun cancelAll() {
+            cancelled++
         }
     }
 
@@ -220,7 +220,7 @@ class WidgetControllerTest {
         settleSlowly { looking.isCompleted }
         assertEquals(1, glances)
         assertEquals("Lanterns", text(id, R.id.widget_title))
-        assertEquals(1, plans.kept)
+        assertEquals(1, plans.periodic)
         assertEquals(0, plans.once)
     }
 
@@ -241,7 +241,7 @@ class WidgetControllerTest {
         val widgets = widgets(refreshSpeakers = { glances++ == 0 }, plan = plans)
         widgets.refresh()
         assertEquals(0, glances)
-        assertEquals(1, plans.stopped)
+        assertEquals(1, plans.cancelled)
     }
 
     private companion object {

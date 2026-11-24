@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
  * Draws a widget: at each size the launcher gives it, with the pictures each size needs, made off the
  * main thread from Amsel's own cover cache and kept while they are wanted again.
  */
-internal class WidgetRender(private val context: Context, private val images: ImageLoader) {
+internal class WidgetRenderer(private val context: Context, private val images: ImageLoader) {
     val views = WidgetViews(context)
     private val manager = AppWidgetManager.getInstance(context)
     private val density get() = context.resources.displayMetrics.density

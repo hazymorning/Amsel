@@ -23,7 +23,7 @@ import kotlin.math.min
  * and the controls take the width inside [NowPlayingInset].
  */
 @Composable
-internal fun Stage(foot: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun NowPlayingLayout(foot: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Layout(content, modifier) { measurables, constraints ->
         val width = constraints.maxWidth
         val height = constraints.maxHeight

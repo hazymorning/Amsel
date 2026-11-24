@@ -18,9 +18,9 @@ class WidgetRefreshJobSchedulerTest {
 
     @Test fun aHalfHourlyLookIsAskedForOnce() {
         val plan = WidgetRefreshJobScheduler(context)
-        plan.keep()
+        plan.schedulePeriodic()
         val first = jobs.allPendingJobs.single()
-        plan.keep()
+        plan.schedulePeriodic()
         assertEquals(listOf(first), jobs.allPendingJobs)
         assertTrue(first.isPeriodic)
         assertEquals(30 * 60_000L, first.intervalMillis)
@@ -30,12 +30,12 @@ class WidgetRefreshJobSchedulerTest {
 
     @Test fun aLookOnceRunsBesideTheHalfHourlyOne() {
         val plan = WidgetRefreshJobScheduler(context)
-        plan.keep()
-        plan.once()
-        plan.once()
-        val once = jobs.allPendingJobs.filterNot { it.isPeriodic }
-        assertEquals(listOf(0L), once.map { it.minLatencyMillis })
-        plan.stop()
+        plan.schedulePeriodic()
+        plan.scheduleOnce()
+        plan.scheduleOnce()
+        val oneOff = jobs.allPendingJobs.filterNot { it.isPeriodic }
+        assertEquals(listOf(0L), oneOff.map { it.minLatencyMillis })
+        plan.cancelAll()
         assertTrue(jobs.allPendingJobs.isEmpty())
     }
 }

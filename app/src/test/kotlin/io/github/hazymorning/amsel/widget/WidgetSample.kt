@@ -87,7 +87,7 @@ object WidgetSample {
         size: SizeF,
         clearInk: Boolean = false,
     ): RemoteViews = runBlocking {
-        WidgetRender(context, SingletonImageLoader.get(context))
+        WidgetRenderer(context, SingletonImageLoader.get(context))
             .draw(1, setup, look, listOf(size), taps = false, clearInk = clearInk)
     }
 

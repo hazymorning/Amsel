@@ -35,7 +35,7 @@ class QueueDjControllerTest {
     private var status = FakeMaServer.recorded(V, "ai_radio_queue_dj_status")
     private var set: () -> JsonObject = { FakeMaServer.recorded(V, "ai_radio_queue_dj_set") }
 
-    private class Stage(
+    private class Fixture(
         val djs: QueueDjController,
         val extras: ExtrasRepository,
         val messages: MessageController,
@@ -50,13 +50,13 @@ class QueueDjControllerTest {
     }
 
     /** The recorded server with the DJ's plugin, [loaded] or gone; Kitchen's DJ is as [status] says. */
-    private fun withDj(block: suspend Stage.() -> Unit) =
+    private fun withDj(block: suspend Fixture.() -> Unit) =
         withFakeApi(V, { command, _ -> listOf(answer(command)) }) { api, server ->
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             try {
                 val extras = ExtrasRepository(api).apply { load() }
                 val messages = MessageController(MutableStateFlow(true))
-                Stage(QueueDjController(extras, messages, scope) { "Kitchen" }, extras, messages, server).block()
+                Fixture(QueueDjController(extras, messages, scope) { "Kitchen" }, extras, messages, server).block()
             } finally {
                 scope.cancel()
             }

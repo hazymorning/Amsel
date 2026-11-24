@@ -33,10 +33,10 @@ class SimilarSongsViewModelTest {
 
     @After fun reset() = Dispatchers.resetMain()
 
-    private fun page(source: FakeSource, key: String = SONG) = SimilarSongsViewModel(key, source, mapper, playing)
+    private fun page(source: FakePageSource, key: String = SONG) = SimilarSongsViewModel(key, source, mapper, playing)
 
     @Test fun `similar songs list in the server's order, each with its artist and album`() = runTest {
-        val source = FakeSource(similarHeld = true).apply { similar = served }
+        val source = FakePageSource(similarHeld = true).apply { similar = served }
         val state = watch(page(source).state)
         assertTrue(state.value.loading)
         assertTrue(state.value.songs.isEmpty())
@@ -53,14 +53,14 @@ class SimilarSongsViewModelTest {
     }
 
     @Test fun `no similar songs is an empty page with nothing to retry`() = runTest {
-        val state = watch(page(FakeSource()).state)
+        val state = watch(page(FakePageSource()).state)
         assertTrue(state.value.songs.isEmpty())
         assertFalse(state.value.loading)
         assertNull(state.value.failure)
     }
 
     @Test fun `a song no music service knows is an empty page, not a failure`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             similar = served
             similarFailure = MaCommandException("music/tracks/similar_tracks", 0, "No Music Provider found")
         }
@@ -71,7 +71,7 @@ class SimilarSongsViewModelTest {
     }
 
     @Test fun `a lost connection says so, and Retry asks again`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             similar = served
             similarFailure = MaConnectionException("No answer to music/tracks/similar_tracks")
         }
@@ -96,7 +96,7 @@ class SimilarSongsViewModelTest {
             "track",
             providerMappings = listOf(ProviderMapping(served[1].itemId, "test")),
         )
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = seed
             similar = listOf(served[0], seed, served[1], served[0], served[2])
         }
@@ -112,7 +112,7 @@ class SimilarSongsViewModelTest {
     }
 
     @Test fun `a tap plays from that song on through the rest of the list`() = runTest {
-        val state = watch(page(FakeSource().apply { similar = served }).state).value
+        val state = watch(page(FakePageSource().apply { similar = served }).state).value
         assertEquals(served.drop(1).map { it.uri }, state.from(state.songs[1]))
         assertEquals(served.map { it.uri }, state.from(state.songs[0]))
     }

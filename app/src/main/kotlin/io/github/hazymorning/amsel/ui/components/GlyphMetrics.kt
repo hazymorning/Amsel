@@ -112,7 +112,7 @@ private const val CARET = 0.82f
 enum class GlyphEdge { Start, End, Centre }
 
 /**
- * A glyph whose layout is its ink from side to side, and with [glyphHeight] also from top to bottom.
+ * A glyph whose layout is its ink from side to side, and with [trimHeight] also from top to bottom.
  * Otherwise it keeps the [size] box's height with the ink centred in it, so glyphs in a row centre
  * alike and a glyph centred on text centres its ink there, wherever the drawing sits in its box.
  */
@@ -149,7 +149,7 @@ fun AlignedGlyph(
 
 /**
  * How far an [AlignedGlyph] of [box] pixels moves its drawing so its ink starts at the layout's start,
- * and with [glyphHeight] at its top; otherwise the ink centres in the box's height.
+ * and with [trimHeight] at its top; otherwise the ink centres in the box's height.
  */
 private fun glyphShift(box: Int, ink: GlyphBounds, trimHeight: Boolean) = IntOffset(
     (box * ink.left / GRID).roundToInt(),

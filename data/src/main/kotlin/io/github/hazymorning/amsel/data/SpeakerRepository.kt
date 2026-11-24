@@ -177,12 +177,12 @@ class SpeakerRepository(
     /** This phone's client joined again: its queue shows where it was, and the next play starts there. */
     fun rejoined(queueId: String) = synchronized(this) { away.remove(queueId)?.let { setPausedPosition(queueId, it) } }
 
-    override fun queueStatus(queueId: String): QueueStatus? = synchronized(this) {
+    override fun currentItemStatus(queueId: String): CurrentItemStatus? = synchronized(this) {
         val queue = _queues.value[queueId]?.queue ?: return@synchronized null
         val uri = queue.currentUri ?: return@synchronized null
         if (!queue.isSourceOf(_players.value[queueId])) return@synchronized null
         val starting = queue.playActionInProgress
-        QueueStatus(uri, queue.isPlaying || starting || seeks[queueId] is PendingSeek.Seeking, starting)
+        CurrentItemStatus(uri, queue.isPlaying || starting || seeks[queueId] is PendingSeek.Seeking, starting)
     }
 
     override fun startSeek(queueId: String, place: ItemPosition): Long = synchronized(this) {
@@ -240,7 +240,7 @@ class SpeakerRepository(
         (seeks[queueId] as? PendingSeek.Paused)?.place
     }
 
-    override suspend fun started(queueId: String) {
+    override suspend fun awaitStarted(queueId: String) {
         _queues.first { it[queueId]?.queue?.playActionInProgress != true }
     }
 

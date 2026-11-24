@@ -69,7 +69,7 @@ fun Modifier.elevationShadow(shape: Shape, elevation: Elevation): Modifier = dra
 }
 
 /**
- * Room for the shades of a [lift] in [layers] that move or fade what follows: they are set
+ * Room for the shades of an [elevation] in [layers] that move or fade what follows: they are set
  * [Elevation.overflow] larger on every side, and what follows keeps its size and place. A layer that fades
  * is drawn off screen first and cut at its own bounds, which without this are the cover's, so the
  * shade went whenever the cover faded.

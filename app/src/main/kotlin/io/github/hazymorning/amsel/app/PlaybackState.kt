@@ -11,8 +11,8 @@ import io.github.hazymorning.amsel.playback.LocalPlayback
 import io.github.hazymorning.amsel.playback.PhoneSpeaker
 import io.github.hazymorning.amsel.playback.PlayDispatcher
 import io.github.hazymorning.amsel.playback.PlayRequest
+import io.github.hazymorning.amsel.playback.PlaybackTarget
 import io.github.hazymorning.amsel.playback.RemotePlayer
-import io.github.hazymorning.amsel.playback.SelectedSpeaker
 import io.github.hazymorning.amsel.playback.SpeakerSnapshot
 import io.github.hazymorning.amsel.playback.snapshotOf
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
@@ -42,7 +42,7 @@ class PlaybackState(
     private val context: Context,
     private val data: DataGraph,
     /** The speaker the person picked, or This phone. */
-    selected: StateFlow<SelectedSpeaker>,
+    selected: StateFlow<PlaybackTarget>,
     phone: PhoneSpeaker,
     dispatcher: PlayDispatcher,
     private val local: LocalPlayback,
@@ -86,7 +86,7 @@ class PlaybackState(
             }
         }.stateIn(scope, SharingStarted.Eagerly, SpeakerUi(PHONE, "", isPhone = true))
 
-    internal val optimistic = OptimisticTransport(
+    internal val optimistic = OptimisticTransportState(
         scope,
         elapsedRealtime = SystemClock::elapsedRealtime,
         timeoutMs = RemotePlayer.CONFIRM_TIMEOUT_MS,

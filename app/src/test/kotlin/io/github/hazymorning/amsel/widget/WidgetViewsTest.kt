@@ -224,7 +224,7 @@ class WidgetViewsTest {
 
     /** After the buttons, what plays stands at the foot, the cells at the top. */
     @Test fun whatPlaysCanFollowTheButtons() {
-        val widget = drawn(WidgetSample.music, setup = WidgetSetup(words = WidgetWordsPlace.After))
+        val widget = drawn(WidgetSample.music, setup = WidgetSetup(words = WidgetWordsPosition.After))
         assertEquals(true, widget.shows(R.id.widget_cells_start))
         assertEquals(false, widget.shows(R.id.widget_cells_end))
         assertEquals(3, widget.cells().size)

@@ -67,8 +67,8 @@ fun SettingsScreen(
     /** The appearance page: the theme, the language, and what Home, the Library and the bars show. */
     onAppearance: () -> Unit = {},
     update: UpdateState = UpdateState.Unknown,
-    onLookForUpdatesChange: (Boolean) -> Unit = {},
-    onLookForUpdate: () -> Unit = {},
+    onCheckForUpdatesChange: (Boolean) -> Unit = {},
+    onCheckForUpdate: () -> Unit = {},
     onInstallUpdate: (UpdateState.Available) -> Unit = {},
     downloads: DownloadSettings = DownloadSettings(),
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
@@ -185,14 +185,20 @@ fun SettingsScreen(
                     )
                 }
                 row { shape ->
-                    val waiting = update is UpdateState.Available || update is UpdateState.Loading
+                    val waiting = update is UpdateState.Available || update is UpdateState.Downloading
                     SettingRow(
                         stringResource(R.string.settings_updates),
                         shape,
                         subtitle = when (update) {
                             is UpdateState.Available -> stringResource(R.string.update_out, update.version)
-                            is UpdateState.Loading -> stringResource(R.string.update_downloading, update.update.version)
+
+                            is UpdateState.Downloading -> stringResource(
+                                R.string.update_downloading,
+                                update.update.version,
+                            )
+
                             UpdateState.Newest -> stringResource(R.string.settings_version_newest, state.appVersion)
+
                             else -> stringResource(R.string.settings_version, state.appVersion)
                         },
                         onClick = { choosing = SettingsSheet.Updates },
@@ -220,9 +226,9 @@ fun SettingsScreen(
                 SettingsSheet.Updates -> UpdatesSheetContent(
                     update,
                     state.appVersion,
-                    lookAtStart = state.lookForUpdates,
-                    onLookAtStart = onLookForUpdatesChange,
-                    onLook = onLookForUpdate,
+                    checkAtStart = state.lookForUpdates,
+                    onCheckAtStartChange = onCheckForUpdatesChange,
+                    onCheck = onCheckForUpdate,
                     onInstall = onInstallUpdate,
                 )
 
@@ -298,8 +304,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier, asPlace: 
         onHints = { navigator.open(Route.Hints) },
         onAppearance = { navigator.open(Route.Appearance) },
         update = update,
-        onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
-        onLookForUpdate = graph.updates::checkNow,
+        onCheckForUpdatesChange = viewModel::onCheckForUpdatesChange,
+        onCheckForUpdate = graph.updates::checkNow,
         onInstallUpdate = graph.updates::install,
         downloads = DownloadSettings(account, used, last = prefs?.lastAbsAccount()),
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,

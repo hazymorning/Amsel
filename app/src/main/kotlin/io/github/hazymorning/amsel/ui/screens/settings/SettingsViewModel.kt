@@ -79,8 +79,8 @@ class SettingsViewModel(
 
     fun onVolumeLimitChange(level: Int): Unit = save(again = { onVolumeLimitChange(level) }) { saveVolumeLimit(level) }
 
-    fun onLookForUpdatesChange(on: Boolean): Unit = save(again = {
-        onLookForUpdatesChange(on)
+    fun onCheckForUpdatesChange(on: Boolean): Unit = save(again = {
+        onCheckForUpdatesChange(on)
     }) { saveLookForUpdates(on) }
 
     fun onDownloadOnWifiChange(on: Boolean): Unit =

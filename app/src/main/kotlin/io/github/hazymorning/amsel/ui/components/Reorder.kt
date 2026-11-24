@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
  * item reports its key.
  */
 @Stable
-class Reorderable internal constructor(
+class ReorderState internal constructor(
     private val list: LazyListState,
     private val scope: CoroutineScope,
     private val movable: (Any) -> Boolean,
@@ -145,18 +145,18 @@ internal fun swapsWith(top: Float, bottom: Float, step: Int, offset: Int, size: 
 }
 
 @Composable
-fun rememberReorderable(
+fun rememberReorderState(
     list: LazyListState,
     movable: (Any) -> Boolean,
     onSwap: (from: Any, to: Any) -> Unit,
     onDrop: (key: Any) -> Unit,
-): Reorderable {
+): ReorderState {
     val scope = rememberCoroutineScope()
     val canMove by rememberUpdatedState(movable)
     val swap by rememberUpdatedState(onSwap)
     val drop by rememberUpdatedState(onDrop)
     val state = remember(list) {
-        Reorderable(
+        ReorderState(
             list,
             scope,
             movable = { canMove(it) },
@@ -171,7 +171,7 @@ fun rememberReorderable(
 }
 
 /** Makes this element the drag handle of the item [key]: a drag in any direction moves the item. */
-fun Modifier.reorderHandle(state: Reorderable, key: Any): Modifier = pointerInput(state, key) {
+fun Modifier.reorderHandle(state: ReorderState, key: Any): Modifier = pointerInput(state, key) {
     detectDragGestures(
         onDragStart = { state.start(key) },
         onDrag = { change, amount ->

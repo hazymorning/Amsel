@@ -7,7 +7,7 @@ import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaException
 import io.github.hazymorning.amsel.api.RepeatMode
 import io.github.hazymorning.amsel.app.FavoritesRepository
-import io.github.hazymorning.amsel.app.OptimisticTransport
+import io.github.hazymorning.amsel.app.OptimisticTransportState
 import io.github.hazymorning.amsel.data.DataGraph
 import io.github.hazymorning.amsel.playback.SpeakerCommands
 import kotlinx.coroutines.CoroutineScope
@@ -16,13 +16,13 @@ import kotlinx.coroutines.launch
 
 /**
  * The widgets' volume, shuffle, repeat and heart, as Amsel's own buttons do them: shown at once
- * ([OptimisticTransport], [FavoritesRepository]), sent to the speaker, and taken back if it refuses.
+ * ([OptimisticTransportState], [FavoritesRepository]), sent to the speaker, and taken back if it refuses.
  */
 internal class OptimisticWidgetActions(
     private val context: Context,
     private val data: DataGraph,
     private val commands: SpeakerCommands,
-    private val optimistic: OptimisticTransport,
+    private val optimistic: OptimisticTransportState,
     private val favorites: FavoritesRepository,
     private val scope: CoroutineScope,
 ) : WidgetActions {

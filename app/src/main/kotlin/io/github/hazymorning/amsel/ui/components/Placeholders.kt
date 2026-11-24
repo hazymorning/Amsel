@@ -56,7 +56,7 @@ fun SkeletonArt(modifier: Modifier = Modifier) {
     }
 }
 
-/** [glyphTop] and [inkBottom] trim the line as [capToBaseline] trims real text. */
+/** [trimTop] and [trimBottom] trim the line as [capToBaseline] trims real text. */
 @Composable
 fun SkeletonText(
     style: TextStyle,
@@ -64,11 +64,11 @@ fun SkeletonText(
     width: Dp? = null,
     fraction: Float = 1f,
     alignment: Alignment.Horizontal = Alignment.Start,
-    inkTop: Boolean = false,
-    inkBottom: Boolean = false,
+    trimTop: Boolean = false,
+    trimBottom: Boolean = false,
 ) {
     val cap = with(LocalDensity.current) { capHeight(style) }
-    val vertical = if (inkBottom && !inkTop) Alignment.Bottom else Alignment.CenterVertically
+    val vertical = if (trimBottom && !trimTop) Alignment.Bottom else Alignment.CenterVertically
     Box(modifier.fillMaxWidth()) {
         Text(
             " ",
@@ -78,10 +78,10 @@ fun SkeletonText(
             modifier = Modifier
                 .clearAndSetSemantics {}
                 .then(
-                    if (inkTop ||
-                        inkBottom
+                    if (trimTop ||
+                        trimBottom
                     ) {
-                        Modifier.capToBaseline(style, top = inkTop, bottom = inkBottom)
+                        Modifier.capToBaseline(style, top = trimTop, bottom = trimBottom)
                     } else {
                         Modifier
                     },
@@ -144,8 +144,8 @@ fun TilePlaceholder(index: Int, modifier: Modifier = Modifier, twoLines: Boolean
                     type.titleSmall,
                     Modifier.underCover().padding(top = with(LocalDensity.current) { spaced(Space.Caption) }),
                     fraction = TitleWidths.cycled(index) + TILE_WIDER,
-                    inkTop = true,
-                    inkBottom = true,
+                    trimTop = true,
+                    trimBottom = true,
                 )
             },
             second = if (twoLines) {
@@ -158,7 +158,7 @@ fun TilePlaceholder(index: Int, modifier: Modifier = Modifier, twoLines: Boolean
                             },
                         ),
                         fraction = SubtitleWidths.cycled(index) + TILE_WIDER,
-                        inkBottom = true,
+                        trimBottom = true,
                     )
                 }
             } else {
@@ -190,6 +190,6 @@ fun SectionHeaderPlaceholder(modifier: Modifier = Modifier, above: Dp = 0.dp, be
             .padding(horizontal = Keyline.Margin)
             .baselineFrame(top = Space.SectionToHeader - above + cap, bottom = below),
     ) {
-        SkeletonText(style, width = Sizes.SkeletonLine, inkTop = true, inkBottom = true)
+        SkeletonText(style, width = Sizes.SkeletonLine, trimTop = true, trimBottom = true)
     }
 }

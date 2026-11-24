@@ -42,21 +42,21 @@ class WidgetRefreshJobService : JobService() {
 /** When the widgets look at the speakers while Amsel's socket is closed. */
 interface WidgetRefreshScheduler {
     /** Every half hour from now on, while there are widgets. */
-    fun keep()
+    fun schedulePeriodic()
 
     /** Once, as soon as Android lets it run. */
-    fun once()
+    fun scheduleOnce()
 
     /** No more looks: the last widget left the home screen. */
-    fun stop()
+    fun cancelAll()
 
     companion object {
         val None = object : WidgetRefreshScheduler {
-            override fun keep() = Unit
+            override fun schedulePeriodic() = Unit
 
-            override fun once() = Unit
+            override fun scheduleOnce() = Unit
 
-            override fun stop() = Unit
+            override fun cancelAll() = Unit
         }
     }
 }
@@ -70,18 +70,18 @@ interface WidgetRefreshScheduler {
 class WidgetRefreshJobScheduler(private val context: Context) : WidgetRefreshScheduler {
     private val jobs: JobScheduler? get() = context.getSystemService(JobScheduler::class.java)
 
-    override fun keep() {
+    override fun schedulePeriodic() {
         val jobs = jobs ?: return
         // A job planned by an earlier version keeps its shorter period until replaced.
         if (jobs.getPendingJob(EVERY)?.intervalMillis == PERIOD_MS) return
         jobs.schedule(job(EVERY).setPeriodic(PERIOD_MS, FLEX_MS).build())
     }
 
-    override fun once() {
+    override fun scheduleOnce() {
         jobs?.schedule(job(ONCE).build())
     }
 
-    override fun stop() {
+    override fun cancelAll() {
         jobs?.cancel(EVERY)
         jobs?.cancel(ONCE)
     }

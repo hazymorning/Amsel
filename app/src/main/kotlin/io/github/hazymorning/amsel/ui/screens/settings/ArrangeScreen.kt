@@ -37,7 +37,7 @@ import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.holdToMove
-import io.github.hazymorning.amsel.ui.components.rememberReorderable
+import io.github.hazymorning.amsel.ui.components.rememberReorderState
 import io.github.hazymorning.amsel.ui.components.reorderHandle
 import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
@@ -75,7 +75,7 @@ internal fun <T> ArrangeScreen(
     var order by remember(arrangement.order) { mutableStateOf(arrangement.order) }
     val list = rememberLazyListState()
     val keys = arrangement.order.map(key).toSet()
-    val reorder = rememberReorderable(
+    val reorder = rememberReorderState(
         list,
         movable = { it in keys },
         onSwap = { from, to ->

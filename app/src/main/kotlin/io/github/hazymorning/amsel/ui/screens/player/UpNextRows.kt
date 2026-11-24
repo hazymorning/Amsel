@@ -24,7 +24,7 @@ import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.DragHandle
 import io.github.hazymorning.amsel.ui.components.ListRow
-import io.github.hazymorning.amsel.ui.components.Reorderable
+import io.github.hazymorning.amsel.ui.components.ReorderState
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.RowPlaceholder
 import io.github.hazymorning.amsel.ui.components.reorderHandle
@@ -46,7 +46,7 @@ internal fun QueueRow(
     item: QueueItemUi,
     played: Boolean,
     lifted: Boolean,
-    reorder: Reorderable?,
+    reorder: ReorderState?,
     actions: List<CustomAccessibilityAction>,
     onClick: () -> Unit,
     onMore: (() -> Unit)?,

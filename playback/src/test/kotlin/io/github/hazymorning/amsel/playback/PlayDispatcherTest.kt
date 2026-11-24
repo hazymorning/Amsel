@@ -235,13 +235,13 @@ class PlayDispatcherTest {
             )
             dispatcher.play(chapter25)
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
-            val streamStarted = listOf("startSeek 1 phone-2 960.0 library://audiobook/1", "sent 1", "answered 1")
-            assertEquals(streamStarted, told.calls)
+            val seekCalls = listOf("startSeek 1 phone-2 960.0 library://audiobook/1", "sent 1", "answered 1")
+            assertEquals(seekCalls, told.calls)
             assertEquals("24", fake.playArgs().single()["start_item"]!!.jsonPrimitive.content)
             // A play from the bookmark has no place of its own to land.
             dispatcher.play(PlayRequest("phone-1", listOf("library://audiobook/1"), onPhone = true))
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
-            assertEquals(streamStarted, told.calls)
+            assertEquals(seekCalls, told.calls)
         }
     }
 

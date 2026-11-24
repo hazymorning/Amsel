@@ -105,7 +105,7 @@ fun NavBar(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Un
 
 /** A place's room in the bar: over its glyph, and under it at least as much as the system's bar takes. */
 @Composable
-private fun Modifier.navPlace(): Modifier {
+private fun Modifier.barItemPadding(): Modifier {
     val bars = WindowInsets.systemBars.union(WindowInsets.displayCutout)
     val density = LocalDensity.current
     val buttons = WindowInsets.tappableElement.getBottom(density) > 0
@@ -147,7 +147,7 @@ fun RowScope.NavBarItem(
                 onLongClick = onLongClick,
                 onClick = onClick,
             )
-            .then(Modifier.navPlace()),
+            .then(Modifier.barItemPadding()),
         contentAlignment = Alignment.TopCenter,
     ) {
         Box(Modifier.height(TabGlyph), contentAlignment = Alignment.Center) {
@@ -196,7 +196,7 @@ fun RowScope.NavBarSpeaker(
                 onClick = onClick,
             )
             .semantics { contentDescription = description }
-            .then(Modifier.navPlace()),
+            .then(Modifier.barItemPadding()),
         contentAlignment = Alignment.TopCenter,
     ) {
         Box(Modifier.height(TabGlyph), contentAlignment = Alignment.Center) {

@@ -46,7 +46,7 @@ class ArtistViewModelTest {
     @After fun reset() = Dispatchers.resetMain()
 
     @Test fun `Retry on a page that was unavailable shows its skeleton again`() = runTest {
-        val source = FakeSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
+        val source = FakePageSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
         val vm = ArtistViewModel("library://artist/3", source, mapper, playing, messages)
         val state = watch(vm.state)
         assertTrue(state.value.showUnavailable)
@@ -59,7 +59,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `an artist shows five popular songs and every album, newest first`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             rows.value = row("library://artist/3", "artist", "Aurora Tone")
             item = one("music_artists_get")
             tracks = list("music_artists_artist_tracks").take(5)
@@ -75,7 +75,7 @@ class ArtistViewModelTest {
 
     /** Opened while Amsel connects, coming back to the front: the page fills in once it is connected. */
     @Test fun `an artist opened before the server could be reached loads once it is connected`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             failure = MaConnectionException("Not connected")
             item = one("music_artists_get")
             tracks = list("music_artists_artist_tracks").take(5)
@@ -93,7 +93,7 @@ class ArtistViewModelTest {
 
     /** A server that answered, if only with a refusal, is not asked again by itself. */
     @Test fun `an artist the server refused waits for Retry`() = runTest {
-        val source = FakeSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
+        val source = FakePageSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
         val state = watch(ArtistViewModel(ARTIST, source, mapper, playing, messages).state)
         val asked = source.itemCalls
         source.connections.emit(Unit)
@@ -102,7 +102,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `an artist the server cannot find is unavailable`() = runTest {
-        val source = FakeSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
+        val source = FakePageSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
         val state = watch(ArtistViewModel("library://artist/99", source, mapper, playing, messages).state)
         assertTrue(state.value.showUnavailable)
         // The page says it in its own place, not in a message too.
@@ -110,7 +110,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `an artist the server does not describe in time gets its page from its albums and songs`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             itemFailure = MaConnectionException("No answer to music/item_by_uri")
             tracks = list("music_artists_artist_tracks").take(5)
             albums = list("music_artists_artist_albums")
@@ -123,7 +123,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `an artist paints its albums from the index before the server answers`() = runTest {
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             rows.value = row(ARTIST, "artist", "Aurora Tone")
             albumRows = listOf(
                 row("library://album/4", "album", "First Light", artist = ARTIST, year = 2021),
@@ -144,7 +144,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `albums do not wait for popular songs`() = runTest {
-        val source = FakeSource(popularHeld = true).apply {
+        val source = FakePageSource(popularHeld = true).apply {
             item = one("music_artists_get")
             tracks = list("music_artists_artist_tracks").take(5)
             albums = list("music_artists_artist_albums")
@@ -178,11 +178,11 @@ class ArtistViewModelTest {
         albumType = if (compilation) "compilation" else "album",
     )
 
-    private fun page(source: FakeSource, similarOffered: Flow<Boolean> = flowOf(true)) =
+    private fun page(source: FakePageSource, similarOffered: Flow<Boolean> = flowOf(true)) =
         ArtistViewModel(ARTIST, source, mapper, playing, messages, similarOffered)
 
     @Test fun `albums do not wait for similar artists`() = runTest {
-        val source = FakeSource(similarHeld = true).apply {
+        val source = FakePageSource(similarHeld = true).apply {
             item = one("music_artists_get")
             albums = list("music_artists_artist_albums")
             similar = listOf(artist(7, "Cirrus"), artist(8, "Nimbus"))
@@ -205,7 +205,7 @@ class ArtistViewModelTest {
             null,
         )
         for (answer in answers) {
-            val source = FakeSource().apply {
+            val source = FakePageSource().apply {
                 item = one("music_artists_get")
                 albums = list("music_artists_artist_albums")
                 similarFailure = answer
@@ -224,7 +224,7 @@ class ArtistViewModelTest {
         val held = own.providerMappings.first()
         val asItsServiceHoldsIt =
             MediaItem(held.itemId, held.providerInstance, own.name, "${held.providerInstance}://artist/x", "artist")
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = own
             similar = listOf(artist(7, "Cirrus"), own, asItsServiceHoldsIt, artist(7, "Cirrus"), artist(8, "Nimbus"))
         }
@@ -239,7 +239,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `similar artists are asked only where the server can find any`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_artists_get")
             similar = listOf(artist(7, "Cirrus"))
         }
@@ -253,7 +253,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `similar artists without a picture wear their albums' covers from the index`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_artists_get")
             similar = listOf(artist(7, "Cirrus"), artist(8, "Nimbus"))
             covers = mapOf("library://artist/7" to listOf("c1", "c2", "c3", "c4"))
@@ -265,7 +265,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `an artist with no picture, none in the index, wears its albums' covers, compilations last`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = bare
             albums = listOf(
                 album(1, 2020, "c1"),
@@ -280,7 +280,7 @@ class ArtistViewModelTest {
 
     @Test fun `without albums it wears its popular songs' covers, and one cover alone`() = runTest {
         val songs = list("music_artists_artist_tracks").take(5)
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = bare
             tracks = songs
         }
@@ -297,7 +297,7 @@ class ArtistViewModelTest {
 
     @Test fun `songs count with their album's picture, not their file's copy of it`() = runTest {
         val songs = list("music_artists_artist_tracks")
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = bare
             tracks = songs
         }
@@ -308,7 +308,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `its own picture, then the index's covers, come before the page's`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_artists_get")
             albums = listOf(album(1, 2020, "c1"))
         }
@@ -323,7 +323,7 @@ class ArtistViewModelTest {
 
     @Test fun `an artist opened again wears last time's covers before the server answers, and keeps them`() = runTest {
         val shelf = listOf(album(1, 2020, "c1"), album(2, 2021, "c2"))
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             shownPages[ARTIST] = CachedPage(bare, shelf = shelf)
             item = bare
             albums = shelf
@@ -345,7 +345,7 @@ class ArtistViewModelTest {
     }
 
     @Test fun `an artist the server cannot find drops the index's albums`() = runTest {
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             rows.value = row(ARTIST, "artist", "Aurora Tone")
             albumRows = listOf(row("library://album/4", "album", "First Light", artist = ARTIST, year = 2021))
             failure = MaCommandException("music/item_by_uri", 2, "not found")

@@ -44,7 +44,7 @@ class SpokenPagesViewModelTest {
         .copy(durationSec = 270, resumeMs = resumeMs, fullyPlayed = false, narrators = "Ben Reader")
 
     @Test fun `a book paints from its row, then shows its chapters and resumes where the person stopped`() = runTest {
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             rows.value = bookRow(resumeMs = 100_000)
             item = one("music_audiobooks_get")
         }
@@ -68,7 +68,7 @@ class SpokenPagesViewModelTest {
     }
 
     @Test fun `a downloaded book shows from its download without a connection, and plays`() = runTest {
-        val source = FakeSource().apply { failure = MaConnectionException("offline") }
+        val source = FakePageSource().apply { failure = MaConnectionException("offline") }
         val manifest = DownloadManifest(
             uri = BOOK,
             absItemId = "book1",
@@ -97,7 +97,7 @@ class SpokenPagesViewModelTest {
     }
 
     @Test fun `a book on the speaker follows the speaker, and a mark shows at once`() = runTest {
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             rows.value = bookRow(resumeMs = 10_000)
             item = one("music_audiobooks_get")
             open()
@@ -126,7 +126,7 @@ class SpokenPagesViewModelTest {
     }
 
     @Test fun `a podcast the server cannot name, and the index lacks, offers Retry`() = runTest {
-        val source = FakeSource().apply { pages = listOf(list("music_podcasts_podcast_episodes__page")) }
+        val source = FakePageSource().apply { pages = listOf(list("music_podcasts_podcast_episodes__page")) }
         val state = watch(PodcastViewModel(PODCAST, source, mapper, playingUri, messages).state)
         advanceUntilIdle()
         assertTrue(state.value.episodes.isNotEmpty())
@@ -135,7 +135,7 @@ class SpokenPagesViewModelTest {
 
     @Test fun `a podcast lists its newest episodes, then more as the list nears its end`() = runTest {
         val first = list("music_podcasts_podcast_episodes__page")
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             item = one("music_podcasts_get")
             pages = listOf(List(EPISODE_PAGE) { i -> first[i % 2].copy(uri = "${first[i % 2].uri}#$i") }, first)
             open()
@@ -158,7 +158,7 @@ class SpokenPagesViewModelTest {
 
     @Test fun `an episode the feed repeats lists once`() = runTest {
         val episodes = list("music_podcasts_podcast_episodes__page")
-        val source = FakeSource().apply {
+        val source = FakePageSource().apply {
             item = one("music_podcasts_get")
             pages = listOf(episodes + episodes.first())
         }
@@ -169,7 +169,7 @@ class SpokenPagesViewModelTest {
 
     @Test fun `an episode follows the person's progress and the speaker`() = runTest {
         val episodes = list("music_podcasts_podcast_episodes__page")
-        val source = FakeSource(gated = true).apply {
+        val source = FakePageSource(gated = true).apply {
             item = one("music_podcasts_get")
             pages = listOf(episodes)
             open()

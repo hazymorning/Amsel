@@ -199,8 +199,8 @@ internal fun PageTitle(
                 style,
                 fraction = 0.5f,
                 alignment = Alignment.CenterHorizontally,
-                inkTop = true,
-                inkBottom = true,
+                trimTop = true,
+                trimBottom = true,
                 modifier = Modifier.semantics { contentDescription = loading },
             )
         }
@@ -224,7 +224,7 @@ internal fun PageTitle(
                     place,
                     fraction = 0.4f,
                     alignment = Alignment.CenterHorizontally,
-                    inkBottom = true,
+                    trimBottom = true,
                 )
             }
         }
@@ -249,8 +249,8 @@ internal fun TitleLine(
             modifier,
             width = Sizes.SkeletonLine,
             alignment = Alignment.CenterHorizontally,
-            inkTop = true,
-            inkBottom = true,
+            trimTop = true,
+            trimBottom = true,
         )
 
         onClick != null -> TextLink(

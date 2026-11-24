@@ -26,7 +26,7 @@ sealed interface UpdateState {
     /** Not asked yet in this run of the app. */
     data object Unknown : UpdateState
 
-    data object Looking : UpdateState
+    data object Checking : UpdateState
 
     /** This is the newest. */
     data object Newest : UpdateState
@@ -35,7 +35,7 @@ sealed interface UpdateState {
     data class Available(val version: String, val apk: String, val size: Long = 0) : UpdateState
 
     /** [update] is downloading, [share] of it in, from 0 to 1. */
-    data class Loading(val update: Available, val share: Float) : UpdateState
+    data class Downloading(val update: Available, val share: Float) : UpdateState
 
     /** GitHub could not be asked, or did not answer as expected. */
     data object Failed : UpdateState
@@ -61,7 +61,7 @@ class UpdateController(
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Unknown)
     val state: StateFlow<UpdateState> = _state.asStateFlow()
 
-    private val lookedAtStart = AtomicBoolean(false)
+    private val checkedAtStart = AtomicBoolean(false)
 
     /** The version downloaded in this run, and where: tapped again, it opens the installer at once. */
     @Volatile private var downloaded: Pair<String, File>? = null
@@ -71,7 +71,7 @@ class UpdateController(
      * a last run left behind goes then: it is installed by now, or was not wanted.
      */
     fun checkAtStart(enabled: suspend () -> Boolean) {
-        if (!lookedAtStart.compareAndSet(false, true)) return
+        if (!checkedAtStart.compareAndSet(false, true)) return
         scope.launch {
             withContext(Dispatchers.IO) { folder.deleteRecursively() }
             if (!enabled()) return@launch
@@ -86,14 +86,14 @@ class UpdateController(
     }
 
     fun checkNow() {
-        if (_state.value == UpdateState.Looking || _state.value is UpdateState.Loading) return
+        if (_state.value == UpdateState.Checking || _state.value is UpdateState.Downloading) return
         scope.launch { fetchLatest() }
     }
 
     /** Downloads [update], then opens Android's installer on it as soon as the app is in front. */
     fun install(update: UpdateState.Available) {
-        if (_state.value is UpdateState.Loading) return
-        _state.value = UpdateState.Loading(update, 0f)
+        if (_state.value is UpdateState.Downloading) return
+        _state.value = UpdateState.Downloading(update, 0f)
         scope.launch {
             val apk = downloaded?.takeIf { (version, file) -> version == update.version && file.isFile }?.second
                 ?: try {
@@ -140,7 +140,7 @@ class UpdateController(
                         val share = if (total > 0) (done.toFloat() / total).coerceAtMost(1f) else 0f
                         if (share - told >= STEP) {
                             told = share
-                            _state.value = UpdateState.Loading(update, share)
+                            _state.value = UpdateState.Downloading(update, share)
                         }
                     }
                 }
@@ -151,7 +151,7 @@ class UpdateController(
     }
 
     private suspend fun fetchLatest(): UpdateState {
-        _state.value = UpdateState.Looking
+        _state.value = UpdateState.Checking
         val found = try {
             latest()
         } catch (e: IOException) {

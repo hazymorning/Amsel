@@ -30,7 +30,7 @@ import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.rememberChipRowState
-import io.github.hazymorning.amsel.ui.components.rememberSideSwipe
+import io.github.hazymorning.amsel.ui.components.rememberSideSwipeState
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
@@ -76,7 +76,7 @@ fun LibraryScreen(
         onSelectKind(kind)
     }
     val swipe =
-        rememberSideSwipe(state.kind, order = kinds, enabled = (kinds?.size ?: 0) > 1, endless = true) { forward ->
+        rememberSideSwipeState(state.kind, order = kinds, enabled = (kinds?.size ?: 0) > 1, endless = true) { forward ->
             kinds?.takeIf { it.size > 1 }?.let { it[(it.indexOf(state.kind) + if (forward) 1 else -1).mod(it.size)] }
                 ?.let(select)
         }

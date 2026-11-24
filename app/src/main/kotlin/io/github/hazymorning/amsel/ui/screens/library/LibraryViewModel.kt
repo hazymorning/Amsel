@@ -243,8 +243,14 @@ internal data class LibraryPage(
 /** What the screen believes about the server while a list is empty. */
 internal fun serverStatusOf(state: SessionState): ServerStatus = when (state) {
     is SessionState.Offline -> ServerStatus.Offline
+
     is SessionState.Waiting -> ServerStatus.Connecting
-    else -> ServerStatus.Connected
+
+    is SessionState.Ready,
+    SessionState.Restoring,
+    SessionState.NeedsSetup,
+    SessionState.Unsupported,
+    -> ServerStatus.Connected
 }
 
 internal fun selectionOf(kind: String?, sort: String?) = LibrarySelection(

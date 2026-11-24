@@ -1,8 +1,8 @@
 package io.github.hazymorning.amsel.playback
 
 import io.github.hazymorning.amsel.api.MaException
+import io.github.hazymorning.amsel.data.CurrentItemStatus
 import io.github.hazymorning.amsel.data.ItemPosition
-import io.github.hazymorning.amsel.data.QueueStatus
 import io.github.hazymorning.amsel.data.SeekTracker
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -74,9 +74,9 @@ internal class SeekController(
     fun seek(seconds: Int, step: Boolean) {
         synchronized(this) {
             val settleMs = if (step) SETTLE_MS else 0
-            val queueStatus = seeks.queueStatus(queueId)
-            val place = queueStatus?.let { ItemPosition(it.uri, seconds.toDouble()) }
-            if (queueStatus == null || place == null || plays(queueStatus)) {
+            val currentItemStatus = seeks.currentItemStatus(queueId)
+            val place = currentItemStatus?.let { ItemPosition(it.uri, seconds.toDouble()) }
+            if (currentItemStatus == null || place == null || plays(currentItemStatus)) {
                 startSeek(place, seconds, settleMs)
             } else {
                 waiting = null
@@ -203,8 +203,8 @@ internal class SeekController(
         wantedAtMs = elapsedRealtime()
     }
 
-    private fun plays(queueStatus: QueueStatus): Boolean =
-        wantsPlay?.takeIf { elapsedRealtime() - wantedAtMs < WISH_MS } ?: queueStatus.playing
+    private fun plays(currentItemStatus: CurrentItemStatus): Boolean =
+        wantsPlay?.takeIf { elapsedRealtime() - wantedAtMs < WISH_MS } ?: currentItemStatus.playing
 
     private suspend fun run() {
         while (true) {
@@ -228,7 +228,7 @@ internal class SeekController(
                 // Made on an item that has since ended: its target belongs to that item, not the one playing now.
                 val shown = next.shown
                 val own = next.starting || next.fromParked
-                if (shown != null && !own && seeks.queueStatus(queueId)?.uri != shown.first.uri) {
+                if (shown != null && !own && seeks.currentItemStatus(queueId)?.uri != shown.first.uri) {
                     seeks.failed(queueId, shown.second)
                     next.done.complete(Unit)
                     return@synchronized 0L

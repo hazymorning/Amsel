@@ -43,7 +43,7 @@ import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.Words
 import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.moved
-import io.github.hazymorning.amsel.ui.components.rememberReorderable
+import io.github.hazymorning.amsel.ui.components.rememberReorderState
 import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.screens.settings.LabelToBlock
 import io.github.hazymorning.amsel.ui.screens.settings.RowWords
@@ -131,13 +131,13 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
  */
 @Composable
 fun WidgetSetupScreen(
-    state: WidgetSetupUi,
+    state: WidgetSetupUiState,
     wallpaper: Color?,
     onSheet: (WidgetSheet) -> Unit,
     onRemove: (Int) -> Unit,
     onReorder: (List<Int>) -> Unit,
     onShowWords: (Boolean) -> Unit,
-    onMoveWords: (WidgetWordsPlace) -> Unit,
+    onMoveWords: (WidgetWordsPosition) -> Unit,
     onDone: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -148,7 +148,7 @@ fun WidgetSetupScreen(
     val at = state.setup.words
     var parts by remember(slots, at) { mutableStateOf(widgetParts(slots, at)) }
     val list = rememberLazyListState()
-    val reorder = rememberReorderable(
+    val reorder = rememberReorderState(
         list,
         // What plays stands at either end: the buttons move past each other, never past it.
         movable = { key -> parts.any { it is WidgetPart.Button && it.key == key } },
@@ -160,7 +160,7 @@ fun WidgetSetupScreen(
         onDrop = { key ->
             haptics.performHapticFeedback(HapticFeedbackType.GestureEnd)
             if (key == WidgetPart.Words.key) {
-                val place = wordsPlaceAt(parts.indexOf(WidgetPart.Words), parts.size)
+                val place = wordsPositionAt(parts.indexOf(WidgetPart.Words), parts.size)
                 parts = widgetParts(slots, place)
                 onMoveWords(place)
             } else {
@@ -202,7 +202,7 @@ fun WidgetSetupScreen(
 
 /** Which speaker the widget keeps to, its background, and which buttons stand on a cell. */
 @Composable
-private fun WidgetSettings(state: WidgetSetupUi, onSheet: (WidgetSheet) -> Unit) = SettingsBlock {
+private fun WidgetSettings(state: WidgetSetupUiState, onSheet: (WidgetSheet) -> Unit) = SettingsBlock {
     row { shape ->
         val name = state.speakers.firstOrNull { it.id == state.setup.speaker }?.name
             ?: stringResource(R.string.widget_speaker_amsel)
@@ -222,7 +222,7 @@ private fun WidgetSettings(state: WidgetSetupUi, onSheet: (WidgetSheet) -> Unit)
 
 /** The parts' name, and where the widget is too small for every button, which ones it shows. */
 @Composable
-private fun PartsLabel(state: WidgetSetupUi) {
+private fun PartsLabel(state: WidgetSetupUiState) {
     val hidden = state.setup.slots.size - state.fits
     Column {
         GroupLabel(
@@ -257,7 +257,7 @@ private fun WidgetHint(text: String, modifier: Modifier = Modifier) {
 
 /** The widget drawn from the same views the launcher shows, at its size there; nothing on it acts here. */
 @Composable
-private fun WidgetStage(state: WidgetSetupUi, wallpaper: Color?) {
+private fun WidgetStage(state: WidgetSetupUiState, wallpaper: Color?) {
     val picture = state.picture
     val ground = wallpaper ?: MaterialTheme.colorScheme.surfaceContainer
     Box(

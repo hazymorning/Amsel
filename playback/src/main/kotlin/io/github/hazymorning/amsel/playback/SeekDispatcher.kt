@@ -22,7 +22,7 @@ class SeekDispatcher(
     private val scope: CoroutineScope,
     private val elapsedRealtime: () -> Long,
 ) {
-    private val seekDispatcher = mutableMapOf<String, SeekController>()
+    private val controllers = mutableMapOf<String, SeekController>()
     private val _failures =
         MutableSharedFlow<CommandFailure>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
@@ -35,8 +35,8 @@ class SeekDispatcher(
     /** A play that starts playback was asked of [playerId] ([SpeakerCommands.starting]). */
     fun starting(playerId: String) = controller(playerId).starting()
 
-    internal fun controller(playerId: String): SeekController = synchronized(seekDispatcher) {
-        seekDispatcher.getOrPut(playerId) {
+    internal fun controller(playerId: String): SeekController = synchronized(controllers) {
+        controllers.getOrPut(playerId) {
             SeekController(
                 playerId,
                 seeks,

@@ -176,7 +176,7 @@ private fun PlayerRow(
     val skip: (Boolean) -> Unit = { forward ->
         onControl(if (forward) PlayerControl.Next else PlayerControl.Previous)
     }
-    val swipe = rememberSideSwipe(state.key ?: state.title, enabled = state.canSkip, onGo = skip)
+    val swipe = rememberSideSwipeState(state.key ?: state.title, enabled = state.canSkip, onGo = skip)
     // The last control's ink stands [ControlsInset] in from the screen's edge, whichever it is.
     val endSpare = when (val end = controls.lastOrNull() ?: DockControl.PlayPause) {
         DockControl.PlayPause -> (Sizes.TouchTarget - PlayDisc) / 2

@@ -107,7 +107,7 @@ private object TestGraph : PlaybackGraph {
         ),
     )
 
-    val targetFlow = MutableStateFlow(SelectedSpeaker("kitchen", isPhone = false))
+    val targetFlow = MutableStateFlow(PlaybackTarget("kitchen", isPhone = false))
     val playing = mutableListOf<Boolean>()
     val heartFlow = MutableStateFlow<Boolean?>(null)
     var hearts = 0
@@ -116,7 +116,7 @@ private object TestGraph : PlaybackGraph {
     var whileBuilding: (() -> Unit)? = null
 
     fun reset() {
-        targetFlow.value = SelectedSpeaker("kitchen", isPhone = false)
+        targetFlow.value = PlaybackTarget("kitchen", isPhone = false)
         playing.clear()
         whileBuilding = null
         heartFlow.value = null
@@ -129,7 +129,7 @@ private object TestGraph : PlaybackGraph {
         hearts++
     }
 
-    override val target: StateFlow<SelectedSpeaker> get() = targetFlow
+    override val target: StateFlow<PlaybackTarget> get() = targetFlow
     override val phone: LocalOutput? = null
     override val commands: SpeakerCommands =
         FakeSpeaker(requireNotNull(speakers.getValue("kitchen").value), emptyList(), elapsedRealtime)
@@ -152,10 +152,10 @@ private object TestGraph : PlaybackGraph {
     }
 
     override suspend fun selectPhone() {
-        targetFlow.value = SelectedSpeaker("phone", isPhone = true)
+        targetFlow.value = PlaybackTarget("phone", isPhone = true)
     }
 
-    override fun playerFor(target: SelectedSpeaker): Player {
+    override fun playerFor(target: PlaybackTarget): Player {
         whileBuilding?.invoke()
         whileBuilding = null
         return super.playerFor(target)
@@ -211,10 +211,10 @@ class PlaybackServiceTest {
     @Test fun theConnectionHearsWhatTheNewSpeakerIsDoingOnEverySwap() {
         start()
         assertEquals(listOf(true), TestGraph.playing) // Kitchen already plays when the service starts
-        TestGraph.targetFlow.value = SelectedSpeaker("office", isPhone = false)
+        TestGraph.targetFlow.value = PlaybackTarget("office", isPhone = false)
         idle()
         // Back to Kitchen: its snapshot is cached and already playing, so no isPlaying change fires.
-        TestGraph.targetFlow.value = SelectedSpeaker("kitchen", isPhone = false)
+        TestGraph.targetFlow.value = PlaybackTarget("kitchen", isPhone = false)
         idle()
         assertEquals(listOf(true, false, true), TestGraph.playing)
     }
@@ -222,7 +222,7 @@ class PlaybackServiceTest {
     @Test fun aBookShowsNowPlayingsFiveControlsAndMusicTakesTheSkipsAway() {
         start()
         assertTrue(session.mediaButtonPreferences.isEmpty())
-        TestGraph.targetFlow.value = SelectedSpeaker("study", isPhone = false)
+        TestGraph.targetFlow.value = PlaybackTarget("study", isPhone = false)
         idle()
         val buttons = session.mediaButtonPreferences
         assertEquals(
@@ -243,7 +243,7 @@ class PlaybackServiceTest {
             ),
             buttons.map { it.slots.get(0) },
         )
-        TestGraph.targetFlow.value = SelectedSpeaker("kitchen", isPhone = false)
+        TestGraph.targetFlow.value = PlaybackTarget("kitchen", isPhone = false)
         idle()
         assertTrue(session.mediaButtonPreferences.isEmpty())
     }
@@ -262,7 +262,7 @@ class PlaybackServiceTest {
         assertEquals(CommandButton.ICON_HEART_FILLED, session.mediaButtonPreferences.single().icon)
         assertEquals("Unlike", session.mediaButtonPreferences.single().displayName)
         // A book has no heart, even while one is reported: its controls take the places.
-        TestGraph.targetFlow.value = SelectedSpeaker("study", isPhone = false)
+        TestGraph.targetFlow.value = PlaybackTarget("study", isPhone = false)
         idle()
         assertTrue(session.mediaButtonPreferences.none { it.sessionCommand == BrowseTree.HEART })
         assertEquals(4, session.mediaButtonPreferences.size)
@@ -277,7 +277,7 @@ class PlaybackServiceTest {
     }
 
     @Test fun aSpeakerPickedWhileTheSessionIsBuiltIsNotLost() {
-        TestGraph.whileBuilding = { TestGraph.targetFlow.value = SelectedSpeaker("office", isPhone = false) }
+        TestGraph.whileBuilding = { TestGraph.targetFlow.value = PlaybackTarget("office", isPhone = false) }
         start()
         assertEquals("office-song", session.player.currentMediaItem?.mediaId)
     }
