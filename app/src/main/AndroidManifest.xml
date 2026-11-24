@@ -115,14 +115,8 @@
             android:authorities="${applicationId}.artwork"
             android:exported="false"
             android:grantUriPermissions="true" />
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.updates"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/updates" />
-        </provider>
+        <receiver
+            android:name=".app.UpdateResultReceiver"
+            android:exported="false" />
     </application>
 </manifest>

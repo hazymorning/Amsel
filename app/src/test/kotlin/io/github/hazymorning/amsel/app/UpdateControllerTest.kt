@@ -82,6 +82,17 @@ class UpdateControllerTest {
         assertFalse(temp.root.resolve("update/amsel.apk").exists())
     }
 
+    @Test fun anUpdateAndroidDidNotInstallOffersAnotherTry() = updating(github()) {
+        val found = find()
+        updates.install(found)
+        opened.receive()
+        updates.notInstalled(found.version)
+        val said = messages.pending.first { it.isNotEmpty() }.single()
+        assertEquals(R.string.update_not_installed, said.text)
+        checkNotNull(said.retry).invoke()
+        assertArrayEquals(apk, opened.receive().readBytes())
+    }
+
     @Test fun theInstallerWaitsUntilAmselIsInFront() = updating(github(), inFront = false) {
         val found = find()
         updates.install(found)
@@ -133,8 +144,10 @@ class UpdateControllerTest {
         val messages = MessageController(MutableStateFlow(true))
         val opened = Channel<File>(Channel.UNLIMITED)
         val updates =
-            UpdateController(http, "2026.11.33", messages, scope, front, temp.root.resolve("update"), { ours }) {
-                opened.trySend(it).isSuccess
+            UpdateController(http, "2026.11.33", messages, scope, front, temp.root.resolve("update"), {
+                ours
+            }) { apk, _ ->
+                opened.trySend(apk)
             }
         try {
             withTimeout(10_000) { Run(updates, front, messages, opened).block() }

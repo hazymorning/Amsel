@@ -68,5 +68,6 @@
     <string name="update_downloading">Amsel %1$s wird heruntergeladen</string>
     <string name="update_not_downloaded">Amsel %1$s konnte nicht heruntergeladen werden</string>
     <string name="update_not_ours">Amsel %1$s wurde nicht installiert: Die Signatur passt nicht zu Amsel</string>
+    <string name="update_not_installed">Android hat Amsel %1$s nicht installiert</string>
     <string name="error_no_installer">Der Android-Installer konnte nicht geöffnet werden</string>
 </resources>
