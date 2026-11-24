@@ -49,7 +49,9 @@ open class AmselApp :
                 override fun onReceive(context: Context, intent: Intent) = graph.data.session.tryAgain()
             },
             IntentFilter(Intent.ACTION_SCREEN_ON),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
+            // Only the system sends ACTION_SCREEN_ON. Not exported, AndroidX would need a permission below
+            // Android 13 that the manifest removes, and throw.
+            ContextCompat.RECEIVER_EXPORTED,
         )
     }
 
