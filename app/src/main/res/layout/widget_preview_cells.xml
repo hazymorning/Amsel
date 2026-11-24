@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The buttons as a widget two cells wide comes, the speakers, play and next, for the picker's
-     preview and while a widget is first drawn. -->
+<!-- What a two-cell widget shows of DefaultSlots: speakers, play and next. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/widget_cell_height"

@@ -26,8 +26,8 @@ enum class ThemeMode(val pref: String) {
 }
 
 /**
- * From Android 12, so the splash and what the system draws for the app, such as the text toolbar, follow
- * the app's choice. A change recreates the activity.
+ * Android 12 on: lets the splash and what the system draws for the app, such as the text toolbar,
+ * follow the app's choice. A change recreates the activity.
  */
 fun Context.applyNightMode(mode: ThemeMode) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return

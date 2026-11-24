@@ -77,7 +77,7 @@ class JourneyApp : AmselApp() {
 
 /** Runs against scripts/test-server at MA_URL, with the user, library and fake speakers live.sh sets up. */
 @RunWith(RobolectricTestRunner::class)
-// LEGACY: on GitHub's JDK native graphics aborts when this test runs alone (JniConstants: Class not
+// Legacy, as native graphics aborts on GitHub's JDK when this test runs alone (JniConstants: Class not
 // found: java/nio/FloatBuffer). Shots need AMSEL_JOURNEY_SHOTS=1 and -Drobolectric.graphicsMode=NATIVE.
 @GraphicsMode(GraphicsMode.Mode.LEGACY)
 @Config(sdk = [36], application = JourneyApp::class, qualifiers = "w411dp-h891dp-xxhdpi")

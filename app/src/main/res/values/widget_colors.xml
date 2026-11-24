@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Light and dark stand over a cover; plain is Amsel's paper before Android 12; ink and paper stand clear on the wallpaper, whatever the night. -->
+    <!-- light and dark: over a cover; plain: the fallback before Android 12; ink and paper (Clear) have no night variant. -->
     <color name="widget_words_light">#FF191A17</color>
     <color name="widget_quiet_light">#A8191A17</color>
     <color name="widget_glyph_light">#DE191A17</color>
@@ -33,7 +33,7 @@
     <color name="widget_on_disc_paper">#FF191A17</color>
     <color name="widget_press_paper">#29F2F1EC</color>
     <color name="widget_background_cover">#FFE9E8E1</color>
-    <!-- Over a sharp cover: none by day; at night the cover's range in the night's, as Amsel's own covers. -->
+    <!-- Transparent by day; at night (values-night) it narrows a sharp cover's range, as Artwork does. -->
     <color name="widget_night_tone">#00000000</color>
     <color name="widget_veil_light_top">#4DF2F1EC</color>
     <color name="widget_veil_light_middle">#61F2F1EC</color>
@@ -41,7 +41,7 @@
     <color name="widget_veil_dark_top">#380A0A09</color>
     <color name="widget_veil_dark_middle">#4D0A0A09</color>
     <color name="widget_veil_dark_bottom">#750A0A09</color>
-    <!-- Paper reads on any cover under it: on a white one at 5.8 to 1, the quiet words at 3.9. -->
+    <!-- Light text reads on any cover under it: 5.8:1 over white, 3.9:1 for the quiet text. -->
     <color name="widget_veil_darkened">#A80A0A09</color>
     <color name="widget_cell_light">#1F191A17</color>
     <color name="widget_cell_dark">#2EF2F1EC</color>

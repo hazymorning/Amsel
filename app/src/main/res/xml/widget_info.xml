@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Now playing: two cells by two, half a phone's width. Any size, its form follows. Not on Android's update timer (updatePeriodMillis 0): Amsel draws it when what plays changes. -->
+<!-- updatePeriodMillis 0: WidgetController pushes every redraw. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:configure="io.github.hazymorning.amsel.widget.WidgetSetupActivity"

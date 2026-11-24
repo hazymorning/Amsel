@@ -43,9 +43,9 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 
-// Advances only as often as it shows, about a pixel of the line and at least four times a second,
-// sleeping in between. Each step waits for an infinite-animation frame, which Compose pauses in
-// tests, so screenshots hold at [NowPlayingUi.positionMs].
+// Advances only as often as it shows: about a pixel of the line, at least four times a second for the
+// times, sleeping in between. Each step waits for an infinite-animation frame, which Compose pauses
+// in tests, so screenshots hold at [NowPlayingUi.positionMs].
 @Composable
 internal fun rememberPlaybackPosition(state: NowPlayingUi): State<Long> {
     val position = remember { mutableLongStateOf(state.positionMs) }

@@ -35,7 +35,7 @@ object Space {
     val S12 = 48.dp
     val S16 = 64.dp
 
-    /** Added to the next line's own height for the step from a title's baseline to that line's. */
+    /** A title's baseline to the next line's baseline is that line's own height plus this. */
     val Line = 4.dp
 
     val Part = 8.dp

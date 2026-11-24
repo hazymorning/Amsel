@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One cell, all of it the button: its cell in the frame, as every other form's, or a cover. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/background"
@@ -17,7 +16,7 @@
         android:scaleType="centerCrop"
         android:visibility="gone" />
 
-    <!-- An ImageView, not a View: a launcher inflates only the classes widgets may use. -->
+    <!-- An ImageView, not a View: RemoteViews inflate only the classes allowed in widgets. -->
     <ImageView
         android:id="@+id/widget_veil"
         android:layout_width="match_parent"
@@ -43,7 +42,7 @@
         android:tintMode="src_in"
         android:visibility="gone" />
 
-    <!-- The button's cell in the frame; pressed with the tile, which is all of it the button. -->
+    <!-- The whole tile is the click target; duplicateParentState shows its pressed state on the cell. -->
     <FrameLayout
         android:id="@+id/widget_tile_cell"
         android:layout_width="match_parent"

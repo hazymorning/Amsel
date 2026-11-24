@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One of a pad's rows; half a gap above and below its cells, as beside them. -->
+<!-- Half a gap above and below, as the cell drawables have at the sides; WidgetDrawing.pad counts on it. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_pad_row"
     android:layout_width="match_parent"

@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The speaker and what plays, in the phone's own sans-serif, which WidgetTextMetrics measures: sizes and
-     lines as WidgetLine has them. The view stands the words' lead outside its box at either side,
-     and each line's padding puts its first ink, and the level's last, on the box's edge
-     (WidgetWordsViews). The level, the speaker's volume, stands after the speaker's name, which
-     is cut before it where the row runs out; the time under all. -->
+<!-- Sizes as WidgetLine has them, in the system sans-serif that WidgetTextMetrics measures. The
+     negative margins let WidgetWordsViews pad each line so its first glyph's visible edge meets the box. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_words"
@@ -31,8 +28,8 @@
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
 
-        <!-- As wide as the name, the level right after it; the weight only cuts it where the row
-             runs out, which a width of none would not do. -->
+        <!-- wrap_content keeps the level right after the name; the weight only shrinks the name when
+             the row is full, which 0dp would not do. -->
         <TextView
             android:id="@+id/widget_speaker"
             android:layout_width="wrap_content"
@@ -113,9 +110,8 @@
         android:textSize="13sp"
         android:visibility="gone" />
 
-    <!-- Ticks by itself from the time Amsel sets while it plays: a widget draws again only when
-         something changes. At rest the time stands in widget_time_still: a stopped Chronometer works
-         its time out again whenever the launcher lays the widget out anew, and runs on. -->
+    <!-- Ticks on the launcher's side while playing. While paused the time is widget_time_still: a
+         stopped Chronometer recomputes its text whenever the launcher lays it out, and so runs on. -->
     <Chronometer
         android:id="@+id/widget_time"
         android:layout_width="match_parent"

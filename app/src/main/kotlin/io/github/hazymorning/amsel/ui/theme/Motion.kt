@@ -93,7 +93,7 @@ object Motion {
     }
 }
 
-/** Android's animations are off: crossfades only. */
+/** True while Android's animations are off: crossfades only. */
 val LocalReducedMotion = staticCompositionLocalOf { false }
 
 /** Observed, as changing the setting recreates no activity. */
