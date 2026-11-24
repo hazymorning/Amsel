@@ -49,7 +49,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.firm
 
-/** [mark] stands before the second line, such as the dot of an update ready. */
+/** [mark] is drawn before the second line, such as the dot of an update ready. */
 @Composable
 internal fun SettingRow(
     title: String,

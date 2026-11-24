@@ -74,7 +74,7 @@ object Space {
 
     /**
      * A sheet's top edge to its first content (a title's capitals, a cover's top), and its last content
-     * to its bottom edge. More than the side margin, which looks tight over a bold title.
+     * to its bottom edge. More than the side margin, which is too tight over a bold title.
      */
     val SheetEdge = 32.dp
 
@@ -191,7 +191,7 @@ object Radius {
 
     fun caption(side: Dp): Dp = under(cover(side))
 
-    /** Half the radius: flush, words look as if they stick out past a rounded corner; a full radius in, indented. */
+    /** Half the radius: flush, words seem to stick out past a rounded corner; a full radius in, indented. */
     fun under(radius: Dp): Dp = radius / 2
 }
 

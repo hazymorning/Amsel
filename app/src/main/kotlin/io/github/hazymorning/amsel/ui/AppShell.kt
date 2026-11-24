@@ -253,7 +253,7 @@ private fun TabPages(tabs: TabStacks, tab: Tab, modifier: Modifier = Modifier) {
                 else -> Motion.crossfade()
             }
         },
-        // Switching tabs from a page can look like a pop to NavDisplay; it is still a tab change.
+        // NavDisplay can take switching tabs from a page for a pop; it is still a tab change.
         popTransitionSpec = {
             when {
                 initialState.root() != targetState.root() -> Motion.none()

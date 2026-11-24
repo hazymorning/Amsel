@@ -9,12 +9,12 @@ import androidx.compose.ui.graphics.compositeOver
 // Every Material slot is set from the palette, so the Material components still in use agree with it.
 // PaletteContrastTest checks the contrast pairs.
 
-/** Dims a played song's cover: it recedes without going dark. */
+/** Dims a played song's cover without making it dark. */
 const val DIM_ALPHA = 0.32f
 
 const val HAIRLINE_ALPHA = 0.08f
 
-/** Translucent rather than a solid tone, so a quiet pill looks the same on the dock as on a page. */
+/** Translucent rather than a solid tone, so a quiet pill matches on the dock and on a page. */
 const val PILL_ALPHA = 0.055f
 
 const val DISABLED_ALPHA = 0.38f

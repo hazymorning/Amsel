@@ -7,7 +7,7 @@ import android.os.Bundle
 import io.github.hazymorning.amsel.graph
 import kotlinx.coroutines.launch
 
-/** [WidgetController] pushes redraws; Android calls here after a reboot, an update, a launcher reset or a resize. */
+/** [WidgetController] pushes redraws; Android calls here after a reboot, an app update, a launcher reset, a resize. */
 open class WidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         work(context) {

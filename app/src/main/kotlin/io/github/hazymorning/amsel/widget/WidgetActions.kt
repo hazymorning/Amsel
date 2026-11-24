@@ -4,7 +4,7 @@ import io.github.hazymorning.amsel.api.RepeatMode
 import io.github.hazymorning.amsel.ui.model.next
 
 /**
- * Each change shows at once; a refusal throws [io.github.hazymorning.amsel.api.MaException] and the
+ * Each change shows at once; a failure throws [io.github.hazymorning.amsel.api.MaException] and the
  * speaker's own state shows again.
  */
 interface WidgetActions {
@@ -76,8 +76,9 @@ internal class StateButtonHandler(private val actions: WidgetActions, private va
     }
 
     /**
-     * The server steps from the level it last set, so taps within STEP_ON_MS add up before the speaker
-     * reports (docs/API-NOTES.md, 5.3). A step past the limit sets the limit; at or above it, Louder refuses.
+     * The server steps from the level it last set, so taps in a row add up before the speaker reports
+     * (docs/API-NOTES.md, 5.3); `asked` follows that for STEP_ON_MS. Louder past the limit sets the
+     * limit, and at or above it refuses.
      */
     private suspend fun volume(shown: WidgetContent, up: Boolean): Refusal? {
         if (shown.phone) {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- light and dark: over a cover; plain: the fallback before Android 12; ink and paper (Clear) have no night variant. -->
+    <!-- _light and _dark: over a cover; _plain: the fallback before Android 12; _ink and _paper (Clear): no night variant. -->
     <color name="widget_words_light">#FF191A17</color>
     <color name="widget_quiet_light">#A8191A17</color>
     <color name="widget_glyph_light">#DE191A17</color>

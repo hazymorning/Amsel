@@ -255,8 +255,8 @@ private fun said(
     time: Boolean = false,
     strip: Boolean = false,
 ): WidgetFit {
-    // Centred text is placed by its visible extent (cap top to last baseline), more than LEAD shorter
-    // than its box, so the box may overflow the frame by LEAD / 2 above and below.
+    // Centred text is placed by its visible extent (cap top to last baseline); for the two Small lines
+    // that is more than LEAD less than their box, which may overflow the frame by LEAD / 2 each way.
     val centred = fit.form == WidgetForm.Line || fit.form == WidgetForm.Bar || fit.form == WidgetForm.Player
     fun fits(words: WidgetWords, size: WordSize) = words.needs(type, size) <= room + EPSILON
     val lines = listOfNotNull(

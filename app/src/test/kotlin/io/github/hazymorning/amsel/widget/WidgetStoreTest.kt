@@ -80,7 +80,7 @@ class WidgetStoreTest {
         assertEquals(emptyMap<String, WidgetContent>(), again.contents())
     }
 
-    /** Amsel 2026.11.50 kept one content and its pictures: the content is read, the pictures deleted. */
+    /** Amsel 2026.11.50 kept one speaker's content and its pictures: the content is read, the pictures deleted. */
     @Test fun theEarlierLookIsReadAndItsPicturesGo() = runTest {
         File(dir, "look.json").writeText("""{"speaker":"Kitchen","title":"Lanterns"}""")
         File(dir, "cover.png").writeText("png")

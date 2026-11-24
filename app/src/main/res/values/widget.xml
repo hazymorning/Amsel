@@ -20,8 +20,7 @@
          line back in. -->
     <dimen name="widget_words_lead_out">-6dp</dimen>
     <dimen name="widget_words_lead">6dp</dimen>
-    <!-- Centred text may overflow the frame by half the lead above and below (centred, in
-         WidgetFit.kt's said()). -->
+    <!-- Centred text may overflow the frame by half the lead above and below (`centred` in WidgetFit.kt). -->
     <dimen name="widget_words_lead_out_half">-3dp</dimen>
     <dimen name="widget_art_to_words">12dp</dimen>
     <!-- widget_art_to_words less the lead, which the text box adds above the cap top. -->

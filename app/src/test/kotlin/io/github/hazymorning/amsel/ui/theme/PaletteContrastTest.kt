@@ -19,7 +19,7 @@ class PaletteContrastTest {
 
     @Test fun textReadsOnEverySurface() = schemes.forEach { (mode, s) ->
         s.surfaces().forEach { (name, bg) -> check("$mode ink on $name", contrast(s.onSurface, bg), 7f) }
-        // Secondary text stands only on the page and Surface 1; Surface 2 carries only labels in Ink.
+        // Secondary text is used only on the page and Surface 1; Surface 2 carries only labels in Ink.
         listOf("background" to s.surface, "surface 1" to s.surfaceContainerLow).forEach { (name, bg) ->
             check("$mode secondary on $name", contrast(s.onSurfaceVariant, bg), 4.5f)
         }

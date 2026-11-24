@@ -208,7 +208,7 @@ private val DaySun = Color(0xFFFBFAF7)
 /** Between the night page's first and second surface tones and darker than the crowns, so the moon stays faint. */
 private val NightMoon = Color(0xFF21221E)
 
-/** Large enough for the bird's eye and beak to read, small enough to stay a signature. */
+/** Large enough for the bird's eye and beak to be legible, and no larger. */
 private val Disc = 72.dp
 
 internal val BirdHeight = Disc / 2 * ((ReadmeHeader.DISC + ReadmeHeader.FOOT) / ReadmeHeader.DISC)

@@ -23,7 +23,7 @@ class SettingsShots : ScreenshotTest() {
         Settings(place = true)
     }
 
-    /** Inside the shell, so the picture stands on the dock's edge. */
+    /** Inside the shell, so the picture ends at the dock's edge. */
     @Test fun foot() = snap(
         "settings_foot",
         listOf(ShotVariant.Light, ShotVariant.Dark),

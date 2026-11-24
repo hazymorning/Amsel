@@ -27,7 +27,7 @@ class WidgetCover(val bitmap: Bitmap, val light: Boolean, val accent: WidgetAcce
 /** ARGB colours of the play button's cell and glyph. */
 class WidgetAccent(val cell: Int, val glyph: Int)
 
-/** RemoteViews can neither blur nor clip a view, so the blur and the cover corners are drawn into the bitmaps. */
+/** RemoteViews offer no blur and no continuous-corner clip, so both are drawn into the bitmaps. */
 object WidgetArt {
     /** Blurred at this side; the launcher's upscaling softens it further. */
     const val SIDE = 96

@@ -28,8 +28,8 @@
             android:tint="@color/widget_glyph_light"
             android:tintMode="src_in" />
 
-        <!-- wrap_content keeps the level right after the name; the weight only shrinks the name when
-             the row is full, which 0dp would not do. -->
+        <!-- wrap_content, not 0dp, keeps the level right after the name; the weight only shrinks the
+             name when the row is full. -->
         <TextView
             android:id="@+id/widget_speaker"
             android:layout_width="wrap_content"

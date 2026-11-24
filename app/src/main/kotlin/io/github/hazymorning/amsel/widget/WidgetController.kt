@@ -223,7 +223,7 @@ class WidgetController(
     suspend fun tap(widgetId: Int, slot: Int, shownPlaying: Boolean) {
         val setup = setup(widgetId)
         val button = setup.slots.getOrNull(slot) ?: return
-        // The tap may have started the process.
+        // The tap may have started the process, which then follows nothing yet.
         follow()
         val shown = suspend { (_contents.value ?: store.contents())[setup.speaker ?: AMSELS] }
         taps.tap(button, hands(setup.speaker), shownPlaying, shown) { say(setup, it) }
