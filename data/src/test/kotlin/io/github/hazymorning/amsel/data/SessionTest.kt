@@ -232,7 +232,8 @@ class SessionTest {
             fake.server.dispatcher = home
             network.current.value = FakePhoneNetwork.CAFE
             session.awaitState { it is ConnectionState.Connected }
-            assertTrue(session.upToDate.value)
+            // Session sets upToDate from its own collector of the state, on another thread.
+            assertTrue(withTimeout(5_000) { session.upToDate.first { it } })
         }
     }
 
