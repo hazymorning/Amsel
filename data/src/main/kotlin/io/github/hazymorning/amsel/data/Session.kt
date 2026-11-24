@@ -1,7 +1,7 @@
 package io.github.hazymorning.amsel.data
 
 import io.github.hazymorning.amsel.api.ConnectionState
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaAuth
 import io.github.hazymorning.amsel.api.MaClient
@@ -70,8 +70,8 @@ sealed interface SessionState {
  * reach for two minutes ([stale]); a new network, or the screen coming on ([tryAgain]), tries again.
  */
 class Session(
-    private val prefs: AppPrefs,
-    private val vault: TokenVault,
+    private val prefs: PrefsStore,
+    private val vault: TokenCipher,
     private val http: OkHttpClient,
     private val scope: CoroutineScope,
     private val deviceName: String,
@@ -127,7 +127,7 @@ class Session(
 
     /**
      * What the server last said of the speakers still holds as far as the phone can tell: the
-     * socket is connected, or was closed on purpose since, or a [glance] read them since. False
+     * socket is connected, or was closed on purpose since, or a [readOnOwnSocket] read them since. False
      * before either, and once the socket or a glance could not reach the server.
      */
     val upToDate: StateFlow<Boolean> = _upToDate.asStateFlow()
@@ -148,7 +148,7 @@ class Session(
     val checkedHere: StateFlow<Boolean> get() = checked.here
 
     /** Artwork URLs on the connected address, or null before there is one. */
-    val images: Images? get() = stored.value?.address?.let { Images(it) }
+    val images: ImageUrls? get() = stored.value?.address?.let { ImageUrls(it) }
 
     val state: StateFlow<SessionState> = combine(restored, stored, client.state) { isRestored, session, conn ->
         when {
@@ -317,7 +317,7 @@ class Session(
      * with it, closed again after [block]. Null when nobody is signed in or the server does not
      * answer in time, which [upToDate] then says.
      */
-    suspend fun <T : Any> glance(block: suspend (MaApi) -> T): T? {
+    suspend fun <T : Any> readOnOwnSocket(block: suspend (MaApi) -> T): T? {
         restored.first { it }
         val session = stored.value ?: return null
         val own = MaClient(http, scope)

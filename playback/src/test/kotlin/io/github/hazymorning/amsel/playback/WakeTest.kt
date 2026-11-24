@@ -5,7 +5,7 @@ import io.github.hazymorning.amsel.api.FakeMaServer
 import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaClient
 import io.github.hazymorning.amsel.api.fixture
-import io.github.hazymorning.amsel.data.Seeks
+import io.github.hazymorning.amsel.data.SeekTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,8 +49,8 @@ class WakeTest {
     @Test fun aLockScreenCommandReopensTheSocket() = withClosedSocket { api, wake, fake ->
         val scope = CoroutineScope(Dispatchers.IO)
         val dispatcher = PlayDispatcher(api, NoPhone, scope) { 0L }
-        val lanes = SeekLanes(api, wake, Seeks.None, NoPhone, scope) { 0L }
-        val commands = MaSpeakerCommands(api, dispatcher, wake, Seeks.None, lanes, scope)
+        val seekDispatcher = SeekDispatcher(api, wake, SeekTracker.None, NoPhone, scope) { 0L }
+        val commands = MaSpeakerCommands(api, dispatcher, wake, SeekTracker.None, seekDispatcher, scope)
         commands.next("kitchen")
         assertTrue(fake.received.any { it["command"].toString().contains("players/cmd/next") })
     }

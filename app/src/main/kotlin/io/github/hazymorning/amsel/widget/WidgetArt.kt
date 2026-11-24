@@ -50,7 +50,7 @@ object WidgetArt {
         val sharp = IntArray(SIDE * SIDE)
         small.getPixels(sharp, 0, SIDE, 0, 0, SIDE, SIDE)
         val blurred = Bitmap.createBitmap(pixels, SIDE, SIDE, Bitmap.Config.ARGB_8888)
-        val light = inkReads(pixels, SIDE, SIDE)
+        val light = darkTextReadsBetter(pixels, SIDE, SIDE)
         return WidgetCover(blurred, light, accent(sharp, light))
     }
 
@@ -195,7 +195,7 @@ object WidgetArt {
      * Whether ink over the light veil reads better than paper over the dark one, on the part the
      * words stand on: the contrast of each against the cover as its veil leaves it.
      */
-    internal fun inkReads(pixels: IntArray, width: Int, height: Int): Boolean {
+    internal fun darkTextReadsBetter(pixels: IntArray, width: Int, height: Int): Boolean {
         val rows = (height * WORDS_SHARE).toInt().coerceAtLeast(1)
         var underInk = 0.0
         var underPaper = 0.0

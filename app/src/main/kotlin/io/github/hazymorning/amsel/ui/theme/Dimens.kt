@@ -242,7 +242,7 @@ object Shapes {
      * Chips and buttons that carry a label: fully round ends, also for one line of the largest text;
      * a label that wraps keeps its corners.
      */
-    val Pill: Shape = RoundedCornerShape(HalfUpTo(32.dp))
+    val Pill: Shape = RoundedCornerShape(CappedHalfCorner(32.dp))
 
     val Circle: Shape = CircleShape
 
@@ -250,7 +250,7 @@ object Shapes {
 }
 
 /** Half the shape's height, but never more than [max]. */
-private class HalfUpTo(private val max: Dp) : CornerSize {
+private class CappedHalfCorner(private val max: Dp) : CornerSize {
     override fun toPx(shapeSize: Size, density: Density): Float =
         minOf(shapeSize.height / 2, with(density) { max.toPx() })
 }

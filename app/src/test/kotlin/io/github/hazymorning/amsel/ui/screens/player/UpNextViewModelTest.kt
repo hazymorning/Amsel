@@ -11,10 +11,10 @@ import io.github.hazymorning.amsel.api.MaClient
 import io.github.hazymorning.amsel.api.MaCommandException
 import io.github.hazymorning.amsel.api.MaEvent
 import io.github.hazymorning.amsel.api.fixture
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.UpNextEdit
 import io.github.hazymorning.amsel.data.SessionState
-import io.github.hazymorning.amsel.data.Speakers
+import io.github.hazymorning.amsel.data.SpeakerRepository
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -74,10 +74,10 @@ class UpNextViewModelTest {
                     UpNextViewModel(
                         "kitchen",
                         api,
-                        Speakers(api, { 0L }),
+                        SpeakerRepository(api, { 0L }),
                         MutableStateFlow(SessionState.Waiting(null)),
                         UiMapper { null },
-                        Messages(MutableStateFlow(true)),
+                        MessageController(MutableStateFlow(true)),
                         scope,
                         beforePlay::add,
                         sheet,
@@ -160,13 +160,13 @@ class UpNextViewModelTest {
             client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
-            val messages = Messages(MutableStateFlow(true))
+            val messages = MessageController(MutableStateFlow(true))
             val factory = viewModelFactory {
                 initializer {
                     UpNextViewModel(
                         "kitchen",
                         api,
-                        Speakers(api, { 0L }),
+                        SpeakerRepository(api, { 0L }),
                         MutableStateFlow(SessionState.Waiting(null)),
                         UiMapper { null },
                         messages,
@@ -223,7 +223,7 @@ class UpNextViewModelTest {
             client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             val api = MaApi(client)
-            val speakers = Speakers(api, { 0L })
+            val speakers = SpeakerRepository(api, { 0L })
             val queue = buildJsonObject {
                 put("queue_id", "kitchen")
                 put("items", total)
@@ -239,7 +239,7 @@ class UpNextViewModelTest {
                         speakers,
                         MutableStateFlow(SessionState.Waiting(null)),
                         UiMapper { null },
-                        Messages(MutableStateFlow(true)),
+                        MessageController(MutableStateFlow(true)),
                         scope,
                         beforePlay = {},
                         sheetEdits = MutableSharedFlow(),

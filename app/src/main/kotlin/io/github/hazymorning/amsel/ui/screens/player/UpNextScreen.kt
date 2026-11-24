@@ -46,7 +46,7 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.fadingEdges
 import io.github.hazymorning.amsel.ui.components.moved
-import io.github.hazymorning.amsel.ui.components.rememberReorderable
+import io.github.hazymorning.amsel.ui.components.rememberReorderState
 import io.github.hazymorning.amsel.ui.components.rowBand
 import io.github.hazymorning.amsel.ui.components.rowGrowth
 import io.github.hazymorning.amsel.ui.layerDrag
@@ -127,7 +127,7 @@ private fun QueueList(
     ScrollEdges(list)
     LoadAhead(list, onNearEnd = onLoadLater, onNearStart = onLoadEarlier)
     fun indexOf(key: Any) = order.indexOfFirst { it.id == key }
-    val reorder = rememberReorderable(
+    val reorder = rememberReorderState(
         list,
         movable = { indexOf(it) >= state.firstEditable },
         onSwap = { from, to -> order = order.moved(indexOf(from), indexOf(to)) },

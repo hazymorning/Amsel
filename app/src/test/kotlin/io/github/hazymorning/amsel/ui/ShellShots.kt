@@ -26,7 +26,7 @@ import io.github.hazymorning.amsel.testing.ScreenshotTest
 import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.screens.library.LibraryScreen
@@ -93,7 +93,7 @@ private fun Shell(
     messages: SnackbarHostState = remember { SnackbarHostState() },
     offer: Offer? = null,
     dock: List<DockControl> = DockControl.Default.visible,
-    bar: List<BarPlace> = BarPlace.Default,
+    bar: List<BarItem> = BarItem.Default,
 ) {
     AppShell(
         nowPlaying = PlayerSample.nowPlaying.takeIf { playing },

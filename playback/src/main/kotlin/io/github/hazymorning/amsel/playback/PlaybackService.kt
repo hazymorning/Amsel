@@ -13,7 +13,7 @@ import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionError
 import io.github.hazymorning.amsel.api.MaCommandException
-import io.github.hazymorning.amsel.data.downloads.Downloads
+import io.github.hazymorning.amsel.data.downloads.DownloadRepository
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,20 +32,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the session's player follows: a speaker's id (null while this phone has none yet). */
-data class Target(val playerId: String?, val isPhone: Boolean)
+data class PlaybackTarget(val playerId: String?, val isPhone: Boolean)
 
 /** What the service needs from AppGraph. In the app this is `:data` plus the PlayDispatcher. */
 @OptIn(UnstableApi::class)
 interface PlaybackGraph {
     /** The selected speaker, or this phone: where the app plays and what it controls. */
-    val target: StateFlow<Target>
+    val target: StateFlow<PlaybackTarget>
 
     /**
      * The player the session holds (the notification, the lock screen, a headset, the car, and the
      * app's own buttons): the selected speaker, or This phone while its music goes on and the
      * selected speaker shows nothing at all, so what is heard can be paused.
      */
-    val sessionTarget: StateFlow<Target> get() = target
+    val sessionTarget: StateFlow<PlaybackTarget> get() = target
 
     /** This phone's audio plays or is about to, whichever speaker the session holds. */
     val phoneAudible: StateFlow<Boolean> get() = Quiet
@@ -66,7 +66,7 @@ interface PlaybackGraph {
     val phone: LocalOutput?
 
     /** Books and episodes downloaded for listening without a connection. */
-    val downloads: Downloads? get() = null
+    val downloads: DownloadRepository? get() = null
 
     /** A download playing on this phone: the session holds its player while it holds something. */
     val local: LocalPlayback? get() = null
@@ -105,7 +105,7 @@ interface PlaybackGraph {
     suspend fun selectPhone()
 
     /** Why the car has nothing to browse, once the stored session is known; null when signed in. */
-    suspend fun blocked(): Blocked?
+    suspend fun blocked(): BrowseBlockReason?
 
     /**
      * What a voice request plays on the target: the uri the server finds for [query]; with no
@@ -115,7 +115,7 @@ interface PlaybackGraph {
     suspend fun voiceUri(query: String?, focus: String?): String?
 
     /** A speaker, or this phone (same mapping, local output) once its player id is known. */
-    fun playerFor(target: Target): Player = RemotePlayer(
+    fun playerFor(target: PlaybackTarget): Player = RemotePlayer(
         playerId = target.playerId.orEmpty(),
         snapshots = target.playerId?.let(::snapshots) ?: NoSpeaker,
         commands = commands,
@@ -158,7 +158,7 @@ class PlaybackService : MediaLibraryService() {
     private var buttonsShown: Pair<Boolean, Boolean?>? = null
 
     /** The target the session's player was built for. */
-    private val held = MutableStateFlow<Target?>(null)
+    private val held = MutableStateFlow<PlaybackTarget?>(null)
 
     /** The notification was swiped away: it stays away until the speaker plays again. */
     private var notificationDismissed = false
@@ -180,7 +180,7 @@ class PlaybackService : MediaLibraryService() {
                     ::getString,
                     applicationInfo.loadLabel(packageManager).toString(),
                     CarArtwork(this),
-                    Cars(packageManager),
+                    CarDetector(packageManager),
                     ::holdPhone,
                     graph::blocked,
                     graph::voiceUri,

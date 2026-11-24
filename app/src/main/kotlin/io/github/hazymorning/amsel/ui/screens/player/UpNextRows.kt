@@ -20,11 +20,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.DragHandle
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
-import io.github.hazymorning.amsel.ui.components.Reorderable
+import io.github.hazymorning.amsel.ui.components.ReorderState
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.RowPlaceholder
 import io.github.hazymorning.amsel.ui.components.reorderHandle
@@ -46,7 +46,7 @@ internal fun QueueRow(
     item: QueueItemUi,
     played: Boolean,
     lifted: Boolean,
-    reorder: Reorderable?,
+    reorder: ReorderState?,
     actions: List<CustomAccessibilityAction>,
     onClick: () -> Unit,
     onMore: (() -> Unit)?,
@@ -130,7 +130,7 @@ internal fun RemoveBackground(direction: SwipeToDismissBoxValue) {
         horizontalArrangement = side,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InkGlyph(R.drawable.ic_remove, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        AlignedGlyph(R.drawable.ic_remove, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

@@ -30,10 +30,10 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.playback.Chapters
+import io.github.hazymorning.amsel.playback.ChapterNavigation
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.formatDuration
-import io.github.hazymorning.amsel.ui.components.inkSides
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimSideBearings
 import io.github.hazymorning.amsel.ui.model.ChapterUi
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
@@ -187,7 +187,13 @@ internal fun rememberChapter(state: NowPlayingUi, position: State<Long>): State<
     val starts = remember(state.chapters) { state.chapters.map { it.startMs } }
     return remember(state.chapters) {
         derivedStateOf {
-            if (!state.hasChapters) null else state.chapters.getOrNull(Chapters.indexAt(starts, position.value))
+            if (!state.hasChapters) {
+                null
+            } else {
+                state.chapters.getOrNull(
+                    ChapterNavigation.indexAt(starts, position.value),
+                )
+            }
         }
     }
 }
@@ -209,6 +215,6 @@ private fun TimeLabel(text: String) {
         style = style,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,
-        modifier = Modifier.textInk(style).inkSides(text, style),
+        modifier = Modifier.capToBaseline(style).trimSideBearings(text, style),
     )
 }

@@ -32,12 +32,12 @@ import io.github.hazymorning.amsel.ui.components.PlayButton
 import io.github.hazymorning.amsel.ui.components.TextLink
 import io.github.hazymorning.amsel.ui.components.ToggleIconButton
 import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.endReach
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.inkWidth
+import io.github.hazymorning.amsel.ui.components.glyphWidth
 import io.github.hazymorning.amsel.ui.components.label
 import io.github.hazymorning.amsel.ui.components.overhang
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.model.PlayerControl
 import io.github.hazymorning.amsel.ui.model.next
@@ -145,11 +145,11 @@ internal fun TransportRow(state: NowPlayingUi, onControl: (PlayerControl) -> Uni
         val middle = width / 2f
         val reach = SkipReach.toPx()
         val centres = listOf(
-            keyline + inkWidth(outer.first, SideGlyph).toPx() / 2,
+            keyline + glyphWidth(outer.first, SideGlyph).toPx() / 2,
             middle - reach,
             middle,
             middle + reach,
-            width - keyline - inkWidth(outer.second, SideGlyph).toPx() / 2,
+            width - keyline - glyphWidth(outer.second, SideGlyph).toPx() / 2,
         )
         layout(width, height) {
             p.forEachIndexed { i, placeable ->
@@ -230,8 +230,8 @@ private fun TrackWords(title: String, artist: String, onArtist: (() -> Unit)?, l
                 color = colors.onSurface,
                 maxLines = 2,
                 modifier = Modifier
-                    .textInk(type.headlineSmall)
-                    .inkStart(words, type.headlineSmall)
+                    .capToBaseline(type.headlineSmall)
+                    .trimStartBearing(words, type.headlineSmall)
                     .semantics { heading() },
             )
             if (onArtist != null) {
@@ -249,8 +249,8 @@ private fun TrackWords(title: String, artist: String, onArtist: (() -> Unit)?, l
                     color = colors.onSurfaceVariant,
                     modifier = Modifier
                         .paddingFromBaseline(top = TitleToArtist)
-                        .textInk(second, top = false)
-                        .inkStart(by, second),
+                        .capToBaseline(second, top = false)
+                        .trimStartBearing(by, second),
                 )
             }
         }

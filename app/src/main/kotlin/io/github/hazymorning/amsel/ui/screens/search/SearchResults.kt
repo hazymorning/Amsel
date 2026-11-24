@@ -33,7 +33,7 @@ import io.github.hazymorning.amsel.ui.components.SectionHeader
 import io.github.hazymorning.amsel.ui.components.TrackRow
 import io.github.hazymorning.amsel.ui.components.fadingEdges
 import io.github.hazymorning.amsel.ui.components.headerToRow
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.components.withTop
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.MediaKind
@@ -79,7 +79,7 @@ internal fun ResultList(
     LazyColumn(
         Modifier.fillMaxSize().fadingEdges(list, length = Fade.Long).nestedScroll(hideKeyboard),
         state = list,
-        contentPadding = insets.withTop(Space.Group, bottom = Space.ListEnd - rowInkBottom(RowLead.Cover, true)),
+        contentPadding = insets.withTop(Space.Group, bottom = Space.ListEnd - rowGlyphBottom(RowLead.Cover, true)),
     ) {
         var first = true
 
@@ -89,7 +89,7 @@ internal fun ResultList(
             item(key = "header:$key", contentType = "header") {
                 SectionHeader(
                     stringResource(title),
-                    above = if (spaced) rowInkBottom(RowLead.Cover, true) else null,
+                    above = if (spaced) rowGlyphBottom(RowLead.Cover, true) else null,
                     below = headerToRow(RowLead.Cover, true),
                 )
             }

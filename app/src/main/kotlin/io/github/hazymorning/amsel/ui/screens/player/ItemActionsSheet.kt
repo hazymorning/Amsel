@@ -34,8 +34,8 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.label
 import io.github.hazymorning.amsel.ui.components.overhang
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
-import io.github.hazymorning.amsel.ui.components.rowInkTop
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphTop
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.ItemAction
 import io.github.hazymorning.amsel.ui.model.ItemActionsUiState
@@ -49,8 +49,8 @@ import kotlinx.coroutines.flow.first
 
 @Composable
 fun ItemActionsSheetContent(state: ItemActionsUiState, onAction: (ItemAction) -> Unit, modifier: Modifier = Modifier) {
-    val coverTop = rowInkTop(RowLead.Cover, twoLines = true)
-    val coverBottom = rowInkBottom(RowLead.Cover, twoLines = true)
+    val coverTop = rowGlyphTop(RowLead.Cover, twoLines = true)
+    val coverBottom = rowGlyphBottom(RowLead.Cover, twoLines = true)
     Column(
         modifier
             .fillMaxWidth()

@@ -38,7 +38,7 @@ class DockCardTest {
         val coverMiddle = Keyline.Margin + Sizes.DockArt / 2
         assertEquals(coverMiddle.value, ((button.top + button.bottom) / 2 - dock.top).value, HALF_A_PIXEL)
         val next = compose.onNode(hasContentDescription("Next")).getUnclippedBoundsInRoot()
-        val inkEnd = (next.left + next.right) / 2 + inkWidth(R.drawable.ic_skip_next) / 2
+        val inkEnd = (next.left + next.right) / 2 + glyphWidth(R.drawable.ic_skip_next) / 2
         // The controls stand off the screen's edge, where a thumb finds them: 40 in, not on the margin.
         assertEquals(40f, (dock.right - inkEnd).value, 1.dp.value)
     }

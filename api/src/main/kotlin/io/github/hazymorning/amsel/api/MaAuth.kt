@@ -158,7 +158,7 @@ public class MaAuth(private val http: OkHttpClient) {
     }
 
     private suspend fun exchange(socket: MaSocket, accessToken: String, deviceName: String): SignInResult {
-        val send: Command = { command, args -> socket.call(command, args) }
+        val send: CommandSender = { command, args -> socket.call(command, args) }
         authenticate(socket, accessToken)
         val longLived = try {
             createToken(send, deviceName)
@@ -191,14 +191,14 @@ private fun refusal(login: JsonObject): SignInResult {
 }
 
 /** Sends one command: on a short-lived sign-in socket, or on the app's connection. */
-internal typealias Command = suspend (command: String, args: JsonObject?) -> JsonElement?
+internal typealias CommandSender = suspend (command: String, args: JsonObject?) -> JsonElement?
 
 /** A long-lived token named [name] for whoever [send] is signed in as; null when none comes back. */
-internal suspend fun createToken(send: Command, name: String): String? =
+internal suspend fun createToken(send: CommandSender, name: String): String? =
     (send("auth/token/create", buildJsonObject { put("name", name) }) as? JsonPrimitive)?.contentOrNull
 
 /** Retires [token] on the server, which closes every socket signed in with it. */
-internal suspend fun revokeToken(send: Command, token: String) {
+internal suspend fun revokeToken(send: CommandSender, token: String) {
     val jti = TokenClaims.parse(token)?.tokenId ?: return
     send("auth/token/revoke", buildJsonObject { put("token_id", jti) })
 }

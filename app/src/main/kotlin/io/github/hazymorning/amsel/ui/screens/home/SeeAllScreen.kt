@@ -35,7 +35,7 @@ import io.github.hazymorning.amsel.ui.components.ScrollEdges
 import io.github.hazymorning.amsel.ui.components.TileGrid
 import io.github.hazymorning.amsel.ui.components.TilePlaceholder
 import io.github.hazymorning.amsel.ui.components.plus
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.secondLine
 import io.github.hazymorning.amsel.ui.model.twoLines
@@ -118,7 +118,7 @@ private val SectionSource.glyph: Int
 /** The first cover 8 under the bar, as a row keeps it 8 under its top; the last ink 32 above the dock. */
 @Composable
 private fun rowsPadding(insets: PaddingValues) =
-    insets.plus(bottom = Space.ListEnd - rowInkBottom(RowLead.Cover, twoLines = true))
+    insets.plus(bottom = Space.ListEnd - rowGlyphBottom(RowLead.Cover, twoLines = true))
 
 /** First load only: the grid's tiles or the list's rows as tonal blocks. */
 @Composable

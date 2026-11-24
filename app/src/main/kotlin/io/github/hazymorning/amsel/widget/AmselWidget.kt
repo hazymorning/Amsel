@@ -15,7 +15,7 @@ open class WidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         work(context) {
             redraw(ids)
-            lookSoon()
+            refreshSoon()
         }
     }
 
@@ -31,7 +31,7 @@ open class WidgetProvider : AppWidgetProvider() {
         context.graph.widgets.removed()
     }
 
-    private fun work(context: Context, block: suspend Widgets.() -> Unit) {
+    private fun work(context: Context, block: suspend WidgetController.() -> Unit) {
         val pending = goAsync()
         val graph = context.graph
         graph.scope.launch {

@@ -40,7 +40,7 @@ class LiveServerTest {
         }
         val results = api.search(album.name)
         assertTrue(results.albums.first().isLibraryItem)
-        assertTrue(Images(ServerAddress.parse(liveUrl!!)!!).url(album.cover) != null)
+        assertTrue(ImageUrls(ServerAddress.parse(liveUrl!!)!!).url(album.cover) != null)
     }
 
     @Test fun `recently played can be asked of one speaker`() = live { api, _ ->

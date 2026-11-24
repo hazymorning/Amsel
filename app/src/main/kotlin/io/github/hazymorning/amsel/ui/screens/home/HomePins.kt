@@ -49,7 +49,7 @@ import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.holdToMove
 import io.github.hazymorning.amsel.ui.components.moved
 import io.github.hazymorning.amsel.ui.components.overhang
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Motion
@@ -60,7 +60,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 
 /** A scrolling container a carried pin scrolls by nearing its edge; [visible] is what it shows, in the window. */
-internal class ScrollRoom(val scroll: ScrollableState, val vertical: Boolean, val visible: () -> Rect)
+internal class DragScrollArea(val scroll: ScrollableState, val vertical: Boolean, val visible: () -> Rect)
 
 /**
  * The pins in edit mode, in their section's own layout, every pin Home holds: a pin held still for a
@@ -73,19 +73,19 @@ internal fun PinArrangement(
     section: SectionUi,
     onOpen: (MediaUi) -> Unit,
     onArrange: (List<String>) -> Unit,
-    home: ScrollRoom?,
+    home: DragScrollArea?,
     modifier: Modifier = Modifier,
 ) {
     val items = section.items
     val keys = items.map { it.key }
     val scope = rememberCoroutineScope()
-    val drag = remember { PinDrag(scope) }
+    val drag = remember { PinDragState(scope) }
     LaunchedEffect(keys) { drag.sync(keys) }
     val shelf = section.layout.isShelf
     val shelfScroll = rememberScrollState()
     var shelfBox by remember { mutableStateOf(Rect.Zero) }
     val rooms by rememberUpdatedState(
-        listOfNotNull(home, ScrollRoom(shelfScroll, vertical = false) { shelfBox }.takeIf { shelf }),
+        listOfNotNull(home, DragScrollArea(shelfScroll, vertical = false) { shelfBox }.takeIf { shelf }),
     )
     val tile = tileWidth(section.layout)
     val pin: @Composable (Int, MediaUi) -> Unit = { index, item ->
@@ -99,7 +99,13 @@ internal fun PinArrangement(
                 PinSlots(
                     drag,
                     keys,
-                    Slots.Of(columns, (inner - CardGap * (columns - 1)) / columns, CardGap, CardGap, Keyline.Margin),
+                    SlotGrid.Spec(
+                        columns,
+                        (inner - CardGap * (columns - 1)) / columns,
+                        CardGap,
+                        CardGap,
+                        Keyline.Margin,
+                    ),
                     shelf = false,
                 ) { items.forEachIndexed { index, item -> key(item.key) { pin(index, item) } } }
             }
@@ -111,7 +117,7 @@ internal fun PinArrangement(
                     .horizontalScroll(shelfScroll),
             ) {
                 val gap = tileGap(section.layout)
-                PinSlots(drag, keys, Slots.Of(keys.size, tile, gap, 0.dp, Keyline.Margin), shelf = true) {
+                PinSlots(drag, keys, SlotGrid.Spec(keys.size, tile, gap, 0.dp, Keyline.Margin), shelf = true) {
                     items.forEachIndexed { index, item -> key(item.key) { pin(index, item) } }
                 }
             }
@@ -119,9 +125,9 @@ internal fun PinArrangement(
             SectionLayout.List -> PinSlots(
                 drag,
                 keys,
-                Slots.Of(1, maxWidth, 0.dp, 0.dp, 0.dp),
+                SlotGrid.Spec(1, maxWidth, 0.dp, 0.dp, 0.dp),
                 shelf = false,
-                Modifier.overhang(bottom = rowInkBottom(RowLead.Cover, twoLines = true)),
+                Modifier.overhang(bottom = rowGlyphBottom(RowLead.Cover, twoLines = true)),
             ) { items.forEachIndexed { index, item -> key(item.key) { pin(index, item) } } }
         }
     }
@@ -151,7 +157,7 @@ private fun Pin(
     index: Int,
     keys: List<String>,
     section: SectionUi,
-    drag: PinDrag,
+    drag: PinDragState,
     onOpen: (MediaUi) -> Unit,
     onArrange: (List<String>) -> Unit,
 ) {
@@ -206,9 +212,9 @@ private fun Pin(
  */
 @Composable
 private fun PinSlots(
-    drag: PinDrag,
+    drag: PinDragState,
     keys: List<String>,
-    slots: Slots.Of,
+    slots: SlotGrid.Spec,
     shelf: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
@@ -216,7 +222,7 @@ private fun PinSlots(
     Layout(content, modifier.onGloballyPositioned { drag.origin = it.positionInWindow() }) { measurables, constraints ->
         val cell = slots.cell.roundToPx()
         val placeables = measurables.map { it.measure(Constraints(minWidth = cell, maxWidth = cell)) }
-        val grid = Slots(
+        val grid = SlotGrid(
             columns = slots.columns,
             cell = cell,
             height = placeables.maxOfOrNull { it.height } ?: 0,
@@ -238,7 +244,7 @@ private fun PinSlots(
 }
 
 /** Equal slots in rows of [columns], [gapX] and [gapY] apart, starting [origin] in; all in pixels. */
-private data class Slots(
+private data class SlotGrid(
     val columns: Int,
     val cell: Int,
     val height: Int,
@@ -248,7 +254,7 @@ private data class Slots(
     val count: Int,
 ) {
     /** What a layout asks for, in dp. */
-    data class Of(val columns: Int, val cell: Dp, val gapX: Dp, val gapY: Dp, val origin: Dp)
+    data class Spec(val columns: Int, val cell: Dp, val gapX: Dp, val gapY: Dp, val origin: Dp)
 
     private val rows: Int get() = if (count == 0) 0 else (count + columns - 1) / columns
 
@@ -272,7 +278,7 @@ private data class Slots(
     }
 
     companion object {
-        val None = Slots(1, 0, 0, 0, 0, 0, 0)
+        val None = SlotGrid(1, 0, 0, 0, 0, 0, 0)
     }
 }
 
@@ -281,11 +287,11 @@ private data class Slots(
  * the finger has taken it, and when it is let go it glides from there into its slot.
  */
 @Stable
-private class PinDrag(private val scope: CoroutineScope) {
+private class PinDragState(private val scope: CoroutineScope) {
     private var order by mutableStateOf(emptyList<String>())
     private var before = emptyList<String>()
     private var at by mutableStateOf(Offset.Zero)
-    private var slots = Slots.None
+    private var slots = SlotGrid.None
     private val shown = HashMap<String, Animatable<Offset, AnimationVector2D>>()
     private val targets = HashMap<String, Offset>()
 
@@ -304,7 +310,7 @@ private class PinDrag(private val scope: CoroutineScope) {
         if (dragging == null) order = keys
     }
 
-    fun measured(next: Slots) {
+    fun measured(next: SlotGrid) {
         if (next == slots) return
         slots = next
         // Another size of slot (a turned phone, larger text): every pin starts again in its place.
@@ -374,8 +380,8 @@ private class PinDrag(private val scope: CoroutineScope) {
     fun box(): Rect? = if (dragging == null) null else Rect(origin + at, slots.size)
 }
 
-/** How fast a carried pin scrolls [ScrollRoom] when its middle comes within [edge] of an end, up to [most] a frame. */
-private fun ScrollRoom.speed(box: Rect, edge: Float, most: Float): Float {
+/** How fast a carried pin scrolls [DragScrollArea] when its middle comes within [edge] of an end, up to [most] a frame. */
+private fun DragScrollArea.speed(box: Rect, edge: Float, most: Float): Float {
     val shows = visible()
     if (shows.isEmpty) return 0f
     val middle = if (vertical) box.center.y else box.center.x

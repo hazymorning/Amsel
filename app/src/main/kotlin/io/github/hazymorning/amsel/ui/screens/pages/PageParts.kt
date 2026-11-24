@@ -57,10 +57,10 @@ import io.github.hazymorning.amsel.ui.components.SkeletonArt
 import io.github.hazymorning.amsel.ui.components.SkeletonText
 import io.github.hazymorning.amsel.ui.components.TextLink
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkCentre
-import io.github.hazymorning.amsel.ui.components.inkWidth
+import io.github.hazymorning.amsel.ui.components.capToBaseline
+import io.github.hazymorning.amsel.ui.components.centreOnGlyphs
+import io.github.hazymorning.amsel.ui.components.glyphWidth
 import io.github.hazymorning.amsel.ui.components.plus
-import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.theme.Sizes
@@ -146,7 +146,7 @@ internal fun pageCover(): Dp = Sizes.pageCover(LocalWindowInfo.current.container
 internal fun PageArt(art: ArtRef?, kind: MediaKind, name: String?, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth().padding(top = Space.Sibling), contentAlignment = Alignment.Center) {
         if (name != null) {
-            Artwork(art, Modifier.size(pageCover()), kind, lifted = !MaterialTheme.colorScheme.isNight, name = name)
+            Artwork(art, Modifier.size(pageCover()), kind, elevated = !MaterialTheme.colorScheme.isNight, name = name)
         } else {
             SkeletonArt(Modifier.size(pageCover()))
         }
@@ -190,7 +190,7 @@ internal fun PageTitle(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .textInk(style)
+                    .capToBaseline(style)
                     .semantics { heading() },
             )
         } else {
@@ -199,8 +199,8 @@ internal fun PageTitle(
                 style,
                 fraction = 0.5f,
                 alignment = Alignment.CenterHorizontally,
-                inkTop = true,
-                inkBottom = true,
+                trimTop = true,
+                trimBottom = true,
                 modifier = Modifier.semantics { contentDescription = loading },
             )
         }
@@ -216,7 +216,7 @@ internal fun PageTitle(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
-                    modifier = place.fillMaxWidth().textInk(type.bodyMedium, top = false),
+                    modifier = place.fillMaxWidth().capToBaseline(type.bodyMedium, top = false),
                 )
             } else {
                 SkeletonText(
@@ -224,7 +224,7 @@ internal fun PageTitle(
                     place,
                     fraction = 0.4f,
                     alignment = Alignment.CenterHorizontally,
-                    inkBottom = true,
+                    trimBottom = true,
                 )
             }
         }
@@ -249,8 +249,8 @@ internal fun TitleLine(
             modifier,
             width = Sizes.SkeletonLine,
             alignment = Alignment.CenterHorizontally,
-            inkTop = true,
-            inkBottom = true,
+            trimTop = true,
+            trimBottom = true,
         )
 
         onClick != null -> TextLink(
@@ -266,7 +266,7 @@ internal fun TitleLine(
             style,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = modifier.textInk(style).inkCentre(text, style),
+            modifier = modifier.capToBaseline(style).centreOnGlyphs(text, style),
         )
     }
 }
@@ -355,7 +355,7 @@ private fun PageGlyphSlot(glyph: PageGlyph?) {
 
 /** So the glyph's ink, not its target, stands a group's distance from the circle. */
 private fun glyphGap(glyph: PageGlyph?): Dp {
-    val ink = glyph?.let { if (it.ring != null) Sizes.Icon else inkWidth(it.icon) } ?: Sizes.Icon
+    val ink = glyph?.let { if (it.ring != null) Sizes.Icon else glyphWidth(it.icon) } ?: Sizes.Icon
     return (Space.Group - (Sizes.TouchTarget - ink) / 2).coerceAtLeast(0.dp)
 }
 

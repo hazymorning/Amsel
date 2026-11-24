@@ -12,8 +12,8 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.Offer
-import io.github.hazymorning.amsel.app.Offers
-import io.github.hazymorning.amsel.app.Playing
+import io.github.hazymorning.amsel.app.OfferController
+import io.github.hazymorning.amsel.app.PlaybackState
 import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.R as PlaybackR
@@ -226,7 +226,7 @@ fun rememberOpenItem(navigator: Navigator, asks: Boolean = false): (MediaUi) -> 
 }
 
 /** Offers [offer]; a second tap that takes it ticks as every play does. */
-private fun Offers.offerOrTake(offer: Offer, haptics: HapticFeedback) {
+private fun OfferController.offerOrTake(offer: Offer, haptics: HapticFeedback) {
     if (takes(offer)) haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
     offer(offer)
 }
@@ -236,4 +236,4 @@ private fun MediaUi.offer(@StringRes button: Int, take: () -> Unit) =
     Offer(about = key, title = title, button = button, art = art, kind = kind, secondTapTakes = true, take = take)
 
 /** Whether [key] plays on the speaker in use right now, not only rests there. */
-private fun Playing.plays(key: String): Boolean = nowPlaying.value?.let { it.key == key && it.isPlaying } == true
+private fun PlaybackState.plays(key: String): Boolean = nowPlaying.value?.let { it.key == key && it.isPlaying } == true

@@ -80,7 +80,7 @@ class WidgetShots : ScreenshotTest() {
 
     @Composable
     private fun Parts() {
-        val after = WidgetSetup(words = WidgetWordsPlace.After)
+        val after = WidgetSetup(words = WidgetWordsPosition.After)
         val pad = WidgetSetup(slots = DefaultSlots.take(4), showsWords = false)
         val small = SizeF(152f, 172f)
         Widget(after, WidgetSample.music, WidgetSample.card, column = 0, row = 0)
@@ -149,7 +149,7 @@ class WidgetShots : ScreenshotTest() {
 
     /** [setup] showing [look] at [size], its top left in cell [column], [row]. */
     @Composable
-    private fun Widget(setup: WidgetSetup, look: WidgetLook, size: SizeF, column: Int, row: Int) {
+    private fun Widget(setup: WidgetSetup, look: WidgetContent, size: SizeF, column: Int, row: Int) {
         val context = LocalContext.current
         val night = MaterialTheme.colorScheme.isNight
         val views =
@@ -168,7 +168,7 @@ class WidgetShots : ScreenshotTest() {
         val context = LocalContext.current
         val setup = WidgetSetup(slots = WidgetSample.ownButtons)
         val picture = remember { WidgetSample.drawn(context, setup, WidgetSample.music, WidgetSample.card) }
-        val state = WidgetSetupUi(
+        val state = WidgetSetupUiState(
             setup = setup,
             look = WidgetSample.music,
             picture = picture,

@@ -53,11 +53,11 @@ import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.ui.components.DropdownChip
 import io.github.hazymorning.amsel.ui.components.MoreButton
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkSides
-import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.overhang
-import io.github.hazymorning.amsel.ui.components.textInk
-import io.github.hazymorning.amsel.ui.components.textInkWidth
+import io.github.hazymorning.amsel.ui.components.textGlyphWidth
+import io.github.hazymorning.amsel.ui.components.trimSideBearings
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -129,8 +129,8 @@ private fun SectionTitleField(
                     customActions = moves
                 }
                 .padding(vertical = reach)
-                .textInk(style)
-                .inkStart(title, style),
+                .capToBaseline(style)
+                .trimStartBearing(title, style),
         )
         return
     }
@@ -183,8 +183,8 @@ private fun SectionTitleField(
                 }
                 focused = it.isFocused
             }
-            .fieldInk(style)
-            .inkStart(text.text, style),
+            .fieldCapToBaseline(style)
+            .trimStartBearing(text.text, style),
     )
 }
 
@@ -192,12 +192,12 @@ private fun SectionTitleField(
 private const val TITLE_LINES = 2
 
 /**
- * [textInk] for the rename field. A name longer than the field's lines scrolls in it and takes its
+ * [capToBaseline] for the rename field. A name longer than the field's lines scrolls in it and takes its
  * baselines along, so the field is cut by what a line of [style] holds over its capitals and under
  * its baseline: its lines then stand where the title's stood, whatever it shows of the name.
  */
 @Composable
-private fun Modifier.fieldInk(style: TextStyle): Modifier {
+private fun Modifier.fieldCapToBaseline(style: TextStyle): Modifier {
     val measurer = rememberTextMeasurer()
     return layout { measurable, constraints ->
         val line = measurer.measure("", style)
@@ -223,7 +223,7 @@ internal fun SectionSentence(section: SectionUi, onWhat: () -> Unit, onHow: () -
     val whatName = stringResource(section.option.choice)
     val howName = stringResource(section.layout.label)
     val style = MaterialTheme.typography.bodyLarge
-    val lead = max(textInkWidth(sentence.before, style), textInkWidth(sentence.between, style))
+    val lead = max(textGlyphWidth(sentence.before, style), textGlyphWidth(sentence.between, style))
     Column(
         Modifier.fillMaxWidth().padding(horizontal = Keyline.Margin),
         verticalArrangement = Arrangement.spacedBy(Space.S3),
@@ -252,7 +252,7 @@ private fun SentenceLine(word: String, lead: Dp, chip: @Composable (Modifier) ->
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 // By its ink, so the chip alone sets the line's height at any font size.
-                modifier = Modifier.textInk(style).inkSides(word, style),
+                modifier = Modifier.capToBaseline(style).trimSideBearings(word, style),
             )
         }
         chip(Modifier.weight(1f, fill = false).alignByBaseline())

@@ -5,7 +5,7 @@ import android.view.Gravity
 import android.widget.RemoteViews
 import androidx.annotation.LayoutRes
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.navigation.Opening
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 import io.github.hazymorning.amsel.widget.WidgetSizes.ART_TO_WORDS
 import io.github.hazymorning.amsel.widget.WidgetSizes.BAR_CELL
 import io.github.hazymorning.amsel.widget.WidgetSizes.CELL_HEIGHT
@@ -24,17 +24,17 @@ import kotlin.math.roundToInt
  */
 internal class WidgetDrawing(
     private val context: Context,
-    private val text: WidgetText,
+    private val text: WidgetTextMetrics,
     private val slots: WidgetSlots,
     private val id: Int,
     private val setup: WidgetSetup,
-    private val look: WidgetLook,
-    private val pictures: WidgetPictures,
+    private val look: WidgetContent,
+    private val pictures: WidgetBitmaps,
     clearInk: Boolean,
     private val taps: Boolean,
 ) {
     private val playing = look.signedIn && look.title != null
-    private val ground = WidgetGround.of(setup.style, pictures.cover.takeIf { playing }, clearInk)
+    private val ground = WidgetBackground.of(setup.style, pictures.cover.takeIf { playing }, clearInk)
     private val tone = ground.tone
     private val density = context.resources.displayMetrics.density
     private val cells =
@@ -53,7 +53,7 @@ internal class WidgetDrawing(
     }
 
     /** What plays after the buttons: there are some, and the person wants it so. */
-    private fun after(shown: List<PlacedSlot>) = setup.words == WidgetWordsPlace.After && shown.isNotEmpty()
+    private fun after(shown: List<IndexedSlot>) = setup.words == WidgetWordsPosition.After && shown.isNotEmpty()
 
     /**
      * What plays at the top and the cells at the foot, or the cells at the top and what plays at the
@@ -121,7 +121,7 @@ internal class WidgetDrawing(
         val (row, other) = rowsBy(after)
         clear(other)
         shows(row, shown.isNotEmpty())
-        cells.row(this, row, shown, R.layout.widget_cell_bar, inset = px((target - cell) / 2), face(fit))
+        cells.row(this, row, shown, R.layout.widget_cell_bar, inset = px((target - cell) / 2), cellSizePx(fit))
     }
 
     /** Buttons alone, in rows in the frame's middle. */
@@ -132,7 +132,7 @@ internal class WidgetDrawing(
         // Each row holds half a gap above and below its targets.
         val upright = px((fit.height - rows * (target + GAP)) / 2)
         setViewPadding(R.id.widget_pad, px(side), upright, px(side), upright)
-        cells.pad(this, R.id.widget_pad, shown, fit.columns, inset = px((target - fit.cell) / 2), face(fit))
+        cells.pad(this, R.id.widget_pad, shown, fit.columns, inset = px((target - fit.cell) / 2), cellSizePx(fit))
     }
 
     /** [layout] on the widget's ground: its colour or the cover of what plays, and what a tap on it opens. */
@@ -152,7 +152,7 @@ internal class WidgetDrawing(
         if (taps) {
             setOnClickPendingIntent(
                 android.R.id.background,
-                open(context, if (look.signedIn) Opening.NowPlaying else null),
+                open(context, if (look.signedIn) DeepLink.NowPlaying else null),
             )
         }
     }
@@ -166,16 +166,16 @@ internal class WidgetDrawing(
      * [shown] in [fit]'s rows before what plays where it comes [after] them, else after it; the other
      * place gone. The rows as wide as the widget keep the cells in the frame.
      */
-    private fun RemoteViews.cellRows(shown: List<PlacedSlot>, after: Boolean, fit: WidgetFit) {
+    private fun RemoteViews.cellRows(shown: List<IndexedSlot>, after: Boolean, fit: WidgetFit) {
         val (rows, other) = rowsBy(after)
         clear(other)
         shows(rows, shown.isNotEmpty())
         setViewPadding(rows, px(side), 0, px(side), 0)
-        cells.rows(this, rows, shown, fit.columns, face(fit))
+        cells.rows(this, rows, shown, fit.columns, cellSizePx(fit))
     }
 
     /** The size of [fit]'s cells in px, which a Play … button's cover fills. */
-    private fun face(fit: WidgetFit): Pair<Int, Int>? =
+    private fun cellSizePx(fit: WidgetFit): CellSize? =
         cellSize(fit, setup.cells == WidgetCells.None)?.let { (width, height) -> px(width) to px(height) }
 
     /** The place for the cells, before what plays where it comes [after] them, and the other one. */
@@ -256,7 +256,7 @@ internal class WidgetDrawing(
         if (!taps) return@apply
         val press = when {
             !look.signedIn -> open(context, null)
-            slot == null -> open(context, Opening.NowPlaying)
+            slot == null -> open(context, DeepLink.NowPlaying)
             else -> cells.press(first.index, slot)
         }
         setOnClickPendingIntent(android.R.id.background, press)

@@ -139,8 +139,8 @@ fun MediaTile(
                         .underCover()
                         .fillMaxWidth()
                         .padding(top = gap)
-                        .textInk(titleStyle)
-                        .inkStart(item.title, titleStyle),
+                        .capToBaseline(titleStyle)
+                        .trimStartBearing(item.title, titleStyle),
                 )
             },
             second = second?.let { text ->
@@ -152,10 +152,14 @@ fun MediaTile(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .inkStart(text, type.bodyMedium),
+                                .trimStartBearing(text, type.bodyMedium),
                         )
                     }
-                    Box(Modifier.underCover().paddingFromBaseline(top = line).textInk(type.bodyMedium, top = false)) {
+                    Box(
+                        Modifier.underCover().paddingFromBaseline(
+                            top = line,
+                        ).capToBaseline(type.bodyMedium, top = false),
+                    ) {
                         when {
                             playing -> BarsBefore(type.bodyMedium, words)
                             mark != null -> MarkBefore(type.bodyMedium, mark, words)

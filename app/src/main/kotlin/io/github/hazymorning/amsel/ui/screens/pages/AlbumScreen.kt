@@ -18,8 +18,8 @@ import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.TrackRow
 import io.github.hazymorning.amsel.ui.components.numberLeadWidth
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
-import io.github.hazymorning.amsel.ui.components.rowInkTop
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphTop
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
@@ -58,7 +58,7 @@ fun AlbumScreen(
         // A compilation names every track's artist on a second line; elsewhere a guest follows the title.
         val twoLines = album?.compilation == true
         val numbers = numberLeadWidth(state.tracks.maxOfOrNull { it.number ?: 0 } ?: 0)
-        val trackInk = rowInkBottom(RowLead.Glyph, twoLines)
+        val trackInk = rowGlyphBottom(RowLead.Glyph, twoLines)
         val moreBy = album?.artist?.let { stringResource(R.string.pages_more_by, it) }
         // A tile's caption ends on its ink; a track row runs on below it.
         val endsOnShelf = moreBy != null && state.moreByArtist.isNotEmpty()
@@ -72,7 +72,7 @@ fun AlbumScreen(
                     onPlay = onPlay,
                     start = shuffleGlyph(onShuffle),
                     end = album?.let { moreGlyph(it.title) { onMore(it.media) } },
-                    listInk = rowInkTop(RowLead.Glyph, twoLines),
+                    listInk = rowGlyphTop(RowLead.Glyph, twoLines),
                 )
             }
             if (state.tracksLoading) {

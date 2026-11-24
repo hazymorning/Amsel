@@ -92,35 +92,35 @@ public inline fun <T> orNullOnFailure(call: () -> T): T? = try {
     null
 }
 
-internal sealed interface Incoming {
-    data class ServerInfoFrame(val info: ServerInfo) : Incoming
+internal sealed interface IncomingMessage {
+    data class ServerInfoFrame(val info: ServerInfo) : IncomingMessage
 
-    data class Result(val messageId: String, val result: JsonElement?, val partial: Boolean) : Incoming
+    data class Result(val messageId: String, val result: JsonElement?, val partial: Boolean) : IncomingMessage
 
-    data class Error(val messageId: String, val code: Int, val details: String) : Incoming
+    data class Error(val messageId: String, val code: Int, val details: String) : IncomingMessage
 
-    data class Event(val event: MaEvent) : Incoming
+    data class Event(val event: MaEvent) : IncomingMessage
 
-    data object Unknown : Incoming
+    data object Unknown : IncomingMessage
 }
 
-internal fun parseIncoming(text: String): Incoming {
-    val obj = MaJson.parseToJsonElement(text) as? JsonObject ?: return Incoming.Unknown
+internal fun parseIncoming(text: String): IncomingMessage {
+    val obj = MaJson.parseToJsonElement(text) as? JsonObject ?: return IncomingMessage.Unknown
     val id = obj["message_id"]?.jsonPrimitive?.contentOrNull
     return when {
-        id != null && obj.containsKey("error_code") -> Incoming.Error(
+        id != null && obj.containsKey("error_code") -> IncomingMessage.Error(
             messageId = id,
             code = (obj["error_code"] as? JsonPrimitive)?.intOrNull ?: -1,
             details = (obj["details"] as? JsonPrimitive)?.contentOrNull.orEmpty(),
         )
 
-        id != null -> Incoming.Result(
+        id != null -> IncomingMessage.Result(
             messageId = id,
             result = obj["result"],
             partial = (obj["partial"] as? JsonPrimitive)?.booleanOrNull ?: false,
         )
 
-        obj.containsKey("event") -> Incoming.Event(
+        obj.containsKey("event") -> IncomingMessage.Event(
             MaEvent(
                 name = obj["event"]?.jsonPrimitive?.contentOrNull.orEmpty(),
                 objectId = (obj["object_id"] as? JsonPrimitive)?.contentOrNull,
@@ -129,8 +129,8 @@ internal fun parseIncoming(text: String): Incoming {
         )
 
         obj.containsKey("server_id") && obj.containsKey("schema_version") ->
-            Incoming.ServerInfoFrame(MaJson.decodeFromJsonElement(ServerInfo.serializer(), obj))
+            IncomingMessage.ServerInfoFrame(MaJson.decodeFromJsonElement(ServerInfo.serializer(), obj))
 
-        else -> Incoming.Unknown
+        else -> IncomingMessage.Unknown
     }
 }

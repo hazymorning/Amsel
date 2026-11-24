@@ -48,7 +48,7 @@ import kotlinx.coroutines.withContext
 /**
  * Search as you type: the field updates at once, the server is asked 300 ms after the last
  * keystroke, and only the latest query's answer is shown. The library index adds what a typo kept
- * the server from finding ([Fuzzy]), and answers alone while the server cannot. The query survives
+ * the server from finding ([FuzzyMatcher]), and answers alone while the server cannot. The query survives
  * process death.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -120,7 +120,7 @@ class SearchViewModel(
         // back once its index is read.
         val library = async {
             val ready = index.filterNotNull().first()
-            ready to withContext(background) { ready.near(Fuzzy.words(q), NEAR_MATCHES) }
+            ready to withContext(background) { ready.near(FuzzyMatcher.words(q), NEAR_MATCHES) }
         }
         try {
             val raw = search(q)

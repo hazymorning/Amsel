@@ -27,12 +27,12 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.InkGlyph
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.model.displayName
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Shapes
@@ -76,7 +76,7 @@ internal fun GroupList(
                 onClick = { chosen = if (ticked) chosen - choice.id else chosen + choice.id },
                 leading = {
                     val colors = MaterialTheme.colorScheme
-                    InkGlyph(
+                    AlignedGlyph(
                         if (choice.isPhone) R.drawable.ic_phone else R.drawable.ic_speaker,
                         tint = if (ticked) colors.onSurface else colors.onSurfaceVariant,
                     )
@@ -85,7 +85,9 @@ internal fun GroupList(
             )
         }
         // Done stands a group's distance under the last speaker's name, as Group does in the list.
-        Spacer(Modifier.height((Space.BeforeList - rowInkBottom(RowLead.Glyph, twoLines = false)).coerceAtLeast(0.dp)))
+        Spacer(
+            Modifier.height((Space.BeforeList - rowGlyphBottom(RowLead.Glyph, twoLines = false)).coerceAtLeast(0.dp)),
+        )
         PrimaryButton(
             stringResource(R.string.home_edit_done),
             onClick = { onDone(leader.id, chosen - before.toSet(), before - chosen.toSet()) },
@@ -106,7 +108,7 @@ private fun RoundCheck(on: Boolean) {
             .border(CheckRing, if (on) colors.onSurface else colors.outline, Shapes.Circle),
         contentAlignment = Alignment.Center,
     ) {
-        if (on) InkGlyph(R.drawable.ic_check, tint = colors.surface, size = Sizes.IconSmall)
+        if (on) AlignedGlyph(R.drawable.ic_check, tint = colors.surface, size = Sizes.IconSmall)
     }
 }
 

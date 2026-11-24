@@ -33,7 +33,7 @@ import io.github.hazymorning.amsel.ui.components.IconAction
 import io.github.hazymorning.amsel.ui.components.MoreButton
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.chapterLine
-import io.github.hazymorning.amsel.ui.components.rememberSideSwipe
+import io.github.hazymorning.amsel.ui.components.rememberSideSwipeState
 import io.github.hazymorning.amsel.ui.model.ActionsContext
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
@@ -46,10 +46,10 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.rememberPlayerLayerState
 import io.github.hazymorning.amsel.ui.theme.CoverColors
-import io.github.hazymorning.amsel.ui.theme.Lift
+import io.github.hazymorning.amsel.ui.theme.Elevation
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Sizes
-import io.github.hazymorning.amsel.ui.theme.around
+import io.github.hazymorning.amsel.ui.theme.extendForShadow
 import io.github.hazymorning.amsel.ui.theme.isNight
 import io.github.hazymorning.amsel.ui.theme.rememberCoverColors
 import kotlinx.coroutines.launch
@@ -88,7 +88,7 @@ fun NowPlayingScreen(
         animateColorAsState((colors ?: extracted)?.tint(page, night) ?: page, Motion.effectsSlow(), label = "wash")
     val position = rememberPlaybackPosition(state)
 
-    // The foot's inset is the stage's to place the footer by: the gesture handle lies in the room under it.
+    // The foot's inset is the layout's to place the footer by: the gesture handle lies in the room under it.
     val foot = footRoom()
     Column(
         modifier
@@ -120,16 +120,16 @@ fun NowPlayingScreen(
             },
         )
         // A sideways swipe on the cover is previous and next, as the dock's row has it.
-        val swipe = rememberSideSwipe(state.key ?: state.title, enabled = state.canSkip) { forward ->
+        val swipe = rememberSideSwipeState(state.key ?: state.title, enabled = state.canSkip) { forward ->
             onControl(if (forward) PlayerControl.Next else PlayerControl.Previous)
         }
-        Stage(foot, Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
+        NowPlayingLayout(foot, Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
             Artwork(
                 state.art,
                 // The cover's shade moves and fades with it.
-                Modifier.then(swipe.detect).around(Lift.Cover, swipe.follow),
+                Modifier.then(swipe.detect).extendForShadow(Elevation.Cover, swipe.follow),
                 kind = if (state.spoken) state.kind else MediaKind.Track,
-                lifted = !night,
+                elevated = !night,
                 name = state.album ?: state.title,
             )
             val chapter = rememberChapter(state, position)

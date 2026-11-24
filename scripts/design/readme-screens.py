@@ -21,7 +21,7 @@ SCALE, SUPERSAMPLE = 2, 4
 CORNER, SMOOTHING = 72, 0.6  # the header's continuous corners
 SCREEN_CORNER = 0.095  # of a screen's width, as a phone's display rounds
 # Stone and ink from ui/theme/Color.kt; a screen's edge is a cover's hairline, and by day it stands on a
-# large cover's shade (Lift.kt: drop, blur, spread, alpha), at night on its own.
+# large cover's shade (Elevation.kt: drop, blur, spread, alpha), at night on its own.
 THEMES = {
     "light": {"field": "#E9E8E1", "ink": "#191A17", "shades": ((1, 2, 0, 0.05), (24, 48, -24, 0.38))},
     "dark": {"field": "#1B1C19", "ink": "#E6E5DE", "shades": ()},

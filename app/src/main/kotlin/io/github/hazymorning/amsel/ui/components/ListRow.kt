@@ -162,10 +162,10 @@ fun ListRow(
             Spacer(Modifier.width(Space.Sibling))
             // Laid out in every choice and drawn in the chosen one, so a name breaks alike chosen or not.
             // Its middle stands where a pill button's round end has its centre, so it lines up under one.
-            InkGlyph(
+            AlignedGlyph(
                 R.drawable.ic_check,
                 Modifier
-                    .padding(end = Sizes.ButtonHeight / 2 - inkWidth(R.drawable.ic_check) / 2)
+                    .padding(end = Sizes.ButtonHeight / 2 - glyphWidth(R.drawable.ic_check) / 2)
                     .drawWithContent { if (selected) drawContent() },
                 tint = MaterialTheme.colorScheme.onSurface,
             )
@@ -181,11 +181,11 @@ private fun rowHeight(lead: RowLead, twoLines: Boolean): Dp = when {
 
 /** How far a row's first ink (the cover's top, or the title's cap top) sits below its top. */
 @Composable
-fun rowInkTop(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).top
+fun rowGlyphTop(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).top
 
 /** How far a row's last ink (the cover's bottom, or the last baseline) sits above its bottom. */
 @Composable
-fun rowInkBottom(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).bottom
+fun rowGlyphBottom(lead: RowLead, twoLines: Boolean): Dp = rowGeometry(lead, twoLines).bottom
 
 /** What a cover row adds under its cover when its text's lines need more than its 72 dp. */
 @Composable
@@ -255,5 +255,5 @@ fun headerToRow(lead: RowLead, twoLines: Boolean): Dp {
 @Composable
 fun numberLeadWidth(largest: Int): Dp {
     val widest = "0".repeat(largest.toString().length.coerceAtLeast(2))
-    return max(Sizes.Lead, textInkWidth(widest, MaterialTheme.typography.bodyMedium.tabular()))
+    return max(Sizes.Lead, textGlyphWidth(widest, MaterialTheme.typography.bodyMedium.tabular()))
 }

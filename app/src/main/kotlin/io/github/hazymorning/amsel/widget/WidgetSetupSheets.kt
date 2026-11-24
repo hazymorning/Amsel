@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
@@ -63,7 +63,7 @@ internal fun ButtonChoices(slot: Int, current: WidgetSlot?, volumeLimit: Int, on
                     title = stringResource(button.label),
                     subtitle = note(button, current, volumeLimit),
                     lead = RowLead.Glyph,
-                    leading = { InkGlyph(button.glyph, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    leading = { AlignedGlyph(button.glyph, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     selected = current?.button == button,
                     role = Role.RadioButton,
                     titleLines = 2,

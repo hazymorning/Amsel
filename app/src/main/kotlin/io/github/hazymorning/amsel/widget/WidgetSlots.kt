@@ -11,7 +11,7 @@ import io.github.hazymorning.amsel.playback.SKIP_FORWARD_MS
 /** What a widget's buttons say and show. */
 internal class WidgetSlots(private val context: Context) {
     /** What TalkBack says for a button, and what the widget's page calls it. */
-    fun label(slot: WidgetSlot, look: WidgetLook): String {
+    fun label(slot: WidgetSlot, look: WidgetContent): String {
         val res = context.resources
         return when (slot.button) {
             WidgetButton.PlayPause -> context.getString(if (look.playing) R.string.pause else R.string.play)
@@ -54,7 +54,7 @@ internal class WidgetSlots(private val context: Context) {
     }
 
     /** What TalkBack says for the widget as a whole: what plays, by whom, where, and how loud. */
-    fun summary(look: WidgetLook): String {
+    fun summary(look: WidgetContent): String {
         if (!look.signedIn) return context.getString(R.string.widget_sign_in)
         val volume = look.volume?.let { ". " + context.getString(R.string.player_volume_now, it) }.orEmpty()
         val title = look.title ?: return context.getString(R.string.player_not_playing) + volume
@@ -78,7 +78,7 @@ internal class WidgetSlots(private val context: Context) {
 
 /** A button's glyph: a book's skips are by seconds, as on the dock; its Up next, its chapters. */
 @DrawableRes
-internal fun WidgetButton.glyphFor(look: WidgetLook): Int = when {
+internal fun WidgetButton.glyphFor(look: WidgetContent): Int = when {
     this == WidgetButton.PlayPause -> if (look.playing) R.drawable.ic_pause_slim else R.drawable.ic_play
     this == WidgetButton.Next && look.spoken -> R.drawable.ic_skip_forward
     this == WidgetButton.Previous && look.spoken -> R.drawable.ic_skip_back
@@ -89,14 +89,14 @@ internal fun WidgetButton.glyphFor(look: WidgetLook): Int = when {
 }
 
 /** A shuffle or repeat that is off shows quieter than one that is on. */
-internal fun WidgetButton.isOff(look: WidgetLook): Boolean = when (this) {
+internal fun WidgetButton.isOff(look: WidgetContent): Boolean = when (this) {
     WidgetButton.Shuffle -> look.shuffle != true
     WidgetButton.Repeat -> look.repeat == RepeatMode.Off
     else -> false
 }
 
 /** Whether the button has something to act on in what [look] shows; one that has not gives way. */
-internal fun WidgetButton.availableIn(look: WidgetLook): Boolean = when (this) {
+internal fun WidgetButton.availableIn(look: WidgetContent): Boolean = when (this) {
     WidgetButton.Favourite -> look.favourite != null
     WidgetButton.Shuffle -> look.shuffle != null
     WidgetButton.Repeat -> look.repeat != null

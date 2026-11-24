@@ -30,19 +30,20 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.ChoiceRow
-import io.github.hazymorning.amsel.ui.components.InkGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.components.Words
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.headerToRow
-import io.github.hazymorning.amsel.ui.components.inkStart
 import io.github.hazymorning.amsel.ui.components.sheetEnd
-import io.github.hazymorning.amsel.ui.components.textInk
-import io.github.hazymorning.amsel.ui.components.textInkWidth
+import io.github.hazymorning.amsel.ui.components.textGlyphWidth
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
+import io.github.hazymorning.amsel.ui.model.ServerStatus
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -78,7 +79,7 @@ internal fun SettingRow(
         subtitleLines = WHOLE,
         role = role,
         onClick = onClick,
-        leading = glyph?.let { { InkGlyph(it, tint = MaterialTheme.colorScheme.onSurfaceVariant) } },
+        leading = glyph?.let { { AlignedGlyph(it, tint = MaterialTheme.colorScheme.onSurfaceVariant) } },
         trailing = trailing,
         mark = mark,
     )
@@ -94,8 +95,8 @@ internal fun buttonFitsBeside(name: String, button: String, glyph: Boolean = fal
     val words = MaterialTheme.typography.bodyLarge
     val row = LocalWindowInfo.current.containerDpSize.width - (BlockEdge + RowInset) * 2 -
         if (glyph) Sizes.Lead + Space.Sibling else 0.dp
-    val room = row - Space.Sibling - textInkWidth(button, words.firm())
-    return name.split(' ').all { textInkWidth(it, words) <= room }
+    val room = row - Space.Sibling - textGlyphWidth(button, words.firm())
+    return name.split(' ').all { textGlyphWidth(it, words) <= room }
 }
 
 /**
@@ -159,8 +160,8 @@ internal fun <T> ChoiceSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Keyline.Margin)
-                    .textInk(style)
-                    .inkStart(detail, style),
+                    .capToBaseline(style)
+                    .trimStartBearing(detail, style),
             )
             Spacer(Modifier.height(headerToRow(RowLead.None, twoLines = false)))
         }
@@ -225,7 +226,7 @@ internal fun SettingSwitch(checked: Boolean) {
 
 @Composable
 internal fun ExternalGlyph() {
-    InkGlyph(R.drawable.ic_open_external, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    AlignedGlyph(R.drawable.ic_open_external, tint = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** A setting's name and its description are read whole at any type size: they wrap, never cut. */
@@ -233,11 +234,11 @@ private const val WHOLE = Int.MAX_VALUE
 
 /** Whether the server answers now, after where it is. */
 @Composable
-internal fun connectionLine(connection: Connection): String = stringResource(
+internal fun connectionLine(connection: ServerStatus): String = stringResource(
     when (connection) {
-        Connection.Connected -> R.string.settings_connected
-        Connection.Connecting -> R.string.settings_connecting
-        Connection.Offline -> R.string.settings_unreachable
+        ServerStatus.Connected -> R.string.settings_connected
+        ServerStatus.Connecting -> R.string.settings_connecting
+        ServerStatus.Offline -> R.string.settings_unreachable
     },
 )
 

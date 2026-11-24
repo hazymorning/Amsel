@@ -37,9 +37,9 @@ import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.Spinner
 import io.github.hazymorning.amsel.ui.components.WaitingState
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.headerToRow
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -158,8 +158,8 @@ private fun AddressForm(state: ServerUiState, onAddressChange: (String) -> Unit,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .semantics { liveRegion = LiveRegionMode.Polite }
-                    .textInk(type.bodyLarge)
-                    .inkStart(sentence, type.bodyLarge),
+                    .capToBaseline(type.bodyLarge)
+                    .trimStartBearing(sentence, type.bodyLarge),
             )
             Spacer(Modifier.height(with(density) { groupAfter(type.bodyLarge) }))
         }
@@ -186,7 +186,7 @@ private fun AddressForm(state: ServerUiState, onAddressChange: (String) -> Unit,
             note,
             style = type.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.textInk(type.bodyMedium).inkStart(note, type.bodyMedium),
+            modifier = Modifier.capToBaseline(type.bodyMedium).trimStartBearing(note, type.bodyMedium),
         )
     }
 }

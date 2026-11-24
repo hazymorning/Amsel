@@ -23,7 +23,7 @@ import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
 import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.Spinner
-import io.github.hazymorning.amsel.ui.components.inkHeight
+import io.github.hazymorning.amsel.ui.components.trimToGlyphHeight
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
@@ -94,6 +94,6 @@ internal fun OrLabel(modifier: Modifier = Modifier, above: Dp = Space.Group) {
         modifier = modifier
             .fillMaxWidth()
             .padding(top = above, bottom = Space.Group)
-            .inkHeight(word, style),
+            .trimToGlyphHeight(word, style),
     )
 }

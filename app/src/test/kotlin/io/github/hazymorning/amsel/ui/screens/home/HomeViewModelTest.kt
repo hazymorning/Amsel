@@ -5,7 +5,7 @@ import app.cash.turbine.test
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.ServerInfo
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.data.SessionState
 import io.github.hazymorning.amsel.data.home.HomeItem
 import io.github.hazymorning.amsel.data.home.HomeLayout
@@ -92,7 +92,7 @@ class HomeViewModelTest {
         MutableStateFlow(emptySet<MediaType>()),
         libraryEmpty,
         uiMapper,
-        Messages(MutableStateFlow(true)),
+        MessageController(MutableStateFlow(true)),
         editOnly = editOnly,
     )
 

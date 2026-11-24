@@ -18,8 +18,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.inkStart
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.capToBaseline
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.theme.Keyline
 
 /**
@@ -52,8 +52,8 @@ fun WelcomeScreen(onFindServer: () -> Unit, modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .textInk(style)
-                        .inkStart(sentence, style)
+                        .capToBaseline(style)
+                        .trimStartBearing(sentence, style)
                         .semantics { heading() },
                 )
                 Spacer(Modifier.weight(BELOW))

@@ -52,7 +52,7 @@ fun TipCard(text: String, onGone: () -> Unit, modifier: Modifier = Modifier) {
             .padding(start = Space.Sibling),
     ) {
         Box(Modifier.padding(top = Inside).height(line), contentAlignment = Alignment.Center) {
-            InkGlyph(R.drawable.ic_tip, tint = colors.onSurfaceVariant, size = wordGlyph(style))
+            AlignedGlyph(R.drawable.ic_tip, tint = colors.onSurfaceVariant, size = wordGlyph(style))
         }
         Spacer(Modifier.width(GlyphToWords))
         Text(

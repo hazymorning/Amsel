@@ -97,7 +97,7 @@ fun ChoiceChip(selected: Boolean, onClick: () -> Unit, label: String, role: Role
             style = style,
             color = text,
             maxLines = 1,
-            modifier = Modifier.inkSides(label, style),
+            modifier = Modifier.trimSideBearings(label, style),
         )
     }
 }
@@ -212,10 +212,10 @@ fun DropdownChip(
             style,
             color = colors.onSurface,
             maxLines = DROPDOWN_LINES,
-            modifier = Modifier.weight(1f, fill = false).textInk(style).inkStart(label, style),
+            modifier = Modifier.weight(1f, fill = false).capToBaseline(style).trimStartBearing(label, style),
         )
         Spacer(Modifier.width(Space.Part))
-        InkGlyph(R.drawable.ic_dropdown, tint = colors.onSurfaceVariant, size = wordCaret(style))
+        AlignedGlyph(R.drawable.ic_dropdown, tint = colors.onSurfaceVariant, size = wordCaret(style))
     }
 }
 

@@ -24,7 +24,7 @@ class WidgetViewsTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
     private fun drawn(
-        look: WidgetLook,
+        look: WidgetContent,
         slots: List<WidgetSlot> = DefaultSlots,
         size: SizeF = WidgetSample.card,
         setup: WidgetSetup = WidgetSetup(slots = slots),
@@ -169,7 +169,7 @@ class WidgetViewsTest {
 
     /** A book has no heart and no shuffle: the transport stands alone and evenly where they were. */
     @Test fun buttonsWithNothingToActOnGiveWay() {
-        val shown = { look: WidgetLook -> drawn(look, size = WidgetSample.player).cells().size }
+        val shown = { look: WidgetContent -> drawn(look, size = WidgetSample.player).cells().size }
         assertEquals(5, shown(WidgetSample.music))
         assertEquals(3, shown(WidgetSample.book))
     }
@@ -224,7 +224,7 @@ class WidgetViewsTest {
 
     /** After the buttons, what plays stands at the foot, the cells at the top. */
     @Test fun whatPlaysCanFollowTheButtons() {
-        val widget = drawn(WidgetSample.music, setup = WidgetSetup(words = WidgetWordsPlace.After))
+        val widget = drawn(WidgetSample.music, setup = WidgetSetup(words = WidgetWordsPosition.After))
         assertEquals(true, widget.shows(R.id.widget_cells_start))
         assertEquals(false, widget.shows(R.id.widget_cells_end))
         assertEquals(3, widget.cells().size)

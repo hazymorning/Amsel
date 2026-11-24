@@ -71,14 +71,14 @@ class WidgetStoreTest {
 
     @Test fun theLooksOutlastTheRun() = runTest {
         val looks = mapOf(
-            WidgetStore.AMSELS to WidgetLook(speaker = "Kitchen", title = "Lanterns", playing = true),
-            "bedroom" to WidgetLook(speakerId = "bedroom", speaker = "Bedroom"),
+            WidgetStore.AMSELS to WidgetContent(speaker = "Kitchen", title = "Lanterns", playing = true),
+            "bedroom" to WidgetContent(speakerId = "bedroom", speaker = "Bedroom"),
         )
-        store.setLooks(looks)
+        store.setContents(looks)
         val again = WidgetStore(dir)
-        assertEquals(looks, again.looks())
-        again.forgetLooks()
-        assertEquals(emptyMap<String, WidgetLook>(), again.looks())
+        assertEquals(looks, again.contents())
+        again.forgetContents()
+        assertEquals(emptyMap<String, WidgetContent>(), again.contents())
     }
 
     /** Amsel 2026.11.50 kept one look and its pictures: the look is read once, the pictures go. */
@@ -86,8 +86,8 @@ class WidgetStoreTest {
         File(dir, "look.json").writeText("""{"speaker":"Kitchen","title":"Lanterns"}""")
         File(dir, "cover.png").writeText("png")
         File(dir, "thumbs").mkdirs()
-        assertEquals("Lanterns", store.looks()[WidgetStore.AMSELS]?.title)
-        store.setLooks(store.looks())
+        assertEquals("Lanterns", store.contents()[WidgetStore.AMSELS]?.title)
+        store.setContents(store.contents())
         assertFalse(File(dir, "cover.png").exists())
         assertFalse(File(dir, "thumbs").exists())
     }

@@ -27,7 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /** Why the car has nothing to browse. */
-enum class Blocked { SignIn, TooOld }
+enum class BrowseBlockReason { SignIn, TooOld }
 
 /**
  * Android Auto tree: root -> four tabs (Recently played, Playlists, Albums, and Artists, or Library
@@ -45,10 +45,10 @@ class BrowseTree(
     private val text: (Int) -> String,
     private val rootTitle: String,
     private val artwork: CarArtwork,
-    private val cars: Cars,
+    private val cars: CarDetector,
     private val beforeCarPlay: suspend () -> Boolean,
     /** Why there is nothing to browse, once the stored session is known; null when signed in. */
-    private val blocked: suspend () -> Blocked?,
+    private val blocked: suspend () -> BrowseBlockReason?,
     /** What a voice request plays: [PlaybackGraph.voiceUri]. */
     private val voiceUri: suspend (query: String?, focus: String?) -> String?,
     /** Opens Amsel on the phone: the car offers it while no one is signed in. */
@@ -152,8 +152,8 @@ class BrowseTree(
     }
 
     /** Said in the car; signing in offers to open Amsel on the phone. */
-    private fun errorFor(blocked: Blocked): SessionError = when (blocked) {
-        Blocked.SignIn -> SessionError(
+    private fun errorFor(blocked: BrowseBlockReason): SessionError = when (blocked) {
+        BrowseBlockReason.SignIn -> SessionError(
             SessionError.ERROR_SESSION_AUTHENTICATION_EXPIRED,
             text(R.string.browse_sign_in),
             Bundle().apply {
@@ -167,7 +167,7 @@ class BrowseTree(
             },
         )
 
-        Blocked.TooOld -> SessionError(SessionError.ERROR_NOT_SUPPORTED, text(R.string.error_too_old))
+        BrowseBlockReason.TooOld -> SessionError(SessionError.ERROR_NOT_SUPPORTED, text(R.string.error_too_old))
     }
 
     override fun onGetChildren(

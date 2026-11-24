@@ -15,7 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.data.home.SectionOption
 import io.github.hazymorning.amsel.ui.components.RowLead
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.model.SpokenWord
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import io.github.hazymorning.amsel.ui.theme.Space
@@ -37,7 +37,7 @@ class HomeEditSheetsTest {
 
     private fun show(current: SectionOption) = compose.setContent {
         AmselTheme {
-            under = rowInkBottom(RowLead.None, twoLines = false)
+            under = rowGlyphBottom(RowLead.None, twoLines = false)
             Box(Modifier.height(SHEET)) {
                 WhatSheetContent(current, SpokenWord(books = true, podcasts = true, newEpisodes = true)) {}
             }

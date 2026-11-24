@@ -18,7 +18,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
 public class MaApi(internal val client: MaClient) {
-    private val send: Command = { command, args -> client.call(command, args) }
+    private val send: CommandSender = { command, args -> client.call(command, args) }
 
     /** A long-lived token named [name] for the signed-in person; null when none comes back. */
     public suspend fun createToken(name: String): String? = createToken(send, name)

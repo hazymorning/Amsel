@@ -10,8 +10,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.R as PlaybackR
-import io.github.hazymorning.amsel.ui.navigation.Arrangement
 import io.github.hazymorning.amsel.ui.navigation.Navigator
+import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.screens.library.icon
 import io.github.hazymorning.amsel.ui.screens.library.isHeld
@@ -24,10 +24,10 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun LibraryKindsScreen(
-    kinds: Arrangement<LibraryKind>,
+    kinds: OrderedToggles<LibraryKind>,
     /** The kinds the Library has anything of now (LibraryKind.isHeld). */
     held: Set<LibraryKind>,
-    onChange: (Arrangement<LibraryKind>) -> Unit,
+    onChange: (OrderedToggles<LibraryKind>) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

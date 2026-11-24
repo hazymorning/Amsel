@@ -52,7 +52,7 @@ class WidgetFitTest {
 
     /** At 200 % the line under the title goes first, then its second line, then the speaker's. */
     @Test fun largeTypeGivesWayInOrder() {
-        val large = WidgetType(speaker = 28f, title = 34f, subtitle = 28f)
+        val large = WidgetLineHeights(speaker = 28f, title = 34f, subtitle = 28f)
         assertEquals(
             WidgetWords(speaker = true, titleLines = 1, subtitle = true),
             widgetFit(172f, 204f, 3, large).words,

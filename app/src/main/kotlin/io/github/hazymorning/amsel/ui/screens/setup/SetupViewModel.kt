@@ -12,7 +12,7 @@ import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
 import io.github.hazymorning.amsel.api.ServerProbe
 import io.github.hazymorning.amsel.api.SignInResult
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.retryWhileOpen
 import io.github.hazymorning.amsel.data.FoundServer
 import kotlinx.coroutines.Job
@@ -39,7 +39,7 @@ class SetupViewModel(
     private val signIn: suspend (ServerAddress, ServerInfo, username: String, password: String) -> SignInResult,
     private val homeAssistantUrl: suspend (ServerAddress) -> String?,
     private val completeHomeAssistant: suspend (ServerAddress, ServerInfo, code: String) -> SignInResult,
-    private val messages: Messages,
+    private val messages: MessageController,
 ) : ViewModel() {
     private val _state = MutableStateFlow(SetupUiState())
     val state: StateFlow<SetupUiState> = _state.asStateFlow()
@@ -48,7 +48,7 @@ class SetupViewModel(
     private var found: List<FoundServer> = emptyList()
 
     /** The server Sign in is for. */
-    private var chosen: Chosen? = null
+    private var chosen: SelectedServer? = null
     private var search: Job? = null
     private var settle: Job? = null
     private var work: Job? = null
@@ -86,7 +86,9 @@ class SetupViewModel(
         if (address == null) {
             updateServer { copy(error = ServerError.Unreachable) }
         } else {
-            connect(Target(address, connectingTo = server.address, field = server.address, fromList = false))
+            connect(
+                ServerCheckRequest(address, connectingTo = server.address, field = server.address, fromList = false),
+            )
         }
     }
 
@@ -215,7 +217,7 @@ class SetupViewModel(
     }
 
     /** Checks [target] and opens Sign in; on failure the address step shows why. */
-    private fun connect(target: Target) {
+    private fun connect(target: ServerCheckRequest) {
         stopSearch()
         work?.cancel()
         updateServer { copy(connectingTo = target.connectingTo, error = null) }
@@ -223,7 +225,12 @@ class SetupViewModel(
             when (val check = checkServer(target.address, probe)) {
                 is ServerCheck.Ready -> {
                     val server =
-                        Chosen(target.address, check.probe.info, target.fromList, check.probe.offersHomeAssistant)
+                        SelectedServer(
+                            target.address,
+                            check.probe.info,
+                            target.fromList,
+                            check.probe.offersHomeAssistant,
+                        )
                     chosen = server
                     _state.update {
                         it.copy(
@@ -261,7 +268,7 @@ class SetupViewModel(
     }
 
     /** Retry from the message, unless the person has moved on meanwhile. */
-    private fun connectAgain(target: Target) {
+    private fun connectAgain(target: ServerCheckRequest) {
         val state = _state.value
         if (state.step == SetupStep.Server && !state.server.connecting) connect(target)
     }
@@ -278,9 +285,9 @@ class SetupViewModel(
         if (result !is SignInResult.Success) updateSignIn { copy(busy = null, error = error) }
     }
 
-    private fun kept(): Kept = _state.value.kept(chosen)
+    private fun kept(): SavedSetupState = _state.value.kept(chosen)
 
-    private fun restore(kept: Kept) {
+    private fun restore(kept: SavedSetupState) {
         chosen = kept.chosen
         // The search ended with the process: look again.
         kept.restored()?.let { _state.value = it } ?: findServer()

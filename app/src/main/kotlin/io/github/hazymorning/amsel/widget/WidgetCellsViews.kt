@@ -7,16 +7,16 @@ import android.view.Gravity
 import android.widget.RemoteViews
 import androidx.annotation.LayoutRes
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.navigation.Opening
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 
 /** A button of the setup: its place there, for its tap, and what it does. */
-internal typealias PlacedSlot = IndexedValue<WidgetSlot>
+internal typealias IndexedSlot = IndexedValue<WidgetSlot>
 
 /** A cell's width and height in px, which a Play … button's cover fills. */
-internal typealias Face = Pair<Int, Int>
+internal typealias CellSize = Pair<Int, Int>
 
 /** The buttons a widget with [this] setup shows where [room] fit: of those with something to act on in [look], as [standing] keeps them. */
-internal fun WidgetSetup.shown(look: WidgetLook, room: Int): List<PlacedSlot> =
+internal fun WidgetSetup.shown(look: WidgetContent, room: Int): List<IndexedSlot> =
     standing(slots.withIndex().filter { it.value.button.availableIn(look) }, room) { it.value.button }
 
 /**
@@ -26,13 +26,13 @@ internal fun WidgetSetup.shown(look: WidgetLook, room: Int): List<PlacedSlot> =
  */
 internal class WidgetCellsViews(
     private val context: Context,
-    private val text: WidgetText,
+    private val text: WidgetTextMetrics,
     private val slots: WidgetSlots,
     private val id: Int,
     private val setup: WidgetSetup,
-    private val look: WidgetLook,
-    private val pictures: WidgetPictures,
-    private val tone: Tone,
+    private val look: WidgetContent,
+    private val pictures: WidgetBitmaps,
+    private val tone: WidgetColors,
     cover: WidgetCover?,
     private val taps: Boolean,
     private val px: (Float) -> Int,
@@ -43,42 +43,49 @@ internal class WidgetCellsViews(
     }
 
     /** The buttons [fit] holds. */
-    fun shown(fit: WidgetFit): List<PlacedSlot> = setup.shown(look, fit.buttons)
+    fun shown(fit: WidgetFit): List<IndexedSlot> = setup.shown(look, fit.buttons)
 
     /**
      * [buttons] side by side in [row], as cells of [layout] [inset] px in from their targets above and
-     * below, each [face] px large.
+     * below, each [cellSize] px large.
      */
-    fun row(views: RemoteViews, row: Int, buttons: List<PlacedSlot>, @LayoutRes layout: Int, inset: Int, face: Face?) {
+    fun row(
+        views: RemoteViews,
+        row: Int,
+        buttons: List<IndexedSlot>,
+        @LayoutRes layout: Int,
+        inset: Int,
+        cellSize: CellSize?,
+    ) {
         views.removeAllViews(row)
-        for ((index, slot) in buttons) views.addView(row, cell(index, slot, layout, inset, face))
+        for ((index, slot) in buttons) views.addView(row, cell(index, slot, layout, inset, cellSize))
     }
 
     /**
      * [buttons] beside what plays, in rows of [columns] in [rows], a gap apart; a last row with fewer
      * keeps the cells' width, in its middle.
      */
-    fun rows(views: RemoteViews, rows: Int, buttons: List<PlacedSlot>, columns: Int, face: Face?) {
+    fun rows(views: RemoteViews, rows: Int, buttons: List<IndexedSlot>, columns: Int, cellSize: CellSize?) {
         views.removeAllViews(rows)
         buttons.chunked(columns.coerceAtLeast(1)).forEachIndexed { i, chunk ->
             if (i > 0) views.addView(rows, RemoteViews(context.packageName, R.layout.widget_cells_gap))
             val row = RemoteViews(context.packageName, R.layout.widget_cells_row)
             fewer(row, R.id.widget_cells_row, chunk.size, columns)
             for ((index, slot) in chunk) {
-                row.addView(R.id.widget_cells_row, cell(index, slot, R.layout.widget_cell, inset = 0, face))
+                row.addView(R.id.widget_cells_row, cell(index, slot, R.layout.widget_cell, inset = 0, cellSize))
             }
             views.addView(rows, row)
         }
     }
 
     /** [buttons] in rows of [columns] in [pad]; a last row with fewer keeps the cells' width, in its middle. */
-    fun pad(views: RemoteViews, pad: Int, buttons: List<PlacedSlot>, columns: Int, inset: Int, face: Face?) {
+    fun pad(views: RemoteViews, pad: Int, buttons: List<IndexedSlot>, columns: Int, inset: Int, cellSize: CellSize?) {
         views.removeAllViews(pad)
         for (chunk in buttons.chunked(columns)) {
             val row = RemoteViews(context.packageName, R.layout.widget_pad_row)
             fewer(row, R.id.widget_pad_row, chunk.size, columns)
             for ((index, slot) in chunk) {
-                row.addView(R.id.widget_pad_row, cell(index, slot, R.layout.widget_cell, inset, face))
+                row.addView(R.id.widget_pad_row, cell(index, slot, R.layout.widget_cell, inset, cellSize))
             }
             views.addView(pad, row)
         }
@@ -93,12 +100,12 @@ internal class WidgetCellsViews(
 
     /**
      * Button [index] of the setup as a cell of [layout], [inset] px in from its target above and
-     * below; a Play … button is its item's cover, as large as the cell, [face] px.
+     * below; a Play … button is its item's cover, as large as the cell, [cellSize] px.
      */
-    private fun cell(index: Int, slot: WidgetSlot, @LayoutRes layout: Int, inset: Int, face: Face?) =
+    private fun cell(index: Int, slot: WidgetSlot, @LayoutRes layout: Int, inset: Int, cellSize: CellSize?) =
         RemoteViews(context.packageName, layout).apply {
             val art = slot.item?.art?.takeIf { slot.button == WidgetButton.PlayItem }
-            val picture = art?.let { face?.let { (width, height) -> pictures.faces[faceKey(art, width, height)] } }
+            val picture = art?.let { cellSize?.let { (width, height) -> pictures.faces[faceKey(art, width, height)] } }
             shows(R.id.widget_face, picture != null)
             shows(R.id.widget_glyph, picture == null)
             if (picture != null) {
@@ -147,10 +154,10 @@ internal class WidgetCellsViews(
 
     fun press(index: Int, slot: WidgetSlot): PendingIntent = when {
         !look.signedIn -> open(context, null)
-        slot.button == WidgetButton.Speakers -> open(context, Opening.Speakers)
-        slot.button == WidgetButton.UpNext -> open(context, Opening.UpNext)
-        slot.button == WidgetButton.Group -> open(context, Opening.Group)
-        else -> WidgetTaps.pending(context, id, index, shownPlaying = look.playing)
+        slot.button == WidgetButton.Speakers -> open(context, DeepLink.Speakers)
+        slot.button == WidgetButton.UpNext -> open(context, DeepLink.UpNext)
+        slot.button == WidgetButton.Group -> open(context, DeepLink.Group)
+        else -> WidgetTapReceiver.pending(context, id, index, shownPlaying = look.playing)
     }
 }
 
@@ -158,7 +165,7 @@ internal class WidgetCellsViews(
  * Moves what [view] holds so [drawn]'s ink, not its square, stands in the middle; [room] is the
  * padding the view keeps on every side anyway. A padding moves its content by half its difference.
  */
-internal fun RemoteViews.centre(view: Int, drawn: GlyphPlace?, room: Float, px: (Float) -> Int) {
+internal fun RemoteViews.centre(view: Int, drawn: GlyphPosition?, room: Float, px: (Float) -> Int) {
     val dx = drawn?.dx ?: 0f
     val dy = drawn?.dy ?: 0f
     if (room > 0f) {

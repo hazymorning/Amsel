@@ -24,10 +24,10 @@ import okhttp3.OkHttpClient
  * open is plain http. The rule of [plainHttpOnlyWhen] goes on to the new client.
  */
 public fun OkHttpClient.localCleartext(cleartext: () -> Boolean = { true }): OkHttpClient {
-    val permitted = (socketFactory as? PlainHttpRule)?.permitted ?: { true }
+    val permitted = (socketFactory as? PlainSocketFactory)?.permitted ?: { true }
     return newBuilder()
-        .proxySelector(DirectCleartext(proxySelector))
-        .socketFactory(LocalCleartextSockets(cleartext, permitted))
+        .proxySelector(DirectCleartextProxySelector(proxySelector))
+        .socketFactory(LocalCleartextSocketFactory(cleartext, permitted))
         .build()
 }
 
@@ -36,7 +36,7 @@ public fun OkHttpClient.localCleartext(cleartext: () -> Boolean = { true }): OkH
  * no, whatever the address. Every client [localCleartext] and [forUrl] make from it keeps the rule.
  */
 public fun OkHttpClient.plainHttpOnlyWhen(permitted: () -> Boolean): OkHttpClient =
-    newBuilder().socketFactory(PlainHttpRule(permitted)).build()
+    newBuilder().socketFactory(PlainSocketFactory(permitted)).build()
 
 /** This client for [url] over TLS; for plain http, one that connects only to local addresses. */
 public fun OkHttpClient.forUrl(url: HttpUrl): OkHttpClient = if (url.isHttps) this else localCleartext()
@@ -54,7 +54,7 @@ public fun InetAddress.isLocal(): Boolean = isLoopbackAddress || isLinkLocalAddr
     }
 
 /** Sockets as the system makes them; the client carries [permitted] on to those derived from it. */
-private open class PlainHttpRule(val permitted: () -> Boolean) : SocketFactory() {
+private open class PlainSocketFactory(val permitted: () -> Boolean) : SocketFactory() {
     override fun createSocket(): Socket = Socket()
 
     override fun createSocket(host: String, port: Int): Socket =
@@ -76,8 +76,8 @@ private open class PlainHttpRule(val permitted: () -> Boolean) : SocketFactory()
         }
 }
 
-private class LocalCleartextSockets(private val cleartext: () -> Boolean, permitted: () -> Boolean) :
-    PlainHttpRule(permitted) {
+private class LocalCleartextSocketFactory(private val cleartext: () -> Boolean, permitted: () -> Boolean) :
+    PlainSocketFactory(permitted) {
     override fun createSocket(): Socket = object : Socket() {
         override fun connect(endpoint: SocketAddress, timeout: Int) {
             if (cleartext()) {
@@ -91,7 +91,7 @@ private class LocalCleartextSockets(private val cleartext: () -> Boolean, permit
 }
 
 /** Equal for the same [proxies], so the clients [forUrl] makes share their plain-http connections. */
-private data class DirectCleartext(private val proxies: ProxySelector) : ProxySelector() {
+private data class DirectCleartextProxySelector(private val proxies: ProxySelector) : ProxySelector() {
     override fun select(uri: URI): List<Proxy> =
         if (uri.scheme == "http") listOf(Proxy.NO_PROXY) else proxies.select(uri)
 

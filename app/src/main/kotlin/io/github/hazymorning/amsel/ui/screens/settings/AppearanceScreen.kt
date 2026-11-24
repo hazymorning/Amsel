@@ -30,7 +30,7 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.components.MaterialScreen
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.ScrollEdges
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
 import io.github.hazymorning.amsel.ui.navigation.DockControl
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
@@ -64,7 +64,7 @@ fun AppearanceScreen(
     dock: List<DockControl> = DockControl.Default.visible,
     onDock: () -> Unit = {},
     /** The places the bottom bar shows, in its order, and the page that arranges them. */
-    bar: List<BarPlace> = BarPlace.Default,
+    bar: List<BarItem> = BarItem.Default,
     onBar: () -> Unit = {},
 ) {
     val scroll = rememberScrollState()
@@ -164,7 +164,7 @@ fun AppearanceRoute(navigator: Navigator) {
         onLibrary = { navigator.open(Route.LibraryKinds) },
         dock = DockControl.arrangement(prefs?.dockControls).visible,
         onDock = { navigator.open(Route.Dock) },
-        bar = BarPlace.of(prefs?.barPlaces),
+        bar = BarItem.of(prefs?.barPlaces),
         onBar = { navigator.open(Route.Bar) },
     )
 }

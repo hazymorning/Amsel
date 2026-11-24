@@ -9,7 +9,7 @@ import io.github.hazymorning.amsel.api.ServerAddress
 import io.github.hazymorning.amsel.api.ServerInfo
 import io.github.hazymorning.amsel.api.ServerProbe
 import io.github.hazymorning.amsel.api.SignInResult
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.data.FoundServer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +38,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SetupViewModelTest {
     private val dispatcher = StandardTestDispatcher()
-    private val messages = Messages(MutableStateFlow(true))
+    private val messages = MessageController(MutableStateFlow(true))
     private val probed = mutableListOf<ServerAddress>()
     private val signedIn = mutableListOf<Pair<String, String>>()
     private val codes = mutableListOf<String>()

@@ -32,7 +32,7 @@ import io.github.hazymorning.amsel.ui.components.SectionHeader
 import io.github.hazymorning.amsel.ui.components.SectionHeaderPlaceholder
 import io.github.hazymorning.amsel.ui.components.TrackRow
 import io.github.hazymorning.amsel.ui.components.headerToRow
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.components.tileColumns
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
@@ -75,7 +75,7 @@ fun ArtistScreen(
         val similarTitle = stringResource(R.string.pages_similar_artists)
         val shelfAbove = when {
             rows.isNotEmpty() || state.contentLoading -> Space.TileRows
-            state.popular.isNotEmpty() || state.popularPending -> rowInkBottom(RowLead.Cover, true)
+            state.popular.isNotEmpty() || state.popularPending -> rowGlyphBottom(RowLead.Cover, true)
             else -> Space.HeaderToList
         }
         // A tile's caption ends on its ink; an album row keeps its own room under it.
@@ -154,7 +154,7 @@ private fun LazyListScope.albumGrid(
     item(key = "albums_header", contentType = PageSlot.Header) {
         SectionHeader(
             stringResource(PlaybackR.string.albums),
-            above = if (afterSongs) rowInkBottom(RowLead.Cover, true) else Space.HeaderToList,
+            above = if (afterSongs) rowGlyphBottom(RowLead.Cover, true) else Space.HeaderToList,
         )
     }
     items(rows, key = { "albums:${it.first().key}" }, contentType = { PageSlot.AlbumRow }) { row ->
@@ -179,7 +179,7 @@ private fun LazyListScope.popularBlocks() {
 
 private fun LazyListScope.albumBlocks(columns: Int) {
     item(key = "albums_header_block", contentType = PageSlot.Header) {
-        SectionHeaderPlaceholder(above = rowInkBottom(RowLead.Cover, true))
+        SectionHeaderPlaceholder(above = rowGlyphBottom(RowLead.Cover, true))
     }
     item(key = "albums_block", contentType = PageSlot.AlbumRow) {
         TileRowBlock(columns, Modifier.padding(bottom = Space.TileRows))

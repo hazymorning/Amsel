@@ -16,7 +16,7 @@ import kotlinx.coroutines.runBlocking
 object WidgetSample {
     val blueHour = WidgetItem("library://album/1", "Blue Hour", "sample:album/1")
 
-    val music = WidgetLook(
+    val music = WidgetContent(
         speakerId = "kitchen",
         speaker = "Kitchen",
         volume = 40,
@@ -34,7 +34,7 @@ object WidgetSample {
         restMs = 83_000,
     )
 
-    val book = WidgetLook(
+    val book = WidgetContent(
         speakerId = "living",
         speaker = "Living room",
         volume = 35,
@@ -48,9 +48,9 @@ object WidgetSample {
         restMs = 7_984_000,
     )
 
-    val idle = WidgetLook(speakerId = "bedroom", speaker = "Bedroom")
+    val idle = WidgetContent(speakerId = "bedroom", speaker = "Bedroom")
 
-    val signedOut = WidgetLook(signedIn = false)
+    val signedOut = WidgetContent(signedIn = false)
 
     /** Quieter, Louder, Continue listening, and Blue Hour. */
     val ownButtons = listOf(
@@ -83,22 +83,22 @@ object WidgetSample {
     fun drawn(
         context: Context,
         setup: WidgetSetup,
-        look: WidgetLook,
+        look: WidgetContent,
         size: SizeF,
         clearInk: Boolean = false,
     ): RemoteViews = runBlocking {
-        WidgetRender(context, SingletonImageLoader.get(context))
+        WidgetRenderer(context, SingletonImageLoader.get(context))
             .draw(1, setup, look, listOf(size), taps = false, clearInk = clearInk)
     }
 
     /** [setup] showing [look] at [size] without covers (an empty one where a cover stands), for what the views say. */
-    fun plain(context: Context, setup: WidgetSetup, look: WidgetLook, size: SizeF = card): RemoteViews {
+    fun plain(context: Context, setup: WidgetSetup, look: WidgetContent, size: SizeF = card): RemoteViews {
         val views = WidgetViews(context)
         val fit = views.fit(size.width, size.height, setup, look)
         val side = views.px(fit.art)
         val density = context.resources.displayMetrics.density
         val blanks = listOf(side).filter { it > 0 }.associateWith { WidgetArt.blank(it, density) }
-        return views.build(1, setup, look, listOf(fit), WidgetPictures(blanks = blanks), clearInk = false, taps = false)
+        return views.build(1, setup, look, listOf(fit), WidgetBitmaps(blanks = blanks), clearInk = false, taps = false)
     }
 }
 

@@ -14,9 +14,9 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import io.github.hazymorning.amsel.ui.navigation.Arrangement
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
 import io.github.hazymorning.amsel.ui.navigation.DockControl
+import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import io.github.hazymorning.amsel.ui.screens.library.LibraryKind
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import org.junit.Assert.assertEquals
@@ -33,37 +33,37 @@ class BarScreenTest {
     @get:Rule val compose = createComposeRule()
 
     @Test fun aSwitchTurnsAPlaceOffWhereItStands() {
-        var places by mutableStateOf(BarPlace.arrangement(null))
+        var places by mutableStateOf(BarItem.arrangement(null))
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         val before = compose.onNodeWithText("Search").getUnclippedBoundsInRoot()
         compose.onNodeWithText("Search").assertIsOn().performClick().assertIsOff()
         // It left the bar but kept its row: nothing jumped.
-        assertEquals(BarPlace.arrangement(null).order, places.order)
-        assertEquals(listOf(BarPlace.Home, BarPlace.Speaker, BarPlace.Library, BarPlace.Settings), places.visible)
+        assertEquals(BarItem.arrangement(null).order, places.order)
+        assertEquals(listOf(BarItem.Home, BarItem.Speaker, BarItem.Library, BarItem.Settings), places.visible)
         assertEquals(before, compose.onNodeWithText("Search").getUnclippedBoundsInRoot())
         compose.onNodeWithText("Search").performClick()
-        assertEquals(BarPlace.Default, places.visible)
+        assertEquals(BarItem.Default, places.visible)
     }
 
     @Test fun homeHasNoSwitchItAlwaysStays() {
-        compose.setContent { AmselTheme { BarScreen(BarPlace.arrangement(null), onChange = {}, onBack = {}) } }
+        compose.setContent { AmselTheme { BarScreen(BarItem.arrangement(null), onChange = {}, onBack = {}) } }
         compose.onNodeWithText("Always in the bar").assertExists()
         compose.onNodeWithText("Home").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ToggleableState))
     }
 
     @Test fun talkBackMovesAPlace() {
-        var places by mutableStateOf(BarPlace.arrangement(null))
+        var places by mutableStateOf(BarItem.arrangement(null))
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         val actions = compose.onNodeWithText("Search").fetchSemanticsNode().config[SemanticsActions.CustomActions]
         actions.first { it.label == "Move up" }.action()
         assertEquals(
-            listOf(BarPlace.Home, BarPlace.Search, BarPlace.Speaker) + BarPlace.arrangement(null).order.drop(3),
+            listOf(BarItem.Home, BarItem.Search, BarItem.Speaker) + BarItem.arrangement(null).order.drop(3),
             places.order,
         )
     }
 
     @Test fun settingsOutOfTheBarSayWhereTheyAre() {
-        var places by mutableStateOf(BarPlace.arrangement(null))
+        var places by mutableStateOf(BarItem.arrangement(null))
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         val pull = "Hidden: pull Home down to open Settings"
         compose.onNodeWithText(pull).assertDoesNotExist()
@@ -72,10 +72,10 @@ class BarScreenTest {
     }
 
     @Test fun theBarTakesFiveAtMost() {
-        var places by mutableStateOf(BarPlace.arrangement(null).with(BarPlace.Settings, on = false))
+        var places by mutableStateOf(BarItem.arrangement(null).with(BarItem.Settings, on = false))
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         compose.onNodeWithText("Albums").performScrollTo().performClick().assertIsOn()
-        assertEquals(BarPlace.Default - BarPlace.Settings + BarPlace.Albums, places.visible)
+        assertEquals(BarItem.Default - BarItem.Settings + BarItem.Albums, places.visible)
         // Five shown: one more waits, and TalkBack hears why.
         compose.onNodeWithText("Radio").performScrollTo().performClick().assertIsOff()
             .assert(
@@ -105,7 +105,7 @@ class BarScreenTest {
 
     @Test fun theMiniPlayerTakesThreeAtMostAndPlayStays() {
         var controls by mutableStateOf(
-            Arrangement(DockControl.entries, setOf(DockControl.PlayPause, DockControl.Next, DockControl.Previous)),
+            OrderedToggles(DockControl.entries, setOf(DockControl.PlayPause, DockControl.Next, DockControl.Previous)),
         )
         compose.setContent { AmselTheme { DockScreen(controls, onChange = { controls = it }, onBack = {}) } }
         compose.onNodeWithText("Always in the mini player").assertExists()

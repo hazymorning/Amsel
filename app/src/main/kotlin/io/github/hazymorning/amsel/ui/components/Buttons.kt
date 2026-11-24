@@ -42,13 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.theme.DISABLED_ALPHA
-import io.github.hazymorning.amsel.ui.theme.Lift
+import io.github.hazymorning.amsel.ui.theme.Elevation
 import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
+import io.github.hazymorning.amsel.ui.theme.elevationShadow
 import io.github.hazymorning.amsel.ui.theme.firm
-import io.github.hazymorning.amsel.ui.theme.lift
 import io.github.hazymorning.amsel.ui.theme.lineHeight
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
@@ -171,14 +171,14 @@ fun TextAction(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            InkGlyph(icon, tint = color, size = glyph)
+            AlignedGlyph(icon, tint = color, size = glyph)
             Spacer(Modifier.width(gap))
         }
         Words(
             text,
             style = style,
             color = color,
-            modifier = Modifier.inkSides(text, style),
+            modifier = Modifier.trimSideBearings(text, style),
         )
     }
 }
@@ -203,7 +203,7 @@ fun ToggleIconButton(
     val colors = MaterialTheme.colorScheme
     val tint by animateColorAsState(if (on) colors.onSurface else offTint, Motion.effects(), label = "toggle")
     val shown by animateFloatAsState(if (on && dot) 1f else 0f, Motion.effects(), label = "dot")
-    val below = inkHeight(icon, size) / 2 + Sizes.ToggleDotGap + Sizes.ToggleDot / 2
+    val below = glyphHeight(icon, size) / 2 + Sizes.ToggleDotGap + Sizes.ToggleDot / 2
     Box(
         modifier
             .size(Sizes.TouchTarget)
@@ -222,7 +222,7 @@ fun ToggleIconButton(
             },
         contentAlignment = Alignment.Center,
     ) {
-        InkGlyph(icon, tint = tint, size = size)
+        AlignedGlyph(icon, tint = tint, size = size)
     }
 }
 
@@ -276,13 +276,13 @@ fun PlayButton(
         Box(
             Modifier
                 .size(size)
-                .then(if (tonal) Modifier else Modifier.lift(Shapes.Circle, Lift.Button))
+                .then(if (tonal) Modifier else Modifier.elevationShadow(Shapes.Circle, Elevation.Button))
                 .clip(Shapes.Circle)
                 .background(background),
             contentAlignment = Alignment.Center,
         ) {
-            val shift = if (playing) 0.dp else inkWidth(icon, glyph) / PLAY_SHIFT
-            InkGlyph(icon, Modifier.offset(x = shift), tint = glyphTint, size = glyph)
+            val shift = if (playing) 0.dp else glyphWidth(icon, glyph) / PLAY_SHIFT
+            AlignedGlyph(icon, Modifier.offset(x = shift), tint = glyphTint, size = glyph)
         }
     }
 }

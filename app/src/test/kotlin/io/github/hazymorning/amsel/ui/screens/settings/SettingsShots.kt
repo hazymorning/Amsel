@@ -11,7 +11,7 @@ import io.github.hazymorning.amsel.testing.ShotVariant
 import io.github.hazymorning.amsel.ui.AppShell
 import io.github.hazymorning.amsel.ui.PlayerLayerState
 import io.github.hazymorning.amsel.ui.ShellSlots
-import io.github.hazymorning.amsel.ui.navigation.BarPlace
+import io.github.hazymorning.amsel.ui.navigation.BarItem
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
@@ -44,11 +44,11 @@ class SettingsShots : ScreenshotTest() {
      * Podcasts put in, so the bar is full and the other kinds wait.
      */
     @Test fun bar() = snap("settings_bar") {
-        val places = BarPlace.arrangement(null)
-            .with(BarPlace.Search, on = false)
-            .with(BarPlace.Settings, on = false)
-            .with(BarPlace.Albums, on = true)
-            .with(BarPlace.Podcasts, on = true)
+        val places = BarItem.arrangement(null)
+            .with(BarItem.Search, on = false)
+            .with(BarItem.Settings, on = false)
+            .with(BarItem.Albums, on = true)
+            .with(BarItem.Podcasts, on = true)
         AppShell(
             nowPlaying = PlayerSample.nowPlaying,
             speaker = PlayerSample.nowPlaying.speaker,

@@ -13,15 +13,15 @@ import kotlinx.coroutines.flow.stateIn
 /** The speaker the person picked, or This phone: where the app plays and what it controls. */
 class SpeakerSelection(data: DataGraph, phone: PhoneSpeaker, scope: CoroutineScope) {
     /** Prefs hold the picked speaker; null means "This phone", the default. */
-    val target: StateFlow<Target> =
+    val target: StateFlow<PlaybackTarget> =
         combine(data.prefs.prefs.filterNotNull().map { it.speakerId }, phone.playerId) { selected, phoneId ->
             if (selected == null ||
                 selected == phoneId
             ) {
-                Target(phoneId, isPhone = true)
+                PlaybackTarget(phoneId, isPhone = true)
             } else {
-                Target(selected, isPhone = false)
+                PlaybackTarget(selected, isPhone = false)
             }
         }.onEach { phone.setWanted(it.isPhone) }
-            .stateIn(scope, SharingStarted.Eagerly, Target(null, isPhone = true))
+            .stateIn(scope, SharingStarted.Eagerly, PlaybackTarget(null, isPhone = true))
 }

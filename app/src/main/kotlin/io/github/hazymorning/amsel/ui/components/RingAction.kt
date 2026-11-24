@@ -43,7 +43,7 @@ fun RingAction(
         contentAlignment = Alignment.Center,
     ) {
         Spinner(size = Sizes.Icon, color = tint, progress = progress)
-        InkGlyph(icon, tint = tint, size = RingGlyph)
+        AlignedGlyph(icon, tint = tint, size = RingGlyph)
     }
 }
 

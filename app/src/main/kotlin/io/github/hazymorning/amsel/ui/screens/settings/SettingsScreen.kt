@@ -34,7 +34,7 @@ import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.TabHeader
 import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.Route
-import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignIn
+import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignInAction
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
 
@@ -67,19 +67,19 @@ fun SettingsScreen(
     /** The appearance page: the theme, the language, and what Home, the Library and the bars show. */
     onAppearance: () -> Unit = {},
     update: UpdateState = UpdateState.Unknown,
-    onLookForUpdatesChange: (Boolean) -> Unit = {},
-    onLookForUpdate: () -> Unit = {},
+    onCheckForUpdatesChange: (Boolean) -> Unit = {},
+    onCheckForUpdate: () -> Unit = {},
     onInstallUpdate: (UpdateState.Available) -> Unit = {},
     downloads: DownloadSettings = DownloadSettings(),
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
-    onAbsSignIn: AbsSignIn = { _, _, _ -> null },
+    onAbsSignIn: AbsSignInAction = { _, _, _ -> null },
     onAbsSignOut: () -> Unit = {},
     /** The page of Amsel's licence, the privacy notice and the licences of software by others. */
     onLicences: () -> Unit = {},
 ) {
     val title = stringResource(R.string.settings)
     val scroll = rememberScrollState()
-    var choosing by rememberSaveable { mutableStateOf<Choice?>(null) }
+    var choosing by rememberSaveable { mutableStateOf<SettingsSheet?>(null) }
     val place = onBack == null
     val titleHeight = remember { mutableIntStateOf(0) }
     val scrolled by remember { derivedStateOf { titleHeight.intValue > 0 && scroll.value >= titleHeight.intValue } }
@@ -106,7 +106,7 @@ fun SettingsScreen(
                 stringResource(R.string.settings_account),
                 above = if (place) TitleToGroup else Space.Sibling,
             ) {
-                accountRows(signedIn, where, signOut, signOutBeside) { choosing = Choice.SignOut }
+                accountRows(signedIn, where, signOut, signOutBeside) { choosing = SettingsSheet.SignOut }
                 row { shape ->
                     SettingRow(
                         stringResource(R.string.open_music_assistant),
@@ -135,7 +135,7 @@ fun SettingsScreen(
                         shape,
                         subtitle = limitLabel(state.volumeLimit),
                         role = Role.DropdownList,
-                        onClick = { choosing = Choice.VolumeLimit },
+                        onClick = { choosing = SettingsSheet.VolumeLimit },
                         glyph = R.drawable.ic_volume,
                     )
                 }
@@ -180,22 +180,28 @@ fun SettingsScreen(
                         stringResource(R.string.downloads),
                         shape,
                         subtitle = downloadsLine(downloads.account, downloads.usedBytes),
-                        onClick = { choosing = Choice.Downloads },
+                        onClick = { choosing = SettingsSheet.Downloads },
                         glyph = R.drawable.ic_download,
                     )
                 }
                 row { shape ->
-                    val waiting = update is UpdateState.Available || update is UpdateState.Loading
+                    val waiting = update is UpdateState.Available || update is UpdateState.Downloading
                     SettingRow(
                         stringResource(R.string.settings_updates),
                         shape,
                         subtitle = when (update) {
                             is UpdateState.Available -> stringResource(R.string.update_out, update.version)
-                            is UpdateState.Loading -> stringResource(R.string.update_downloading, update.update.version)
+
+                            is UpdateState.Downloading -> stringResource(
+                                R.string.update_downloading,
+                                update.update.version,
+                            )
+
                             UpdateState.Newest -> stringResource(R.string.settings_version_newest, state.appVersion)
+
                             else -> stringResource(R.string.settings_version, state.appVersion)
                         },
-                        onClick = { choosing = Choice.Updates },
+                        onClick = { choosing = SettingsSheet.Updates },
                         glyph = R.drawable.ic_updates,
                         mark = if (waiting) ({ MossDot() }) else null,
                     )
@@ -217,23 +223,23 @@ fun SettingsScreen(
         // A choice applies at once, under the sheet as it slides away.
         AmselSheet(onDismiss = { choosing = null }) {
             when (choice) {
-                Choice.Updates -> UpdatesSheetContent(
+                SettingsSheet.Updates -> UpdatesSheetContent(
                     update,
                     state.appVersion,
-                    lookAtStart = state.lookForUpdates,
-                    onLookAtStart = onLookForUpdatesChange,
-                    onLook = onLookForUpdate,
+                    checkAtStart = state.lookForUpdates,
+                    onCheckAtStartChange = onCheckForUpdatesChange,
+                    onCheck = onCheckForUpdate,
                     onInstall = onInstallUpdate,
                 )
 
-                Choice.Downloads -> DownloadsSheetContent(
+                SettingsSheet.Downloads -> DownloadsSheetContent(
                     downloads.copy(wifiOnly = state.downloadOnWifi),
                     onDownloadOnWifiChange,
                     onAbsSignIn,
                     onAbsSignOut,
                 )
 
-                Choice.SignOut -> SheetQuestion(
+                SettingsSheet.SignOut -> SheetQuestion(
                     title = stringResource(R.string.settings_sign_out_title),
                     question = stringResource(R.string.settings_sign_out_question),
                     primary = stringResource(R.string.settings_sign_out),
@@ -242,7 +248,7 @@ fun SettingsScreen(
                     onSecondary = { close() },
                 )
 
-                Choice.VolumeLimit -> ChoiceSheet(
+                SettingsSheet.VolumeLimit -> ChoiceSheet(
                     stringResource(R.string.settings_volume_limit),
                     LIMITS,
                     state.volumeLimit,
@@ -264,7 +270,7 @@ internal val BetweenGroups = Space.S8
 /** From the big title's baseline, where Settings are a place of their own, to the first group's name. */
 private val TitleToGroup = Space.S8
 
-private enum class Choice { VolumeLimit, Updates, Downloads, SignOut }
+private enum class SettingsSheet { VolumeLimit, Updates, Downloads, SignOut }
 
 @Composable
 private fun limitLabel(level: Int): String =
@@ -298,8 +304,8 @@ fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier, asPlace: 
         onHints = { navigator.open(Route.Hints) },
         onAppearance = { navigator.open(Route.Appearance) },
         update = update,
-        onLookForUpdatesChange = viewModel::onLookForUpdatesChange,
-        onLookForUpdate = graph.updates::lookNow,
+        onCheckForUpdatesChange = viewModel::onCheckForUpdatesChange,
+        onCheckForUpdate = graph.updates::checkNow,
         onInstallUpdate = graph.updates::install,
         downloads = DownloadSettings(account, used, last = prefs?.lastAbsAccount()),
         onDownloadOnWifiChange = viewModel::onDownloadOnWifiChange,

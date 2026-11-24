@@ -7,7 +7,7 @@ import io.github.hazymorning.amsel.api.MaApi
 import io.github.hazymorning.amsel.api.MaClient
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.fixture
-import io.github.hazymorning.amsel.data.PageMemory
+import io.github.hazymorning.amsel.data.PageCache
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.TrackUi
 import java.io.File
@@ -77,7 +77,7 @@ class PageSourceTest {
             client.start(fake.address, "t", fake.serverId)
             withTimeout(5000) { client.state.filterIsInstance<ConnectionState.Connected>().first() }
             // No server id: the memory keeps nothing.
-            val memory = PageMemory(File(checkNotNull(System.getProperty("java.io.tmpdir")))) { null }
+            val memory = PageCache(File(checkNotNull(System.getProperty("java.io.tmpdir")))) { null }
             val connected = client.state.map { it is ConnectionState.Connected }
             val source =
                 ServerPageSource(MaApi(client), { error("The library index is not needed here") }, memory, connected)

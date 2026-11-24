@@ -44,7 +44,7 @@ fun TextLink(
         band to max((Sizes.TouchTarget - cap) / 2, band)
     }
     // A short name still gets a target 48 dp wide.
-    val side = max(Space.S3, (Sizes.TouchTarget - textInkWidth(text, style)) / 2)
+    val side = max(Space.S3, (Sizes.TouchTarget - textGlyphWidth(text, style)) / 2)
     val presses = remember { MutableInteractionSource() }
     Words(
         text,
@@ -58,8 +58,8 @@ fun TextLink(
             .clip(Shapes.Tile)
             .indication(presses, LocalIndication.current)
             .padding(horizontal = side, vertical = band)
-            .textInk(style)
-            .then(if (centred) Modifier.inkCentre(text, style) else Modifier.inkStart(text, style)),
+            .capToBaseline(style)
+            .then(if (centred) Modifier.centreOnGlyphs(text, style) else Modifier.trimStartBearing(text, style)),
     )
 }
 

@@ -70,7 +70,7 @@ private fun FieldText(
                 placeholder,
                 style = style,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.inkStart(placeholder, style),
+                modifier = Modifier.trimStartBearing(placeholder, style),
             )
         }
         Box(Modifier.offset { IntOffset(-shift.roundToInt(), 0) }) { field() }
@@ -135,7 +135,7 @@ fun SearchField(
                             color = colors.onSurfaceVariant,
                         )
                     } else {
-                        InkGlyph(R.drawable.ic_search, tint = colors.onSurfaceVariant, size = glyph)
+                        AlignedGlyph(R.drawable.ic_search, tint = colors.onSurfaceVariant, size = glyph)
                     }
                 }
                 Spacer(Modifier.width(Space.S3))
@@ -146,7 +146,7 @@ fun SearchField(
                         clearLabel,
                         onClear,
                         Modifier.padding(start = Space.Part, end = Space.Sibling),
-                        edge = InkEdge.End,
+                        edge = GlyphEdge.End,
                         tint = colors.onSurfaceVariant,
                         size = glyph,
                     )
@@ -176,7 +176,7 @@ fun SearchEntry(placeholder: String, label: String, onClick: () -> Unit, modifie
                 .semantics(mergeDescendants = true) {},
         ) {
             Spacer(Modifier.width(Space.Sibling))
-            InkGlyph(R.drawable.ic_search, tint = colors.onSurfaceVariant, size = glyph)
+            AlignedGlyph(R.drawable.ic_search, tint = colors.onSurfaceVariant, size = glyph)
             Spacer(Modifier.width(Space.S3))
             FieldText("", placeholder, field = {}, Modifier.weight(1f))
             Spacer(Modifier.width(Space.Sibling))
@@ -232,7 +232,7 @@ fun LabelledField(
                         label,
                         style = type.bodyMedium,
                         color = colors.onSurfaceVariant,
-                        modifier = Modifier.textInk(type.bodyMedium).inkStart(label, type.bodyMedium),
+                        modifier = Modifier.capToBaseline(type.bodyMedium).trimStartBearing(label, type.bodyMedium),
                     )
                     Spacer(Modifier.height(Space.Part))
                     FieldBox(error = error != null, fill) {
@@ -266,7 +266,7 @@ fun FieldNote(text: String, modifier: Modifier = Modifier, error: Boolean = fals
         modifier = modifier
             .then(if (error) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier)
             .padding(top = Space.Part)
-            .textInk(style)
-            .inkStart(text, style),
+            .capToBaseline(style)
+            .trimStartBearing(text, style),
     )
 }

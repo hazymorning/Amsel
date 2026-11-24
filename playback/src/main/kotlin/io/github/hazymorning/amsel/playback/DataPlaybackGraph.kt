@@ -9,7 +9,7 @@ import io.github.hazymorning.amsel.api.Player
 import io.github.hazymorning.amsel.data.DataGraph
 import io.github.hazymorning.amsel.data.QueueState
 import io.github.hazymorning.amsel.data.SessionState
-import io.github.hazymorning.amsel.data.downloads.Downloads
+import io.github.hazymorning.amsel.data.downloads.DownloadRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -35,9 +35,9 @@ import kotlinx.coroutines.flow.stateIn
 class DataPlaybackGraph(
     private val data: DataGraph,
     private val dispatcher: PlayDispatcher,
-    lanes: SeekLanes,
+    seekDispatcher: SeekDispatcher,
     /** The speaker the person picked, or This phone ([SpeakerSelection]). */
-    override val target: StateFlow<Target>,
+    override val target: StateFlow<PlaybackTarget>,
     override val scope: CoroutineScope,
     override val phone: PhoneSpeaker,
     override val local: LocalPlayback,
@@ -53,16 +53,22 @@ class DataPlaybackGraph(
 
     private val api: MaApi get() = data.session.api
 
-    override val downloads: Downloads get() = data.downloads
+    override val downloads: DownloadRepository get() = data.downloads
     private val snapshotFlows = mutableMapOf<String, StateFlow<SpeakerSnapshot?>>()
 
-    override val sessionTarget: StateFlow<Target> =
+    override val sessionTarget: StateFlow<PlaybackTarget> =
         combine(target, phone.playerId, data.speakers.players, data.speakers.gone) { selected, phoneId, players, gone ->
             val phoneMusic = phoneId != null && phoneId !in gone && players[phoneId]?.hasMusic == true
             // Anything the selected speaker shows is what the app's own buttons act on, through this session.
             val selectedShows =
                 selected.playerId?.let(players::get)?.let { it.hasMusic || it.currentMedia != null } == true
-            if (!selected.isPhone && !selectedShows && phoneMusic) Target(phoneId, isPhone = true) else selected
+            if (!selected.isPhone && !selectedShows &&
+                phoneMusic
+            ) {
+                PlaybackTarget(phoneId, isPhone = true)
+            } else {
+                selected
+            }
         }.stateIn(scope, SharingStarted.Eagerly, target.value)
 
     override val phoneAudible: StateFlow<Boolean> get() = phone.audible
@@ -98,7 +104,7 @@ class DataPlaybackGraph(
             .stateIn(scope, SharingStarted.Eagerly, null)
 
     override val commands: MaSpeakerCommands =
-        MaSpeakerCommands(api, dispatcher, data.session::wake, data.speakers, lanes, scope)
+        MaSpeakerCommands(api, dispatcher, data.session::wake, data.speakers, seekDispatcher, scope)
     override val catalog: Catalog = DataCatalog(
         api,
         data.session::wake,
@@ -124,9 +130,13 @@ class DataPlaybackGraph(
         commandFailures.tryEmit(failure)
     }
 
-    override suspend fun blocked(): Blocked? = when (data.session.state.first { it != SessionState.Restoring }) {
-        SessionState.NeedsSetup -> Blocked.SignIn
-        SessionState.Unsupported -> Blocked.TooOld
+    override suspend fun blocked(): BrowseBlockReason? = when (
+        data.session.state.first {
+            it != SessionState.Restoring
+        }
+    ) {
+        SessionState.NeedsSetup -> BrowseBlockReason.SignIn
+        SessionState.Unsupported -> BrowseBlockReason.TooOld
         else -> null
     }
 

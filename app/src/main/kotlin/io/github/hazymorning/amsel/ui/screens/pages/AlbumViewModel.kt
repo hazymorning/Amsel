@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.orNullOnFailure
-import io.github.hazymorning.amsel.app.Messages
+import io.github.hazymorning.amsel.app.MessageController
 import io.github.hazymorning.amsel.app.retryWhileOpen
-import io.github.hazymorning.amsel.data.ShownPage
+import io.github.hazymorning.amsel.data.CachedPage
 import io.github.hazymorning.amsel.data.library.LibraryItemEntity
 import io.github.hazymorning.amsel.ui.mapping.UiMapper
 import io.github.hazymorning.amsel.ui.model.ArtRef
@@ -36,7 +36,7 @@ class AlbumViewModel(
     private val source: PageSource,
     private val mapper: UiMapper,
     playing: Flow<String?>,
-    private val messages: Messages,
+    private val messages: MessageController,
 ) : ViewModel() {
     private val page = MutableStateFlow(AlbumUiState(loading = true))
     private var loading: Job? = null
@@ -65,7 +65,7 @@ class AlbumViewModel(
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
         loading = viewModelScope.launch {
-            val load = Load()
+            val load = PageLoad()
             val item = async { load.attempt { source.item(key) } }
             val tracks = async { load.attempt { source.albumTracks(key) } }
             launch {
@@ -78,13 +78,13 @@ class AlbumViewModel(
             val served = tracks.await()
             page.update { it.loaded(album, served) }
             messages.loadFailed(load, shown(page.value, source.row(key).first(), null).showUnavailable, retryLoad)
-            if (album != null && served != null) source.keep(key, ShownPage(album, served))
+            if (album != null && served != null) source.keep(key, CachedPage(album, served))
             source.againOnceConnected(load, ::retry)
         }
     }
 
     /** What the page showed last time, where the server has not answered yet. */
-    private fun AlbumUiState.from(last: ShownPage) = copy(
+    private fun AlbumUiState.from(last: CachedPage) = copy(
         album = album ?: mapper.albumHeader(last.item),
         tracks = tracks.ifEmpty { last.rows.map(mapper::track) },
     )

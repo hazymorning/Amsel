@@ -31,9 +31,9 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.zIndex
 import io.github.hazymorning.amsel.R
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.IconAction
-import io.github.hazymorning.amsel.ui.components.InkGlyph
-import io.github.hazymorning.amsel.ui.components.Reorderable
+import io.github.hazymorning.amsel.ui.components.ReorderState
 import io.github.hazymorning.amsel.ui.components.holdToMove
 import io.github.hazymorning.amsel.ui.components.reorderHandle
 import io.github.hazymorning.amsel.ui.screens.settings.BetweenRows
@@ -60,19 +60,19 @@ internal sealed interface WidgetPart {
 }
 
 /** [slots] in their saved order, what plays before them or after them as it stands [at]. */
-internal fun widgetParts(slots: List<WidgetSlot>, at: WidgetWordsPlace): List<WidgetPart> {
+internal fun widgetParts(slots: List<WidgetSlot>, at: WidgetWordsPosition): List<WidgetPart> {
     val seen = mutableMapOf<WidgetSlot, Int>()
     val buttons = slots.mapIndexed { place, slot ->
         val same = seen.getOrDefault(slot, 0)
         seen[slot] = same + 1
         WidgetPart.Button(place, "${slot.button.id} ${slot.item?.uri.orEmpty()} $same")
     }
-    return if (at == WidgetWordsPlace.After) buttons + WidgetPart.Words else listOf(WidgetPart.Words) + buttons
+    return if (at == WidgetWordsPosition.After) buttons + WidgetPart.Words else listOf(WidgetPart.Words) + buttons
 }
 
 /** Where what plays lands when let go at [index] of [parts]: at the nearer end. */
-internal fun wordsPlaceAt(index: Int, parts: Int): WidgetWordsPlace =
-    if (index < parts / 2f) WidgetWordsPlace.Before else WidgetWordsPlace.After
+internal fun wordsPositionAt(index: Int, parts: Int): WidgetWordsPosition =
+    if (index < parts / 2f) WidgetWordsPosition.Before else WidgetWordsPosition.After
 
 /**
  * The widget's [parts] in their order, each moved by its handle, a held press anywhere on it, or
@@ -81,14 +81,14 @@ internal fun wordsPlaceAt(index: Int, parts: Int): WidgetWordsPlace =
  * one more while there are fewer than eight. The widget keeps at least one part.
  */
 internal fun LazyListScope.partRows(
-    state: WidgetSetupUi,
+    state: WidgetSetupUiState,
     parts: List<WidgetPart>,
-    reorder: Reorderable,
+    reorder: ReorderState,
     onSlot: (Int) -> Unit,
     onRemove: (Int) -> Unit,
     onMove: (from: Int, to: Int) -> Unit,
     onShowWords: (Boolean) -> Unit,
-    onMoveWords: (WidgetWordsPlace) -> Unit,
+    onMoveWords: (WidgetWordsPosition) -> Unit,
 ) {
     val slots = state.setup.slots
     val adding = slots.size < MAX_BUTTONS
@@ -147,7 +147,7 @@ internal fun LazyListScope.partRows(
 
 /** A row lifted under the finger while it is dragged, or gliding into place. */
 @Composable
-private fun LazyItemScope.Liftable(reorder: Reorderable, key: String, content: @Composable ColumnScope.() -> Unit) {
+private fun LazyItemScope.Liftable(reorder: ReorderState, key: String, content: @Composable ColumnScope.() -> Unit) {
     val lifted = reorder.draggingKey == key || reorder.settlingKey == key
     val modifier = if (lifted) {
         Modifier.zIndex(1f).graphicsLayer { translationY = reorder.offsetOf(key) }
@@ -167,15 +167,15 @@ private fun WordsRow(
     alone: Boolean,
     first: Boolean,
     shape: Shape,
-    reorder: Reorderable,
+    reorder: ReorderState,
     onShow: (Boolean) -> Unit,
-    onMove: (WidgetWordsPlace) -> Unit,
+    onMove: (WidgetWordsPosition) -> Unit,
 ) {
     val haptics = LocalHapticFeedback.current
     val held = shown && alone
     val moves = listOfNotNull(
         CustomAccessibilityAction(stringResource(if (first) R.string.move_down else R.string.move_up)) {
-            onMove(if (first) WidgetWordsPlace.After else WidgetWordsPlace.Before)
+            onMove(if (first) WidgetWordsPosition.After else WidgetWordsPosition.Before)
             true
         }.takeUnless { alone },
     )
@@ -226,7 +226,7 @@ private fun ButtonRow(
     fits: Boolean,
     removable: Boolean,
     shape: Shape,
-    reorder: Reorderable,
+    reorder: ReorderState,
     onSlot: (Int) -> Unit,
     onRemove: (Int) -> Unit,
     onMove: (from: Int, to: Int) -> Unit,
@@ -279,7 +279,7 @@ private fun ButtonRow(
 
 /** A row's handle: a press on it picks the row up at once. */
 @Composable
-private fun Handle(reorder: Reorderable, key: String) {
+private fun Handle(reorder: ReorderState, key: String) {
     Box(
         Modifier
             .size(Sizes.TouchTarget)
@@ -287,7 +287,7 @@ private fun Handle(reorder: Reorderable, key: String) {
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
-        InkGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        AlignedGlyph(R.drawable.ic_drag, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

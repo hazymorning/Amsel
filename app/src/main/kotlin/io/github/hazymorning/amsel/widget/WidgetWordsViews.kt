@@ -12,9 +12,9 @@ internal enum class WordsAlign { Top, Bottom, Middle }
 /** A widget's words: the speaker, the title and the line under it, each line's first ink on the frame. */
 internal class WidgetWordsViews(
     private val context: Context,
-    private val type: WidgetText,
-    private val look: WidgetLook,
-    private val tone: Tone,
+    private val type: WidgetTextMetrics,
+    private val look: WidgetContent,
+    private val tone: WidgetColors,
     private val px: (Float) -> Int,
 ) {
     /**
@@ -132,11 +132,11 @@ internal class WidgetWordsViews(
     }
 
     /** From the level's glyph to its number, as far as from the speaker's glyph to its name, ink to ink. */
-    private fun afterLevelGlyph(text: WidgetText, level: String): Float =
+    private fun afterLevelGlyph(text: WidgetTextMetrics, level: String): Float =
         text.speakerGlyph * GLYPH_GAP - text.levelSides().second - text.sideBearing(level, WidgetLine.Speaker)
 
     /** What [level] takes after the speaker's name: its gap, its glyph, its number. */
-    private fun levelRoom(text: WidgetText, level: String): Float =
+    private fun levelRoom(text: WidgetTextMetrics, level: String): Float =
         text.dp(LEVEL_GAP * text.size.scale) + text.speakerGlyph + afterLevelGlyph(text, level) +
             text.width(level, WidgetLine.Speaker) - text.endBearing(level, WidgetLine.Speaker)
 

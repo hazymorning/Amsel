@@ -1,6 +1,6 @@
 package io.github.hazymorning.amsel.ui.screens.search
 
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.ItemMapping
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaItemImage
@@ -19,7 +19,7 @@ class SearchResultsTest {
     private val mapper = UiMapper { null }
 
     /** Draws covers, as the app does once connected. */
-    private val drawn = UiMapper { Images(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
+    private val drawn = UiMapper { ImageUrls(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
     private val covers = listOf("c1", "c2", "c3", "c4")
 
     private fun MediaItem.pictured(proxyId: String) =

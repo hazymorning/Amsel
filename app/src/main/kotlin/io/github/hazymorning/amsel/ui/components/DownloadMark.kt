@@ -38,7 +38,7 @@ fun DownloadMarkGlyph(mark: DownloadMark, modifier: Modifier = Modifier) {
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
     when (mark) {
         // In ink, beside the quieter words: at a glance, which books are on the phone.
-        DownloadMark.Done -> InkGlyph(
+        DownloadMark.Done -> AlignedGlyph(
             R.drawable.ic_downloaded,
             modifier,
             tint = MaterialTheme.colorScheme.onSurface,

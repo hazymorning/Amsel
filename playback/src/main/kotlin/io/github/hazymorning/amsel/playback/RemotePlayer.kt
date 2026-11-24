@@ -321,8 +321,14 @@ class RemotePlayer(
     private fun chapterTarget(command: Int): Long? {
         val starts = snapshot?.current?.chapterStartsMs?.takeIf { it.size >= 2 } ?: return null
         return when (command) {
-            Player.COMMAND_SEEK_TO_NEXT -> Chapters.nextStart(starts, currentPosition)
-            Player.COMMAND_SEEK_TO_PREVIOUS -> Chapters.previousStart(starts, currentPosition, MA_RESTART_THRESHOLD_MS)
+            Player.COMMAND_SEEK_TO_NEXT -> ChapterNavigation.nextStart(starts, currentPosition)
+
+            Player.COMMAND_SEEK_TO_PREVIOUS -> ChapterNavigation.previousStart(
+                starts,
+                currentPosition,
+                MA_RESTART_THRESHOLD_MS,
+            )
+
             else -> null
         }
     }

@@ -91,7 +91,7 @@ fun SectionHeader(
             modifier = Modifier
                 .weight(1f, fill = false)
                 .alignByBaseline()
-                .inkStart(title, style)
+                .trimStartBearing(title, style)
                 .semantics { heading() },
         )
     }
@@ -112,8 +112,8 @@ fun GroupLabel(text: String, above: Dp, below: Dp, start: Dp = Keyline.Margin) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = start, end = Keyline.Margin, top = above, bottom = below)
-            .textInk(style)
-            .inkStart(text, style)
+            .capToBaseline(style)
+            .trimStartBearing(text, style)
             .semantics { heading() },
     )
 }

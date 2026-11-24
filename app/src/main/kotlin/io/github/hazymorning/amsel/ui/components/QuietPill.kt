@@ -42,7 +42,7 @@ fun QuietPill(@DrawableRes icon: Int, text: String, onClick: () -> Unit, modifie
         modifier.quietGround(onClick, text).padding(horizontal = PillPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InkGlyph(icon, tint = colors.controls, size = wordGlyph(style))
+        AlignedGlyph(icon, tint = colors.controls, size = wordGlyph(style))
         Spacer(Modifier.width(PillGap))
         Text(
             text,
@@ -51,7 +51,7 @@ fun QuietPill(@DrawableRes icon: Int, text: String, onClick: () -> Unit, modifie
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             // From the capitals to the baseline, so the word is centred by its letters, not its line.
-            modifier = Modifier.clearAndSetSemantics {}.textInk(style).inkSides(text, style),
+            modifier = Modifier.clearAndSetSemantics {}.capToBaseline(style).trimSideBearings(text, style),
         )
     }
 }

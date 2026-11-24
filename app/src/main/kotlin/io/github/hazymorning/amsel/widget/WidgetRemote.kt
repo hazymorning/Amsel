@@ -10,10 +10,10 @@ import android.widget.RemoteViews
 import androidx.annotation.ColorRes
 import androidx.core.graphics.ColorUtils
 import io.github.hazymorning.amsel.MainActivity
-import io.github.hazymorning.amsel.ui.navigation.Opening
+import io.github.hazymorning.amsel.ui.navigation.DeepLink
 
 /** Amsel itself, at [opening]: Now Playing, the speakers, or where it opens anyway. */
-internal fun open(context: Context, opening: Opening?): PendingIntent {
+internal fun open(context: Context, opening: DeepLink?): PendingIntent {
     val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     if (opening != null) intent.setAction(Intent.ACTION_VIEW).setData(opening.link)
     return PendingIntent.getActivity(

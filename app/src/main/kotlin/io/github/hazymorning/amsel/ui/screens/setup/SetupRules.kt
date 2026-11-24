@@ -66,7 +66,7 @@ internal suspend fun attempt(block: suspend () -> SignInResult): SignInResult = 
  * Why [target] was not reached. A name typed without a scheme went to https, as one off the home
  * network may answer any DNS; plain http to it only when typed so.
  */
-internal fun ServerError.of(target: Target): ServerError =
+internal fun ServerError.of(target: ServerCheckRequest): ServerError =
     if (this == ServerError.Unreachable && "://" !in target.field && target.address.baseUrl.isHttps) {
         ServerError.HttpsFailed
     } else {
@@ -88,7 +88,7 @@ internal fun typedForm(address: ServerAddress): String {
 internal fun FoundServer.toUi(): FoundServerUi = FoundServerUi(info.serverId, info.name, hostOf(address))
 
 /** A server address kept as the text it parses back from. */
-private object AddressText : KSerializer<ServerAddress> {
+private object ServerAddressSerializer : KSerializer<ServerAddress> {
     override val descriptor = PrimitiveSerialDescriptor("ServerAddress", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: ServerAddress) = encoder.encodeString(value.toString())
@@ -98,8 +98,8 @@ private object AddressText : KSerializer<ServerAddress> {
 }
 
 @Serializable
-internal data class Chosen(
-    @Serializable(with = AddressText::class) val address: ServerAddress,
+internal data class SelectedServer(
+    @Serializable(with = ServerAddressSerializer::class) val address: ServerAddress,
     val info: ServerInfo,
     val fromList: Boolean,
     val offersHomeAssistant: Boolean,
@@ -109,17 +109,17 @@ internal data class Chosen(
 
 /** What outlives the process: the page, what was typed (never the password) and the chosen server. */
 @Serializable
-internal data class Kept(
+internal data class SavedSetupState(
     val step: SetupStep,
     val serverStep: ServerStep,
     val address: String,
     val notFound: Boolean,
-    val chosen: Chosen?,
+    val chosen: SelectedServer?,
     val username: String,
 )
 
 /** What to check: the address, what shows progress meanwhile, and the field's text if it fails. */
-internal data class Target(
+internal data class ServerCheckRequest(
     val address: ServerAddress,
     val connectingTo: String,
     val field: String,
@@ -127,13 +127,13 @@ internal data class Target(
 )
 
 internal fun FoundServer.target(fromList: Boolean) =
-    Target(address, connectingTo = info.serverId, field = typedForm(address), fromList = fromList)
+    ServerCheckRequest(address, connectingTo = info.serverId, field = typedForm(address), fromList = fromList)
 
-internal fun SetupUiState.kept(chosen: Chosen?) =
-    Kept(step, server.step, server.address, server.notFound, chosen, signIn?.username.orEmpty())
+internal fun SetupUiState.kept(chosen: SelectedServer?) =
+    SavedSetupState(step, server.step, server.address, server.notFound, chosen, signIn?.username.orEmpty())
 
-/** The state [Kept] brings back; null for the server search, which ended with the process. */
-internal fun Kept.restored(): SetupUiState? {
+/** The state [SavedSetupState] brings back; null for the server search, which ended with the process. */
+internal fun SavedSetupState.restored(): SetupUiState? {
     val server = ServerUiState(serverStep, address = address, notFound = notFound)
     val signIn = chosen?.signInState()?.copy(username = username)
     return when {

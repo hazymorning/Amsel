@@ -14,8 +14,8 @@ import android.os.IBinder
 import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import io.github.hazymorning.amsel.data.downloads.DownloadRepository
 import io.github.hazymorning.amsel.data.downloads.DownloadState
-import io.github.hazymorning.amsel.data.downloads.Downloads
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Runs the downloads in front of everything else ([Downloads.work]), with a notification of what
+ * Runs the downloads in front of everything else ([DownloadRepository.work]), with a notification of what
  * comes down and how far, and a button that stops them: a book is hundreds of megabytes, and Android
  * ends background work long before that. It stops itself when nothing is left.
  */

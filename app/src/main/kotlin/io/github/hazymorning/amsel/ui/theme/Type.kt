@@ -24,9 +24,9 @@ private val W600 = FontWeight(600)
 private val W650 = FontWeight(650)
 private val W700 = FontWeight(700)
 
-private class Faces(val title: FontFamily, val text: FontFamily)
+private class FontFamilies(val title: FontFamily, val text: FontFamily)
 
-private val Commissioner = Faces(
+private val Commissioner = FontFamilies(
     title = FontFamily(Font(R.font.commissioner_title_650, W650), Font(R.font.commissioner_title_700, W700)),
     text = FontFamily(
         Font(R.font.commissioner_400, W400),
@@ -82,7 +82,7 @@ private fun style(family: FontFamily, weight: FontWeight, size: Float, line: Int
  * lines), labelLarge (the mini player's title), labelMedium (times) and labelSmall (tab labels).
  * Selection shows in colour, never in weight.
  */
-private fun typography(faces: Faces): Typography {
+private fun typography(faces: FontFamilies): Typography {
     // Tracking in sp, as the type scale (docs/DESIGN.md) gives it.
     val display = style(faces.title, W650, 30f, 36, -0.45f)
     val title = style(faces.title, W700, 26f, 32, -0.26f)

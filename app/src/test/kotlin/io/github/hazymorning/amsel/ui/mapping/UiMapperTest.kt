@@ -1,6 +1,6 @@
 package io.github.hazymorning.amsel.ui.mapping
 
-import io.github.hazymorning.amsel.api.Images
+import io.github.hazymorning.amsel.api.ImageUrls
 import io.github.hazymorning.amsel.api.MaJson
 import io.github.hazymorning.amsel.api.MediaItem
 import io.github.hazymorning.amsel.api.MediaItemImage
@@ -37,7 +37,7 @@ import org.junit.Test
 /** Radio stations, books and podcasts as the recorded servers send them, in the UI's models. */
 class UiMapperTest {
     private val address = ServerAddress.parse("http://ma.local:8095") ?: error("address")
-    private val mapper = UiMapper { Images(address) }
+    private val mapper = UiMapper { ImageUrls(address) }
 
     private fun result(version: String, name: String): JsonElement =
         fixture(version, name).getValue("response").jsonObject.getValue("result")

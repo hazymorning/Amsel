@@ -82,11 +82,11 @@ class WidgetInsetsTest {
     /** [slots] showing [look], laid out for [planned] and drawn at [actual]. */
     private fun draw(
         slots: List<WidgetSlot>,
-        look: WidgetLook,
+        look: WidgetContent,
         planned: SizeF,
         actual: SizeF = planned,
         cells: WidgetCells = WidgetCells.All,
-        words: WidgetWordsPlace = WidgetWordsPlace.Before,
+        words: WidgetWordsPosition = WidgetWordsPosition.Before,
         showsWords: Boolean = true,
     ): Drawn {
         val setup = WidgetSetup(WidgetStyle.Plain, slots = slots, cells = cells, words = words, showsWords = showsWords)
@@ -96,7 +96,7 @@ class WidgetInsetsTest {
         return Drawn(bitmap, context.getColor(R.color.widget_background_plain), density)
     }
 
-    private fun laidOut(setup: WidgetSetup, look: WidgetLook, planned: SizeF, actual: SizeF = planned): View {
+    private fun laidOut(setup: WidgetSetup, look: WidgetContent, planned: SizeF, actual: SizeF = planned): View {
         val view = WidgetSample.plain(context, setup, look, planned).apply(context, FrameLayout(context))
         val width = (actual.width * density).roundToInt()
         val height = (actual.height * density).roundToInt()
@@ -190,7 +190,7 @@ class WidgetInsetsTest {
         val look = music.copy(subtitle = "Ana Holm", durationMs = 0)
         for (actual in around(WidgetSample.card)) {
             val name = "card, words after, at $actual"
-            val drawn = draw(DefaultSlots, look, WidgetSample.card, actual, words = WidgetWordsPlace.After)
+            val drawn = draw(DefaultSlots, look, WidgetSample.card, actual, words = WidgetWordsPosition.After)
             assertFrame(WidgetSizes.PADDING, drawn, name)
             assertCells(drawn, WidgetSizes.PADDING + WidgetSizes.CELL_HEIGHT / 2, 3, name)
         }

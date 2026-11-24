@@ -38,7 +38,7 @@ import io.github.hazymorning.amsel.ui.components.TextAction
 import io.github.hazymorning.amsel.ui.components.baselineFrame
 import io.github.hazymorning.amsel.ui.components.moved
 import io.github.hazymorning.amsel.ui.components.plus
-import io.github.hazymorning.amsel.ui.components.rememberReorderable
+import io.github.hazymorning.amsel.ui.components.rememberReorderState
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
@@ -73,7 +73,7 @@ internal fun Sections(
     )
     // One for the list's life: a new one at each recomposition would keep every section from skipping.
     val home = remember(list) {
-        ScrollRoom(list, vertical = true) {
+        DragScrollArea(list, vertical = true) {
             listBox.copy(top = listBox.top + shown.first, bottom = listBox.bottom - shown.second)
         }
     }
@@ -81,7 +81,7 @@ internal fun Sections(
     val ids = remember(byId) { byId.keys.toList() }
     // The order while a drag swaps sections; the stored order replaces it once the drop is saved.
     var order by remember(ids) { mutableStateOf(ids) }
-    val reorder = rememberReorderable(
+    val reorder = rememberReorderState(
         list,
         movable = { it in byId },
         onSwap = { from, to -> order = order.moved(order.indexOf(from), order.indexOf(to)) },

@@ -21,7 +21,7 @@ public data class PlayProgress(
     val uri: String,
     @SerialName("media_type") val mediaType: String = "",
     @SerialName("fully_played") val fullyPlayed: Boolean? = null,
-    @SerialName("seconds_played") @Serializable(with = LenientLong::class) val secondsPlayed: Long? = null,
+    @SerialName("seconds_played") @Serializable(with = LenientLongSerializer::class) val secondsPlayed: Long? = null,
     @SerialName("is_playing") val isPlaying: Boolean = false,
     @SerialName("userid") val userId: String? = null,
 )
@@ -58,14 +58,14 @@ public suspend fun MaApi.inProgress(limit: Int): List<MediaItem> =
     list("music/in_progress_items", MediaItem.serializer()) { put("limit", limit) }
 
 /** A book or episode in progress as [inProgress] lists it, and as read again by its uri when that worked. */
-public data class Started(val listed: MediaItem, val fresh: MediaItem?)
+public data class InProgressItem(val listed: MediaItem, val fresh: MediaItem?)
 
 /**
  * [inProgress] with each item read again by its uri, side by side, for the progress and cover the
  * listing lacks; one finished meanwhile is left out.
  */
-public suspend fun MaApi.started(limit: Int): List<Started> = coroutineScope {
-    inProgress(limit).map { item -> async { Started(item, orNullOnFailure { itemByUri(item.uri) }) } }.awaitAll()
+public suspend fun MaApi.started(limit: Int): List<InProgressItem> = coroutineScope {
+    inProgress(limit).map { item -> async { InProgressItem(item, orNullOnFailure { itemByUri(item.uri) }) } }.awaitAll()
 }.filterNot { it.fresh?.fullyPlayed == true }
 
 /**

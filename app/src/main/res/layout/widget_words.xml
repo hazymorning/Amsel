@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The speaker and what plays, in the phone's own sans-serif, which WidgetText measures: sizes and
+<!-- The speaker and what plays, in the phone's own sans-serif, which WidgetTextMetrics measures: sizes and
      lines as WidgetLine has them. The view stands the words' lead outside its box at either side,
      and each line's padding puts its first ink, and the level's last, on the box's edge
      (WidgetWordsViews). The level, the speaker's volume, stands after the speaker's name, which

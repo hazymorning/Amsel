@@ -67,11 +67,11 @@ private const val MAX_LEVEL = 100
  * cold start it does not know yet. Two taps in a row step on from the first, before the speaker
  * reports it.
  */
-internal class StateTaps(private val actions: WidgetActions, private val elapsedRealtime: () -> Long) {
+internal class StateButtonHandler(private val actions: WidgetActions, private val elapsedRealtime: () -> Long) {
     private val asked = mutableMapOf<String, Pair<Int, Long>>()
 
     /** Says why nothing changed, or null. */
-    suspend fun tap(button: WidgetButton, shown: WidgetLook): Refusal? {
+    suspend fun tap(button: WidgetButton, shown: WidgetContent): Refusal? {
         when (button) {
             WidgetButton.Quieter -> return volume(shown, up = false)
             WidgetButton.Louder -> return volume(shown, up = true)
@@ -89,7 +89,7 @@ internal class StateTaps(private val actions: WidgetActions, private val elapsed
      * person's limit: a step that would pass it sets the limit, one from the limit or above it does
      * nothing and says so.
      */
-    private suspend fun volume(shown: WidgetLook, up: Boolean): Refusal? {
+    private suspend fun volume(shown: WidgetContent, up: Boolean): Refusal? {
         if (shown.phone) {
             actions.phoneVolume(up)
             return null

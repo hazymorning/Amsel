@@ -30,13 +30,13 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.ui.components.InkGlyph
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.SpeakerPill
 import io.github.hazymorning.amsel.ui.components.SpeakerPillLeast
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.footerWords
-import io.github.hazymorning.amsel.ui.components.inkSides
 import io.github.hazymorning.amsel.ui.components.overhang
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimSideBearings
 import io.github.hazymorning.amsel.ui.components.wordGlyph
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -79,13 +79,13 @@ internal fun Footer(
         val width = constraints.maxWidth
         val gap = PillToUtilities.roundToPx()
         val loose = Constraints()
-        val pill = subcompose(Part.Pill) { SpeakerPill(state.speaker, onSpeaker) }.first()
+        val pill = subcompose(FooterSlot.Pill) { SpeakerPill(state.speaker, onSpeaker) }.first()
         val wanted = pill.maxIntrinsicWidth(Sizes.TouchTarget.roundToPx())
-        val full = subcompose(Part.Utilities) { utilities(true) }.first().measure(loose)
+        val full = subcompose(FooterSlot.Utilities) { utilities(true) }.first().measure(loose)
         val end = if (wanted + gap + full.width <= width) {
             full
         } else {
-            subcompose(Part.Bare) { utilities(false) }.first().measure(loose)
+            subcompose(FooterSlot.Bare) { utilities(false) }.first().measure(loose)
         }
         val room = (width - gap - end.width).coerceAtLeast(0)
         val start = when {
@@ -93,11 +93,11 @@ internal fun Footer(
 
             // The caret goes before a letter of the name does.
             room >= SpeakerPillLeast.roundToPx() ->
-                subcompose(Part.Plain) { SpeakerPill(state.speaker, onSpeaker, caret = false) }
+                subcompose(FooterSlot.Plain) { SpeakerPill(state.speaker, onSpeaker, caret = false) }
                     .first()
                     .measure(Constraints(maxWidth = room))
 
-            else -> subcompose(Part.Glyph) {
+            else -> subcompose(FooterSlot.Glyph) {
                 SpeakerPill(state.speaker, onSpeaker, named = false)
             }.first().measure(loose)
         }
@@ -109,7 +109,7 @@ internal fun Footer(
     }
 }
 
-private enum class Part { Pill, Plain, Glyph, Utilities, Bare }
+private enum class FooterSlot { Pill, Plain, Glyph, Utilities, Bare }
 
 private val PillToUtilities = Space.S3
 
@@ -172,7 +172,7 @@ private fun GlyphGround(
             .background(if (ground) colors.onSurface.copy(alpha = PILL_ALPHA) else Color.Transparent),
         contentAlignment = Alignment.Center,
     ) {
-        InkGlyph(icon, tint = colors.controls, size = glyph)
+        AlignedGlyph(icon, tint = colors.controls, size = glyph)
     }
 }
 
@@ -192,14 +192,14 @@ private fun VolumeLevel(level: String, description: String, onClick: () -> Unit)
             .padding(horizontal = LevelPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InkGlyph(R.drawable.ic_volume, tint = colors.controls, size = wordGlyph(words))
+        AlignedGlyph(R.drawable.ic_volume, tint = colors.controls, size = wordGlyph(words))
         Spacer(Modifier.width(GlyphToLevel))
         Text(
             level,
             style = words,
             color = colors.controls,
             maxLines = 1,
-            modifier = Modifier.clearAndSetSemantics {}.textInk(words).inkSides(level, words),
+            modifier = Modifier.clearAndSetSemantics {}.capToBaseline(words).trimSideBearings(level, words),
         )
     }
 }

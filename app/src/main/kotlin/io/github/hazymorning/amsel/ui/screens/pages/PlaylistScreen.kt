@@ -20,8 +20,8 @@ import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.MoreButton
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.TrackRow
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
-import io.github.hazymorning.amsel.ui.components.rowInkTop
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphTop
 import io.github.hazymorning.amsel.ui.model.ActionsContext
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
@@ -62,7 +62,7 @@ fun PlaylistScreen(
             onBack,
             modifier,
             bottom =
-                Space.ListEnd - rowInkBottom(RowLead.Cover, true),
+                Space.ListEnd - rowGlyphBottom(RowLead.Cover, true),
             art = playlist?.art,
             // An empty playlist has no row for Play, so its ⋮ waits in the bar.
             actions = {
@@ -84,7 +84,7 @@ fun PlaylistScreen(
                         onPlay = onPlay,
                         start = shuffleGlyph(onShuffle),
                         end = playlist?.let { moreGlyph(it.title) { onMore(it.media) } },
-                        listInk = rowInkTop(RowLead.Cover, twoLines = true),
+                        listInk = rowGlyphTop(RowLead.Cover, twoLines = true),
                     )
                 }
             }

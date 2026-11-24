@@ -45,7 +45,7 @@ import io.github.hazymorning.amsel.ui.components.EmptyState
 import io.github.hazymorning.amsel.ui.components.PageTopBar
 import io.github.hazymorning.amsel.ui.components.WaitingState
 
-enum class HomeAssistantPage { Opening, Shown, Unreachable }
+enum class HomeAssistantPageState { Opening, Shown, Unreachable }
 
 /**
  * Home Assistant's own sign-in page, inside the app. JavaScript and DOM storage are on because Music Assistant's callback page needs them. When the page sends the
@@ -76,7 +76,7 @@ fun HomeAssistantSignIn(
         page = page,
         onClose = onClose,
         onRetry = {
-            page = HomeAssistantPage.Opening
+            page = HomeAssistantPageState.Opening
             retained.web.loadUrl(url)
         },
         modifier = modifier,
@@ -106,17 +106,17 @@ fun HomeAssistantSignIn(
                         ): WebResourceResponse? {
                             val home = request.url.host?.let(::isLanHost) == true && plainAllowed()
                             if (request.url.scheme != "http" || home) return null
-                            if (request.isForMainFrame) view.post { page = HomeAssistantPage.Unreachable }
+                            if (request.isForMainFrame) view.post { page = HomeAssistantPageState.Unreachable }
                             return WebResourceResponse("text/plain", "utf-8", 403, "Forbidden", null, null)
                         }
 
                         override fun onPageFinished(view: WebView, url: String?) {
-                            if (page == HomeAssistantPage.Opening) page = HomeAssistantPage.Shown
+                            if (page == HomeAssistantPageState.Opening) page = HomeAssistantPageState.Shown
                         }
 
                         override fun onReceivedSslError(view: WebView, handler: SslErrorHandler, error: SslError) {
                             handler.cancel()
-                            page = HomeAssistantPage.Unreachable
+                            page = HomeAssistantPageState.Unreachable
                         }
 
                         override fun onReceivedError(
@@ -124,12 +124,12 @@ fun HomeAssistantSignIn(
                             request: WebResourceRequest,
                             error: WebResourceError,
                         ) {
-                            if (request.isForMainFrame) page = HomeAssistantPage.Unreachable
+                            if (request.isForMainFrame) page = HomeAssistantPageState.Unreachable
                         }
                     }
                 }
             },
-            update = { it.visibility = if (page == HomeAssistantPage.Shown) View.VISIBLE else View.INVISIBLE },
+            update = { it.visibility = if (page == HomeAssistantPageState.Shown) View.VISIBLE else View.INVISIBLE },
             modifier = Modifier.fillMaxSize(),
         )
     }
@@ -142,7 +142,7 @@ fun HomeAssistantSignIn(
 private class RetainedPage(context: Context, url: String) : RetainObserver {
     private val host = MutableContextWrapper(context)
     val web = WebView(host).apply { loadUrl(url) }
-    val page = mutableStateOf(HomeAssistantPage.Opening)
+    val page = mutableStateOf(HomeAssistantPageState.Opening)
 
     /** The view, in [context]'s activity. */
     fun attach(context: Context): WebView {
@@ -178,7 +178,7 @@ private class RetainedPage(context: Context, url: String) : RetainObserver {
  */
 @Composable
 fun HomeAssistantFrame(
-    page: HomeAssistantPage,
+    page: HomeAssistantPageState,
     onClose: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -202,12 +202,12 @@ fun HomeAssistantFrame(
         ) {
             web()
             when (page) {
-                HomeAssistantPage.Opening -> WaitingState(
+                HomeAssistantPageState.Opening -> WaitingState(
                     stringResource(R.string.setup_opening_home_assistant),
                     Modifier.fillMaxSize(),
                 )
 
-                HomeAssistantPage.Unreachable -> EmptyState(
+                HomeAssistantPageState.Unreachable -> EmptyState(
                     R.drawable.ic_offline,
                     stringResource(R.string.setup_error_home_assistant_page),
                     Modifier.fillMaxSize(),
@@ -215,7 +215,7 @@ fun HomeAssistantFrame(
                     onAction = onRetry,
                 )
 
-                HomeAssistantPage.Shown -> Unit
+                HomeAssistantPageState.Shown -> Unit
             }
         }
     }

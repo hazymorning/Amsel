@@ -18,14 +18,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.graph
-import io.github.hazymorning.amsel.playback.Chapters
+import io.github.hazymorning.amsel.playback.ChapterNavigation
 import io.github.hazymorning.amsel.ui.components.RowLead
 import io.github.hazymorning.amsel.ui.components.SheetHeader
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.chapterRows
 import io.github.hazymorning.amsel.ui.components.numberLeadWidth
 import io.github.hazymorning.amsel.ui.components.rememberListeningClock
 import io.github.hazymorning.amsel.ui.components.sheetEnd
-import io.github.hazymorning.amsel.ui.components.textInk
 import io.github.hazymorning.amsel.ui.model.ChapterUi
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
@@ -44,7 +44,7 @@ fun ChaptersSheetContent(state: NowPlayingUi, onPick: (ChapterUi) -> Unit, modif
     val now by rememberListeningClock(state.isPlaying)
     val starts = remember(state.chapters) { state.chapters.map { it.startMs } }
     val at = state.positionAt(now)
-    val current = Chapters.indexAt(starts, at)
+    val current = ChapterNavigation.indexAt(starts, at)
     val left = state.chapters.getOrNull(current)?.let { ((it.endMs - at).coerceAtLeast(0) / 1000).toInt() }
     val list = rememberLazyListState(initialFirstVisibleItemIndex = (current - 1).coerceAtLeast(0))
     val end = if (state.chapters.isEmpty()) Space.SheetEdge else sheetEnd(RowLead.Glyph, twoLines = false)
@@ -63,7 +63,7 @@ fun ChaptersSheetContent(state: NowPlayingUi, onPick: (ChapterUi) -> Unit, modif
                 ),
                 style = body,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = Keyline.Margin).textInk(body),
+                modifier = Modifier.padding(horizontal = Keyline.Margin).capToBaseline(body),
             )
         } else {
             val numbers = numberLeadWidth(state.chapters.lastOrNull()?.number ?: 0)

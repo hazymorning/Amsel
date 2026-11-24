@@ -32,10 +32,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.hazymorning.amsel.R
-import io.github.hazymorning.amsel.app.Choice
-import io.github.hazymorning.amsel.app.GroupChoice
+import io.github.hazymorning.amsel.app.GroupCandidate
+import io.github.hazymorning.amsel.app.PlayOnAction
 import io.github.hazymorning.amsel.graph
-import io.github.hazymorning.amsel.ui.components.InkGlyph
+import io.github.hazymorning.amsel.ui.components.AlignedGlyph
 import io.github.hazymorning.amsel.ui.components.ListRow
 import io.github.hazymorning.amsel.ui.components.PlayBars
 import io.github.hazymorning.amsel.ui.components.PrimaryButton
@@ -44,7 +44,7 @@ import io.github.hazymorning.amsel.ui.components.SecondaryButton
 import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.SheetQuestion
 import io.github.hazymorning.amsel.ui.components.label
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
@@ -173,7 +173,7 @@ private fun SpeakerList(
         // The sheet reads "Play on", the speakers, then what to do with them: Group, one big tap, and
         // letting a group go one more under it in the second tone, so the sheet keeps one focal
         // point. They stand a group's distance under the last speaker's words.
-        Spacer(Modifier.height((Space.BeforeList - rowInkBottom(RowLead.Glyph, twoLines = true)).coerceAtLeast(0.dp)))
+        Spacer(Modifier.height((Space.BeforeList - rowGlyphBottom(RowLead.Glyph, twoLines = true)).coerceAtLeast(0.dp)))
         val wide = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth()
         if (members != null) {
             PrimaryButton(
@@ -249,7 +249,7 @@ private fun SpeakerRow(speaker: SpeakerUi, selected: Boolean, onClick: () -> Uni
             onClick()
         },
         leading = {
-            InkGlyph(
+            AlignedGlyph(
                 speaker.glyph,
                 tint = if (selected) colors.onSurface else colors.onSurfaceVariant,
             )
@@ -271,7 +271,7 @@ data class PlayOnUiState(
     /** Whom the group step is for: the leader of the group that exists, else the speaker in use. */
     val leader: SpeakerUi? = null,
     /** Who can play along with [leader]; empty when it cannot lead a group. */
-    val group: List<GroupChoice> = emptyList(),
+    val group: List<GroupCandidate> = emptyList(),
     /** Speakers play along with another, the one in use or not: Ungroup lets them all go. */
     val grouped: Boolean = false,
     val question: PlayOnQuestion? = null,
@@ -304,7 +304,7 @@ fun PlayOnRoute(onDone: () -> Unit, grouping: Boolean = false) {
         ),
         onSelect = { target ->
             scope.launch {
-                if (graph.playOn.choose(target) == Choice.Ask) {
+                if (graph.playOn.choose(target) == PlayOnAction.Ask) {
                     question = PlayOnQuestion(target, graph.playing.nowPlaying.value?.title.orEmpty(), current)
                 } else {
                     onDone()
@@ -328,7 +328,7 @@ fun PlayOnRoute(onDone: () -> Unit, grouping: Boolean = false) {
     )
 }
 
-/** "Transfer playback" from Now Playing's ⋯. The move runs in the app's scope ([PlayOn.moveTo]), so the sheet closes at once. */
+/** "Transfer playback" from Now Playing's ⋯. The move runs in the app's scope ([PlayOnController.moveTo]), so the sheet closes at once. */
 @Composable
 fun TransferRoute(onDone: () -> Unit) {
     val graph = LocalContext.current.graph

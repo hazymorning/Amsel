@@ -30,7 +30,7 @@ import io.github.hazymorning.amsel.api.MediaType
 import io.github.hazymorning.amsel.api.albumTracks
 import io.github.hazymorning.amsel.api.endlessMixOf
 import io.github.hazymorning.amsel.api.libraryItems
-import io.github.hazymorning.amsel.data.TokenVault
+import io.github.hazymorning.amsel.data.TokenCipher
 import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.playback.PlaybackService
 import io.github.hazymorning.amsel.ui.model.NowPlayingUi
@@ -68,7 +68,7 @@ class JourneyApp : AmselApp() {
 
     override fun createGraph(): AppGraph = AppGraph(
         this,
-        object : TokenVault {
+        object : TokenCipher {
             override fun seal(token: String) = token
 
             override fun open(sealed: String) = sealed

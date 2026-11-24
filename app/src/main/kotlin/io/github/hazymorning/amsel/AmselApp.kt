@@ -33,7 +33,7 @@ open class AmselApp :
                     // Each time Amsel comes to the front, it can follow the music to the speaker that plays.
                     graph.scope.launch { if (graph.data.prefs.current().followPlaying) graph.playOn.followPlaying() }
                     // The first time only: a start of the app, never a return to it.
-                    graph.updates.lookAtStart { graph.data.prefs.current().lookForUpdates }
+                    graph.updates.checkAtStart { graph.data.prefs.current().lookForUpdates }
                 }
 
                 override fun onStop(owner: LifecycleOwner) {

@@ -21,26 +21,26 @@ import kotlinx.coroutines.launch
 internal fun CoroutineScope.staleness(state: Flow<ConnectionState>, afterMs: Long): StateFlow<Boolean> {
     val stale = MutableStateFlow(false)
     launch {
-        state.map(::linkOf).distinctUntilChanged().collectLatest { link ->
+        state.map(::connectionPhaseOf).distinctUntilChanged().collectLatest { link ->
             when (link) {
-                Link.Up -> stale.value = false
+                ConnectionPhase.Up -> stale.value = false
 
-                Link.Trying -> {
+                ConnectionPhase.Trying -> {
                     delay(afterMs)
                     stale.value = true
                 }
 
-                Link.Closed -> Unit
+                ConnectionPhase.Closed -> Unit
             }
         }
     }
     return stale.asStateFlow()
 }
 
-private enum class Link { Up, Trying, Closed }
+private enum class ConnectionPhase { Up, Trying, Closed }
 
-private fun linkOf(state: ConnectionState): Link = when (state) {
-    is ConnectionState.Connected -> Link.Up
-    ConnectionState.Connecting, ConnectionState.Offline -> Link.Trying
-    ConnectionState.Idle, ConnectionState.SignedOut, ConnectionState.Unsupported -> Link.Closed
+private fun connectionPhaseOf(state: ConnectionState): ConnectionPhase = when (state) {
+    is ConnectionState.Connected -> ConnectionPhase.Up
+    ConnectionState.Connecting, ConnectionState.Offline -> ConnectionPhase.Trying
+    ConnectionState.Idle, ConnectionState.SignedOut, ConnectionState.Unsupported -> ConnectionPhase.Closed
 }

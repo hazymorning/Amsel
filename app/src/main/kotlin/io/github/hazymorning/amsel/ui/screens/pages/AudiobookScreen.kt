@@ -30,15 +30,15 @@ import io.github.hazymorning.amsel.ui.LocalAppActions
 import io.github.hazymorning.amsel.ui.components.MoreButton
 import io.github.hazymorning.amsel.ui.components.ProgressLine
 import io.github.hazymorning.amsel.ui.components.RowLead
+import io.github.hazymorning.amsel.ui.components.capToBaseline
+import io.github.hazymorning.amsel.ui.components.centreOnGlyphs
 import io.github.hazymorning.amsel.ui.components.chapterRows
-import io.github.hazymorning.amsel.ui.components.inkCentre
 import io.github.hazymorning.amsel.ui.components.leftText
 import io.github.hazymorning.amsel.ui.components.lengthText
 import io.github.hazymorning.amsel.ui.components.numberLeadWidth
 import io.github.hazymorning.amsel.ui.components.rememberListeningClock
-import io.github.hazymorning.amsel.ui.components.rowInkBottom
-import io.github.hazymorning.amsel.ui.components.rowInkTop
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.rowGlyphBottom
+import io.github.hazymorning.amsel.ui.components.rowGlyphTop
 import io.github.hazymorning.amsel.ui.model.ChapterUi
 import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
@@ -93,7 +93,7 @@ fun AudiobookScreen(
         listState,
         onBack,
         modifier,
-        bottom = Space.ListEnd - rowInkBottom(RowLead.Glyph, twoLines = false),
+        bottom = Space.ListEnd - rowGlyphBottom(RowLead.Glyph, twoLines = false),
         art = book?.media?.art,
         actions = { if (book != null) MoreButton(book.title, onClick = { onMore(book.media) }) },
     ) {
@@ -110,7 +110,7 @@ fun AudiobookScreen(
                 } else {
                     null
                 },
-                listInk = rowInkTop(RowLead.Glyph, twoLines = false),
+                listInk = rowGlyphTop(RowLead.Glyph, twoLines = false),
             )
         }
         if (state.chaptersLoading) {
@@ -174,7 +174,7 @@ private fun WhereYouAre(state: AudiobookUiState, now: Long) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            modifier = Modifier.textInk(type).inkCentre(text, type),
+            modifier = Modifier.capToBaseline(type).centreOnGlyphs(text, type),
         )
         if (where != null) ProgressLine({ where.first }, Modifier.padding(top = Space.Part))
     }

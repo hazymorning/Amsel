@@ -35,11 +35,11 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.Artwork
 import io.github.hazymorning.amsel.ui.components.ShelfRow
 import io.github.hazymorning.amsel.ui.components.Words
-import io.github.hazymorning.amsel.ui.components.inkStart
+import io.github.hazymorning.amsel.ui.components.capToBaseline
 import io.github.hazymorning.amsel.ui.components.leftText
 import io.github.hazymorning.amsel.ui.components.lengthText
 import io.github.hazymorning.amsel.ui.components.shelfTileWidth
-import io.github.hazymorning.amsel.ui.components.textInk
+import io.github.hazymorning.amsel.ui.components.trimStartBearing
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Keyline
@@ -67,7 +67,7 @@ internal fun ListeningShelf(
     modifier: Modifier = Modifier,
 ) {
     val width = shelfTileWidth()
-    val card = rememberCardMeasure(width)
+    val card = rememberCardMetrics(width)
     ShelfRow(items, key = { it.key }, modifier) { item ->
         ListeningCard(item, card, onPlay = { onResume(item) }, onMore = { onMore(item) })
     }
@@ -76,7 +76,7 @@ internal fun ListeningShelf(
 /** The cards' twins while Continue listening loads for the first time: their size, their shape. */
 @Composable
 internal fun ListeningSkeleton(modifier: Modifier = Modifier) {
-    val card = rememberCardMeasure(shelfTileWidth())
+    val card = rememberCardMetrics(shelfTileWidth())
     Row(
         modifier
             .fillMaxWidth()
@@ -106,10 +106,10 @@ internal fun withTimeLeft(items: List<MediaUi>): List<MediaUi> = items.map { ite
  * Where a card's lines stand, from its top. Under the cover, two lines that say what it is; then,
  * a group's gap further, what is left, 16 over the line along the card's foot.
  */
-private class CardMeasure(val width: Dp, val cover: Dp, val words: Dp, val title: Dp, val second: Dp, val height: Dp)
+private class CardMetrics(val width: Dp, val cover: Dp, val words: Dp, val title: Dp, val second: Dp, val height: Dp)
 
 @Composable
-private fun rememberCardMeasure(width: Dp): CardMeasure {
+private fun rememberCardMetrics(width: Dp): CardMetrics {
     val type = MaterialTheme.typography
     val density = LocalDensity.current
     return remember(width, density, type) {
@@ -118,7 +118,7 @@ private fun rememberCardMeasure(width: Dp): CardMeasure {
             val title = Frame + cover + spaced(Space.Caption) + capHeight(type.titleSmall)
             val second = secondLine(type.bodyMedium)
             val foot = spaced(Space.Group) + capHeight(type.bodyMedium) + spaced(Space.S4) + Sizes.ProgressLine
-            CardMeasure(width, cover, Frame + Radius.under(Radius.cover(cover)), title, second, title + second + foot)
+            CardMetrics(width, cover, Frame + Radius.under(Radius.cover(cover)), title, second, title + second + foot)
         }
     }
 }
@@ -130,7 +130,7 @@ private fun rememberCardMeasure(width: Dp): CardMeasure {
  * what is left, and along it, edge to edge in the ink of every progress line, how far the person got.
  */
 @Composable
-private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, onMore: () -> Unit) {
+private fun ListeningCard(item: MediaUi, card: CardMetrics, onPlay: () -> Unit, onMore: () -> Unit) {
     val type = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val presses = remember { MutableInteractionSource() }
@@ -175,8 +175,8 @@ private fun ListeningCard(item: MediaUi, card: CardMeasure, onPlay: () -> Unit, 
                         end = card.words,
                         bottom = with(LocalDensity.current) { spaced(Space.S4) } + Sizes.ProgressLine,
                     )
-                    .textInk(type.bodyMedium)
-                    .inkStart(text, type.bodyMedium),
+                    .capToBaseline(type.bodyMedium)
+                    .trimStartBearing(text, type.bodyMedium),
             )
         }
         FootLine({ item.progress ?: 0f }, colors.onSurface, Modifier.align(Alignment.BottomCenter))
@@ -204,7 +204,7 @@ private fun FootLine(fraction: () -> Float, ink: Color, modifier: Modifier) {
 
 /** The title on its two lines; while it takes one, its author or podcast on the second. */
 @Composable
-private fun WhatItIs(item: MediaUi, card: CardMeasure, modifier: Modifier) {
+private fun WhatItIs(item: MediaUi, card: CardMetrics, modifier: Modifier) {
     val type = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val by = item.subtitle?.takeIf { it.isNotBlank() }
@@ -215,7 +215,7 @@ private fun WhatItIs(item: MediaUi, card: CardMeasure, modifier: Modifier) {
                 type.titleSmall,
                 color = colors.onSurface,
                 maxLines = 2,
-                modifier = Modifier.inkStart(item.title, type.titleSmall),
+                modifier = Modifier.trimStartBearing(item.title, type.titleSmall),
             )
             if (by !=
                 null
@@ -224,7 +224,7 @@ private fun WhatItIs(item: MediaUi, card: CardMeasure, modifier: Modifier) {
                     by,
                     type.bodyMedium,
                     color = colors.onSurfaceVariant,
-                    modifier = Modifier.inkStart(by, type.bodyMedium),
+                    modifier = Modifier.trimStartBearing(by, type.bodyMedium),
                 )
             }
         },

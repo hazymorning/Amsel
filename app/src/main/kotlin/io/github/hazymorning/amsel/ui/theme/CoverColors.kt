@@ -69,7 +69,7 @@ private val cache = LruCache<String, Hue>(64)
 
 /** A cover's hue, or [Grey] when it has none worth borrowing. */
 private sealed interface Hue {
-    data class Of(val colors: CoverColors) : Hue
+    data class Colored(val colors: CoverColors) : Hue
 
     data object Grey : Hue
 }
@@ -83,13 +83,13 @@ private sealed interface Hue {
 fun rememberCoverColors(art: ArtRef?): CoverColors? {
     val context = LocalContext.current
     val key = art?.base
-    val colors by produceState(initialValue = key?.let { (cache.get(it) as? Hue.Of)?.colors }, key) {
+    val colors by produceState(initialValue = key?.let { (cache.get(it) as? Hue.Colored)?.colors }, key) {
         if (art == null || key == null) {
             value = null
             return@produceState
         }
         cache.get(key)?.let {
-            value = (it as? Hue.Of)?.colors
+            value = (it as? Hue.Colored)?.colors
             return@produceState
         }
         val loader = SingletonImageLoader.get(context)
@@ -117,7 +117,7 @@ fun rememberCoverColors(art: ArtRef?): CoverColors? {
             hueOf(palette)
         }
         cache.put(key, hue)
-        value = (hue as? Hue.Of)?.colors
+        value = (hue as? Hue.Colored)?.colors
     }
     return colors
 }
@@ -154,7 +154,7 @@ private fun hueOf(palette: Palette): Hue {
     val bins = family(best)
     val w = bins.sumOf { weight[it].toDouble() }.toFloat()
     val hue = Math.toDegrees(atan2(bins.sumOf { y[it].toDouble() }, bins.sumOf { x[it].toDouble() })).toFloat()
-    return Hue.Of(CoverColors((hue + 360f) % 360f, bins.sumOf { saturation[it].toDouble() }.toFloat() / w))
+    return Hue.Colored(CoverColors((hue + 360f) % 360f, bins.sumOf { saturation[it].toDouble() }.toFloat() / w))
 }
 
 /** Hue families of 30°, judged three at a time so a family split by a boundary still counts whole. */

@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.data.home.SectionOption
-import io.github.hazymorning.amsel.ui.components.Reorderable
+import io.github.hazymorning.amsel.ui.components.ReorderState
 import io.github.hazymorning.amsel.ui.components.SearchEntry
 import io.github.hazymorning.amsel.ui.components.SectionHeader
 import io.github.hazymorning.amsel.ui.components.holdToMove
@@ -81,9 +81,9 @@ internal fun Section(
     editing: Boolean,
     lifted: Boolean,
     actions: SectionActions,
-    reorder: Reorderable,
+    reorder: ReorderState,
     modifier: Modifier = Modifier,
-    home: ScrollRoom? = null,
+    home: DragScrollArea? = null,
 ) {
     val title = section.heading()
     if (!editing) {
@@ -120,7 +120,7 @@ internal fun Section(
         Column(
             Modifier
                 .overhang(top = Space.BandText, bottom = Space.BandText)
-                .then(if (lifted) Modifier.clip(LiftedBand).background(band, LiftedBand) else Modifier)
+                .then(if (lifted) Modifier.clip(SectionRowShape).background(band, SectionRowShape) else Modifier)
                 .padding(vertical = Space.BandText),
         ) {
             Column(
@@ -178,7 +178,7 @@ private fun SectionBody(section: SectionUi, actions: SectionActions) {
 }
 
 /** A row's band at section size: a tile's shape, as far past the margins as a text row's band. */
-private object LiftedBand : Shape {
+private object SectionRowShape : Shape {
     override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
         val inset = with(density) { (Keyline.Margin - Space.BandText).toPx() }
         val band = Shapes.Tile.createOutline(Size(size.width - inset * 2, size.height), layoutDirection, density)
