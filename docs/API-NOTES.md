@@ -190,6 +190,7 @@ claiming it would make Android ask which app should open it. `localhost` is alwa
 return URL on both releases, so the server shows no consent page, and the WebView never loads it.
 The phone must reach HA's URL and MA's `base_url`. If MA's `base_url` is an address the phone
 cannot reach (container-internal, for example), the callback fails: fall back to username and password.
+- The callback page leaves the Music Assistant session token in the WebView's localStorage (the `localStorage.setItem` before its redirect, `helpers/resources/oauth_callback.html:271-283`). When the sign-in step ends, Amsel deletes the WebView's storage and cookies and destroys it (`RetainedPage.end`, `HomeAssistantPageTest`).
 
 ### 3.5 Scopes (`webserver/helpers/auth_middleware.py:37-68`; @2.10.8 `:37-68`) [live]
 
@@ -269,6 +270,7 @@ target types from `helpers/config_entries.py:29-33`.
 | `current_media` | `{uri, media_type, title, artist, album, album_artist, image_url, palette, duration, source_id, queue_item_id, elapsed_time, elapsed_time_last_updated}` | What plays now, whatever the source. `image_url` is an absolute imageproxy URL built on `base_url` (rebuild it, §8). `palette` = `{background_dark, background_light, primary, accent, on_dark, on_light}` as `[r,g,b]` or null, on both releases [live] |
 | `elapsed_time`, `elapsed_time_last_updated` | float | Position = `elapsed_time + (now - last_updated)` while playing; `time` gives the server clock |
 | `supported_features` | set of str | `power`, `volume_set`, `volume_mute`, `pause`, `seek`, `next_previous`, `enqueue`, `play_media`, `set_members`, `select_source`, … |
+- **`synced_to` and `group_members` disagree for a while** [live]. On 2.10.9 the members can name the leader before it lists them: four seconds after two joined, both had `synced_to` set and the leader listed nobody. On 2.11.0b7, two seconds in, the leader listed both and only one member had said so. While a group passes to another leader (2.10.9), a member's `synced_to` can name another member for a moment. Amsel reads groups from the members' `synced_to` (`syncGroups`).
 
 ### 5.3 Player commands (all `players.control`, all return null, same on both releases) [live]
 
@@ -299,6 +301,8 @@ answer. So Amsel sends the pause, and where a play is on its way (its own play, 
 next, a `play_media`, or the queue's flag) sends it again once that is over, unless playback was
 asked for meanwhile (`SeekController`, `MaSpeakerCommands.sendPauseOrStop`). On 2.11.0b7 a pause right after
 `next` or `seek` holds by itself: it cancels the `play_index` the server had scheduled.
+- **Answers come before the speaker acts** [inf]. A transport command (play, pause, shuffle, repeat, volume, next) is answered first; the speaker's new state arrives as `player_updated`/`queue_updated` a few hundred milliseconds later, about a second on some speakers. Amsel shows the tap at once and keeps it until the speaker reports the same state or a timeout passes (`OptimisticTransportState`).
+- **`set_members` settles over seconds** [live, 2.10.9 and 2.11.0b7, the test server's fake speakers]. The speakers that joined report the leader in their own `synced_to` one at a time, about two seconds apart. On 2.11 the leader's `group_members` lists a new member about two seconds before the member's `synced_to` does. `player_ids_to_remove` skips a speaker the server does not name as a member yet, so it can be let go only once named. After a speaker leaves, the leader's `group_members` still lists it for about two seconds, and removing it again in that time is an error. Amsel follows the server's word until all requested members are named (adds only) or the word has not changed for 5 s (`SpeakerGroupController.settle`, `GROUP_CONFIRM_MS`).
 
 ### 5.4 This phone (Sendspin)
 
@@ -344,6 +348,8 @@ place (`SpeakerRepository.rejoined`, `PendingSeek.Paused`): it shows there and a
 queue plays again or holds something else. A client-side fix that remembered places across runs
 (`Stand`, 2026.11.6, removed in 2026.11.9) took a chapter picked after the phone came back for the
 old save and sent the book back there.
+- **Back after a disconnect** [live, 2.10.9 and 2.11.0b7]. After This phone's Sendspin client leaves, the server keeps its player entry, marked unavailable. It registers the player again about 2 s after the client is back and refuses any command sent before then ("Player ... is not available"). A command for This phone waits until the server lists the player as available again (`joinedId`). 2.11.0b7 also sends a `player_updated` that calls the player available about a second after the server dropped it; only `player_added`, or a fresh `players/all`, means it is registered again (`SpeakerRepository.gone`).
+- **Legacy clients** [src]. A Sendspin client may use the legacy unencrypted protocol through `/sendspin`: after the proxy's `auth`, a `client/hello` first frame with `player@v1` support. The sendspin provider accepts it while its `allow_legacy_clients` option is on, the default on 2.10 and 2.11 (`providers/sendspin/provider.py`, `CONF_ALLOW_LEGACY_CLIENTS`), and logs a "non-compliant client" warning. `scripts/test-server/fake_player.py` relies on this.
 
 ## 6. Queues
 
@@ -370,6 +376,7 @@ old save and sent the book back there.
 `media_item` is a full `Track` (artists and album as ItemMapping). `index` is not filled in
 `player_queues/items` (all `0` [live]): use `offset + position in page`. `streamdetails` is large;
 ignore it.
+- **A queue item's `media_item` stays as queued** [src]: the server does not update its `favorite` after a like (`players/controller.py`; the official app's `MainDataSource` notes the same), nor its `fully_played` after a mark or a progress change. Amsel reads the playing item again with `music/item_by_uri` when it starts and after a reconnect.
 
 ### 6.2 Queue commands (`player_queues/controller.py`; read = `queues.read`, write = `queues.control`)
 
@@ -408,6 +415,7 @@ for the group's lock and again for its own, then fails with error 24 (`players/c
 So: send it from an app-wide scope, one per queue, show the pending state from the queue's
 `extra_attributes.play_action_in_progress`, and drop double taps. Sequence seen after a `replace`
 [live]: `queue_items_updated`, about 9 `queue_updated`, 4 `player_updated`.
+- **`start_item` and repeated or loose tracks.** `start_item` names a track by uri, so in a playlist that holds a track more than once the server starts at its first copy; Amsel plays a later copy as a list of uris from that row. For a list of track uris (an artist's popular songs, similar songs) `start_item` does not apply, so Amsel sends the list from the tapped song.
 
 ## 7. Library
 
@@ -426,6 +434,7 @@ So: send it from an app-wide scope, one per queue, show the pending state from t
 - **Telling smart playlists apart** (`MediaItem.isSmartPlaylist`): a provider mapping with `provider_domain: "builtin"` **and** `is_editable: false`. Neither half is enough alone: a playlist made in MA (`music/playlists/create_playlist`) is also `builtin` with `owner: "Music Assistant"`, but `is_editable: true` (`providers/builtin/__init__.py:277-347`, same @2.10.8); a local `.m3u` playlist is `is_editable: false` too ("Amsel Mix" [live]). Library items carry `provider: "library"`, so the provider shows only in `provider_mappings`, which summary items include [live]. `music/playlists/library_items {provider: "builtin"}` filters server-side on both releases [live], but returns the MA-made playlists as well. Amsel keeps an `isSmart` column in the library index (`LibraryRepository.smartPlaylists` and `ownPlaylists`).
 - **The Smart Playlists plugin** (`providers/smart_playlist`, a beta plugin in 2.10 and 2.11) adds each rule-based playlist it makes to the library: `owner: "Smart Playlist"`, `is_editable: true`, a provider mapping with `provider_domain: "smart_playlist"` (`smart_playlist/__init__.py:718-723`). `MediaItem.isPluginSmartPlaylist` checks the domain; such playlists also count as smart, and the index keeps a `smartPlugin` column. Home's Smart playlists show the plugin's when there are any, the built-in set otherwise.
 - **Radio** (`media_type: "radio"`) adds `duration: 0`, `is_dynamic: false` and on 2.11 `is_endless: true`; no artists, album or year. Its cover is `metadata.images[0]` with a `proxy_id` like any other item [live].
+- **`sort_name`** is the name in lower case with a leading "The" moved to the end: "The Lantern Road" has `sort_name` "lantern road, the" on 2.10 and 2.11 [live: fixtures `music_audiobooks_get`, `music_audiobooks_library_items`]. The Library's A–Z letters come from it (`letterJumps`), so such a name files under L.
 
 ### 7.2 `music/{albums|artists|playlists|tracks|radios}/library_items` (`media/base.py:590-675`)
 
@@ -512,6 +521,7 @@ below the header waited for it, and for local files for a second, full listing a
 header and the albums paint from the index in the first frame and only the popular songs wait.
 An artist with 300 library tracks sent about 650 KB for five popular rows; on 2.11 it is now
 about 11 KB [inf: 2.2 KB per full track, measured].
+- **Long playlists and podcasts are slow** [inf]. 2.10 streams all of a long playlist or podcast in partials, and 2.11 fetches all of it from the provider before it answers the first page. Amsel allows 90 s (`STREAM_TIMEOUT`).
 
 ### 7.4 Home sections
 
@@ -610,6 +620,8 @@ these fixtures to an existing fixture directory. Fixtures: `music_radios_*`, `bu
 - **`start_item`** names a chapter by `position`, and the server takes the first chapter with that position in its whole stored list: after a merge (the same book from files and from Audiobookshelf, or an Audiobookshelf edit) a current chapter's position can name a stale one elsewhere (chapter 25 started chapter 26). `MediaItem.startItemFor` picks a position whose first chapter starts there. A chapter starts 0.5 s early (`_get_resume_position` subtracts 500 ms).
 - **Audiobookshelf** [live]. A multi-file book is one item on one timeline: `elapsed_time`, seeks and chapter starts are whole-book seconds and cross file boundaries. Progress goes to Audiobookshelf every 30 s while playing and on pause, but the provider **drops any update for an item within 8 s of its previous one, marks included** (`audiobookshelf/helpers.py` `ProgressGuard`); 2.11's next sync from Audiobookshelf (about 10 s after a change there) then sends Audiobookshelf's state back as `playlog_updated` with `userid: null`, one per progress row, and undoes such a mark. 2.10.9 sent nothing within 15 s of a change made in Audiobookshelf and kept the old progress in its items, while `play_media` already resumed from the new one. After a chapter edit in Audiobookshelf the server appends the new chapters to the stale ones (`MediaItemMetadata.update` merges lists; dev `audiobooks.py` replaces only images and collections); `MediaItem.chapters` keeps the last chapter at each position and drops a stored one that overlaps the chapter before it. Each 2.11 sync also re-sends every Audiobookshelf progress row, changed or not, so the index writes only what changed.
 - **Not used yet:** `player_queues/set_playback_speed`, `start_from_beginning`, `music/artists/artist_audiobooks`, and the server's bookmarks (branch `audiobook_bookmarks`, schema 102 there): Amsel keeps bookmarks on the phone and follows a chapter's end with the plain timer.
+- **Seek timing** [live and household tests]. After a seek is answered, the first report at the target can take most of 30 s (a stream from Audiobookshelf over a VPN did); Amsel waits 30 s (`PendingSeek.WINDOW_MS`) before it takes the server's report, whatever it is. The answer itself can take minutes at worst: in the owner's test of 2026.11.9, a chapter picked deep in a long file played while the queue reported 0, and Now Playing showed chapter 1 until the answer came. After a chapter start the server reports the position half a second early twice, 5 ms apart (`queue_time_updated` 959.25, then `queue_updated` 959.25, for a chapter at 960).
+- **`last_played` of a book** moves only once the book is finished, so a book in progress keeps its old place in the Recently played sort and in `played_only`. Amsel ranks the books from `music/in_progress_items` first, last played first (`LibraryRepository.recentlyPlayed`).
 
 ### 7.10 Audiobookshelf for downloads (2026-11-08; Audiobookshelf 2.37.2 [live])
 
@@ -655,6 +667,7 @@ Each is offered only where the server has what it takes, read from `providers` (
 - **DJ changes.** 2.11 sends `provider_event` with `object_id: "ai_radio"` and `data: {"event": "queue_dj_updated"}` after every `set`, also one that changed nothing; 2.10.9 sends nothing [live], so Amsel reads the state again before it shows it. Nothing on the queue object tells of the DJ. What it says is a queue item with `media_item.media_type: "sound_effect"` and `provider: "ai_radio"` [live, 2.11.0b7].
 
 Fixtures: `player_queues_get__endless_mix`, `music_tracks_similar_tracks`, `music_artists_similar_artists`, `ai_radio_*`, `event_provider_event__queue_dj_updated` (2.11). Live: `LiveServerTest` on the `test` music service `setup.py` adds (§11), and `LiveDjTest` where the plugin is loaded.
+- **More on the DJ and the extras.** On 2.10.9 too, what the DJ says is a queue item with `media_item.media_type: "sound_effect"` and `provider: "ai_radio"` (fixture `2.10/player_queues_items__dj_break`) [live]. A break the speaker has already buffered is still spoken after the DJ is switched off (`host_id: null`) [inf]. The mix plugin `radio_playlist` is built in from 2.10.9 on; a mix is offered only where `providers` lists it as a loaded plugin [inf]. `music/tracks/similar_tracks` for a song that no music service knows answers with a command error instead of `[]` ("No Music Provider found"); Amsel shows the empty page without Retry. Like songs, `similar_artists` can return the artist asked for under a music service's id; `withoutSeed` drops it by its provider mappings, and repeats are dropped by uri.
 
 ## 8. Images
 
@@ -669,6 +682,7 @@ identical @2.10.8 `:332-367`) [live]:
 - The id stays valid for a year after its last use (`metadata/constants.py:133`). A 404 means "no image": show the placeholder.
 - **Which picture** (`MediaItem.cover`): the item's own (`coverOf`, §7.1), else its `image`, else its album's, else its podcast's; a nested item's is its `image`, else its own `metadata.images`. A `QueueItem` has an `image` of its own besides: the server's choice.
 - **The server's own stand-ins** [src]: `QueueItem.image` is the item's first `thumb`, for a track its album's before its own, for an episode its podcast's after its own (`models: queue_item.py`, `get_image`); `current_media.image_url` is the same picture at size 512 (`models/player.py:3184-3232`). `get_image_url_for_item` (`metadata/images.py:187-238`, @2.10.8 `:195-243`) goes on to an album's first artist and a track's first artist, but only the Music Quiz plugin calls it. Nothing stands in for an artist's own picture: Amsel's index gives an artist without one the covers of its albums (`albumCovers`), which it wears wherever it shows, with no call per row.
+- **Smart playlist covers** [inf]. The server draws a built-in smart playlist's image as a collage of six by six album covers, each too small to read at tile size. Amsel crops it to the top-left corner, with as few covers across as stay sharp at the size shown (two on a tile, three on the playlist's page), and leaves any picture that is not such a grid whole (`MosaicCrop`).
 
 ## 9. Events
 
@@ -696,6 +710,7 @@ All events reach an authenticated socket automatically (`websocket_client.py:529
 Also sent but not used: `player_config_updated`, `player_options_updated`, `setup_flow_updated`, `dashboard_*`, `sync_tasks_updated`.
 `application_shutdown` is deprecated, and `auth_session` is never sent.
 A personal playlist the user can no longer see arrives once as `media_item_deleted` (2.11, `:694-717`).
+- **Events need an open socket.** Events reach a client only over its open, authenticated socket; the server has no push channel that could wake a phone whose socket is closed, so the widgets refresh from a JobScheduler job instead (`WidgetRefreshJobService`).
 
 ## 10. Limits and gotchas
 
@@ -722,6 +737,8 @@ A personal playlist the user can no longer see arrives once as `media_item_delet
 5. A guest user for scope tests: `auth/user/create {username, password, role: "guest"}`.
 6. Similar songs without a music service: `config/providers/setup {provider_domain: "test"}` adds the image's own test service at once (instance `test`, no form), and `config/providers/save {provider_domain: "test", instance_id: "test", values}` with every `num_*` at 0 and every `library_sync_*` false keeps it out of the library; left as set up, its first sync 10 s later adds 500 songs, 5 podcasts and 20 books. `similar_tracks {item_id: "0_0_0", provider_instance_id_or_domain: "test"}` then answers `0_0_1` to `0_1_5`, and they play (60 s of silence each) [live]. `setup.py` does this.
 7. The DJ without an AI: `openai_compatible` (flow values `service: "custom"`, then `base_url`; then save `models`) and `openai_tts` (`base_url`, `model`, `response_format`) set up against any address that answers `GET /models`, `GET /audio/voices` and `POST /audio/speech`, then `ai_radio` with `ai_engine` and `tts_engine` from its form's options. `config/providers/remove {instance_id}` takes each away again, `ai_radio` first [live].
+- Once a user exists, `POST /setup` answers "Setup already completed" with HTTP 400 on 2.10.9 and HTTP 409 on 2.11.0b7; a script then signs in with `POST /auth/login {provider_id: "builtin", credentials: {username, password}, device_name}` [live]. On 2.11 the `filesystem_local` setup form can also ask for `overlap_choice` when the folder overlaps another source; `setup.py` answers `use_folder`.
+- The fake speakers of `scripts/test-server/fake_player.py` (Kitchen, Living Room) appear in `players/all` about 15 s after they connect to a fresh server; the live tests wait up to 60 s for them.
 
 ## Sources
 

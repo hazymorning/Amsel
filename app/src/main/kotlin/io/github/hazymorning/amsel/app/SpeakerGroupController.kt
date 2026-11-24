@@ -110,7 +110,7 @@ class SpeakerGroupController internal constructor(
         leaving: Set<String>?,
         joining: Set<String>,
     ) {
-        // [joining], asked by the wish this one replaces, count from the leader's own list too, which
+        // [joining], asked by the request this one replaces, count from the leader's own list too, which
         // names them first; any other member counts only by its own synced_to ([syncGroups]).
         fun members(players: Map<String, Player>): Set<String> {
             val listed = players[leaderId]?.takeIf { it.canLeadGroup }?.groupMembers.orEmpty()
@@ -142,7 +142,7 @@ class SpeakerGroupController internal constructor(
         }
     }
 
-    // Compared by identity: a later wish for the same members is still another.
+    // Compared by identity: a later request for the same members is still another.
     private class PendingGroup(val members: Set<String>)
 
     private enum class GroupChange { Changed, Superseded }

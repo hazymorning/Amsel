@@ -51,7 +51,7 @@ class PlayOnController(
         override fun releasePhoneHold() = phone.hold(false)
 
         override suspend fun transfer(from: String, to: String, play: Boolean) {
-            // A seek made while paused was parked, never sent, so the server's transfer cannot carry it.
+            // A seek made while paused stays the paused position and is never sent, so a transfer cannot carry it.
             val pausedPosition = data.speakers.pausedPosition(from)
             if (play) commands.starting(to)
             data.session.api.transfer(from, to, play)

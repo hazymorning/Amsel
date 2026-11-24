@@ -205,7 +205,7 @@ class PlaybackController(
     }
 
     /**
-     * Unless a place is parked here, played with play_media so the server resumes from its bookmark:
+     * Unless a paused position is set here, played with play_media so the server resumes from its bookmark:
      * the queue's own place can be a stale save restored after This phone left. True when it already
      * plays and nothing was sent. See docs/API-NOTES.md, "This phone (Sendspin)".
      */
