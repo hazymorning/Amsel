@@ -24,15 +24,9 @@ import io.github.hazymorning.amsel.ui.theme.lineHeight
 import io.github.hazymorning.amsel.ui.theme.secondLine
 import kotlin.math.roundToInt
 
-/** From a mark's edge (the play bars, a download's) to the words after it: a space and a little more. */
 private val MarkGap = 6.dp
 
-/**
- * The title, and the second line with its baseline one line under the title's. The layout is the
- * ink (cap top to last baseline) plus what the line boxes need around it, or the ink alone
- * [besideCover], where the cover sets the row's height; either way the ink is centred. [ring] puts
- * the playing ring before the second line, or before the title when there is none.
- */
+/** [playing] only sets TalkBack's state; [ring] draws the play bars, before the second line if there is one. */
 @Composable
 internal fun RowText(
     title: String,
@@ -68,7 +62,7 @@ internal fun RowText(
                 modifier = Modifier.trimStartBearing(title, titleStyle),
             )
         }
-        // The play bars stand where a download's mark would: what plays matters more.
+        // The play bars replace a download mark: what plays matters more.
         val before: (@Composable () -> Unit)? = if (ring) {
             { PlayBars() }
         } else {
@@ -90,7 +84,6 @@ internal fun RowText(
     }
 }
 
-/** The play bars before the line ([MarkBefore]). */
 @Composable
 internal fun BarsBefore(
     style: TextStyle,
@@ -98,7 +91,7 @@ internal fun BarsBefore(
     moving: Boolean = LocalMusicPlays.current.value,
 ) = MarkBefore(style, { PlayBars(moving = moving) }, line)
 
-/** [mark] centred on [style]'s capitals, then the line; the line's baselines are the block's. */
+/** Centres [mark] on the line's capitals; the block reports the line's baselines as its own. */
 @Composable
 internal fun MarkBefore(style: TextStyle, mark: @Composable () -> Unit, line: @Composable () -> Unit) {
     val cap = with(LocalDensity.current) { capHeight(style).toPx() }
@@ -128,10 +121,9 @@ internal fun MarkBefore(style: TextStyle, mark: @Composable () -> Unit, line: @C
 }
 
 /**
- * Lays out [RowText]'s lines, and the skeleton bars that stand in for them, alike. [inset] keeps
- * room over and under them; the dock's larger lines take less, so they stay within its cover's height.
- * [baselines] sets how far the second line's baseline stands under the title's, where a list's
- * rhythm would leave a small card's two lines too far apart.
+ * Shared by [RowText] and its skeleton, so both lay out alike: cap top to last baseline, centred, plus
+ * the line boxes' extra height unless [besideCover]. The dock passes a smaller [inset] to stay within
+ * its cover's height; [baselines] overrides the step from the title's baseline to the second line's.
  */
 @Composable
 internal fun RowLines(

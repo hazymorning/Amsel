@@ -16,9 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * A tap on one of a widget's buttons. The launcher sends it with background starts allowed, which
- * lets Amsel come to the front for ten seconds (docs/notes/widget.md): long enough for the playback
- * service to show its notification when the tap starts sound.
+ * A widget click's broadcast exempts Amsel from background start limits for 10 s (docs/notes/widget.md),
+ * time for the playback service to start in the foreground.
  */
 class WidgetTapReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -43,14 +42,14 @@ class WidgetTapReceiver : BroadcastReceiver() {
         private const val SLOT = "slot"
         private const val SHOWN_PLAYING = "shown_playing"
 
-        /** Within the ten seconds a receiver has. */
+        /** Under the 10 s a foreground broadcast's goAsync() may take. */
         private const val BUDGET_MS = 9_000L
 
-        /** Button [slot] of widget [widgetId], as it shows now: play or pause. */
+        /** Carries [shownPlaying], so play and pause act on what the widget showed when tapped. */
         fun pending(context: Context, widgetId: Int, slot: Int, shownPlaying: Boolean): PendingIntent {
             val intent = Intent(context, WidgetTapReceiver::class.java)
                 .setAction(TAP)
-                // Extras alone do not tell two pending intents apart.
+                // PendingIntent identity ignores extras (Intent.filterEquals); the data keeps buttons apart.
                 .setData("amsel-widget://$widgetId/$slot".toUri())
                 .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                 .putExtra(SLOT, slot)
@@ -66,17 +65,11 @@ class WidgetTapReceiver : BroadcastReceiver() {
     }
 }
 
-/** What a widget's button does on its speaker. */
 internal class WidgetTapHandler(
     private val context: Context,
     private val states: StateButtonHandler,
-    /** The book or episode heard last, from the server. */
     private val lastStarted: suspend () -> WidgetItem?,
 ) {
-    /**
-     * [button] was tapped while its widget showed [shownPlaying] and [shown]; it acts through
-     * [hands], and [say] puts a sentence on the widget where it went wrong.
-     */
     suspend fun tap(
         button: WidgetSlot,
         hands: WidgetTransport,
@@ -103,7 +96,7 @@ internal class WidgetTapHandler(
 
                 WidgetButton.PlayItem -> button.item?.let { hands.play(it) }
 
-                // Open Amsel itself (WidgetCellsViews.press).
+                // Their PendingIntent opens the app instead (WidgetCellsViews.press).
                 WidgetButton.Speakers, WidgetButton.UpNext, WidgetButton.Group -> Unit
             }
         } catch (e: MaException) {

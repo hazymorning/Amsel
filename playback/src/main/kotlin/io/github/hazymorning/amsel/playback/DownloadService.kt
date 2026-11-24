@@ -87,7 +87,6 @@ class DownloadService : Service() {
                 val shown = launch {
                     downloads.states.map(::shownOf).distinctUntilChanged().collect { show(notification(it)) }
                 }
-                // Blocking file writes and network reads.
                 withContext(Dispatchers.IO) { downloads.work() }
                 shown.cancel()
                 stopForeground(STOP_FOREGROUND_REMOVE)

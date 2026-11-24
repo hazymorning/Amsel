@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Sign out stands beside the account's name, or on a row of its own once a word of the name would break. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class SettingsRowsTest {
@@ -43,7 +42,6 @@ class SettingsRowsTest {
         val button = bounds("Sign out")
         assertTrue("beside", button.left > name.right && button.top < name.bottom)
         compose.onNodeWithText("Sign out").performClick()
-        // It asks first: nothing is forgotten until the sheet's Sign out.
         assertEquals(0, signedOut)
         compose.onNodeWithText("Sign out?").assertExists()
         compose.onAllNodesWithText("Sign out").onLast().performClick()
@@ -59,7 +57,6 @@ class SettingsRowsTest {
         assertTrue("under", button.top > name.bottom)
         assertEquals("from the row's start", name.left.value, button.left.value, 1f)
         compose.onNodeWithText("Sign out").performClick()
-        // It asks first: nothing is forgotten until the sheet's Sign out.
         assertEquals(0, signedOut)
         compose.onNodeWithText("Sign out?").assertExists()
         compose.onAllNodesWithText("Sign out").onLast().performClick()

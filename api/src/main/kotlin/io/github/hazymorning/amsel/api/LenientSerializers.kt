@@ -59,7 +59,7 @@ internal object LenientIntSerializer : KSerializer<Int?> {
         if (value == null) encoder.encodeNull() else encoder.encodeInt(value)
 }
 
-/** MA also sends `unknown`; a mode not in [RepeatMode] reads as off. */
+/** A mode not in [RepeatMode], such as MA's `unknown`, reads as off. */
 internal object RepeatModeSerializer : KSerializer<RepeatMode> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("RepeatMode", PrimitiveKind.STRING)
 

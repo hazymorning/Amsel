@@ -21,15 +21,9 @@ import io.github.hazymorning.amsel.ui.theme.LocalReducedMotion
 import kotlin.math.PI
 import kotlin.math.cos
 
-/** Whether music plays on the speaker in use, from the app's root: a list's play bars move only then. */
+/** Whether the speaker in use is playing, provided at the app root; the play bars move only then. */
 val LocalMusicPlays = staticCompositionLocalOf<State<Boolean>> { mutableStateOf(false) }
 
-/**
- * Three short moss bars that mark what is playing, beside it in a list, standing on the line's
- * baseline as high as its capitals. While the music plays ([moving]) each rises and falls at its
- * own pace inside the mark's own box, so nothing beside it ever moves; paused, or with reduced
- * motion, they stand still at three heights.
- */
 @Composable
 fun PlayBars(modifier: Modifier = Modifier, moving: Boolean = LocalMusicPlays.current.value) {
     val moss = MaterialTheme.colorScheme.tertiary
@@ -45,8 +39,7 @@ fun PlayBars(modifier: Modifier = Modifier, moving: Boolean = LocalMusicPlays.cu
         val width = BarWidth.toPx()
         val step = width + BarGap.toPx()
         RESTING.indices.forEach { index ->
-            // Each bar starts at its own point of its swell, so from the first frame the three
-            // stand at three heights and never move as one, never all low like an ellipsis.
+            // Offset phases: from the first frame the bars differ in height and never all sink like an ellipsis.
             val level = phases?.let { LOW + (1f - LOW) * swell(it[index].value + OFFSETS[index]) } ?: RESTING[index]
             val height = size.height * level
             drawRoundRect(
@@ -59,24 +52,21 @@ fun PlayBars(modifier: Modifier = Modifier, moving: Boolean = LocalMusicPlays.cu
     }
 }
 
-/** A smooth rise and fall over one cycle: 0 at its ends, 1 half way. */
 private fun swell(phase: Float): Float = 0.5f - 0.5f * cos(2f * PI.toFloat() * phase)
 
 private val BarWidth = 2.dp
 private val BarGap = 1.5.dp
 private val BarsWidth = BarWidth * 3 + BarGap * 2
 
-/** As high as a list's second line's capitals, so the bars stand on its baseline and end at its caps. */
+/** The cap height of a list's second line, so the bars span its baseline to its cap top. */
 private val BarsHeight = 10.dp
 
-/** How low a bar sinks while it moves, as a share of its height: still a bar, never a dot. */
+/** The lowest share of its height a moving bar sinks to, so it never shrinks to a dot. */
 private const val LOW = 0.35f
 
-/** Each bar's rise and fall, a little apart, so the three never fall into step. */
+/** Cycle lengths in ms, a little apart, so the bars never fall into step. */
 private val CYCLES = listOf(1_640, 2_120, 1_880)
 
-/** Where in its cycle each bar starts. */
 private val OFFSETS = listOf(0.6f, 0f, 0.3f)
 
-/** The heights the bars hold while the music rests. */
 private val RESTING = listOf(0.5f, 1f, 0.7f)

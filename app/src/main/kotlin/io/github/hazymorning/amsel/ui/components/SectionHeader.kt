@@ -30,7 +30,7 @@ import io.github.hazymorning.amsel.ui.theme.rememberPress
 import io.github.hazymorning.amsel.ui.theme.spaced
 
 /**
- * [above]: how far the previous content's visible bottom sits inside its layout, so the cap top lands
+ * [above]: how far the previous content's visible bottom sits inside its layout, so the cap top is
  * [Space.SectionToHeader] below it; null puts the cap top at the layout's top. [below] runs from the
  * baseline to the next content's layout top.
  */

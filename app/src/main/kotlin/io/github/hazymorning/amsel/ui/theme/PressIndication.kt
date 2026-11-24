@@ -21,14 +21,8 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.invalidateDraw
 import kotlinx.coroutines.launch
 
-/** The highlight under a finger: ink, just visible. */
 private const val HIGHLIGHT_ALPHA = 0.06f
 
-/**
- * What a press looks like everywhere instead of a ripple: a soft highlight in the control's own
- * [shape] (none when [shape] is null) and the control sinking slightly, both easing in over a
- * press's 120 ms and out again on release.
- */
 @Stable
 class PressIndication(private val color: Color, private val shape: Shape?, private val sink: Boolean = true) :
     IndicationNodeFactory {
@@ -89,7 +83,7 @@ private class PressNode(
     }
 }
 
-/** A press in [shape], in ink; null keeps only the sinking (a tile, whose cover shows the press). */
+/** A null [shape] keeps only the sink, for a tile whose cover shows the press. */
 @Composable
 fun rememberPress(shape: Shape?, sink: Boolean = true): PressIndication {
     val ink = MaterialTheme.colorScheme.onSurface

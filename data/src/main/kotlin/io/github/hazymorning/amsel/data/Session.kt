@@ -177,7 +177,7 @@ class Session(
                     try {
                         dropSession()
                     } catch (e: IOException) {
-                        // Dropped in memory only; the next start is refused again and retries.
+                        // Dropped in memory only; the next start is refused again and drops it again.
                         forget()
                     }
                     synchronized(lock) { client.stop() }

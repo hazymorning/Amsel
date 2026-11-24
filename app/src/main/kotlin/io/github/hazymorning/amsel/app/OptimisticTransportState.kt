@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Taps show at once, as the speaker reports back only through the server, later (docs/API-NOTES.md,
-// "Player commands"). A request stands until reported or timed out, so a lost command falls back to
-// the speaker's own state. Seeks are not kept here: SeekTracker shows them.
+// Taps show at once: the speaker's report comes back through the server only later (docs/API-NOTES.md,
+// "Player commands"). A request stands until reported or timed out, so a lost command falls back to the
+// speaker's own state. Seeks are not kept here: the speakers' own positions show them (SeekTracker).
 internal class OptimisticTransportState(
     private val scope: CoroutineScope,
     private val elapsedRealtime: () -> Long,

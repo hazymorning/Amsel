@@ -35,7 +35,7 @@ import io.github.hazymorning.amsel.ui.screens.player.NowPlayingScreen
 import org.junit.Test
 
 class ShellShots : ScreenshotTest() {
-    /** Library's artists scrolled under the slim bar and the dock, which dissolve them into their material. */
+    /** The edge fades of the slim bar and the dock over a scrolled list. */
     @Test fun scrolled() = snap(
         "shell_scrolled",
         before = {
@@ -46,15 +46,12 @@ class ShellShots : ScreenshotTest() {
         },
     ) { Shell(rows = true) }
 
-    /** Nothing plays, with the speaker's button kept in the mini player: it stays, to choose where. */
+    /** The dock's speaker button stays while nothing plays, to choose where. */
     @Test fun idleSpeaker() = snap("shell_idle_speaker", before = {
         openLibrary()
     }) { Shell(playing = false, dock = listOf(DockControl.PlayPause, DockControl.Next, DockControl.Speaker)) }
 
-    /**
-     * A tap that did not reach the speaker says so over the dock, in German, where the words are
-     * longest: Retry is one short word beside the sentence, and no word of the sentence is broken.
-     */
+    /** In German, whose words are longest: Retry stays beside the sentence, and no word breaks. */
     @Test fun messageInGerman() = snap("shell_message_german", qualifiers = "de", before = { openLibrary() }) {
         val messages = remember { SnackbarHostState() }
         val sentence = stringResource(PlaybackR.string.error_speaker_busy, PlayerSample.nowPlaying.speaker.name)
@@ -63,7 +60,6 @@ class ShellShots : ScreenshotTest() {
         Shell(messages = messages)
     }
 
-    /** A station tapped on Home, offered over the dock: its cover and name, the speaker in use, one big button. */
     @Test fun offer() = snap("shell_offer", listOf(ShotVariant.Light, ShotVariant.LargeFont), before = {
         openLibrary()
     }) { Shell(offer = station) }
@@ -122,7 +118,7 @@ private fun Shell(
     )
 }
 
-/** Library as it opens: albums, Blue Hour among them playing; or the artists, long enough to scroll. */
+/** [rows]: the artists, a list long enough to scroll. */
 @Composable
 private fun Library(rows: Boolean, playing: Boolean) {
     val state = if (rows) {

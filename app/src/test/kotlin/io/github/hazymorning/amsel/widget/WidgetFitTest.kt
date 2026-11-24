@@ -15,14 +15,12 @@ class WidgetFitTest {
         assertEquals(WidgetForm.Player, widgetFit(356f, 204f, 3).form)
     }
 
-    /** Two cells wide, a phone's usual 172 dp: three targets of 48 and more across its frame. */
     @Test fun twoCellsHoldThreeButtons() {
         assertEquals(3, widgetFit(172f, 96f, 4).buttons)
         assertEquals(3, widgetFit(172f, 204f, 4).buttons)
         assertEquals(2, widgetFit(150f, 96f, 4).buttons)
     }
 
-    /** Every button's target is at least a touch target wide, whatever the width. */
     @Test fun noTargetIsNarrowerThanATouchTarget() {
         for (width in 110..420 step 2) {
             val fit = widgetFit(width.toFloat(), 96f, 4)
@@ -50,7 +48,7 @@ class WidgetFitTest {
         assertEquals(2, widgetFit(172f, 204f, 3).words.titleLines)
     }
 
-    /** At 200 % the line under the title goes first, then its second line, then the speaker's. */
+    /** At 200 % the title's second line goes first, then the line under the title, then the speaker's line. */
     @Test fun largeTypeGivesWayInOrder() {
         val large = WidgetLineHeights(speaker = 28f, title = 34f, subtitle = 28f)
         assertEquals(
@@ -63,7 +61,6 @@ class WidgetFitTest {
         )
     }
 
-    /** A player's cover is as high as the room over its cells, and never more than half its width. */
     @Test fun aPlayersCoverFillsTheRoomBesideTheWords() {
         val fit = widgetFit(356f, 204f, 3)
         assertEquals(204f - 2 * PADDING - WidgetSizes.CELL_HEIGHT - WidgetSizes.WORDS_TO_CELLS, fit.art, 0.01f)
@@ -83,7 +80,6 @@ class WidgetFitTest {
         assertEquals(WidgetWords(speaker = true, titleLines = 2, subtitle = true), tight)
     }
 
-    /** Type grows a fifth on a widget where all its lines have room at that size, and only there. */
     @Test fun wordsGrowWhereEveryLineHasRoom() {
         assertEquals(WordSize.Regular, widgetFit(172f, 204f, buttons = 3, time = true).size)
         assertEquals(WordSize.Large, widgetFit(172f, 260f, buttons = 3, time = true).size)
@@ -91,10 +87,6 @@ class WidgetFitTest {
         assertEquals(WordSize.Large, widgetFit(356f, 320f, buttons = 5, time = true).size)
     }
 
-    /**
-     * A strip too low for the speaker's line over the title keeps both, an eighth smaller, standing in
-     * its middle by their ink; lower still, the title alone.
-     */
     @Test fun aStripKeepsTwoLinesInSmallerType() {
         val speakerAndTitle = WidgetWords(speaker = true, titleLines = 1, subtitle = false)
         assertEquals(speakerAndTitle to WordSize.Regular, widgetFit(356f, 96f, 3).let { it.words to it.size })
@@ -104,14 +96,12 @@ class WidgetFitTest {
         assertEquals(WidgetWords(speaker = false, titleLines = 1, subtitle = false), widgetFit(356f, 58f, 3).words)
     }
 
-    /** Bare buttons reach into the frame: a small square holds three where two cells stand. */
     @Test fun bareButtonsFitMore() {
         assertEquals(2, widgetFit(156f, 156f, buttons = 3).buttons)
         assertEquals(3, widgetFit(156f, 156f, buttons = 3, bare = true).buttons)
         assertEquals(3, widgetFit(156f, 96f, buttons = 4, bare = true).buttons)
     }
 
-    /** Without what plays the buttons fill the widget: in as few rows as hold them, cells about square. */
     @Test fun withoutWhatPlaysTheButtonsMakeAPad() {
         val four = widgetFit(172f, 204f, buttons = 4, words = false)
         assertEquals(WidgetForm.Pad, four.form)
@@ -127,7 +117,6 @@ class WidgetFitTest {
         assertEquals(8, widgetFit(356f, 204f, buttons = 8, words = false).buttons)
     }
 
-    /** Two cells wide and three high, the cover stands across, as on a small player; its words under it. */
     @Test fun aTallNarrowWidgetShowsItsCoverAcross() {
         val fit = widgetFit(172f, 312f, buttons = 3, time = true)
         assertEquals(WidgetForm.Poster, fit.form)
@@ -143,7 +132,6 @@ class WidgetFitTest {
         assertEquals(8, widgetFit(500f, 204f, buttons = 8).buttons)
     }
 
-    /** Tall enough to keep what plays its speaker, a title line and the line under it, buttons take more rows. */
     @Test fun aTallWidgetTakesMoreRowsOfButtons() {
         val tall = widgetFit(172f, 312f, 5)
         assertEquals(WidgetForm.Card, tall.form)
@@ -155,11 +143,10 @@ class WidgetFitTest {
         assertEquals(8, player.buttons)
         assertEquals(4, player.columns)
         assertEquals(6, widgetFit(356f, 204f, 8).buttons)
-        // As many as one row holds keep the cover across.
+        // With one row of buttons the cover fits across.
         assertEquals(WidgetForm.Poster, widgetFit(172f, 312f, 3).form)
     }
 
-    /** Where fewer fit than are set, play and pause stays, and the others give way from the start. */
     @Test fun playStaysAndTheOthersGiveWayFromTheStart() {
         val set = DefaultSlots.map { it.button }
         fun kept(room: Int, buttons: List<WidgetButton> = set) = standing(buttons, room) { it }

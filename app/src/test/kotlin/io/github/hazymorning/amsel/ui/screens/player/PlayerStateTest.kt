@@ -38,7 +38,7 @@ import org.junit.Test
 class PlayerStateTest {
     private val playing = SampleData.nowPlaying.copy(positionMs = 10_000, positionAtMs = 1_000, durationMs = 60_000)
 
-    /** A server with all it takes for a mix and similar songs, as one is out of the box. */
+    // A server as it comes out of the box, with the mix and similar songs.
     private val extras = ServerExtras(mix = true, similarSongs = true)
 
     @Test fun positionMovesOnWhilePlaying() = assertEquals(15_000, playing.positionAt(6_000))

@@ -80,7 +80,7 @@ internal fun GroupList(
                 trailing = { RoundCheck(ticked) },
             )
         }
-        // Done stands Space.BeforeList under the last speaker's name, as Group does in the list.
+        // Done is Space.BeforeList below the last speaker's name, as Group is in the list.
         Spacer(
             Modifier.height((Space.BeforeList - rowGlyphBottom(RowLead.Glyph, twoLines = false)).coerceAtLeast(0.dp)),
         )

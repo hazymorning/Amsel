@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The window and the system splash must be painted before Compose is, so they repeat the page colour here. */
+/** The window and the system splash are drawn before Compose, so `splash_background` repeats the page colour. */
 @RunWith(RobolectricTestRunner::class)
 class SplashColourTest {
     @Test fun theDaySplashIsThePage() = assertEquals(LightColors.surface, splash())

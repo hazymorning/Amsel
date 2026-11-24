@@ -35,7 +35,7 @@ import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.secondLine
 import io.github.hazymorning.amsel.ui.theme.spaced
 
-/** Cycled by index, so a list of placeholders does not look uniform. */
+/** Cycled by index, so the placeholders of a list vary in width. */
 private val TitleWidths = floatArrayOf(0.55f, 0.4f, 0.65f, 0.5f, 0.35f)
 private val SubtitleWidths = floatArrayOf(0.3f, 0.25f, 0.35f)
 

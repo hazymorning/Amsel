@@ -330,7 +330,7 @@ private fun PageGlyphSlot(glyph: PageGlyph?) {
     }
 }
 
-// The glyph itself, not its touch target, stands Space.Group from the play button.
+// The glyph itself, not its touch target, is Space.Group away from the play button.
 private fun glyphGap(glyph: PageGlyph?): Dp {
     val ink = glyph?.let { if (it.ring != null) Sizes.Icon else glyphWidth(it.icon) } ?: Sizes.Icon
     return (Space.Group - (Sizes.TouchTarget - ink) / 2).coerceAtLeast(0.dp)

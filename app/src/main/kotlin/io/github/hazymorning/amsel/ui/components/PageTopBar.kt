@@ -60,8 +60,8 @@ val LocalDockInset = staticCompositionLocalOf<State<Dp>> { mutableStateOf(0.dp) 
 
 /**
  * [bar] reserves its height above the content, unless [barShown] is given: then it lies over the
- * content and shows only while true (a screen whose own large title is still in view). [content]
- * gets the padding that keeps its items clear of the status strip, the bar and the dock.
+ * content and shows only while true, for a screen with its own large title. [content] gets the
+ * padding that keeps its items clear of the status strip, the bar and the dock.
  */
 @Composable
 fun MaterialScreen(
@@ -70,7 +70,7 @@ fun MaterialScreen(
     barShown: Boolean? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    // Not safeDrawing: it holds the keyboard, which never reaches the top, and reading it here would
+    // Not safeDrawing: it includes the keyboard, which never reaches the top, and reading it here would
     // recompose the screen on every frame the keyboard moves.
     val top = WindowInsets.systemBars.union(WindowInsets.displayCutout)
     val status = top.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding()

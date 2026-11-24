@@ -24,7 +24,7 @@ import io.github.hazymorning.amsel.ui.theme.lineHeight
 
 /**
  * Laid out from cap top to baseline; the 48 dp target overhangs. The press shape is the line box plus
- * [PressRoom] above and below: room for accents and descenders, clear of the neighbouring lines.
+ * [PressRoom] above and below: space for accents and descenders, clear of the neighbouring lines.
  */
 @Composable
 fun TextLink(

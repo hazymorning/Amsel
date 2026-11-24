@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
 }
 
-// build-logic is an included build, whose tasks a task name given at the root does not reach.
+// A task name given at the root does not reach the included build-logic, so its ktlintCheck is wired in.
 ktlint { version.set(libs.versions.ktlint.get()) }
 tasks.named("ktlintCheck") { dependsOn(gradle.includedBuild("build-logic").task(":ktlintCheck")) }
 

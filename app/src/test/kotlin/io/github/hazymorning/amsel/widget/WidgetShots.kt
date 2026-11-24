@@ -22,22 +22,16 @@ import io.github.hazymorning.amsel.ui.theme.isNight
 import org.junit.Test
 
 class WidgetShots : ScreenshotTest() {
-    /** Every form over its cover: two tiles and a row, two cards, a bar, a player. */
     @Test fun forms() = snap("widget", ShotVariant.entries) { HomeScreen { Forms() } }
 
-    /** Plain in the system's colours, and clear on the wallpaper, side by side. */
     @Test fun looks() = snap("widget_looks") { HomeScreen { Looks() } }
 
-    /** Nothing playing, and signed out. */
     @Test fun states() = snap("widget_states") { HomeScreen { States() } }
 
-    /** Wide and tall: buttons as many as fit, the cover across a tall narrow one. */
     @Test fun roomy() = snap("widget_roomy") { HomeScreen { Roomy() } }
 
-    /** What plays after the buttons, or left out for a grid of them; a low strip; bare buttons where cells would not fit. */
     @Test fun parts() = snap("widget_parts") { HomeScreen { Parts() } }
 
-    /** The darkened cover in every form: paper over the cover, round Play … buttons, Up next. */
     @Test fun darkened() = snap("widget_darkened") { HomeScreen { Darkened() } }
 
     @Test fun setup() = snap("widget_setup") { Setup() }
@@ -140,14 +134,12 @@ class WidgetShots : ScreenshotTest() {
         Widget(WidgetSetup(slots = emptyList()), WidgetSample.music, WidgetSample.row, column = 1, row = 5)
     }
 
-    /** A home screen's picture behind the widgets, as calm as most, four cells across. */
     @Composable
     private fun HomeScreen(content: @Composable () -> Unit) {
         val wallpaper = if (MaterialTheme.colorScheme.isNight) NightWallpaper else DayWallpaper
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(wallpaper))) { content() }
     }
 
-    /** [setup] showing [look] at [size], its top left in cell [column], [row]. */
     @Composable
     private fun Widget(setup: WidgetSetup, look: WidgetContent, size: SizeF, column: Int, row: Int) {
         val context = LocalContext.current
@@ -192,7 +184,7 @@ class WidgetShots : ScreenshotTest() {
     }
 
     private companion object {
-        /** Four cells 92 dp apart on a phone 411 dp wide; a widget is 12 dp less than its cells. */
+        /** Four cells 92 dp apart on a 411 dp phone; a widget is 12 dp smaller than its cells. */
         val Margin = 27.5.dp
         val Pitch = 92.dp
         val Top = 56.dp
@@ -201,7 +193,6 @@ class WidgetShots : ScreenshotTest() {
         val DayWallpaper = listOf(Color(0xFFDDE4DA), Color(0xFFB7C0B2))
         val NightWallpaper = listOf(Color(0xFF283029), Color(0xFF141714))
 
-        /** The wallpaper's main colour, as Android gives it to the widget's page. */
         val Wallpaper = Color(0xFFC9D2C5)
 
         val Rooms = listOf(WidgetSpeaker("kitchen", "Kitchen"), WidgetSpeaker("living", "Living room"))

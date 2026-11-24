@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
-# Re-record the WebSocket fixtures for one server version, from a clean server.
-#
-# Usage: record.sh <image-tag> <fixture-dir-name>
-#   e.g. record.sh 2.10.9 2.10      record.sh 2.11.0b7 2.11
-# Writes api/src/testFixtures/resources/fixtures/<fixture-dir-name>/*.json, then removes the server.
-# Environment: PORT (default 8095).
+# Usage: record.sh <image-tag> <fixture-dir>, such as record.sh 2.10.9 2.10 or record.sh 2.11.0b7 2.11.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,8 +12,7 @@ export PORT="${PORT:-8095}"
 trap '"$HERE/stop.sh" "$TAG"' EXIT
 URL="$("$HERE/start.sh" "$TAG")"
 TOKEN="$(python3 "$HERE/setup.py" --url "$URL")"
-# A radio station needs a stream the server can reach: serve one library file on the
-# container's own loopback, so nothing is exposed outside it.
+# The radio fixtures need a stream the server can reach, served on the container's own loopback only.
 docker exec -d "${NAME:-amsel-ma-$TAG}" python3 -m http.server 8777 --bind 127.0.0.1 \
   --directory "/media/Aurora Tone/Second Wind (2023)"
 RADIO_URL="http://127.0.0.1:8777/01%20-%20Tailwind.mp3"

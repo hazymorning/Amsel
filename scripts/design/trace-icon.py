@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Traces docs/design/icon/amsel-icon.png (1024 px, full bleed) into the icon drawables; needs pillow
-and potracer.
+"""Traces docs/design/icon/amsel-icon.png (1024 px, full bleed) into the icon drawables; needs pillow, potracer.
 
 The PNG is the visible 72 dp of a 108 dp adaptive-icon layer, dp 18 to 90. The body, which runs off
 the bottom edge, is extended to the layer's edge so masks and parallax never show a cut.

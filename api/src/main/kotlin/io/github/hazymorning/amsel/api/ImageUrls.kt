@@ -28,7 +28,7 @@ public class ImageUrls(private val address: ServerAddress) {
     public companion object {
         private val SIZES = intArrayOf(80, 160, 256, 512, 1024)
 
-        /** Rounds [px] up to a size the proxy serves (any other is HTTP 400); above 1024, 0 is the original. */
+        /** Rounds [px] up to a size the proxy serves (any other is HTTP 400), or above 1024 to 0, the original. */
         public fun sized(url: String, px: Int, format: String? = null): String {
             val size = SIZES.firstOrNull { it >= px } ?: 0
             return if (format == null) "$url?size=$size" else "$url?size=$size&fmt=$format"

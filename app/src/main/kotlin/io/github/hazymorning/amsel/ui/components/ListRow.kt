@@ -213,7 +213,7 @@ private fun rowGeometry(lead: RowLead, twoLines: Boolean): RowGeometry {
     }
 }
 
-/** What the line boxes add around cap top and baseline: room for accents above and descenders below. */
+/** What the line boxes add around cap top and baseline: space for accents above and descenders below. */
 private fun Density.linePad(title: TextStyle, second: TextStyle?): Dp {
     val above = (lineHeight(title) - capHeight(title)) / 2
     val last = second ?: title
@@ -221,8 +221,8 @@ private fun Density.linePad(title: TextStyle, second: TextStyle?): Dp {
 }
 
 /**
- * From a section heading's baseline to the first row's top: a cover lands [Space.HeadingToRow] below
- * the baseline, as tiles do; a text row's cap top [Space.Group] below, so a pressed band never
+ * From a section heading's baseline to the first row's top: a cover's top sits [Space.HeadingToRow]
+ * below the baseline, as tiles do; a text row's cap top [Space.Group] below, so a pressed band never
  * reaches the heading.
  */
 @Composable

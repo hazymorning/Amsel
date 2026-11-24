@@ -58,7 +58,7 @@ private const val DIAGONAL = 0.70710677f
 
 /**
  * The 45-degree point of the speaker glyph's top arc (centre (128, 88), radius 64 on its 256 grid),
- * where the dot sits on the outline; at the corner of the glyph's box it would float off the glyph.
+ * where the dot sits on the outline; at the corner of the glyph's box it would not touch the glyph.
  */
 private const val ARC_X = 128f
 private const val ARC_Y = 88f

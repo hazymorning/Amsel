@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The arrange pages: a switch shows or hides in place, the order moves only when asked, and limits hold. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class BarScreenTest {
@@ -37,7 +36,6 @@ class BarScreenTest {
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         val before = compose.onNodeWithText("Search").getUnclippedBoundsInRoot()
         compose.onNodeWithText("Search").assertIsOn().performClick().assertIsOff()
-        // It left the bar but kept its row: nothing jumped.
         assertEquals(BarItem.arrangement(null).order, places.order)
         assertEquals(listOf(BarItem.Home, BarItem.Speaker, BarItem.Library, BarItem.Settings), places.visible)
         assertEquals(before, compose.onNodeWithText("Search").getUnclippedBoundsInRoot())
@@ -76,7 +74,6 @@ class BarScreenTest {
         compose.setContent { AmselTheme { BarScreen(places, onChange = { places = it }, onBack = {}) } }
         compose.onNodeWithText("Albums").performScrollTo().performClick().assertIsOn()
         assertEquals(BarItem.Default - BarItem.Settings + BarItem.Albums, places.visible)
-        // Five shown: one more waits, and TalkBack hears why.
         compose.onNodeWithText("Radio").performScrollTo().performClick().assertIsOff()
             .assert(
                 SemanticsMatcher.expectValue(
@@ -109,7 +106,6 @@ class BarScreenTest {
         )
         compose.setContent { AmselTheme { DockScreen(controls, onChange = { controls = it }, onBack = {}) } }
         compose.onNodeWithText("Always in the mini player").assertExists()
-        // Three shown: one more waits, and TalkBack hears why.
         compose.onNodeWithText("Favourite").performClick().assertIsOff()
             .assert(
                 SemanticsMatcher.expectValue(

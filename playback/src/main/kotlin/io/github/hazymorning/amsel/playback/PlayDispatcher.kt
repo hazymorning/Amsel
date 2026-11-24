@@ -145,7 +145,6 @@ class PlayDispatcher(
         if (next != null) start(next) else publish(queueId)
     }
 
-    /** A pending play keeps its sinceMs while it stays the same request. */
     private fun publish(queueId: String) {
         val play = (listOfNotNull(running[queueId]) + waiting[queueId].orEmpty()).lastOrNull { it.starts }
         _pending.update { all ->

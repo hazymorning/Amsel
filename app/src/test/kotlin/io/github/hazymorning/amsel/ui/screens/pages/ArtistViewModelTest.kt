@@ -28,16 +28,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/**
- * The artist page against the recorded 2.11 server shapes: what the index paints at once, and
- * what waits for the server.
- */
+// Fixtures are recorded 2.11 server replies.
 @OptIn(ExperimentalCoroutinesApi::class)
 class ArtistViewModelTest {
     private val messages = MessageController(MutableStateFlow(true))
     private val mapper = UiMapper { null }
 
-    /** Draws covers, as the app does once connected. */
+    // Builds image URLs, as the app does once connected.
     private val drawn = UiMapper { ImageUrls(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
     private val playing = MutableStateFlow<String?>(null)
 
@@ -73,7 +70,6 @@ class ArtistViewModelTest {
         assertFalse(state.showUnavailable)
     }
 
-    /** Opened while Amsel connects, coming back to the front: the page fills in once it is connected. */
     @Test fun `an artist opened before the server could be reached loads once it is connected`() = runTest {
         val source = FakePageSource().apply {
             failure = MaConnectionException("Not connected")
@@ -91,7 +87,7 @@ class ArtistViewModelTest {
         assertEquals(listOf("Second Wind", "First Light"), state.value.albums.map { it.title })
     }
 
-    /** A server that answered, if only with a refusal, is not asked again by itself. */
+    // Only a connection failure is retried by itself; a refusal is an answer.
     @Test fun `an artist the server refused waits for Retry`() = runTest {
         val source = FakePageSource().apply { failure = MaCommandException("music/item_by_uri", 2, "not found") }
         val state = watch(ArtistViewModel(ARTIST, source, mapper, playing, messages).state)
@@ -164,7 +160,7 @@ class ArtistViewModelTest {
 
     private fun artist(id: Int, name: String) = MediaItem("$id", "library", name, "library://artist/$id", "artist")
 
-    /** The page's artist, without a picture of its own. */
+    // The page's artist, without a picture of its own.
     private val bare = MediaItem("3", "library", "Aurora Tone", ARTIST, "artist")
 
     private fun album(id: Int, year: Int?, cover: String, compilation: Boolean = false) = MediaItem(
@@ -230,7 +226,7 @@ class ArtistViewModelTest {
         }
         assertEquals(listOf("Cirrus", "Nimbus"), watch(page(source).state).value.similar.map { it.title })
 
-        // The server did not give the artist: its uri alone tells it.
+        // Without the server's artist, only its URI identifies it.
         source.item = null
         assertEquals(
             listOf("Cirrus", "Aurora Tone", "Nimbus"),
@@ -247,7 +243,7 @@ class ArtistViewModelTest {
         val state = watch(page(source, offered).state)
         assertEquals(0, source.similarCalls)
         assertTrue(state.value.similar.isEmpty())
-        // Right after a connect the server has not said yet what it has: the shelf comes when it does.
+        // Right after a connect the server's offer is not known yet; the shelf comes once it is.
         offered.value = true
         assertEquals(listOf("Cirrus"), state.value.similar.map { it.title })
     }

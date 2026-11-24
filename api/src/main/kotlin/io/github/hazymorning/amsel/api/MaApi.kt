@@ -299,7 +299,7 @@ internal suspend fun <T> JsonElement?.decodeOrNull(serializer: KSerializer<T>): 
     return withContext(Dispatchers.Default) { decodeLeniently(serializer, element) }
 }
 
-/** [next] counts the items that did not decode as well, so the following page repeats none. */
+/** Unless [complete], [next] also counts the items that did not decode, so the following page repeats none. */
 public data class ItemPage<T>(val items: List<T>, val complete: Boolean, val next: Int)
 
 internal fun <T> List<T>.pageFrom(offset: Int): ItemPage<T> {

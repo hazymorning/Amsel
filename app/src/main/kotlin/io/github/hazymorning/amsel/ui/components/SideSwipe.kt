@@ -72,8 +72,8 @@ class SideSwipeState internal constructor(
     internal var rtl = false
 
     /**
-     * An accepted swipe carries the content on, faint, until its result arrives, rather than springing
-     * back first: for a selection whose neighbours are known (an order, the Library's kinds).
+     * An accepted swipe moves the content further out, faint, until its result arrives, rather than
+     * returning first: for a selection whose neighbours are known (an order, the Library's kinds).
      */
     internal var holds = false
 

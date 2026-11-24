@@ -49,7 +49,7 @@ fun ScrollEdges(state: ScrollableState) {
     }
 }
 
-/** Drawn only while content is under the strip, so at rest the page's own background shows through. */
+/** Drawn only while content is under the strip; otherwise the page's own background shows through. */
 @Composable
 fun Modifier.statusBarBackground(edge: ScrollEdgeState): Modifier {
     val colors = MaterialTheme.colorScheme

@@ -9,7 +9,7 @@ class ReorderRuleTest {
     private val heights = mapOf("small" to 100, "tall" to 400, "mid" to 150)
 
     /**
-     * One drag event per step in px, as the list does it: the order laid out top to bottom, the dragged
+     * Simulates a drag, one event per step in px, with the order laid out top to bottom and the dragged
      * item under the finger. Returns the order after each swap.
      */
     private fun drag(start: List<String>, steps: List<Int>, dragged: String = "small"): List<List<String>> {
@@ -51,8 +51,8 @@ class ReorderRuleTest {
     }
 
     @Test fun holdingStillAfterASwapDoesNotSwapBack() {
-        // The finger rests just past the tall section's middle. The tall one, now in the dragged item's
-        // old slot, spans the dragged item's middle, which must not swap them back.
+        // The finger holds still just past the tall section's middle. The tall one, now in the dragged
+        // item's old slot, spans the dragged item's middle, which must not swap them back.
         val swaps = drag(listOf("small", "tall", "mid"), listOf(201) + List(20) { 0 })
         assertEquals(listOf(listOf("tall", "small", "mid")), swaps)
     }

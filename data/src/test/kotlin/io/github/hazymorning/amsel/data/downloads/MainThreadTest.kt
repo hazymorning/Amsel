@@ -18,16 +18,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Android ends the app at any network read on its main thread, where the screens and the
- * download service call from: every answer from Audiobookshelf is read elsewhere.
- */
+// Android throws on any network read on the main thread, where the screens and the download service call from.
 class MainThreadTest {
     private val abs = FakeAbs()
     private val root: File = Files.createTempDirectory("downloads").toFile()
     private val main = Executors.newSingleThreadExecutor { Thread(it, MAIN) }.asCoroutineDispatcher()
 
-    /** The threads that finished reading an answer, without the coroutine a debug run names after them. */
+    // Thread names without the coroutine suffix (" @coroutine#n") a debug run appends.
     private val readers = CopyOnWriteArrayList<String>()
     private val listener = object : EventListener() {
         override fun responseBodyEnd(call: Call, byteCount: Long) {

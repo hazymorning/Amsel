@@ -21,7 +21,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Play on: Group as a big button under the speakers, and Ungroup under it while a group stands. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class PlayOnUngroupTest {
@@ -30,7 +29,7 @@ class PlayOnUngroupTest {
     private val kitchen = PlayerSample.speakers.first { it.id == "kitchen" }
     private val phone = PlayerSample.speakers.first { it.isPhone }
 
-    /** Kitchen leads the Bedroom and the Living room: one row in the list, the two in its group step. */
+    // Kitchen leads Bedroom and Living room: one row in the list, the two members in its group step.
     private val grouped = PlayerSample.speakers.filter { it.id != "living" && it.id != "bedroom" }
         .map { if (it.id == "kitchen") it.copy(others = 2) else it }
     private val kitchensGroup = listOf(
@@ -86,7 +85,7 @@ class PlayOnUngroupTest {
         assertEquals(listOf(Triple("kitchen", listOf(phone.id), listOf("bedroom"))), asked)
     }
 
-    /** A widget's Group while Amsel still connects: the group step comes, never the list before it. */
+    // As from a widget's Group while Amsel still connects.
     @Test fun openedToGroupItWaitsForTheSpeakersAndOpensAtTheGroupStep() {
         val alone = listOf(GroupCandidate("living", "Living room", isPhone = false, member = false))
         var state by mutableStateOf(PlayOnUiState(listOf(phone), phone.id, known = false))

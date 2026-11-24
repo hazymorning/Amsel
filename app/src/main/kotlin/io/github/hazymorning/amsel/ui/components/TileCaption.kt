@@ -27,7 +27,7 @@ internal fun TileCaption(
 ) {
     val (oneLine, room) = with(LocalDensity.current) {
         val top = spaced(Space.Caption) + capHeight(titleStyle)
-        // A one-line title's height, and the caption's: room for a second title line or the second line.
+        // A one-line title's height, and the caption's: high enough for a second title line or the second line.
         top.toPx() to ceil((top + max(lineHeight(titleStyle), secondLine(secondStyle))).toPx()).toInt() + 1
     }
     Layout(

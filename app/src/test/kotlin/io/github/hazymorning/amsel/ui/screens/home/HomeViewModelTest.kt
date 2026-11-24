@@ -57,7 +57,7 @@ class HomeViewModelTest {
         SectionOption.NewAlbums to items(item("album", 4, artist = "library://artist/9")),
     )
 
-    /** A HomeSource that shows an edit at once, as HomeRepository does, and stores it when [release] completes. */
+    // Shows an edit at once, as HomeRepository does, and stores it when [release] completes.
     private class FakeHome(
         layout: HomeLayout? = classicLayout(),
         items: Map<SectionOption, SectionItems>? = null,
@@ -96,7 +96,7 @@ class HomeViewModelTest {
         editOnly = editOnly,
     )
 
-    /** A ViewModel whose state is collected for the rest of the test, as the screen collects it. */
+    // Collected for the rest of the test, as the screen does: the state is shared only while subscribed.
     private fun TestScope.subscribed(
         home: HomeSource,
         libraryEmpty: Flow<Boolean> = MutableStateFlow(false),
@@ -357,7 +357,7 @@ class HomeViewModelTest {
     }
 }
 
-/** The four sections these tests work on: an earlier default without Continue listening. */
+// An earlier default layout, without Continue listening.
 private fun classicLayout() = HomeLayout(
     listOf(
         HomeSection("s1", SectionOption.Pinned, SectionLayout.Grid),

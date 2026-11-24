@@ -97,7 +97,7 @@ fun Words(
                 ?: measure(whole, TextOverflow.Ellipsis)
         }
         shown = result
-        // As wide as what shows: an ellipsized line is laid out over all its room, and what follows it
+        // As wide as what shows: an ellipsized line is laid out over its full width, and what follows it
         // (a group's "+2") must sit right after its last letter.
         val ink = if (textAlign == TextAlign.Start) {
             (0 until result.lineCount).maxOfOrNull { result.getLineRight(it) }?.let { ceil(it).toInt() }

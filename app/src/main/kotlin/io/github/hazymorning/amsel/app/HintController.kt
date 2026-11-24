@@ -46,7 +46,8 @@ class HintController(
     private val sleepTimer: SleepTimerController,
     private val scope: CoroutineScope,
 ) {
-    // elapsedRealtime when Wi-Fi, also beneath a VPN, came up; LONG_AGO if up before listening began; null without.
+    // elapsedRealtime when Wi-Fi, also beneath a VPN, came up; LONG_AGO if it was up before
+    // listening began; null without.
     @Volatile private var wifiSince: Long? = null
 
     private val wifis = ConcurrentHashMap.newKeySet<Network>()
@@ -255,7 +256,7 @@ class HintController(
         val audio = context.getSystemService(AudioManager::class.java) ?: return
         audio.registerAudioDeviceCallback(
             object : AudioDeviceCallback() {
-                // Android's first call lists the devices already connected, however late it comes.
+                // Android's first call lists the devices already connected, however late it comes: not new ones.
                 private var listed = false
 
                 override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>) {

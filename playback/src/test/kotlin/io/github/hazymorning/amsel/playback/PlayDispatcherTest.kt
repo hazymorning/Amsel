@@ -54,7 +54,6 @@ class PlayDispatcherTest {
         error: Int? = null,
         phone: LocalOutput = FakePhone(),
         seeks: SeekTracker = SeekTracker.None,
-        /** In the server's sample of a mix. */
         mixSongs: Int = 0,
         block: suspend CoroutineScope.(PlayDispatcher, FakeMaServer) -> Unit,
     ) = runBlocking {

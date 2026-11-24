@@ -163,7 +163,10 @@ class PhoneSpeaker(
         } ?: throw PhoneNotReadyException()
     }
 
-    /** For a Retry after the client stopped for good: it reconnects only on a config other than its last. */
+    /**
+     * For a Retry after the client stopped for good: it reconnects only on a new config, so the same one
+     * is set again after null.
+     */
     suspend fun reconnect() {
         val current = config.value ?: return
         config.value = null
@@ -205,7 +208,7 @@ class PhoneSpeaker(
                     was == null && state is PlayerState.Connected -> data.speakers.rejoined(state.playerId)
                 }
                 sendspin.value = state
-                // Disabled on purpose, the module says goodbye with user_request and the server drops
+                // Turned off on purpose, the client says goodbye with user_request and the server drops
                 // the phone at once; after the idle close no event reports that, and the stale entry
                 // must not pass for a new join.
                 if (state is PlayerState.Disabled && was != null) data.speakers.markGone(was)

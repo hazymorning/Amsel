@@ -39,7 +39,7 @@ private val Commissioner = FontFamilies(
     ),
 )
 
-/** Each family's capital height as a share of the size, from its OS/2 table. */
+/** Cap height as a share of the font size, from each font's OS/2 table. */
 private val CapHeights: Map<FontFamily, Float> = mapOf(
     Commissioner.title to 0.713f,
     Commissioner.text to 0.713f,
@@ -48,16 +48,11 @@ private val CapHeights: Map<FontFamily, Float> = mapOf(
 private const val CAP_HEIGHT = 0.7f
 
 /**
- * The line height text is laid out with. Under nonlinear font scaling Compose keeps a line in
- * proportion to its scaled size, which `lineHeight.toDp()` does not (at 200%, 20 sp lines of 13 sp
- * text lay out at about 37 dp, not 34).
+ * Under nonlinear font scaling Compose keeps a line in proportion to its scaled size, which
+ * `lineHeight.toDp()` does not (at 200%, 20 sp lines of 13 sp text lay out at about 37 dp, not 34).
  */
 fun Density.lineHeight(style: TextStyle): Dp = style.fontSize.toDp() * (style.lineHeight.value / style.fontSize.value)
 
-/**
- * How far a second line's baseline stands under the line above it: its own line height and a
- * little more, so a title and the line under it never crowd, in every row, tile and player alike.
- */
 fun Density.secondLine(style: TextStyle): Dp = lineHeight(style) + Space.Line
 
 fun Density.capHeight(style: TextStyle): Dp = style.fontSize.toDp() * (CapHeights[style.fontFamily] ?: CAP_HEIGHT)
@@ -76,14 +71,12 @@ private fun style(family: FontFamily, weight: FontWeight, size: Float, line: Int
 )
 
 /**
- * Screens take each role by one Material name: displaySmall (screen titles), headlineSmall (Now
- * Playing's title), titleLarge (section headings), titleMedium (a slim bar's title), titleSmall
- * (cover captions, chips), bodyLarge (list titles, buttons, sentences), bodyMedium (secondary
- * lines), labelLarge (the mini player's title), labelMedium (times) and labelSmall (tab labels).
- * Selection shows in colour, never in weight.
+ * One Material name per role: displaySmall screen titles, headlineSmall Now Playing's title, titleLarge
+ * headings, titleMedium a slim bar's title, titleSmall captions and chips, bodyLarge list titles, buttons
+ * and sentences, bodyMedium second lines, labelLarge the mini player's title, labelMedium times, labelSmall tabs.
  */
 private fun typography(faces: FontFamilies): Typography {
-    // Tracking in sp, as the type scale (docs/DESIGN.md) gives it.
+    // Tracking in sp, as docs/DESIGN.md gives it.
     val display = style(faces.title, W650, 30f, 36, -0.45f)
     val title = style(faces.title, W700, 26f, 32, -0.26f)
     val heading = style(faces.title, W700, 20.5f, 28, -0.3f)
@@ -113,19 +106,14 @@ private val Amsel by lazy { typography(Commissioner) }
 
 internal fun amselTypography(): Typography = Amsel
 
-/** The mini player's line under the speaker's name: Body's face at Caption's size. */
 val Typography.dockLine: TextStyle get() = bodyLarge.copy(fontSize = 14.sp, lineHeight = 20.sp)
 
-/** A button's words: a step firmer than the text around them, so an action reads as one. */
 fun TextStyle.firm(): TextStyle = copy(fontWeight = W520)
 
-/** Figures of one width, so "0:09" turning to "0:10" never moves; tracking stays off so "1:11" holds. */
+/** Equal-width figures, so "0:09" turning to "0:10" does not shift; tracking stays off so "1:11" holds. */
 fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = "tnum", letterSpacing = 0.sp)
 
-/**
- * Figures inside a [glyph] (Now Playing's skip seconds): sized in dp as the glyph is, so they keep
- * their size at every font scale, and grow with it.
- */
+/** Sized in dp like the [glyph] they sit in, so they ignore the font scale and grow with the glyph. */
 fun Density.glyphFigures(times: TextStyle, glyph: Dp = 24.dp): TextStyle {
     val size = (GLYPH_FIGURES.dp * (glyph / 24.dp)).toSp()
     return times.copy(fontWeight = W560, fontSize = size, lineHeight = size).tabular()

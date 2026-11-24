@@ -37,8 +37,8 @@ public class NothingToMixException : Exception("The server has nothing to mix")
 
 /**
  * The mix is sampled first: for a seed without songs `play_media` empties the queue before it fails.
- * Repeat goes off first, as a mix locks the mode it starts with. [beforeStart] runs once the mix is
- * known to have songs, before the queue is touched. See docs/API-NOTES.md, "Extras".
+ * Repeat goes off before the play, as a mix locks the mode it starts with. [beforeStart] runs once
+ * the mix is known to have songs, before the queue is touched. See docs/API-NOTES.md, "Extras".
  */
 public suspend fun MaApi.playEndlessMix(queueId: String, seedUri: String, beforeStart: suspend () -> Unit = {}) {
     val sample = try {

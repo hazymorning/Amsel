@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
-# Start a throwaway Music Assistant server in Docker for tests.
-#
-# Usage: start.sh <image-tag> [library-dir]
-#   image-tag    tag of ghcr.io/music-assistant/server, e.g. 2.10.9, 2.11.0b7, latest, beta
-#   library-dir  music folder to mount read-only at /media (default: build/test-library,
-#                generated with make-library.sh when missing)
-#
-# Environment:
-#   PORT=8095        host port to publish (ignored with NETWORK=host)
-#   NAME=...         container name (default amsel-ma-<tag>)
-#   NETWORK=host     use host networking instead of publishing PORT
-#   PULL=1           docker pull the image first even if it is present
-#
-# Prints the base URL (http://localhost:PORT) on stdout once /info reports status "running".
-# The /data volume is an anonymous Docker volume: stop.sh removes it with the container.
+# Usage: start.sh <image-tag> [library-dir]   (env: PORT, NAME, NETWORK=host, PULL=1)
+# Only the base URL goes to stdout, once /info reports "running". /data is an anonymous volume,
+# so stop.sh removes it with the container.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,7 +13,6 @@ IMAGE="ghcr.io/music-assistant/server:$TAG"
 
 if [[ "${PULL:-0}" == "1" ]] || ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   echo "Pulling $IMAGE ..." >&2
-  # A registry that stumbles for a moment is asked again a little later.
   for try in 1 2 3; do
     docker pull -q "$IMAGE" >&2 && break
     if ((try == 3)); then exit 1; fi
@@ -38,7 +25,7 @@ if [[ ! -d "$LIB" ]]; then
 fi
 LIB="$(cd "$LIB" && pwd)"
 
-# a stale container from an earlier run would keep its onboarded data: start clean
+# A container left from an earlier run would keep its onboarded data.
 docker rm -f -v "$NAME" >/dev/null 2>&1 || true
 
 NET_ARGS=(-p "$PORT:8095")

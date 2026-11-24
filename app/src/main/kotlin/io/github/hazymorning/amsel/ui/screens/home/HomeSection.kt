@@ -81,7 +81,7 @@ internal fun Section(
     val title = section.heading()
     if (!editing) {
         Column(modifier) {
-            // An untitled section stands 32 dp under the one before: a header's height left an empty
+            // An untitled section starts 32 dp below the one before: a header's height left an empty
             // gap, a group gap ran it into the section above.
             if (!section.titled) {
                 if (!first) Spacer(Modifier.height(with(LocalDensity.current) { spaced(Space.S8) }))

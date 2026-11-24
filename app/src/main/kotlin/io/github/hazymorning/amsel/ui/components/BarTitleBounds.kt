@@ -5,7 +5,7 @@ internal data class BarTitleBounds(val start: Int, val width: Int)
 /**
  * Centres the title, keeping [inset] or the end actions' share ([taken]), whichever is larger, from
  * both sides. Where actions wider than [inset] leave too little for the shortest title ([needed]),
- * it gets all the room from [from] to the actions instead, off centre, so it is cut last.
+ * it gets all the width from [from] to the actions instead, off centre, so it is cut last.
  */
 internal fun barTitleBounds(width: Int, inset: Int, taken: Int, from: Int, needed: Int): BarTitleBounds {
     val side = maxOf(inset, taken)

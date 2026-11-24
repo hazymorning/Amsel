@@ -22,7 +22,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** The similar songs page against the recorded 2.11 answer: what it lists, and what it says when there is nothing. */
+// Fixtures are recorded 2.11 server replies.
 @OptIn(ExperimentalCoroutinesApi::class)
 class SimilarSongsViewModelTest {
     private val mapper = UiMapper { null }
@@ -103,7 +103,7 @@ class SimilarSongsViewModelTest {
         val others = listOf(served[0].uri, served[2].uri)
         assertEquals(others, watch(page(source).state).value.songs.map { it.key })
 
-        // The server did not give the song, or failed to: its uri alone tells it.
+        // Without the server's song, or after it failed, only the URI identifies it.
         source.item = null
         source.similar = listOf(served[0], served[1], served[0], served[2])
         assertEquals(others, watch(page(source, served[1].uri).state).value.songs.map { it.key })

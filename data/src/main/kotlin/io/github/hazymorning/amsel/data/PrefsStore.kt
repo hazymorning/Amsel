@@ -297,7 +297,7 @@ class PrefsStore(context: Context, scope: CoroutineScope) {
     }
 
     private companion object {
-        // More than anyone has in progress; the oldest are dropped.
+        // More than any user has in progress; the oldest are dropped.
         const val OFFERS_KEPT = 300
         val DOWNLOADS_OFFERED = stringPreferencesKey("downloads_offered")
         val SERVER_URL = stringPreferencesKey("server_url")

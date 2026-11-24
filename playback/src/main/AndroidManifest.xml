@@ -22,7 +22,7 @@
             android:foregroundServiceType="mediaPlayback"
             tools:ignore="ExportedService">
             <!-- Exported without a permission: Android Auto, SystemUI and Bluetooth controllers bind
-                 it. BrowseTree.onConnectAsync gives browsing and control only to trusted ones and cars. -->
+                 it. BrowseTree.onConnectAsync limits browsing and control to trusted controllers and cars. -->
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaLibraryService" />
                 <action android:name="android.media.browse.MediaBrowserService" />

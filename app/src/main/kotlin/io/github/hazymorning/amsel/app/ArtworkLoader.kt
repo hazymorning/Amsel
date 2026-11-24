@@ -19,7 +19,7 @@ import com.google.common.util.concurrent.SettableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/** Media3's artwork through the app's image loader, sharing its OkHttp client and cache, not a second HTTP stack. */
+// Through the app's image loader, so Media3's artwork shares its OkHttp client and cache.
 @OptIn(UnstableApi::class)
 class ArtworkLoader(private val context: Context, private val images: ImageLoader, private val scope: CoroutineScope) :
     BitmapLoader {

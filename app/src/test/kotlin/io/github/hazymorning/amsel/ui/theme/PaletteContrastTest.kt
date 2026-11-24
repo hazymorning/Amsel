@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The fixed palette keeps WCAG AA on every surface it can sit on. */
 class PaletteContrastTest {
     private val schemes = mapOf("day" to LightColors, "night" to DarkColors)
 
@@ -20,7 +19,7 @@ class PaletteContrastTest {
 
     @Test fun textReadsOnEverySurface() = schemes.forEach { (mode, s) ->
         s.surfaces().forEach { (name, bg) -> check("$mode ink on $name", contrast(s.onSurface, bg), 7f) }
-        // Secondary text stands on the page and on cards; the second tone carries only ink labels.
+        // Secondary text stands only on the page and Surface 1; Surface 2 carries only labels in Ink.
         listOf("background" to s.surface, "surface 1" to s.surfaceContainerLow).forEach { (name, bg) ->
             check("$mode secondary on $name", contrast(s.onSurfaceVariant, bg), 4.5f)
         }
@@ -29,7 +28,7 @@ class PaletteContrastTest {
     @Test fun inkIsSoftNeverPure() = schemes.forEach { (mode, s) ->
         assertTrue("$mode ink is pure", s.onSurface != Color.White && s.onSurface != Color.Black)
         assertTrue("$mode page is pure", s.surface != Color.White && s.surface != Color.Black)
-        // Linen on near-black: plenty to read, without the glare of white on black.
+        // Plenty to read, without the glare of white on black.
         assertTrue("$mode ink glares", contrast(s.onSurface, s.surface) < 17f)
     }
 
@@ -39,7 +38,7 @@ class PaletteContrastTest {
     }
 
     @Test fun quietGlyphsAndMossAreVisible() = schemes.forEach { (mode, s) ->
-        // Faint is for glyphs and separators only, never reading text: a control's 3:1.
+        // Faint is for glyphs and separators, never reading text: WCAG's 3:1 for non-text contrast.
         check("$mode faint on the page", contrast(s.outline, s.surface), 3f)
         listOf("background" to s.surface, "surface 1" to s.surfaceContainerLow).forEach { (name, bg) ->
             check("$mode moss on $name", contrast(s.tertiary, bg), 3f)
@@ -51,7 +50,7 @@ class PaletteContrastTest {
     }
 
     @Test fun surfacesStepAwayFromThePage() = schemes.forEach { (mode, s) ->
-        // Layers are separated by tone, never by shadow: each surface differs from the page.
+        // Layers part by tone, never by shadow, so each surface must differ from the one below it.
         assertTrue("$mode surface 1 equals the page", s.surfaceContainerLow != s.surface)
         assertTrue("$mode surface 2 equals surface 1", s.surfaceContainerHigh != s.surfaceContainerLow)
     }

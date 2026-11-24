@@ -179,7 +179,10 @@ class PlayOnController(
         }
     }
 
-    /** Waits for this connection's speaker list and changes nothing without one, rather than follow an old list. */
+    /**
+     * Waits for this connection's speaker list, and changes nothing without one rather than follow
+     * an old list.
+     */
     suspend fun followPlaying() {
         val speakers = data.speakers
         if (data.session.state.value !is SessionState.Ready || speakers.loads.value == 0) {

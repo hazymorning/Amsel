@@ -62,7 +62,6 @@ class CoverColorsTest {
             for (seed in seeds) {
                 val c = coverColorsOf(seed)
                 val tinted = c.tint(s.surface, night)
-                // Plainly coloured, yet still the page its text was made for.
                 assertTrue("tint of $seed night=$night strays", contrast(tinted, s.surface) < 1.3f)
                 assertTrue("ink on tint of $seed night=$night", contrast(s.onSurface, tinted) >= 7f)
                 assertTrue("secondary on tint of $seed night=$night", contrast(s.onSurfaceVariant, tinted) >= 4.5f)
@@ -86,7 +85,6 @@ private fun coverColorsOf(seed: Color): CoverColors = seed.hsl().let { (hue, sat
     CoverColors(hue, saturation)
 }
 
-/** Hue, saturation and lightness. */
 private fun Color.hsl(): FloatArray = FloatArray(3).also { ColorUtils.colorToHSL(toArgb(), it) }
 
 /** WCAG contrast ratio of two opaque colours. */

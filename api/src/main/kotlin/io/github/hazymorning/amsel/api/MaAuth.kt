@@ -96,10 +96,7 @@ public class MaAuth(private val http: OkHttpClient) {
         }
     }
 
-    /**
-     * Ends with a long-lived token named [deviceName]. The password goes only to the server whose
-     * first frame names [serverId].
-     */
+    /** The password goes only to the server whose first frame names [serverId]. */
     public suspend fun signIn(
         address: ServerAddress,
         serverId: String,

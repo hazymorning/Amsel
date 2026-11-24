@@ -23,7 +23,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** What a touch does on the artist page's shelf of similar artists and on the similar songs page. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class PagesScreenTest {
@@ -35,7 +34,7 @@ class PagesScreenTest {
     private val moreSongs = mutableListOf<TrackUi>()
     private var retries = 0
 
-    /** The page's own list, not the shelf in it. */
+    // The page's own vertical list, not the shelf inside it.
     private val page = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
 
     private fun artist(state: ArtistUiState) = compose.setContent {

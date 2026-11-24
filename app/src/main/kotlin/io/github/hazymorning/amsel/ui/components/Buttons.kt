@@ -173,7 +173,7 @@ fun TextAction(
     }
 }
 
-/** [dot] is for a glyph that looks the same in both states (shuffle), not one with a filled on-glyph (the heart). */
+/** [dot] is for a glyph that is the same in both states (shuffle), not one with a filled on-glyph (the heart). */
 @Composable
 fun ToggleIconButton(
     @DrawableRes icon: Int,

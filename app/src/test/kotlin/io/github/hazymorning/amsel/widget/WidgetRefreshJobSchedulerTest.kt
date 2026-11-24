@@ -10,7 +10,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** How Android is asked to look at the speakers for the widgets while Amsel's socket is closed. */
 @RunWith(RobolectricTestRunner::class)
 class WidgetRefreshJobSchedulerTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()

@@ -86,8 +86,8 @@ class PlaybackController(
                 messages.show(failureText(error), playing.nameOf(id), retry = { volumes.trySend(id to level) })
             }
         }
-        // Without the speakers, Play on and the dock stay empty until the next connect: said, with
-        // Retry, each time the app comes to the front meanwhile.
+        // Without the speakers, Play on and the dock stay empty until the next connect, so the error
+        // shows with Retry each time the app comes to the front meanwhile.
         scope.launch {
             combine(data.speakersFailure, data.session.foreground) { error, inFront -> error?.takeIf { inFront } }
                 .filterNotNull()

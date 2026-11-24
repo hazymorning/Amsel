@@ -11,9 +11,9 @@ public const val POPULAR_TRACKS: Int = 5
 private val TOP_TRACKS_TIMEOUT = 10.seconds
 
 /**
- * `top_tracks` is empty for local files, and slow where music services rank. From schema 92 the
- * fallback, the artist's first tracks, is asked at the same time; before it only when needed, as it
- * then answers every track. See docs/API-NOTES.md, "The artist page: where the time goes".
+ * `top_tracks` is the slow call, and empty for local files. From schema 92 the fallback, the
+ * artist's first tracks, is asked at the same time; before it only when needed, as it then answers
+ * every track. See docs/API-NOTES.md, "The artist page: where the time goes".
  */
 public suspend fun MaApi.artistTopTracks(itemId: String, provider: String): List<MediaItem> {
     val paged = schema() >= Schema.LISTING_PAGING
@@ -32,7 +32,7 @@ public suspend fun MaApi.artistTopTracks(itemId: String, provider: String): List
     }
 }
 
-/** Before schema 92 ([paged] false) these listings take no limit and answer every track: cut here too. */
+/** Before schema 92 ([paged] false) these listings take no limit and answer every track, so the list is cut here. */
 private suspend fun MaApi.firstTracks(
     command: String,
     itemId: String,

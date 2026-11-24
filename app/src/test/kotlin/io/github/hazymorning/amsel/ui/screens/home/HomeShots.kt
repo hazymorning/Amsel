@@ -21,7 +21,7 @@ class HomeShots : ScreenshotTest() {
 
     @Test fun asItComes() = snap("home_as_it_comes") { Home(HomeSample.asItComes) }
 
-    // Untitled sections stand 32 dp apart, not a heading's height; at night the cards take their
+    // Untitled sections are 32 dp apart, not a heading's height; at night the cards take their
     // covers' hue.
     @Test fun untitled() = snap("home_untitled", listOf(Dark)) {
         val search = SectionUi("s9", SectionOption.Search, SectionLayout.Row, emptyList(), titled = false)

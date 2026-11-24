@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Over a Play … button's cover while it is pressed, in a cover's corners. -->
+<!-- 8dp: Radius.Thumb, the corner of covers under 200 dp, so the overlay follows a Play … cover's corners. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
         <shape android:shape="rectangle">

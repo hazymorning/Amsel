@@ -17,7 +17,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Suggestions: one switch per moment, and one for all that keeps each one's choice. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class HintsScreenTest {
@@ -30,7 +29,6 @@ class HintsScreenTest {
         assertEquals(setOf("headphones"), off)
         compose.onNodeWithText("Show suggestions").performClick()
         assertEquals(setOf("headphones", HINTS_ALL), off)
-        // With all off the moments step aside; on again, each keeps its choice.
         compose.onNodeWithText("Headphones connect").assertDoesNotExist()
         compose.onNodeWithText("Show suggestions").performClick()
         compose.onNodeWithText("Headphones connect").assertIsOff()

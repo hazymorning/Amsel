@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 
-/** The one appearance setting: follow the system, or force light or dark. [pref] is how AppPrefs stores it. */
+/** [pref] is the value stored in `Prefs.theme`. */
 enum class ThemeMode(val pref: String) {
     System("system"),
     Light("light"),
@@ -26,8 +26,8 @@ enum class ThemeMode(val pref: String) {
 }
 
 /**
- * Gives the platform the app's own choice (Android 12 on), so the splash and what the system draws
- * for the app, such as the text toolbar, agree with it; the activity is recreated when it changes.
+ * From Android 12, so the splash and what the system draws for the app, such as the text toolbar, follow
+ * the app's choice. A change recreates the activity.
  */
 fun Context.applyNightMode(mode: ThemeMode) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
@@ -40,11 +40,6 @@ fun Context.applyNightMode(mode: ThemeMode) {
     )
 }
 
-/**
- * Amsel's one look: linen paper by day, a soft near-black at night, the bundled type, continuous
- * corners and a press that sinks rather than ripples. Colour comes from the covers ([CoverColors])
- * and moss marks what is alive. Experimental Material opt-ins live only in this package.
- */
 @Composable
 fun AmselTheme(mode: ThemeMode = ThemeMode.System, content: @Composable () -> Unit) {
     val dark = when (mode) {

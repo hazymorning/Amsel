@@ -62,7 +62,7 @@ class AbsException(val reason: Reason, cause: Throwable? = null) : IOException(r
 class AbsClient(
     private val http: OkHttpClient,
     private val store: AbsAccountStore,
-    // [io.github.hazymorning.amsel.data.Session.reachesHome]; https needs no such check.
+    // [io.github.hazymorning.amsel.data.Session.reachesHome]: whether plain http may go out; https needs no check.
     private val reachesHome: suspend () -> Boolean,
 ) {
     private val refreshing = Mutex()

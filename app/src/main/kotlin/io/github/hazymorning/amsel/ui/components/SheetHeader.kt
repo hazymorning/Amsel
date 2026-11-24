@@ -61,7 +61,7 @@ private const val TITLE_LINES = 2
 
 /**
  * Bottom padding that puts a last row's visible bottom [Space.SheetEdge] above the sheet's edge.
- * Content whose layout ends at its visible bottom (a button, a sentence) keeps [Space.SheetEdge] itself.
+ * Content whose layout ends at its visible bottom (a button, a sentence) uses [Space.SheetEdge] itself.
  */
 @Composable
 fun sheetEnd(lead: RowLead, twoLines: Boolean): Dp =

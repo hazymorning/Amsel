@@ -27,7 +27,7 @@ import io.github.hazymorning.amsel.ui.theme.Radius
 import io.github.hazymorning.amsel.ui.theme.capHeight
 import kotlin.math.roundToInt
 
-/** Words under a cover as wide as they are, a little in from its edge ([Radius.caption]). */
+/** Insets text by the corner radius ([Radius.caption]) of a cover as wide as the incoming max width. */
 fun Modifier.underCover(): Modifier = layout { measurable, constraints ->
     val inset = if (constraints.hasBoundedWidth) Radius.caption(constraints.maxWidth.toDp()).roundToPx() else 0
     val placeable = measurable.measure(constraints.offset(horizontal = -inset))
@@ -51,8 +51,8 @@ fun Modifier.overhang(start: Dp = 0.dp, top: Dp = 0.dp, end: Dp = 0.dp, bottom: 
     }
 
 /**
- * Places a block so its first baseline sits [top] below the layout's top and the layout ends [bottom]
- * below its last. With [line], that one line stands for both (a title among actions that have text).
+ * Places the first baseline [top] below the layout's top and ends the layout [bottom] below the last
+ * baseline. [line], if given, stands for both (a title among actions that carry text).
  */
 fun Modifier.baselineFrame(top: Dp, bottom: Dp, line: HorizontalAlignmentLine? = null): Modifier =
     layout { measurable, constraints ->
@@ -74,7 +74,7 @@ fun Modifier.providesBaseline(line: HorizontalAlignmentLine): Modifier = layout 
     layout(placeable.width, placeable.height, lines) { placeable.place(0, 0) }
 }
 
-/** A paint that sets [style] as Text does, to read its ink from the font; null while the font loads. */
+/** A Paint set up as Text sets [style], to read glyph bounds from the font; null while the font loads. */
 @Composable
 private fun rememberTextPaint(style: TextStyle): Paint? {
     val resolver = LocalFontFamilyResolver.current
@@ -101,7 +101,7 @@ private fun rememberTextPaint(style: TextStyle): Paint? {
 
 private fun Paint.glyphBounds(text: String): Rect = Rect().also { getTextBounds(text, 0, text.length, it) }
 
-/** The space before the first letter of [text] and after its last, in pixels, from the font itself. */
+/** The space before the first glyph of [text] and after its last, in px, from the font. */
 @Composable
 internal fun rememberSideBearings(text: String, style: TextStyle): Pair<Float, Float> {
     val paint = rememberTextPaint(style)
@@ -112,7 +112,7 @@ internal fun rememberSideBearings(text: String, style: TextStyle): Pair<Float, F
     }
 }
 
-/** How wide [text] is from its first letter's ink to its last, on one line, as [trimSideBearings] lays it out. */
+/** The width [trimSideBearings] gives [text] on one line. */
 @Composable
 fun textGlyphWidth(text: String, style: TextStyle): Dp {
     if (text.isEmpty()) return 0.dp
@@ -123,7 +123,7 @@ fun textGlyphWidth(text: String, style: TextStyle): Dp {
     return with(density) { (width - start.roundToInt() - end.roundToInt()).toDp() }
 }
 
-/** Moves a start-aligned text left by its first letter's side bearing, so its ink sits on the keyline. */
+/** Shifts start-aligned text by its first side bearing, so the first glyph sits on the keyline; the width stays. */
 @Composable
 fun Modifier.trimStartBearing(text: String, style: TextStyle): Modifier {
     val start = rememberSideBearings(text, style).first.roundToInt()
@@ -133,7 +133,7 @@ fun Modifier.trimStartBearing(text: String, style: TextStyle): Modifier {
     }
 }
 
-/** A one-line label whose layout is its ink from its first letter to its last. */
+/** For one-line text: the layout spans its glyphs, without the side bearings. */
 @Composable
 fun Modifier.trimSideBearings(text: String, style: TextStyle): Modifier {
     val (start, end) = rememberSideBearings(text, style).let { it.first.roundToInt() to it.second.roundToInt() }
@@ -146,7 +146,7 @@ fun Modifier.trimSideBearings(text: String, style: TextStyle): Modifier {
 }
 
 /**
- * Centres a centred one-line text by its ink: a box centred by its advance sits off by half the
+ * Centres centred one-line text by its glyphs: centred by its advance, it sits off by half the
  * difference of its side bearings ("B" has more on the left than "r" on the right).
  */
 @Composable
@@ -160,7 +160,7 @@ fun Modifier.centreOnGlyphs(text: String, style: TextStyle): Modifier {
     }
 }
 
-/** The layout runs from the first line's cap top ([top]) to the last baseline ([bottom]). */
+/** Trims the layout to the first line's cap top ([top]) and to the last baseline ([bottom]). */
 fun Modifier.capToBaseline(style: TextStyle, top: Boolean = true, bottom: Boolean = true): Modifier =
     layout { measurable, constraints ->
         val placeable = measurable.measure(constraints)
@@ -175,10 +175,7 @@ fun Modifier.capToBaseline(style: TextStyle, top: Boolean = true, bottom: Boolea
         layout(placeable.width, end - trim) { placeable.place(0, -trim) }
     }
 
-/**
- * A one-line text whose layout runs from its highest ink to its lowest: for a line with no
- * capitals ("or"), which is spaced from its own ink rather than from a cap top.
- */
+/** One-line text laid out from its highest glyph to its lowest, for text without capitals ("or"). */
 @Composable
 fun Modifier.trimToGlyphHeight(text: String, style: TextStyle): Modifier {
     val paint = rememberTextPaint(style)

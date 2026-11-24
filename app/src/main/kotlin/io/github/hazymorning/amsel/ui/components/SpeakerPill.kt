@@ -34,7 +34,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.controls
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/** Where room is short, the caller drops [caret] first, then the name ([named]) below [SpeakerPillLeast]. */
+/** Where space is short, the caller drops [caret] first, then the name ([named]) below [SpeakerPillLeast]. */
 @Composable
 fun SpeakerPill(
     speaker: SpeakerUi,

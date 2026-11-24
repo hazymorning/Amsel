@@ -22,7 +22,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** A page opened again paints what it showed last time while the server is asked. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CachedPagesTest {
     private val messages = MessageController(MutableStateFlow(true))

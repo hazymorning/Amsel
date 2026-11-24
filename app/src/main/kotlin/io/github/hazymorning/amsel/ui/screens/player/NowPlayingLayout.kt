@@ -64,8 +64,8 @@ private val LineToControls = 32.dp
 private val FooterRoom = Keyline.Margin
 private val OverButtons = Space.S3
 
-// The footer's grounds stand as far from the screen's foot as from its sides, with the gesture handle
-// inside that gap (or its inset, if taller); above 3-button navigation, its height plus [OverButtons].
+// The footer's grounds are as far from the screen's bottom as from its sides, the gesture handle inside
+// that gap (or its inset, if taller); above 3-button navigation, its height plus [OverButtons].
 @Composable
 internal fun footRoom(): Dp {
     val density = LocalDensity.current

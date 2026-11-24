@@ -17,13 +17,12 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tan
 
-/** How far a corner's curve eases into its straight edges: 0 is a plain arc, 1 the longest ease. */
+/** 0 is a plain arc, 1 the longest ease into the straight edges. */
 private const val CORNER_SMOOTHING = 0.6f
 
 /**
- * Continuous corners: each corner keeps a shorter circular arc in its middle and eases into its
- * edges along curves of growing radius, so the corner reads as grown rather than machined. A corner
- * too large for the shape gives up its easing first, so a fully round end stays a plain half circle.
+ * Continuous corners: a shorter circular arc in the middle, eased into the edges by cubic curves. A
+ * corner too large for the shape gives up its easing first, so a fully round end stays a half circle.
  */
 @Immutable
 class SmoothShape(
@@ -35,7 +34,6 @@ class SmoothShape(
     constructor(radius: Dp) : this(radius, radius, radius, radius)
 
     companion object {
-        /** Rounded on top only: a sheet's or a layer's corners. */
         fun top(radius: Dp): SmoothShape = SmoothShape(radius, radius, 0.dp, 0.dp)
     }
 
@@ -88,7 +86,7 @@ class SmoothShape(
         return Corner(r, p, 2f * b, b, c, d, arc)
     }
 
-    /** Each corner's arc centre, and its directions along the incoming edge (u) and the outgoing one (v), clockwise. */
+    /** The arc's middle angle, and unit vectors along the incoming (u) and outgoing (v) edge, clockwise. */
     private enum class Quarter(val centreAngle: Float, val ux: Float, val uy: Float, val vx: Float, val vy: Float) {
         TopRight(-45f, 1f, 0f, 0f, 1f),
         BottomRight(45f, 0f, 1f, -1f, 0f),
@@ -96,7 +94,6 @@ class SmoothShape(
         TopLeft(225f, 0f, -1f, 1f, 0f),
     }
 
-    /** One corner's curve: a cubic from the edge, a middle arc, a cubic onto the next edge. */
     private class Corner(
         val r: Float,
         val p: Float,
@@ -106,7 +103,6 @@ class SmoothShape(
         val d: Float,
         val arc: Float,
     ) {
-        /** Draws from the corner's start on the incoming edge to its end on the outgoing one, clockwise. */
         fun draw(path: Path, x: Float, y: Float, quarter: Quarter) {
             if (r <= 0f) {
                 path.lineTo(x, y)

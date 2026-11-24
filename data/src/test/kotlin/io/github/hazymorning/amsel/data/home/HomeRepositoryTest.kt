@@ -31,7 +31,6 @@ class HomeRepositoryTest {
 
     private val snapshotFile get() = File(folder.root, "home.json")
 
-    /** A loader that answers each option with one item named after it, and records what it was asked. */
     private class FakeLoader(private val speaker: () -> String? = { null }) : SectionLoader {
         val asked = CopyOnWriteArrayList<SectionOption>()
         var failing = emptySet<SectionOption>()
@@ -56,7 +55,6 @@ class HomeRepositoryTest {
 
     private class Env(val repo: HomeRepository, val loader: FakeLoader, val serverId: MutableStateFlow<String?>)
 
-    /** A repository over a real DataStore and snapshot file in [folder], closed after [block]. */
     private fun withRepo(
         server: String? = "server-a",
         loader: FakeLoader = FakeLoader(),

@@ -13,7 +13,7 @@ private const val LOAD_AHEAD = 10
 
 /**
  * Calls [onNearEnd] or [onNearStart] each time the rows left before that end change while within
- * [LOAD_AHEAD], so calls repeat; the callee ignores them while a page loads.
+ * [LOAD_AHEAD], so calls repeat; the callee must ignore them while a page loads.
  */
 @Composable
 fun LoadAhead(list: LazyListState, onNearEnd: () -> Unit, onNearStart: (() -> Unit)? = null) {

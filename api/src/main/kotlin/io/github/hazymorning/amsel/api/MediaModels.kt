@@ -205,9 +205,9 @@ public fun listening(durationSec: Int?, resumeMs: Long?, fullyPlayed: Boolean): 
 }
 
 /**
- * The server merges an edited chapter list into the stored one: the last chapter at each position is
- * current, one overlapping the chapter before it stale. Lists with an unnumbered chapter, rising
- * positions or one position throughout stay as they are. See docs/API-NOTES.md, "Audiobooks and podcasts".
+ * The server merges an edited chapter list into the stored one: the last chapter at each position
+ * is current, and one overlapping the chapter before it is stale. Lists with an unnumbered chapter,
+ * rising positions or one position throughout stay as they are. See docs/API-NOTES.md, "Audiobooks and podcasts".
  */
 internal fun currentChapters(all: List<Chapter>): List<Chapter> {
     val positions = all.map { it.position ?: return all }

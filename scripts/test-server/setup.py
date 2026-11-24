@@ -1,23 +1,7 @@
 #!/usr/bin/env python3
-"""
-Onboard a fresh Music Assistant test server without a browser, and print an API token.
+"""Onboards a fresh test server over HTTP and prints a long-lived API token, the only output on stdout.
 
-Steps (all plain HTTP, python3 stdlib only):
-  1. wait until GET /info answers with "status": "running"
-  2. POST /setup {"username","password","display_name","device_name"} creates the first admin
-     and returns a session token (on a server that already has a user: POST /auth/login)
-  3. JSON-RPC POST /api "auth/token/create" {"name"} makes a long-lived token
-  4. "config/providers/setup" {"provider_domain": "filesystem_local"} starts the setup flow,
-     "config/flows/submit" {"flow_id", "values": {"content_type": "music", "path": "/media"}}
-     finishes it; adding the first provider also marks onboarding done
-  5. "music/sync" {"providers": [instance_id]} starts the library sync; "tasks/get" is polled
-     until every sync task has finished, then the library counts are checked
-  6. "config/providers/setup" {"provider_domain": "test"} adds the server's own test music
-     service and "config/providers/save" empties it at once: it names similar songs offline
-     and puts nothing into the library
-
-Usage: setup.py [--url http://localhost:8095] [--expect-tracks 12] [--token-file PATH]
-The long-lived token is the only thing printed on stdout.
+The steps: scripts/test-server/README.md, "How the headless setup works". Python 3 stdlib only.
 """
 
 from __future__ import annotations
@@ -56,7 +40,7 @@ def wait_running(url: str, timeout: float) -> dict[str, Any]:
 
 
 def session_token(url: str) -> str:
-    """Create the first admin (or log in when it exists) and return a session token."""
+    """Creates the first admin, or logs in once one exists."""
     try:
         res = http_json(
             f"{url}/setup",
@@ -70,7 +54,7 @@ def session_token(url: str) -> str:
         log(f"created admin user '{USERNAME}' via POST /setup")
         return res["token"]
     except HttpError as err:
-        # 2.10 answers 400, 2.11 answers 409 once a user exists
+        # 400 or 409 by version once a user exists. See scripts/test-server/README.md, "How the headless setup works".
         if err.status not in (400, 409) or "already" not in err.body.lower():
             raise
     res = http_json(
@@ -88,7 +72,6 @@ def session_token(url: str) -> str:
 
 
 def ensure_filesystem_provider(url: str, token: str) -> str:
-    """Return the instance id of the filesystem_local provider reading MEDIA_PATH."""
     for conf in rpc(url, token, "config/providers"):
         if conf.get("domain") == "filesystem_local":
             log(f"filesystem_local already configured: {conf['instance_id']}")
@@ -145,7 +128,7 @@ def sync_library(url: str, token: str, instance_id: str, timeout: float) -> None
 
 
 def ensure_test_provider(url: str, token: str) -> None:
-    """Add the server's own "test" music service, which names similar songs offline, holding nothing."""
+    """The server's "test" music service answers similar songs offline. See docs/API-NOTES.md, "Test server recipe"."""
     instance_id = next(
         (conf["instance_id"] for conf in rpc(url, token, "config/providers") if conf.get("domain") == "test"),
         None,
@@ -156,8 +139,8 @@ def ensure_test_provider(url: str, token: str) -> None:
             raise SystemExit(f"test provider setup did not finish: {step}")
         instance_id = (step.get("result") or {}).get("instance_id")
         log(f"added test provider {instance_id}")
-    # As set up it would put 500 songs, 5 podcasts and 20 books into the library with its first
-    # sync, 10 s after it loads. Saved on every run, so one that stopped in between is mended.
+    # Emptied, or its first sync fills the library (docs/API-NOTES.md, "Test server recipe"); saved on
+    # every run, so a run that stopped in between is repaired.
     rpc(
         url,
         token,
@@ -187,7 +170,7 @@ def main() -> None:
     token = rpc(url, session_token(url), "auth/token/create", name="amsel-test")
     instance_id = ensure_filesystem_provider(url, token)
     sync_library(url, token, instance_id, args.timeout)
-    # the sync tasks report done slightly before the last library writes land
+    # Sync tasks report done slightly before the last library writes land.
     deadline = time.monotonic() + 60
     while (tracks := library_count(url, token, "tracks")) < args.expect_tracks:
         if time.monotonic() > deadline:

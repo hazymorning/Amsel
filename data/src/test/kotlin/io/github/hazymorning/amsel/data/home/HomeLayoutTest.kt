@@ -20,7 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeLayoutTest {
-    /** The four sections every edit below works on: an earlier default without Continue listening. */
+    // An earlier default, without Continue listening.
     private val home = HomeLayout(
         listOf(
             HomeSection("s1", Pinned, Grid),
@@ -51,14 +51,14 @@ class HomeLayoutTest {
             fresh.options(),
         )
         assertEquals(listOf(Row, Big, Grid, Row, List, Row, Small, Row, Small), fresh.sections.map { it.layout })
-        // Search and Continue listening stand without a heading; the rest under theirs.
+        // Search and Continue listening have no heading; the rest have theirs.
         assertEquals(
             listOf(false, false, true, true, true, true, true, true, true),
             fresh.sections.map {
                 it.showsTitle
             },
         )
-        // An earlier default's sections keep their ids, so their snapshots still paint.
+        // Sections from an earlier default keep their ids, so their snapshots still show.
         assertEquals(listOf("s5", "s0", "s1", "s2", "s8", "s4", "s6", "s3", "s7"), fresh.ids())
         assertTrue(fresh.pinned.isEmpty())
         assertSame(fresh, fresh.offerListening())
@@ -71,12 +71,12 @@ class HomeLayoutTest {
         )
         val widened = HomeLayout.decode(earlier.encode())
         assertEquals(AllStations, widened.sections.last().option)
-        // In another size or under the person's own name, favourites stay favourites.
+        // Resized or renamed by the user, favourite stations stay favourite stations.
         val resized = earlier.setLayout("s7", Row)
         assertEquals(FavoriteStations, HomeLayout.decode(resized.encode()).sections.last().option)
         val named = earlier.setTitle("s7", "Sender")
         assertEquals(FavoriteStations, HomeLayout.decode(named.encode()).sections.last().option)
-        // Chosen since, they stay what the person chose.
+        // Chosen after the widening, they stay as chosen.
         val chosen = widened.setOption("s7", FavoriteStations)
         assertEquals(FavoriteStations, HomeLayout.decode(chosen.encode()).sections.last().option)
     }
@@ -95,7 +95,7 @@ class HomeLayoutTest {
         assertEquals(listOf(ContinueListening, Pinned, Everything, SmartPlaylists, NewAlbums), offered.options())
         assertEquals(Big, offered.sections.first().layout)
         assertTrue(offered.listeningOffered)
-        // Removed, it stays away.
+        // Once removed, it is not offered again.
         val removed = offered.remove(offered.sections.first().id)
         assertSame(removed, removed.offerListening())
         // An old stored layout never had the flag: it reads as not offered yet.
@@ -176,7 +176,7 @@ class HomeLayoutTest {
         assertFalse(search.sections[2].showsTitle)
         assertTrue(search.setTitled("s3", true).sections[2].showsTitle)
         assertFalse(home.setTitled("s2", false).sections[1].showsTitle)
-        // Another option brings its own way: Search hides its title, the rest show theirs.
+        // A new option resets the heading to its default: hidden for Search, shown for the rest.
         assertTrue(home.setTitled("s2", false).setOption("s2", SectionOption.TopArtists).sections[1].showsTitle)
     }
 
@@ -206,7 +206,7 @@ class HomeLayoutTest {
 
     @Test fun arrangingPinsKeepsThoseHomeCouldNotShowInPlace() {
         val pins = home.pin("d").pin("c").pin("b").pin("a")
-        // "b" did not load, so Home showed a, c, d; the person moved d to the top.
+        // "b" did not load, so Home showed a, c, d; the user moved d to the top.
         val arranged = pins.arrangePins(listOf("d", "a", "c", "gone"))
         assertEquals(listOf("d", "b", "a", "c"), arranged.pinned)
         assertEquals(pins.sections, arranged.sections)

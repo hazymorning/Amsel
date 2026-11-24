@@ -16,10 +16,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Where Audiobookshelf's password and tokens may go over plain http: to a home address, typed so or
- * by its form, and only from the network where Music Assistant answered as itself.
- */
 class AbsClientTest {
     private val abs = FakeAbs()
     private val accounts = MemoryAbsAccounts()
@@ -27,7 +23,7 @@ class AbsClientTest {
 
     @After fun close() = abs.close()
 
-    /** Its https fails with [failure] before connecting; [NAME] is on this phone, as a hostile DNS can say. */
+    /** Https fails with [failure] before connecting; [NAME] resolves to this phone, as a hostile DNS can make it. */
     private fun client(
         failure: IOException = ConnectException("Connection refused"),
         reachesHome: suspend () -> Boolean = { true },
@@ -57,7 +53,7 @@ class AbsClientTest {
         assertEquals(AbsException.Reason.HttpsFailed, reason { client().signIn("$NAME:$port", "root", "pw") })
         assertTrue(abs.requests.toString(), abs.requests.isEmpty())
         assertNull(accounts.account.value)
-        // Typed with http://, it is what the person asked for.
+        // Typed with http://, plain http is what the user asked for.
         runBlocking { client().signIn("http://$NAME:$port", "root", "pw") }
         assertEquals("http://$NAME:$port", accounts.account.value?.url)
     }

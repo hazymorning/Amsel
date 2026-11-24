@@ -16,7 +16,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-/** One number drives a player layer: taps, drags, throws, a list's pull and the back gesture. */
 @RunWith(RobolectricTestRunner::class)
 class PlayerLayerStateTest {
     @get:Rule val compose = createComposeRule()
@@ -24,7 +23,6 @@ class PlayerLayerStateTest {
     private lateinit var layer: PlayerLayerState
     private lateinit var scope: CoroutineScope
 
-    /** A layer [heightPx] tall, as its layout measures it. */
     private fun start(open: Boolean, heightPx: Float = 1000f) {
         compose.setContent {
             layer = remember { PlayerLayerState(open) }
@@ -102,7 +100,6 @@ class PlayerLayerStateTest {
         assertTrue(layer.isOpen)
         assertEquals(1f, layer.fraction)
 
-        // Pulled most of the way down, then thrown back up: it stays open.
         compose.runOnIdle { layer.dragBy(deltaPx = 800f) }
         run { settle(velocityPx = -900f) }
         assertTrue(layer.isOpen)
@@ -119,7 +116,7 @@ class PlayerLayerStateTest {
     @Test fun turningBackAnswersAtOnce() {
         start(open = true)
         compose.runOnIdle {
-            // Up past fully open goes nowhere, so the way back down starts at once.
+            // The drag up past open is clamped, so the way back down starts at once.
             layer.dragBy(deltaPx = -300f)
             layer.dragBy(deltaPx = 100f)
         }
@@ -166,12 +163,12 @@ class PlayerLayerStateTest {
         assertEquals(250f, taken.y)
         assertEquals(0.75f, layer.fraction, 0.001f)
 
-        // Pushing back up lifts the layer before the list scrolls, and no further than open.
+        // Back up, the layer takes the scroll before the list does, but only as far as open.
         val lifted = compose.runOnIdle { scroll.onPreScroll(Offset(0f, -400f), NestedScrollSource.UserInput) }
         assertEquals(-250f, lifted.y, 0.5f)
         assertEquals(1f, layer.fraction)
 
-        // The list's own fling never moves the layer.
+        // The list's own fling (SideEffect) never moves the layer.
         val flung = compose.runOnIdle {
             scroll.onPostScroll(Offset.Zero, Offset(0f, 250f), NestedScrollSource.SideEffect)
         }

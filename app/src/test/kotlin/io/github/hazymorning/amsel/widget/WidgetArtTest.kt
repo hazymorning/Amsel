@@ -23,7 +23,6 @@ class WidgetArtTest {
 
     @Test fun paperStandsOnADarkCover() = assertFalse(WidgetArt.cover(filled(Color.rgb(30, 40, 35))).light)
 
-    /** Ink reads on a mid grey under the light veil better than paper does under the dark one. */
     @Test fun aMidGreyTakesInk() = assertTrue(WidgetArt.cover(filled(Color.rgb(128, 128, 128))).light)
 
     @Test fun theBlurredCoverIsSmallAndSquare() {
@@ -41,14 +40,12 @@ class WidgetArtTest {
         assertTrue("A grey between, not a hard edge: $middle", middle in 60..200)
     }
 
-    /** A button's cover keeps the cover corners: transparent at its very corner, the picture inside. */
     @Test fun aButtonsCoverHasCorners() {
         val thumb = WidgetArt.shaped(filled(Color.RED), px = 84, density = 3f)
         assertEquals(0, Color.alpha(thumb.getPixel(0, 0)))
         assertEquals(255, Color.alpha(thumb.getPixel(42, 42)))
     }
 
-    /** A Play … button's cover fills its cell, taller than wide, in a cover's corners, cut from the middle. */
     @Test fun aPlayButtonsCoverFillsItsCell() {
         val stripes = filled(Color.RED).apply {
             for (x in 0 until 30) for (y in 0 until height) setPixel(x, y, Color.BLUE)
@@ -59,11 +56,10 @@ class WidgetArtTest {
         assertEquals(0, Color.alpha(face.getPixel(0, 0)))
         assertEquals(255, Color.alpha(face.getPixel(66, 2)))
         assertEquals(255, Color.alpha(face.getPixel(2, 84)))
-        // The picture's sides go, not its middle: the blue edge is cut away.
+        // The blue stripe at the source's left edge is cropped away.
         assertEquals(Color.RED, face.getPixel(4, 84))
     }
 
-    /** Darkened, the cover lies sharp and whole; play takes its colour bright, as on a dark ground. */
     @Test fun theDarkenedCoverIsTheCoverItself() {
         val blue = Color.rgb(60, 110, 200)
         val cover = WidgetArt.darkened(filled(blue, width = 640, height = 512))
@@ -75,7 +71,6 @@ class WidgetArtTest {
         assertTrue(ColorUtils.calculateLuminance(accent.cell) > ColorUtils.calculateLuminance(blue))
     }
 
-    /** Darkened, the words are paper over any cover, a white one too; with nothing playing, the empty ground's. */
     @Test fun theDarkenedLookTakesPaperOverAnyCover() {
         val ground = WidgetBackground.of(
             WidgetStyle.Darkened,
@@ -87,14 +82,12 @@ class WidgetArtTest {
         assertEquals(WidgetColors.Light, WidgetBackground.of(WidgetStyle.Darkened, null, clearInk = false).tone)
     }
 
-    /** An empty cover is the cover's shape in white, for the widget to tint in its tone. */
     @Test fun anEmptyCoverHasTheCoversShape() {
         val blank = WidgetArt.blank(px = 144, density = 3f)
         assertEquals(0, Color.alpha(blank.getPixel(0, 0)))
         assertEquals(Color.WHITE, blank.getPixel(72, 72))
     }
 
-    /** Play and pause take a coloured cover's own colour, with a glyph that reads on it. */
     @Test fun aColouredCoverLendsPlayItsColour() {
         for (colour in listOf(Color.rgb(60, 110, 200), Color.rgb(240, 200, 60), Color.rgb(150, 30, 40))) {
             val accent = checkNotNull(WidgetArt.cover(filled(colour)).accent)

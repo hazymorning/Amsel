@@ -41,8 +41,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
 /**
- * A line too long for its room moves back and forth as in MarqueeLabel's `leftRight` mode, pausing at
- * each end, while it [runs]; with reduced motion it stays at its start.
+ * A line too long for its width moves back and forth as in MarqueeLabel's `leftRight` mode, pausing
+ * at each end, while it [runs]; with reduced motion it stays at its start.
  */
 @Composable
 fun MarqueeText(text: String, style: TextStyle, color: Color, modifier: Modifier = Modifier, runs: Boolean = true) {
@@ -111,7 +111,7 @@ private fun DrawScope.fadeEdge(fade: Float, left: Boolean, strength: Float) {
 
 private val FadeWidth = 20.dp
 
-/** A glide's average speed per second, the same as Android's and Compose's own marquees. */
+/** The average speed per second, the same as Android's and Compose's own marquees. */
 private val Speed = 30.dp
 private const val MS_PER_SECOND = 1000f
 

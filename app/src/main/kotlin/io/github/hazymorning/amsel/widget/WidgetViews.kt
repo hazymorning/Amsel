@@ -8,44 +8,33 @@ import android.widget.RemoteViews
 import androidx.compose.runtime.Immutable
 import kotlin.math.roundToInt
 
-/** The pictures a widget shows, made beforehand off the main thread; bitmaps by their side in px. */
+/** Made off the main thread before the views are built; maps keyed by side in px, [faces] by [faceKey]. */
 @Immutable
 class WidgetBitmaps(
-    /** The blurred cover of what plays, under the Cover look. */
+    /** The background cover: blurred (Cover) or sharp (Darkened). */
     val cover: WidgetCover? = null,
-    /** What plays, sharp, in Amsel's cover corners: a bar's or a player's cover, or a tile's without buttons. */
+    /** Sharp covers: a bar's, a player's or a poster's, and a tile's without buttons. */
     val art: Map<Int, Bitmap> = emptyMap(),
-    /** The Play … buttons' covers, each as large as its cell, by [faceKey]. */
     val faces: Map<String, Bitmap> = emptyMap(),
-    /** A one-cell Play … button's cover, filling its tile. */
+    /** A one-cell Play … button's cover. */
     val tiles: Map<Int, Bitmap> = emptyMap(),
-    /** The cover's shape, empty, where nothing plays, and to tint a cover at night. */
+    /** The blank cover shape: the empty cover, and the mask for the night tint. */
     val blanks: Map<Int, Bitmap> = emptyMap(),
 )
 
-/** A Play … button's cover at [art], [width] by [height] px. */
 internal fun faceKey(art: String, width: Int, height: Int): String = "$art@${width}x$height"
 
-/**
- * A widget's views at each of its sizes, laid out by [widgetFit] and placed by the ink: the words'
- * first letters and the speaker's glyph, the buttons' glyphs and the covers stand at the insets, not
- * their boxes. Colours go by resource, so the launcher switches day and night itself.
- */
 class WidgetViews(private val context: Context) {
     internal val text = WidgetTextMetrics(context)
     private val slots = WidgetSlots(context)
     private val density get() = context.resources.displayMetrics.density
 
-    /** What TalkBack says for a button, and what the widget's page calls it. */
     fun label(slot: WidgetSlot, look: WidgetContent): String = slots.label(slot, look)
 
-    /** How a widget [width] by [height] dp lays out [setup], every button of it, as its page counts them. */
+    /** Counts every button, as the widget's page does. */
     fun fit(width: Float, height: Float, setup: WidgetSetup): WidgetFit = fit(width, height, setup, setup.slots.size)
 
-    /**
-     * How it lays out what [look] shows: a button with nothing to act on there gives way, and signed
-     * out none stands, as what plays asks to sign in; its time shows.
-     */
+    /** Counts the buttons available in [look]; none while signed out. */
     fun fit(width: Float, height: Float, setup: WidgetSetup, look: WidgetContent): WidgetFit {
         val buttons = if (look.signedIn) setup.slots.count { it.button.availableIn(look) } else 0
         return fit(width, height, setup, buttons, look.hasTime)
@@ -54,10 +43,7 @@ class WidgetViews(private val context: Context) {
     private fun fit(width: Float, height: Float, setup: WidgetSetup, buttons: Int, time: Boolean = false) =
         widgetFit(width, height, buttons, text.type, time, setup.showsWords, bare = setup.cells == WidgetCells.None)
 
-    /**
-     * Widget [id] at each of [fits]: from Android 12 the launcher shows the one for its size; before,
-     * the first is its portrait and the second its landscape. [taps] false for the page's picture.
-     */
+    /** Before Android 12, [fits] holds portrait then landscape, as [WidgetRenderer.sizes] lists them. */
     fun build(
         id: Int,
         setup: WidgetSetup,
@@ -80,10 +66,9 @@ class WidgetViews(private val context: Context) {
     }
 
     private companion object {
-        /** A launcher keeps at most 16 sizes of one widget. */
+        /** RemoteViews(Map) takes at most 16 sizes. */
         const val MAX_SIZES = 16
     }
 
-    /** [dp] in pixels for a padding, which is never less than none, or a picture's side. */
     internal fun px(dp: Float): Int = (dp * density).roundToInt().coerceAtLeast(0)
 }

@@ -145,7 +145,7 @@ internal fun SeekBar(
                 restingThumb = false,
                 pending = state.arriving,
             )
-            // Composed only while visible, so TalkBack never lands on hidden times.
+            // Composed only while visible, so TalkBack never focuses hidden times.
             if (timed || times > 0f) {
                 // The line itself says both times to TalkBack.
                 Row(Modifier.fillMaxWidth().graphicsLayer { alpha = times }.clearAndSetSemantics { }) {

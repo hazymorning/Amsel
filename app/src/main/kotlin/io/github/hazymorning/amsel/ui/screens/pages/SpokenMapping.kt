@@ -11,8 +11,8 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
 
-// The server header's fields but downloadable, which only the server knows, so nothing jumps when it
-// answers.
+// The server header's fields except downloadable, which only the server knows, so nothing jumps
+// when it answers.
 internal fun UiMapper.audiobookHeader(row: LibraryItemEntity) = AudiobookUi(
     key = row.uri,
     title = row.name,

@@ -16,15 +16,14 @@ import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
 class SettingsShots : ScreenshotTest() {
-    /** The main page at 200 %, from Home with the way back: rows grow, Sign out stays beside the account. */
+    /** At 200 %: rows grow, and Sign out stays beside the account. */
     @Test fun settings() = snap("settings", listOf(ShotVariant.LargeFont)) { Settings() }
 
-    /** Settings as a place of their own in the bar: the big title, no way back. */
     @Test fun settingsPlace() = snap("settings_place") {
         Settings(place = true)
     }
 
-    /** The page's end as the app shows it: the licence, and the blackbird on the dock's edge. */
+    /** Inside the shell, so the picture stands on the dock's edge. */
     @Test fun foot() = snap(
         "settings_foot",
         listOf(ShotVariant.Light, ShotVariant.Dark),
@@ -39,10 +38,7 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
-    /**
-     * The bottom bar's page over the shell, its bar following it: Search taken out, Albums and
-     * Podcasts put in, so the bar is full and the other kinds wait.
-     */
+    /** A full bar, so the places left out show as waiting; the shell's bar follows the page. */
     @Test fun bar() = snap("settings_bar") {
         val places = BarItem.arrangement(null)
             .with(BarItem.Search, on = false)
@@ -63,7 +59,6 @@ class SettingsShots : ScreenshotTest() {
         )
     }
 
-    /** Not signed in to Audiobookshelf yet: why, and its sign-in. */
     @Test fun downloadsSignIn() = snapScreen("downloads_sign_in", listOf(ShotVariant.Light, ShotVariant.Dark)) {
         Settings()
         AmselSheet(onDismiss = {}) {
@@ -87,5 +82,4 @@ private fun Settings(place: Boolean = false) = SettingsScreen(
     downloads = DownloadSettings(),
 )
 
-/** Further than any page is long. */
 private const val END = 100_000f

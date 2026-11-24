@@ -59,7 +59,7 @@ class PlaybackState(
             .map { row(it, isPhone = false) }
     }.stateIn(scope, SharingStarted.Eagerly, listOf(SpeakerUi(PHONE, "", isPhone = true)))
 
-    /** Also while the server does not list the speaker: before it answers, or once it joined a group. */
+    /** Known also while the server does not list it: before it answers, or once it joined a group. */
     val speaker: StateFlow<SpeakerUi> =
         combine(selected, data.speakers.players, data.prefs.prefs) { target, players, prefs ->
             val player = target.playerId?.let { players[it] }
@@ -186,7 +186,7 @@ class PlaybackState(
     /** [playingUri] now. */
     internal val uri: String? get() = reported.value?.uri
 
-    /** A download from this phone's files, which only the phone can fade and pause. */
+    // What plays from this phone's files only the phone can fade and pause.
     internal fun playsDownload(speakerId: String): Boolean {
         val here = local.now.value ?: return false
         return reported.value?.let { it.playerId == speakerId && it.uri == here.manifest.uri } == true

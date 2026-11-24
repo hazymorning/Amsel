@@ -6,10 +6,7 @@ import java.net.InetSocketAddress
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/**
- * An Audiobookshelf server on the loopback, as 2.37.2 answered live: sign-in with rotating
- * tokens, a book of [files], a podcast with one episode, ranged file downloads, and progress.
- */
+// Answers as Audiobookshelf 2.37.2 did live. See docs/API-NOTES.md, "Audiobookshelf for downloads".
 internal class FakeAbs(val files: List<ByteArray> = listOf(bytes(300_000, 1), bytes(200_000, 2))) : AutoCloseable {
     private val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
     val url: String get() = "http://127.0.0.1:${server.address.port}"
@@ -17,7 +14,6 @@ internal class FakeAbs(val files: List<ByteArray> = listOf(bytes(300_000, 1), by
     /** "GET /api/... Range: bytes=..." for every request, in order. */
     val requests = CopyOnWriteArrayList<String>()
 
-    /** Access tokens the server takes; the first sign-in's is dropped by [expireAccess]. */
     private val accepted = mutableSetOf<String>()
     private var serial = 0
     var refreshToken = "refresh-0"
@@ -30,13 +26,12 @@ internal class FakeAbs(val files: List<ByteArray> = listOf(bytes(300_000, 1), by
     /** The book is no longer on the server. */
     var gone = false
 
-    /** A pause after each 64 KB sent, as a slow line has. */
+    /** A pause after each 64 KB sent, as on a slow connection. */
     var chunkDelayMs = 0L
 
     /** The server refuses the files themselves, as for a user without the download right. */
     var refuseFiles = false
 
-    /** What the book's files say their extension is. */
     var ext = ".mp3"
 
     init {
@@ -158,7 +153,6 @@ private fun HttpExchange.bytes(code: Int, body: ByteArray) {
     responseBody.write(body)
 }
 
-/** An account kept in memory. */
 internal class MemoryAbsAccounts : AbsAccountStore {
     override val account = MutableStateFlow<AbsAccount?>(null)
     var token: String? = null

@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-# The live tests against Music Assistant <tag>, as CI runs them: a fresh server in Docker with the
-# test library, the fake speakers Kitchen and Living Room, then the client, seeks on a speaker and
-# the whole app's first-run journey. The server and the speakers are gone afterwards.
-#
-# Usage: live.sh <image-tag>      (NETWORK=host where Docker has no bridge network, see start.sh)
+# Usage: live.sh <image-tag>; NETWORK=host where Docker has no bridge network.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,7 +27,7 @@ speakers+=($!)
 python3 "$HERE/fake_player.py" --name "Living Room" --id amsel-fake-living-room > "$logs/living.log" 2>&1 &
 speakers+=($!)
 
-# Nothing tells Gradle which server answered, so these never count as done before or come from a cache.
+# The server is no Gradle input, so --rerun keeps these from counting as up to date or coming from a cache.
 cd "$ROOT"
 ./gradlew :api:test --tests '*LiveServerTest*' --rerun
 ./gradlew :playback:testDebugUnitTest --tests '*LiveSeekTest*' --rerun

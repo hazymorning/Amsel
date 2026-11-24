@@ -25,7 +25,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.lineHeight
 
-/** The mark is the tip glyph, never the glyph of what the tip is about, which would look like its button. */
+/** The mark is the tip glyph, never the glyph of what the tip is about, which users would take for its button. */
 @Composable
 fun TipCard(text: String, onGone: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
