@@ -28,7 +28,7 @@ internal class WidgetRenderer(private val context: Context, private val images: 
 
     private val grounds = LruCache<String, WidgetCover>(GROUNDS)
 
-    /** In dp. Before Android 12: portrait (min width, max height), then landscape, the order [WidgetViews.build] needs. */
+    /** In dp. Before Android 12: portrait (min width, max height), then landscape, as [WidgetViews.build] needs. */
     fun sizes(id: Int, kind: WidgetKind): List<SizeF> {
         val options = manager.getAppWidgetOptions(id) ?: return listOf(kind.start)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

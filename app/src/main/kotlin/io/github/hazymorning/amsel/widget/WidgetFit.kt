@@ -213,7 +213,7 @@ internal fun cellSize(fit: WidgetFit, bare: Boolean): Pair<Float, Float>? {
 internal fun span(width: Float, bare: Boolean): Float =
     if (bare) width - 2 * WidgetSizes.REACH else width - 2 * WidgetSizes.PADDING + WidgetSizes.GAP
 
-/** A touch target high where the widget allows: in a low one the targets reach into the frame, to REACH from the edge. */
+/** A touch target high where the height allows; in a low widget the targets reach to REACH from the edge. */
 internal fun target(cell: Float, height: Float): Float =
     maxOf(cell, minOf(WidgetSizes.CELL_MIN, height - 2 * WidgetSizes.REACH))
 
@@ -257,7 +257,7 @@ private fun said(
 ): WidgetFit {
     // Centred text is placed by its visible extent (cap top to last baseline), more than LEAD shorter
     // than its box, so the box may overflow the frame by LEAD / 2 above and below.
-    val centred =fit.form == WidgetForm.Line || fit.form == WidgetForm.Bar || fit.form == WidgetForm.Player
+    val centred = fit.form == WidgetForm.Line || fit.form == WidgetForm.Bar || fit.form == WidgetForm.Player
     fun fits(words: WidgetWords, size: WordSize) = words.needs(type, size) <= room + EPSILON
     val lines = listOfNotNull(
         WidgetWords(speaker = true, titleLines = 3, subtitle = true, time = true).takeIf { alone && time && !strip },

@@ -17,7 +17,7 @@ import io.github.hazymorning.amsel.widget.WidgetSizes.WORDS_TO_CELLS
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-/** Sets every property of every view a form uses, each time: a launcher can reapply onto views that keep earlier state. */
+/** Sets every view a form uses, each time: a launcher can reapply onto views that keep their earlier state. */
 internal class WidgetDrawing(
     private val context: Context,
     private val text: WidgetTextMetrics,

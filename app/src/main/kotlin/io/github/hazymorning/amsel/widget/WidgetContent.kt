@@ -113,7 +113,7 @@ private fun toSecond(atMs: Long): Long = Math.floorDiv(atMs + SECOND_MS / 2, SEC
 
 private const val SECOND_MS = 1000L
 
-/** Keeps a clock that moved by at most CLOCK_SLACK_MS since [shown]: position reports jitter, and each change redraws. */
+/** A clock within CLOCK_SLACK_MS of [shown] keeps the shown value: position reports jitter, and each change redraws. */
 internal fun steadyClocks(
     looks: Map<String, WidgetContent>,
     shown: Map<String, WidgetContent>?,

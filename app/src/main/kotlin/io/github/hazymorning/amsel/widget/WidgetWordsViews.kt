@@ -77,7 +77,7 @@ internal class WidgetWordsViews(
                     setViewPadding(R.id.widget_words, 0, px(LEAD - inkTop), 0, px(LEAD - (box - baseline)))
                 }
 
-                // Unequal top and bottom padding moves the content by half the difference; px() drops the negative side.
+                // Unequal padding moves the content by half the difference; px() drops the negative side.
                 WordsAlign.Middle -> {
                     val shift = box / 2 - (inkTop + baseline) / 2
                     setViewPadding(R.id.widget_words, 0, px(2 * shift), 0, px(-2 * shift))

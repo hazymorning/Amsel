@@ -75,7 +75,7 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         return (paint.measureText(text, start, text.length) - bounds.right) / metrics.density
     }
 
-    /** The visible top below the box's top: the higher of the speaker glyph's and the name's, else the title's cap top. */
+    /** The visible top below the box's top: the speaker glyph's or name's, whichever is higher, else the title's. */
     fun wordsTop(words: WidgetWords): Float {
         if (!words.speaker) return capTop(WidgetLine.Title)
         val glyph = speakerGlyph
