@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-"""Draws the README's header, docs/design/readme/header-{light,dark}.svg: the name and the blackbird's
-call in the app's typeface beside the icon's blackbird in a tree, on the app's stone. Dev tool: needs
-`pip install fonttools uharfbuzz`.
+"""Draws docs/design/readme/header-{light,dark}.svg; needs fonttools and uharfbuzz.
 
-GitHub shows a README's pictures without CSS or fonts, so the letters are outlines. The bird is read
+GitHub shows a README's images without CSS or fonts, so the letters are outlines. The bird is read
 from the app icon (res/drawable/ic_launcher_foreground.xml), so the two never differ.
 """
 import math
@@ -23,18 +21,18 @@ FONTS = ROOT / "app/src/main/res/font"
 OUT = ROOT / "docs/design/readme"
 
 W, H = 1200, 450
-MARGIN = 100  # left of the name, above the disc and right of it
+MARGIN = 100
 CORNER, SMOOTHING = 72, 0.6  # continuous corners, as ui/theme/SmoothShape.kt draws them
 # The blackbird's warning call, as NABU writes it.
 NAME, CALL = "Amsel", "pli-pli-pli-pli-pli"
-# Screen titles in the app: the title voice at 650, tracked -0.015 em. The call is body text.
+# As the app's screen titles (Type.kt, display: the title face at 650, -0.015 em); the call as body text.
 NAME_FACE, NAME_SIZE, NAME_TRACKING = "commissioner_title_650.ttf", 127, -0.015
 CALL_FACE = "commissioner_440.ttf"
 NAME_TO_CALL = 42  # the name's baseline to the call's cap height
 DISC = 150
 BIRD_SCALE, BIRD_HEAD = 4.4, (46.5, 62.0)  # the head's middle in the icon's 108 dp
 
-# Stone, ink and the secondary ink from ui/theme/Color.kt; the tree in tints of its moss.
+# field, ink and soft are Surface1, Ink and Secondary in ui/theme/Color.kt; the tree is tints of Moss.
 THEMES = {
     "light": {"field": "#E9E8E1", "disc": "#F7F6F2", "ink": "#191A17", "soft": "#66665E",
               "tree": ("#D3DAC4", "#B8C5A2", "#C7D1B5")},
@@ -56,7 +54,6 @@ class Face:
         self.shaper = hb.Font(hb.Face(path.read_bytes()))
 
     def _run(self, text, tracking):
-        """Each glyph's name, where its origin stands and its ink's left and right, in font units."""
         buffer = hb.Buffer()
         buffer.add_str(text)
         buffer.guess_segment_properties()
@@ -70,12 +67,12 @@ class Face:
             x += pos.x_advance + tracking * self.upm
 
     def ink(self, text, size, tracking=0.0):
-        """How wide the letters' ink is, at [size]."""
+        """Width from the first glyph's left edge to the last glyph's right edge, at size."""
         inked = [(x, b) for _, x, b in self._run(text, tracking) if b]
         return (inked[-1][0] + inked[-1][1][2] - inked[0][0] - inked[0][1][0]) * size / self.upm
 
     def outline(self, text, size, left, baseline, fill, tracking=0.0):
-        """The text as one path, its first letter's ink on [left]."""
+        """The text as one SVG path, the first glyph's left edge at left."""
         k = size / self.upm
         run = list(self._run(text, tracking))
         start = next(x + b[0] for _, x, b in run if b)
@@ -99,7 +96,7 @@ def smooth_rect(w, h, radius):
     b = (p - chord - c - d) / 3
     a = 2 * b
     out = [f"M{n(p)},0"]
-    # Each corner: its arc's middle angle, the way along the edge it comes from and the one it leaves by.
+    # Per corner: the arc's middle angle, the incoming and outgoing edge directions, the corner point.
     for angle, ux, uy, vx, vy, x, y in ((-45, 1, 0, 0, 1, w, 0), (45, 0, 1, -1, 0, w, h),
                                         (135, -1, 0, 0, -1, 0, h), (225, 0, -1, 1, 0, 0, 0)):
         sx, sy, ex, ey = x - ux * p, y - uy * p, x + vx * p, y + vy * p
@@ -119,7 +116,7 @@ def smooth_rect(w, h, radius):
 
 
 def bird(x, y):
-    """The icon's bird, looking left, its head's middle on (x, y)."""
+    """The icon's bird mirrored to face left, the middle of its head at (x, y)."""
     layers = re.findall(r'fillColor="#FF([0-9A-F]{6})"\s+android:fillType="evenOdd"\s+android:pathData="([^"]+)"',
                         ICON.read_text())
     paths = "".join(f'<path fill="#{colour}" fill-rule="evenodd" d="{data}"/>' for colour, data in layers)
@@ -135,7 +132,7 @@ def header(theme, name_face, call_face):
            f'<circle cx="{cx + 161}" cy="{cy + 255}" r="175" fill="{behind}"/>'
            + bird(cx + 6, cy - 12)
            + f'<circle cx="{cx + 1}" cy="{cy + 270}" r="200" fill="{front}"/>')
-    # The call's ink is as wide as the name's; the two stand in the middle of the height.
+    # The call is scaled to the name's width; the two lines are centred vertically.
     call_size = 100 * name_face.ink(NAME, NAME_SIZE, NAME_TRACKING) / call_face.ink(CALL, 100)
     name_cap, call_cap = name_face.cap * NAME_SIZE, call_face.cap * call_size
     top = (H - name_cap - NAME_TO_CALL - call_cap) / 2

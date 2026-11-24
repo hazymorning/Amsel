@@ -54,11 +54,8 @@ import io.github.hazymorning.amsel.ui.theme.rememberPress
 import io.github.hazymorning.amsel.ui.theme.secondLine
 import io.github.hazymorning.amsel.ui.theme.spaced
 
-/**
- * Continue listening as upright cards, each washed in its cover's hue and as wide as a shelf's
- * tiles, so they stand over the covers below: a tap resumes where the person stopped; a long press
- * opens its actions, which lead to its page.
- */
+// Cards as wide as a shelf's tiles, so they align with the covers below. A tap resumes; the item's
+// page is reached through the long-press actions.
 @Composable
 internal fun ListeningShelf(
     items: List<MediaUi>,
@@ -73,7 +70,6 @@ internal fun ListeningShelf(
     }
 }
 
-/** The cards' twins while Continue listening loads for the first time: their size, their shape. */
 @Composable
 internal fun ListeningSkeleton(modifier: Modifier = Modifier) {
     val card = rememberCardMetrics(shelfTileWidth())
@@ -95,17 +91,13 @@ internal fun ListeningSkeleton(modifier: Modifier = Modifier) {
     }
 }
 
-/** Continue listening in any other layout: what is left joins each item's second line. */
 @Composable
 internal fun withTimeLeft(items: List<MediaUi>): List<MediaUi> = items.map { item ->
     val left = item.remainingSec?.let { leftText(it) } ?: return@map item
     item.copy(subtitle = listOfNotNull(item.subtitle, left).joinToString(DOT_SEPARATOR))
 }
 
-/**
- * Where a card's lines stand, from its top. Under the cover, two lines that say what it is; then,
- * a group's gap further, what is left, 16 over the line along the card's foot.
- */
+// Measured from the card's top: [title] is the title's first baseline, [second] the step to the next.
 private class CardMetrics(val width: Dp, val cover: Dp, val words: Dp, val title: Dp, val second: Dp, val height: Dp)
 
 @Composable
@@ -123,12 +115,6 @@ private fun rememberCardMetrics(width: Dp): CardMetrics {
     }
 }
 
-/**
- * Something to pick up again as a card of its cover's paper: the cover in a frame of 12, the card's
- * corners the cover's plus that frame. Under the cover what it is: the title's two lines, or its one
- * and who wrote or made it, so no card has a hole where another's title wraps. Over the card's foot
- * what is left, and along it, edge to edge in the ink of every progress line, how far the person got.
- */
 @Composable
 private fun ListeningCard(item: MediaUi, card: CardMetrics, onPlay: () -> Unit, onMore: () -> Unit) {
     val type = MaterialTheme.typography
@@ -183,12 +169,7 @@ private fun ListeningCard(item: MediaUi, card: CardMetrics, onPlay: () -> Unit, 
     }
 }
 
-/**
- * How far through, as the card's own foot: edge to edge, square at the moving end, its two ends
- * rounded by the card's corners, in ink, quieter than a thin progress line as it runs the card's
- * whole width. Anything begun fills the first corner's curve, so a book a few minutes in still
- * shows where the line starts.
- */
+// Any progress fills at least the first corner's curve, so a book a few minutes in still shows it.
 @Composable
 private fun FootLine(fraction: () -> Float, ink: Color, modifier: Modifier) {
     Canvas(modifier.fillMaxWidth().height(Sizes.ProgressLine)) {
@@ -202,7 +183,8 @@ private fun FootLine(fraction: () -> Float, ink: Color, modifier: Modifier) {
     }
 }
 
-/** The title on its two lines; while it takes one, its author or podcast on the second. */
+// The author or podcast takes the second line only while the title fits on one, so no card has a
+// gap where its neighbour's title wraps.
 @Composable
 private fun WhatItIs(item: MediaUi, card: CardMetrics, modifier: Modifier) {
     val type = MaterialTheme.typography
@@ -243,19 +225,19 @@ private fun WhatItIs(item: MediaUi, card: CardMetrics, modifier: Modifier) {
     }
 }
 
-/** The cover's frame inside the card: its edge plus half its corner is where the words stand, 16 in, as from any filled shape's sides. */
+// Text starts at the frame plus half the cover's corner: 16 dp in for a small cover, as in any
+// filled shape.
 private val Frame = Space.S3
 
-/** The card's corners: the cover's and its frame, so the two curves run side by side. */
+// Concentric with the cover's corners inside the frame.
 private val CardCorner = Radius.Thumb + Frame
 
 private val CardShape = SmoothShape(CardCorner)
 
-/** The card's paper where its cover lends no hue: Home's cards' own. */
 private const val CARD_INK = 0.03f
 
 private const val SKELETON_CARDS = 2
 
-/** The foot line's ink, heard and ahead. */
+// Played and remaining alphas, below a thin progress line's as this one spans the whole card.
 private const val FOOT_HEARD = 0.32f
 private const val FOOT_AHEAD = 0.10f

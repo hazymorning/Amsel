@@ -7,7 +7,7 @@ import android.hardware.SensorManager
 import android.os.SystemClock
 import kotlin.math.sqrt
 
-/** Three firm shakes within a second and a half; one bump in a pocket is not one. */
+// Several shakes in a row, so a single bump in a pocket does not count.
 internal class ShakeListener(private val onShake: () -> Unit) : SensorEventListener {
     private var count = 0
     private var firstAt = 0L

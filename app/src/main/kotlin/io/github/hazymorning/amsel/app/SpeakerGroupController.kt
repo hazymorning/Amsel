@@ -21,11 +21,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * The speakers that play in step with another, as Play on shows and changes them: its group step
- * and Ungroup. A change shows at once and stands in for the server's word until that has settled,
- * which takes seconds ([syncGroups]); a refusal takes it back and says so, with Retry.
- */
 class SpeakerGroupController internal constructor(
     private val players: StateFlow<Map<String, Player>>,
     private val listed: StateFlow<List<SpeakerUi>>,
@@ -33,7 +28,7 @@ class SpeakerGroupController internal constructor(
     private val nameOf: (String) -> String,
     private val messages: MessageController,
     private val scope: CoroutineScope,
-    /** How often the server's speakers were read since signing in: none yet while Amsel connects. */
+    /** Times the speakers were read since signing in; 0 while connecting. */
     private val loads: StateFlow<Int> = MutableStateFlow(1),
     private val setMembers: suspend (leaderId: String, add: List<String>, remove: List<String>) -> Unit,
 ) {
@@ -54,30 +49,27 @@ class SpeakerGroupController internal constructor(
         { leaderId, add, remove -> data.session.api.setMembers(leaderId, add, remove) },
     )
 
-    /** The members asked for and not yet settled, by leader; none for a group let go. */
+    // Members asked for and not yet settled, by leader; an empty set lets the group go.
     private val asked = MutableStateFlow<Map<String, PendingGroup>>(emptyMap())
 
-    /** Commands go out in the order they were asked for: each builds on the one before. */
+    // Commands go out in the order they were asked for: each builds on the one before.
     private val sending = Mutex()
 
-    /** What Play on shows while [currentId] is the speaker in use. */
     fun playOn(currentId: String): Flow<PlayOnGroups> =
         combine(players, asked, phoneId, listed, loads) { players, asked, phoneId, listed, loads ->
             playOnGroups(players, asked.members(), phoneId, listed, currentId, known = loads > 0)
         }
 
-    /** [playOn] as it stands, for the sheet's first frame. */
+    /** For the sheet's first frame. */
     fun playOnNow(currentId: String): PlayOnGroups =
         playOnGroups(players.value, asked.value.members(), phoneId.value, listed.value, currentId, loads.value > 0)
 
-    /** Lets [add] join [leaderId]'s group and [remove] leave it. */
     fun set(leaderId: String, add: List<String>, remove: List<String>) {
         if (add.isEmpty() && remove.isEmpty()) return
         val wish = groups()[leaderId].orEmpty() + add - remove.toSet()
         ask(leaderId, wish, add, remove.toSet()) { set(leaderId, add, remove) }
     }
 
-    /** Lets every speaker that plays along with another go, whichever speaker is in use. */
     fun ungroupAll() = groups().keys.forEach(::letGo)
 
     private fun letGo(leaderId: String) {
@@ -86,7 +78,6 @@ class SpeakerGroupController internal constructor(
 
     private fun groups() = players.value.syncGroups().with(asked.value.members())
 
-    /** [members] show as [leaderId]'s at once; a refusal takes them back and says so, with [retry]. */
     private fun ask(
         leaderId: String,
         members: Set<String>,
@@ -109,17 +100,9 @@ class SpeakerGroupController internal constructor(
         }
     }
 
-    /**
-     * Sends [add] and whoever of [leaving] (everyone, when null) the server names with [leaderId],
-     * then follows its word while it changes: a speaker that joined a moment ago is named seconds
-     * later, and the server lets it go only once it is. A wish that only adds is done once all are
-     * named, any other once the server's word has stood still for [GROUP_CONFIRM_MS], and either
-     * when a later wish for the leader takes its place.
-     *
-     * [joining] were asked to join by the wish this one replaces. Of them the leader's own list
-     * counts too, which on 2.11 names them seconds before they say so themselves; of any other
-     * it does not ([syncGroups]).
-     */
+    // A speaker that just joined is named seconds later and can be let go only once named, so this
+    // follows the server until all are named (adds only) or its word stood still for GROUP_CONFIRM_MS.
+    // [leaving] null is every member. See docs/API-NOTES.md, "Player commands".
     private suspend fun settle(
         leaderId: String,
         wish: PendingGroup,
@@ -127,6 +110,8 @@ class SpeakerGroupController internal constructor(
         leaving: Set<String>?,
         joining: Set<String>,
     ) {
+        // [joining], asked by the request this one replaces, count from the leader's own list too, which
+        // names them first; any other member counts only by its own synced_to ([syncGroups]).
         fun members(players: Map<String, Player>): Set<String> {
             val listed = players[leaderId]?.takeIf { it.canLeadGroup }?.groupMembers.orEmpty()
             return players.syncGroups()[leaderId].orEmpty() +
@@ -157,7 +142,7 @@ class SpeakerGroupController internal constructor(
         }
     }
 
-    /** One asking for a leader's members: a later one for the same members is still another. */
+    // Compared by identity: a later request for the same members is still another.
     private class PendingGroup(val members: Set<String>)
 
     private enum class GroupChange { Changed, Superseded }
@@ -165,16 +150,9 @@ class SpeakerGroupController internal constructor(
     private fun Map<String, PendingGroup>.members() = mapValues { it.value.members }
 }
 
-/** A speaker that can join a group, and whether it is in it. */
 data class GroupCandidate(val id: String, val name: String, val isPhone: Boolean, val member: Boolean)
 
-/**
- * Play on's speakers, a group as one, and what its header and group step need. [leader] is whom
- * the group step is for: the leader of the group that exists (the speaker in use's, else the first
- * in the list), else the speaker in use, or where it cannot lead one (This phone, mostly) the first
- * speaker that can, one that plays first. [choices] can play along with it; none when none can lead.
- * [known] is false while Amsel has not read the server's speakers yet.
- */
+/** [known] is false until the server's speakers were read. */
 @Immutable
 data class PlayOnGroups(
     val speakers: List<SpeakerUi> = emptyList(),
@@ -184,7 +162,7 @@ data class PlayOnGroups(
     val known: Boolean = true,
 )
 
-/** The server's groups with what was [asked] for in their place; an empty asking is no group. */
+// What was [asked] for replaces the server's group; an empty asking is no group.
 private fun Map<String, Set<String>>.with(asked: Map<String, Set<String>>): Map<String, Set<String>> =
     this - asked.keys + asked.filterValues { it.isNotEmpty() }
 
@@ -198,7 +176,7 @@ internal fun playOnGroups(
 ): PlayOnGroups {
     val groups = players.syncGroups().with(asked)
     val members = groups.values.flatten().toSet()
-    // A speaker just let go still says it plays along, so the list leaves it out: it shows at once.
+    // A speaker just let go still reports synced_to, so the speaker list leaves it out: it is added at once.
     val freed = players.values
         .filter { it.syncedTo in asked && it.playerId !in members && listed.none { row -> row.id == it.playerId } }
         .filter { it.copy(syncedTo = null).isShownSpeaker(phoneId) }
@@ -220,10 +198,8 @@ internal fun playOnGroups(
     return PlayOnGroups(speakers, leader, choices, grouped = groups.isNotEmpty(), known = known)
 }
 
-/**
- * Who can play along with [leaderId]: its members first, as the group stands, so ticking and
- * unticking moves nothing, then the speakers the server lets join it that are free.
- */
+// Members first, by the group as it stands rather than the ticks, so ticking moves no row; then the
+// free speakers the server lets join.
 private fun choices(
     players: Map<String, Player>,
     groups: Map<String, Set<String>>,
@@ -240,8 +216,6 @@ private fun choices(
         .sortedWith(compareBy({ !it.member }, { it.name.lowercase() }))
 }
 
-/** Shown in Play on, and in no group as far as it says itself. */
 private val Player.isFree: Boolean get() = canPlayAlong && !hideInUi && syncedTo == null
 
-/** How long the server's word on a group may stand still before it is taken as final. */
 private const val GROUP_CONFIRM_MS = 5_000L

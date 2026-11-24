@@ -31,10 +31,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * A playlist page: the header from the library index and the first tracks it showed last time at
- * once, then the server's playlist and its tracks with their positions (what removing one names):
- * the first page as soon as it comes, the rest under it. [playing] is the uri playing on the
- * current speaker (or starting there); [edits] are what the ⋮ sheet did to this playlist.
+ * [playing] is the URI playing on the current speaker, or starting there; [edits] are the ⋮ sheet's
+ * changes to this playlist.
  */
 class PlaylistViewModel(
     private val key: String,
@@ -52,7 +50,7 @@ class PlaylistViewModel(
         shown(page, row, uri)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlaylistUiState(loading = true))
 
-    /** The index's row paints the header until the server answers, and follows favorites changed anywhere. */
+    // The index row gives the header until the server answers, and the favourite as changed anywhere.
     private fun shown(page: PlaylistUiState, row: LibraryItemEntity?, uri: String?): PlaylistUiState {
         val playlist = page.playlist ?: row?.let(mapper::playlistHeader)
         return page.copy(
@@ -71,11 +69,11 @@ class PlaylistViewModel(
                 when (edit) {
                     is PlaylistEdit.Removed -> removed(edit.position)
 
-                    // What was added shows once the playlist is read again; its rows stay meanwhile.
+                    // Added tracks show once the playlist is read again; the rows stay meanwhile.
                     is PlaylistEdit.Added -> load()
 
-                    // The rows no longer show what the server holds: they load again, and a
-                    // failed load says so instead of keeping the trimmed list.
+                    // The trimmed rows no longer match the server: cleared and reloaded, so a failed
+                    // load says so instead of keeping them.
                     is PlaylistEdit.Failed -> {
                         page.update { it.copy(tracks = emptyList(), positions = emptyList()) }
                         load()
@@ -88,10 +86,9 @@ class PlaylistViewModel(
 
     fun retry() = load()
 
-    /** The track at playlist [position] was removed: its row goes at once, the ones after move up. */
     fun removed(position: Int) = page.update { it.without(position) }
 
-    /** The [first] load paints what the page showed last time while the server is asked. */
+    /** Only the [first] load shows the cached page while the server is asked. */
     private fun load(first: Boolean = false) {
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
@@ -135,10 +132,7 @@ class PlaylistViewModel(
         }
     }
 
-    /**
-     * The first tracks the page showed last time, where the server has not answered yet. They are
-     * not [PlaylistUiState.complete], so nothing is removed by a position that may have moved since.
-     */
+    // Cached rows are not complete, so no removal uses a position that may have moved since.
     private suspend fun paint(last: CachedPage) {
         val rows = withContext(worker) { rows(last.rows, offset = 0, complete = false, next = 0) }
         page.update {
@@ -154,7 +148,6 @@ class PlaylistViewModel(
         }
     }
 
-    /** A page of rows from [offset], mapped off the main thread; null when the server could not be asked or refused. */
     private suspend fun rowsOrNull(load: PageLoad, offset: Int, limit: Int = MaApi.PAGE): Rows? {
         val page = load.attempt { source.playlistTracks(key, offset, limit) } ?: return null
         return withContext(worker) { rows(page.items, offset, page.complete, page.next) }
@@ -177,10 +170,10 @@ class PlaylistViewModel(
     )
 }
 
-/** The first rows, a screen or two: they come at once, and the rest in pages under them. */
+// A screen or two, so the first rows come at once; the rest follow in full pages.
 internal const val FIRST_ROWS = 50
 
-/** The state after the server removes [position]: later positions shift up by one, as the server's do. */
+/** Later positions shift up by one, as the server's do after a removal. */
 internal fun PlaylistUiState.without(position: Int): PlaylistUiState {
     val index = positions.indexOf(position).takeIf { it >= 0 } ?: return this
     return copy(
@@ -189,55 +182,41 @@ internal fun PlaylistUiState.without(position: Int): PlaylistUiState {
     )
 }
 
-/** What a playlist page shows above its tracks. */
 @Immutable
 data class PlaylistUi(
     val key: String,
     val title: String,
     val art: ArtRef? = null,
-    /** Who made it, such as "Anna" or "Music Assistant" for its built-in playlists. */
     val owner: String? = null,
     val favorite: Boolean = false,
-    /** The person may remove tracks from it (their own playlists, not the built-in ones). */
+    /** The server's is_editable: false for the built-in playlists. */
     val editable: Boolean = false,
     /** The server fills it anew each time it plays ([MediaUi.dynamic]). */
     val dynamic: Boolean = false,
 ) {
-    /** The playlist as an item, for its ⋮ sheet. */
     val media: MediaUi = MediaUi(key, MediaKind.Playlist, title, owner, art, favorite, dynamic = dynamic)
 }
 
-/**
- * Everything a playlist page draws. Like an album page, the header paints from the library cache
- * and only the tracks wait; until [playlist] is known the whole page is a skeleton.
- */
 @Immutable
 data class PlaylistUiState(
-    /** Null until known. */
     val playlist: PlaylistUi? = null,
-    /** In playlist order: the first page, then the rest as they arrive. */
     val tracks: List<TrackUi> = emptyList(),
-    /** Each track's 1-based position in the playlist, parallel to [tracks]: what removing one names. */
+    /** 1-based playlist positions, parallel to [tracks]; a removal names one. */
     val positions: List<Int> = emptyList(),
-    /** The track playing on the current speaker when it is in this playlist; drawn highlighted. */
     val currentTrackKey: String? = null,
-    /** The tracks are being fetched: the first load, a Retry, or after a change the server refused. */
     val loading: Boolean = false,
-    /** Every page has arrived, which the count, the length and removing a track need. */
+    /** Every page has arrived; the count, the length and removals wait for it. */
     val complete: Boolean = false,
-    /** The playlist could not be loaded or no longer exists; [showUnavailable] says whether nothing is cached. */
+    /** The last load failed or the playlist is gone; the page says so only when [showUnavailable]. */
     val unavailable: Boolean = false,
 ) {
-    /** No header or nothing playable to show: the page says so plainly and offers Retry. */
     val showUnavailable: Boolean = unavailable && (playlist == null || tracks.isEmpty())
 
-    /** Rows stand in for the tracks while they load. */
     val tracksLoading: Boolean = tracks.isEmpty() && (loading || playlist == null)
 
-    /** Loaded, and nothing in it: one plain line instead of tracks, and no Play or Shuffle. */
     val isEmpty: Boolean = playlist != null && tracks.isEmpty() && !loading && !unavailable
 
-    /** One per row, kept through a removal: the track, and which copy of it (a playlist can hold one twice). */
+    // Unique lazy keys that survive a removal: a playlist can hold the same track twice.
     val rowKeys: List<String> = run {
         val copies = HashMap<String, Int>()
         tracks.map { track ->
@@ -251,6 +230,5 @@ data class PlaylistUiState(
 
     val durationSec: Int = tracks.sumOf { it.durationSec }
 
-    /** The playlist position of the row at [index]. */
     fun positionAt(index: Int): Int = positions.getOrNull(index) ?: (index + 1)
 }

@@ -3,7 +3,6 @@ package io.github.hazymorning.amsel.ui.components
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Where a slim bar's title stands beside glyphs and beside a word, in a bar 1080 px wide. */
 class BarTitleBoundsTest {
     @Test fun besideGlyphsTheTitleKeepsItsInsetHoweverLongItIs() {
         assertEquals(BarTitleBounds(240, 600), barTitleBounds(WIDTH, INSET, taken = 216, from = 72, needed = 2000))

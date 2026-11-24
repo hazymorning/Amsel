@@ -54,10 +54,7 @@ import io.github.hazymorning.amsel.ui.theme.Motion
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.launch
 
-/**
- * The speakers, with the group step and the question in place of the list. A tap on a speaker
- * ([onSelect]) may ask first ([PlayOnUiState.question]): [onMove] and [onSwitch] are its answers.
- */
+/** [onSelect] may ask first ([PlayOnUiState.question]); [onMove] and [onSwitch] are the answers. */
 @Composable
 fun PlayOnSheetContent(
     state: PlayOnUiState,
@@ -79,7 +76,7 @@ fun PlayOnSheetContent(
 
         grouping && state.group.isNotEmpty() -> PlayOnStep.Group
 
-        // Opened to group while Amsel still connects: the group step follows, not the list first.
+        // Opened to group while Amsel still connects: it waits for the group step, not the list.
         grouping && !state.known -> PlayOnStep.Waiting
 
         else -> PlayOnStep.List
@@ -114,10 +111,7 @@ fun PlayOnSheetContent(
 
 private enum class PlayOnStep { List, Group, Question, Waiting }
 
-/**
- * Asked before music that plays would stop: on the speaker tapped, which plays something itself,
- * or on the one the person is leaving. The music goes there, or stays and the speaker only changes.
- */
+// Asked where a switch would stop music: on the busy speaker tapped, or on the one being left.
 @Composable
 private fun MoveQuestion(question: PlayOnQuestion, onMove: (SpeakerUi) -> Unit, onSwitch: (SpeakerUi) -> Unit) {
     val haptics = LocalHapticFeedback.current
@@ -165,19 +159,18 @@ private fun SpeakerList(
         val haptics = LocalHapticFeedback.current
         SheetHeader(stringResource(R.string.player_play_on))
         Spacer(Modifier.height(Space.HeaderToRows))
-        // A speaker out of reach could not be chosen anyway; only the one in use stays to say so.
+        // An unavailable speaker cannot be chosen; only the one in use stays, to show it is unavailable.
         state.speakers.filter { it.available || it.id == state.currentId }.forEach { speaker ->
             SpeakerRow(speaker, selected = speaker.id == state.currentId, onClick = { onSelect(speaker) })
         }
         if (!buttons) return@Column
-        // The sheet reads "Play on", the speakers, then what to do with them: Group, one big tap, and
-        // letting a group go one more under it in the second tone, so the sheet keeps one focal
-        // point. They stand a group's distance under the last speaker's words.
+        // Group is the one primary button, Ungroup a secondary one under it, so the sheet keeps one
+        // focal point.
         Spacer(Modifier.height((Space.BeforeList - rowGlyphBottom(RowLead.Glyph, twoLines = true)).coerceAtLeast(0.dp)))
         val wide = Modifier.padding(horizontal = Keyline.Margin).fillMaxWidth()
         if (members != null) {
             PrimaryButton(
-                // While a group stands, the button changes it: plain words, not a count.
+                // With a group, the button changes it: plain words, not a count.
                 stringResource(if (members > 0) R.string.group_change else R.string.group),
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
@@ -200,7 +193,6 @@ private fun SpeakerList(
     }
 }
 
-/** "Transfer playback": the other speakers in reach. The music moves to the one tapped and goes on there. */
 @Composable
 fun TransferSheetContent(speakers: List<SpeakerUi>, onTransfer: (SpeakerUi) -> Unit, modifier: Modifier = Modifier) {
     val end = sheetEnd(RowLead.Glyph, twoLines = true)
@@ -213,11 +205,10 @@ fun TransferSheetContent(speakers: List<SpeakerUi>, onTransfer: (SpeakerUi) -> U
     }
 }
 
-/** What [speaker] plays, rests on, or that it plays nothing or is out of reach, in a line. */
 @Composable
 internal fun speakerLine(speaker: SpeakerUi): String {
     val holds = speaker.song?.let { listOfNotNull(it, speaker.artist).joinToString(DOT_SEPARATOR) }
-    // A speaker that rests on a song says so: the song alone would read as playing.
+    // A paused speaker says so: the song alone would read as playing.
     return when {
         !speaker.available -> stringResource(R.string.player_not_available)
         speaker.isPlaying -> holds ?: stringResource(R.string.player_playing)
@@ -238,7 +229,6 @@ private fun SpeakerRow(speaker: SpeakerUi, selected: Boolean, onClick: () -> Uni
         subtitle = subtitle,
         lead = RowLead.Glyph,
         playing = plays,
-        // The bars that mark what plays in every list, before what the speaker plays.
         mark = if (plays) ({ PlayBars(moving = true) }) else null,
         selected = selected,
         enabled = speaker.available,
@@ -257,13 +247,10 @@ private fun SpeakerRow(speaker: SpeakerUi, selected: Boolean, onClick: () -> Uni
     )
 }
 
-/** Speaker names are short in a home: their lines stay narrow, the tick close after them. */
+// Speaker names are short, so lines stay narrow and the check stays close after them.
 internal val SpeakerTextMax = 240.dp
 
-/**
- * The "Play on" sheet: every speaker with what it plays, in the order Playing lists them ("This
- * phone" first), a tick on [currentId].
- */
+/** [speakers] in Playing's order, This phone first. */
 @Immutable
 data class PlayOnUiState(
     val speakers: List<SpeakerUi> = emptyList(),
@@ -272,7 +259,7 @@ data class PlayOnUiState(
     val leader: SpeakerUi? = null,
     /** Who can play along with [leader]; empty when it cannot lead a group. */
     val group: List<GroupCandidate> = emptyList(),
-    /** Speakers play along with another, the one in use or not: Ungroup lets them all go. */
+    /** Any speaker is grouped, the one in use or not; Ungroup releases them all. */
     val grouped: Boolean = false,
     val question: PlayOnQuestion? = null,
     /** False while Amsel has not read the server's speakers yet. */
@@ -283,7 +270,6 @@ data class PlayOnUiState(
 @Immutable
 data class PlayOnQuestion(val target: SpeakerUi, val title: String, val from: SpeakerUi)
 
-/** The "Play on" sheet, at its group step where [grouping]. [onDone] closes it. */
 @Composable
 fun PlayOnRoute(onDone: () -> Unit, grouping: Boolean = false) {
     val graph = LocalContext.current.graph
@@ -328,7 +314,7 @@ fun PlayOnRoute(onDone: () -> Unit, grouping: Boolean = false) {
     )
 }
 
-/** "Transfer playback" from Now Playing's ⋯. The move runs in the app's scope ([PlayOnController.moveTo]), so the sheet closes at once. */
+// The move runs in the app's scope ([PlayOnController.moveTo]), so the sheet closes at once.
 @Composable
 fun TransferRoute(onDone: () -> Unit) {
     val graph = LocalContext.current.graph

@@ -25,6 +25,7 @@
     <string name="settings_sleep_no_fade">Ohne Ausklingen</string>
     <string name="sleep_intro">Der Sleep-Timer hält die Musik nach einer Weile an. Hier legst du fest, wie er endet und wann er von selbst startet.</string>
     <string name="settings_language">Sprache</string>
+    <!-- The language this text is in, as its speakers write it. -->
     <string name="settings_language_current">Deutsch</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_version_newest">Version %1$s, auf dem neuesten Stand</string>

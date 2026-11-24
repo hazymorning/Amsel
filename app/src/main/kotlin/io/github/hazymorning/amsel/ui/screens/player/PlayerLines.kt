@@ -43,12 +43,9 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 
-/**
- * The playback position, moved on while playing only as often as it shows: about once a pixel of
- * the cover's line, and a few times a second at least for the times. Between those steps it sleeps
- * instead of waking every frame. Each step lands on a frame of an infinite animation, which Compose
- * pauses in tests, so screenshots stay still at [NowPlayingUi.positionMs].
- */
+// Advances only as often as it shows: about a pixel of the line, at least four times a second for the
+// times, sleeping in between. Each step waits for an infinite-animation frame, which Compose pauses
+// in tests, so screenshots hold at [NowPlayingUi.positionMs].
 @Composable
 internal fun rememberPlaybackPosition(state: NowPlayingUi): State<Long> {
     val position = remember { mutableLongStateOf(state.positionMs) }
@@ -60,7 +57,7 @@ internal fun rememberPlaybackPosition(state: NowPlayingUi): State<Long> {
             withInfiniteAnimationFrameMillis { }
             val now = state.positionAt(SystemClock.elapsedRealtime())
             if (abs(now - position.longValue) >= step) position.longValue = now
-            // At its end the position stands still until the next report.
+            // At the end the position holds until the next report.
             if (state.durationMs in 1..now) break
             delay(((position.longValue + step - now) / pace).toLong().coerceAtLeast(1))
         }
@@ -68,19 +65,14 @@ internal fun rememberPlaybackPosition(state: NowPlayingUi): State<Long> {
     return position
 }
 
-/** Steps along the line: about its width in pixels on a phone. */
+// About the line's width in pixels on a phone.
 private const val LINE_STEPS = 1000L
 private const val MIN_STEP_MS = 16L
 private const val MAX_STEP_MS = 250L
 
-/**
- * Where the music is, on a line under the words ([LineSlider] with no resting thumb). The seek is
- * sent once, on release, and the line stays there until the next report. A book or episode with
- * chapters runs over the chapter it is in, not the whole item. The time played and the time left
- * stand under the line, in figures of one width: always for a book or an episode, where they say
- * where the person is (the owner's wish), and for music while the line is moved and a moment after.
- * They take no room of their own, so nothing below them moves.
- */
+// After a seek the line holds the released place until the next report. The times show always for
+// spoken word, as the owner asked, and for music while seeking and shortly after; they take no
+// height, so nothing below moves.
 @Composable
 internal fun SeekBar(
     state: NowPlayingUi,
@@ -92,7 +84,7 @@ internal fun SeekBar(
 ) {
     var held by remember { mutableStateOf(false) }
     val live by chapter
-    // While the line is held it keeps the chapter it was taken in, though playback moves on.
+    // While held, the line keeps the chapter it was grabbed in, though playback moves on.
     var taken by remember { mutableStateOf<ChapterUi?>(null) }
     val shown = if (held) taken ?: live else live
     val from = shown?.startMs ?: 0L
@@ -124,7 +116,7 @@ internal fun SeekBar(
     }
     val timed = state.spoken || held || lately
     val times by animateFloatAsState(if (timed) 1f else 0f, Motion.effects(), label = "times")
-    // A station is one live stream: no line and no times, their room kept so nothing below moves.
+    // A station is a live stream: line and times are invisible but keep their space, so nothing moves.
     val stream = state.kind == MediaKind.Radio
     Layout(
         content = {
@@ -153,7 +145,7 @@ internal fun SeekBar(
                 restingThumb = false,
                 pending = state.arriving,
             )
-            // Composed only while it shows, so TalkBack never lands on times no one can see.
+            // Composed only while visible, so TalkBack never focuses hidden times.
             if (timed || times > 0f) {
                 // The line itself says both times to TalkBack.
                 Row(Modifier.fillMaxWidth().graphicsLayer { alpha = times }.clearAndSetSemantics { }) {
@@ -177,11 +169,11 @@ internal fun SeekBar(
 
 private const val TIMES_LINGER_MS = 1_500L
 
-/** The time left starts with a true minus, which sits at the figures' height. */
+// A true minus, which sits at the figures' height, unlike a hyphen.
 private const val MINUS = "\u2212"
 private const val MINUS_TIGHTEN = -0.12f
 
-/** The chapter [position] is in, for a book or episode with two or more; null otherwise. */
+/** Null unless the item has two or more chapters. */
 @Composable
 internal fun rememberChapter(state: NowPlayingUi, position: State<Long>): State<ChapterUi?> {
     val starts = remember(state.chapters) { state.chapters.map { it.startMs } }
@@ -201,7 +193,7 @@ internal fun rememberChapter(state: NowPlayingUi, position: State<Long>): State<
 @Composable
 private fun TimeLabel(text: String) {
     val style = MaterialTheme.typography.labelMedium
-    // The minus is as wide as a figure; closed up a little it belongs to its time.
+    // The minus is as wide as a figure; tightened a little, it reads as part of its time.
     val words = if (text.startsWith(MINUS)) {
         buildAnnotatedString {
             withStyle(SpanStyle(letterSpacing = MINUS_TIGHTEN.em)) { append(MINUS) }

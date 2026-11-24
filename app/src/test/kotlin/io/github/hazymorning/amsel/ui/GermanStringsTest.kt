@@ -7,10 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.w3c.dom.Element
 
-/**
- * The app offers German (`locales_config.xml`), so every strings file in `values` has a twin in
- * `values-de` with the same names and the same format arguments.
- */
+/** German is offered in `locales_config.xml`, so `values-de` must match `values` in names and format arguments. */
 class GermanStringsTest {
     @Test fun appStringsHaveGerman() = assertInStep(File("src/main/res"))
 
@@ -41,7 +38,7 @@ class GermanStringsTest {
             .orEmpty()
             .associateBy { it.name }
 
-    /** Each translatable string by name; a plural's or an array's items as one text. */
+    /** A plural's or an array's items come as one text. */
     private fun strings(file: File): Map<String, String> {
         val root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).documentElement
         return KINDS.flatMap { kind ->

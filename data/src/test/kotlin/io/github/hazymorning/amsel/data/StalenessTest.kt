@@ -11,7 +11,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** What the server last said stops counting only once the socket has tried a while in vain. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class StalenessTest {
     private val scope = TestScope()

@@ -45,10 +45,8 @@ class PlayDispatcherTest {
         override suspend fun awaitConnected(): String = joined.await()
     }
 
-    /** How often a mix was about to start on This phone. */
     private var phoneMixes = 0
 
-    /** The seeks the dispatcher handed on, for a book started at a chapter no start item leads to. */
     private val soughtIn = mutableListOf<Pair<String, ItemPosition>>()
 
     private fun withDispatcher(
@@ -56,7 +54,6 @@ class PlayDispatcherTest {
         error: Int? = null,
         phone: LocalOutput = FakePhone(),
         seeks: SeekTracker = SeekTracker.None,
-        /** How many songs the server's sample of a mix holds. */
         mixSongs: Int = 0,
         block: suspend CoroutineScope.(PlayDispatcher, FakeMaServer) -> Unit,
     ) = runBlocking {
@@ -188,7 +185,7 @@ class PlayDispatcherTest {
             dispatcher.play(PlayRequest("phone-1", listOf(mix), onPhone = true))
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
             assertEquals(1, phoneMixes)
-            // On a speaker the phone's own playback is not the mix's business.
+            // A mix on a speaker leaves the phone's own playback alone.
             dispatcher.play(PlayRequest("kitchen", listOf(mix)))
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
             assertEquals(1, phoneMixes)
@@ -238,7 +235,7 @@ class PlayDispatcherTest {
             val seekCalls = listOf("startSeek 1 phone-2 960.0 library://audiobook/1", "sent 1", "answered 1")
             assertEquals(seekCalls, told.calls)
             assertEquals("24", fake.playArgs().single()["start_item"]!!.jsonPrimitive.content)
-            // A play from the bookmark has no place of its own to land.
+            // A play from the bookmark tracks no seek.
             dispatcher.play(PlayRequest("phone-1", listOf("library://audiobook/1"), onPhone = true))
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
             assertEquals(seekCalls, told.calls)
@@ -250,7 +247,7 @@ class PlayDispatcherTest {
             dispatcher.play(PlayRequest("kitchen", listOf("library://audiobook/1"), startPositionMs = 960_400))
             withTimeout(5000) { dispatcher.pending.first { it.isEmpty() } }
             assertEquals(null, fake.playArgs().single()["start_item"])
-            // Into the chapter's first second; the seek itself is the speaker's lane's to send.
+            // Into the chapter's first second; the seek itself goes out through the speaker's SeekController.
             assertEquals(listOf("kitchen" to ItemPosition("library://audiobook/1", 961.0)), soughtIn)
         }
     }

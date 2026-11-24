@@ -75,7 +75,7 @@ class OfferControllerTest {
         assertEquals(true, hints.offer(hint("ended")))
         off += HINTS_ALL
         assertEquals(false, hints.offer(hint("sleep")))
-        // What answers a tap is no hint, and always comes.
+        // An offer that answers a tap has no hint kind and always shows.
         assertEquals(true, hints.offer(offer("radio/1")))
     }
 

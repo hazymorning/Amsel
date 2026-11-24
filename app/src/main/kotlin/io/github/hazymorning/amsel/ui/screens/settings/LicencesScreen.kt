@@ -37,7 +37,7 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Software by others that Amsel ships, as NOTICE lists it, with its licence's file in `assets/licences`. */
+/** Kept in step with NOTICE; [file] is in `assets/licences`. */
 internal enum class ThirdParty(@StringRes val title: Int, @StringRes val licence: Int, val file: String) {
     Sendspin(R.string.licence_sendspin, R.string.licence_apache, "Apache-2.0.txt"),
     Commissioner(R.string.licence_commissioner, R.string.licence_ofl, "OFL-Commissioner.txt"),
@@ -49,7 +49,7 @@ internal enum class ThirdParty(@StringRes val title: Int, @StringRes val licence
     Protobuf(R.string.licence_protobuf, R.string.licence_bsd, "BSD-Protobuf.txt"),
 }
 
-/** The privacy notice, row by row; PRIVACY.md says the same. */
+/** Kept in step with PRIVACY.md. */
 private val PrivacyRows = listOf(
     R.string.music_assistant to R.string.privacy_music_assistant,
     R.string.audiobookshelf to R.string.privacy_audiobookshelf,
@@ -62,10 +62,6 @@ private val PrivacyRows = listOf(
 
 private const val SOURCE_URL = "https://github.com/hazymorning/Amsel"
 
-/**
- * Licences and privacy: Amsel's own licence and the way to its source code, what Amsel sends where
- * and keeps on the phone, and the software by others it ships, each opening its licence's text.
- */
 @Composable
 fun LicencesScreen(onBack: () -> Unit, onOpenSource: () -> Unit, modifier: Modifier = Modifier) {
     val scroll = rememberScrollState()
@@ -118,12 +114,10 @@ fun LicencesScreen(onBack: () -> Unit, onOpenSource: () -> Unit, modifier: Modif
     reading?.let { part -> AmselSheet(onDismiss = { reading = null }) { LicenceText(part) } }
 }
 
-/** A row that only says something, one stop for TalkBack. */
 @Composable
 private fun TextRow(title: String, text: String, shape: Shape) =
     SettingRow(title, shape, Modifier.semantics(mergeDescendants = true) {}, subtitle = text)
 
-/** [part]'s licence as Amsel ships it, a paragraph at a time so it wraps at any type size. */
 @Composable
 private fun LicenceText(part: ThirdParty) {
     val assets = LocalContext.current.assets
@@ -153,7 +147,7 @@ private fun LicenceText(part: ThirdParty) {
     }
 }
 
-/** A licence file's paragraphs, each one's lines joined: the files break their lines for 80 columns. */
+/** The files wrap at 80 columns; joining each paragraph's lines lets it wrap at any font size. */
 internal fun paragraphs(text: String): List<String> =
     text.trim().split(Regex("""\n\s*\n""")).map { paragraph -> paragraph.lines().joinToString(" ") { it.trim() } }
 

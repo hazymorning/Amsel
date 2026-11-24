@@ -69,7 +69,7 @@ fun ArtistScreen(
     } else {
         val artist = state.artist
         val listState = rememberLazyListState()
-        // The page is as wide as the window, as its cover and title are ([pageCover]).
+        // Columns follow the window width, as the page's cover and title do ([pageCover]).
         val columns = tileColumns(LocalWindowInfo.current.containerDpSize.width)
         val rows = remember(state.albums, columns) { state.albums.chunked(columns) }
         val similarTitle = stringResource(R.string.pages_similar_artists)
@@ -78,7 +78,7 @@ fun ArtistScreen(
             state.popular.isNotEmpty() || state.popularPending -> rowGlyphBottom(RowLead.Cover, true)
             else -> Space.HeaderToList
         }
-        // A tile's caption ends on its ink; an album row keeps its own room under it.
+        // An album row keeps Space.TileRows under its captions; a shelf tile's caption ends at its glyphs.
         val bottom = if (state.similar.isEmpty()) Space.ListEnd - Space.TileRows else Space.ListEnd
         PageScaffold(artist?.title, listState, onBack, modifier.fillMaxSize(), bottom = bottom, art = artist?.art) {
             item(key = "art", contentType = PageSlot.Art) {
@@ -97,7 +97,8 @@ fun ArtistScreen(
                 popularBlocks()
                 albumBlocks(columns)
             } else if (state.popularPending) {
-                // Popular songs answer last: their place is held so the albums never move.
+                // Popular songs answer last (docs/API-NOTES.md, "The artist page"): placeholders hold
+                // their place so the albums do not move.
                 popularHeader()
                 trackRowBlocks(RowLead.Cover, withSubtitle = true, count = POPULAR_TRACKS)
                 albumGrid(rows, columns, afterSongs = true, onOpen, onMore)
@@ -139,10 +140,7 @@ private fun LazyListScope.popularHeader() {
     }
 }
 
-/**
- * Albums laid out by hand in rows: a lazy grid cannot sit inside the page's lazy column. The header
- * keeps a section's distance from the last ink above it, popular songs' or the page's play.
- */
+// Rows of tiles, as a lazy grid cannot be nested in the page's lazy column.
 private fun LazyListScope.albumGrid(
     rows: List<List<MediaUi>>,
     columns: Int,
@@ -186,7 +184,7 @@ private fun LazyListScope.albumBlocks(columns: Int) {
     }
 }
 
-/** The artist page for [key] (`library://artist/3`), wired to the server and the current speaker. */
+/** [key] is the artist's URI, such as `library://artist/3`. */
 @Composable
 fun ArtistRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -206,12 +204,12 @@ fun ArtistRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier
         onShuffle = { play(shuffle = true) },
         onPlayTrack = { track ->
             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
-            // A popular song plays the popular songs from there, not the whole discography. The server
-            // takes start_item only for an album or a playlist, so the list starts at the song.
+            // Plays the popular songs from the tapped one, not the discography. start_item starts only an
+            // album or a playlist at a track, so the list starts at the song (docs/API-NOTES.md, "play_media").
             val from = state.popular.indexOf(track).coerceAtLeast(0)
             graph.playback.play(state.popular.drop(from).map { it.key }, title = track.title)
         },
-        // "Go to artist" from this artist's albums and songs would lead back to this page: left out.
+        // "Go to artist" would lead back to this page, so its albums and songs leave it out.
         onMore = { item ->
             val media = item.copy(artistKey = item.artistKey.takeUnless { it == key })
             actions.more(ActionTarget.Media(media, ownPage(item.key == key)))

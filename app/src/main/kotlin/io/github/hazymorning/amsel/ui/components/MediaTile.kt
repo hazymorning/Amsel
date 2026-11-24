@@ -36,7 +36,6 @@ import io.github.hazymorning.amsel.ui.theme.rememberPress
 import io.github.hazymorning.amsel.ui.theme.secondLine
 import io.github.hazymorning.amsel.ui.theme.spaced
 
-/** Tiles in columns between the screen's margins: the Library, See all and their skeletons. */
 @Composable
 fun TileGrid(
     padding: PaddingValues,
@@ -57,41 +56,33 @@ fun TileGrid(
     )
 }
 
-/** As many columns as [TileGrid] makes of [width], for tiles laid out in rows of a list. */
+/** The column count [TileGrid] gives [width], for tiles laid out as rows of a list. */
 @Composable
 fun tileColumns(width: Dp): Int =
     ((width - Keyline.Margin * 2 + Space.Tiles) / (gridTileMin() + Space.Tiles)).toInt().coerceAtLeast(1)
 
-/** At least [Sizes.GridTileMin], wider with large text so a caption keeps its words. */
+/** Widens with a font scale above 1, so a caption keeps its words at large text sizes. */
 @Composable
 private fun gridTileMin(): Dp =
     Sizes.GridTileMin * (1f + (LocalDensity.current.fontScale.coerceAtLeast(1f) - 1f) * GRID_GROWTH)
 
-/** How much of the font's growth the grid's columns follow. */
+/** The share of the font scale's growth that the minimum tile width follows. */
 private const val GRID_GROWTH = 0.8f
 
-/** The fewest letters a tile's title keeps at large font sizes; the tile widens before it goes below. */
+/** A shelf tile's minimum width in ems, so its title keeps about this many letters at large text sizes. */
 private const val CAPTION_EMS = 9
 
-/** A shelf's tile: two to a screen with a third's width left for the next, so every shelf ends alike. */
 @Composable
 fun shelfTileWidth(): Dp {
     val em = with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.fontSize.toDp() }
     return max(Sizes.tile(LocalWindowInfo.current.containerDpSize.width), em * CAPTION_EMS)
 }
 
-/**
- * A square cover and its caption under it, starting where the cover's corner ends ([TileCaption]):
- * the title, and right under it the second line, the server's or what the item is ([secondLine]);
- * [twoLines] false leaves it out (a shelf of artists, stations or playlists). Every tile alike: an
- * artist's picture is a cover like any other, its name on the margin. No menu: a long press opens
- * the item's actions, and the page it opens shows them all.
- */
 @Composable
 fun MediaTile(
     item: MediaUi,
     onClick: () -> Unit,
-    /** The long press; null where a long press does something else (moving a pin in Edit Home). */
+    /** Null where a long press does something else (moving a pin in Edit Home). */
     onMore: (() -> Unit)?,
     modifier: Modifier = Modifier,
     twoLines: Boolean = true,
@@ -114,7 +105,7 @@ fun MediaTile(
                 onLongClickLabel = onMore?.let { stringResource(R.string.more_options_for, item.title) },
                 onLongClick = onMore,
             )
-            // The ring says it to the eye; TalkBack hears it as a row does.
+            // The play bars show it; TalkBack gets the same state description as a row.
             .then(if (playing) Modifier.semantics { stateDescription = nowPlaying } else Modifier),
     ) {
         Artwork(

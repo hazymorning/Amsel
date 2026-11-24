@@ -26,43 +26,39 @@ data class PlayRequest(
     val option: QueueOption = QueueOption.Replace,
     val startItem: String? = null,
     val shuffle: Boolean = false,
-    /** Shown while the server starts playback, so the tap has visible feedback at once. */
+    /** Only shown while the server starts playback, for feedback at once; never sent. */
     val title: String? = null,
     /**
-     * For This phone, sent only once its Sendspin client has joined the server (a remembered id is
-     * not enough: the server forgets a disconnected phone), and with its local hold released, or
-     * the phone would pause the stream it is sent.
+     * Sent only once This phone's Sendspin client has joined (the server forgets a disconnected
+     * phone), with its local hold released, or the phone would pause the stream it is sent.
      */
     val onPhone: Boolean = false,
     /**
-     * Where a book started at a chapter begins: the place its reports must reach. Without a
-     * [startItem] that leads there, the book is started and then sent there.
+     * Where a book started at a chapter begins; without a [startItem] leading there, the book is
+     * started and then sought there.
      */
     val startPositionMs: Long? = null,
 )
 
-/** A play on its way to its speaker, asked for at [sinceMs] (SystemClock.elapsedRealtime). */
+/** [sinceMs] on the elapsedRealtime clock. */
 data class PendingPlay(val request: PlayRequest, val sinceMs: Long)
 
 /**
- * Sends every `play_media`. The server answers only once playback starts, which can take tens of
- * seconds, so requests run in an app-wide scope, one per speaker at a time: an identical request
- * while one runs is a double tap and is dropped. Others wait their turn: of the plays waiting only
- * the latest survives, while every Play next and Add to Up next is kept, in order.
+ * The server answers `play_media` only once playback starts, which can take tens of seconds, so plays
+ * run in an app-wide scope, one per speaker: an identical request meanwhile is a double tap. Of the
+ * plays waiting only the latest is kept; every Play next and Add to Up next is kept, in order.
  */
 class PlayDispatcher(
     private val api: MaApi,
     private val phone: LocalOutput,
     private val scope: CoroutineScope,
-    /** Told where a book started at a chapter begins, before the play goes out. */
     private val seeks: SeekTracker = SeekTracker.None,
-    /** Sends a queue that is starting a book to a place in it ([SeekDispatcher.seekIn]). */
     private val seekIn: (queueId: String, place: ItemPosition) -> Unit = { _, _ -> },
-    /** Told of every play asked that starts playback, a double tap too ([SpeakerCommands.starting]). */
+    /** Called for every play that starts playback, a dropped double tap too. */
     private val starting: (queueId: String) -> Unit = {},
     /**
-     * Told that a mix is about to start on This phone, once the server has songs for it: what the
-     * phone plays from its own files gives way only then, not for a mix that comes to nothing.
+     * Called once the server has songs for a mix on This phone: a download playing there gives way
+     * only then, not for a mix that comes to nothing.
      */
     private val phoneMixStarts: () -> Unit = {},
     private val elapsedRealtime: () -> Long,
@@ -73,12 +69,11 @@ class PlayDispatcher(
     private val _failures =
         MutableSharedFlow<CommandFailure>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** The play each speaker is starting, running or waiting, for optimistic UI; Add and Next start nothing. */
+    /** Per speaker, the latest play that starts playback, running or waiting; never Add or Next. */
     val pending: StateFlow<Map<String, PendingPlay>> = _pending.asStateFlow()
 
     val failures: SharedFlow<CommandFailure> = _failures.asSharedFlow()
 
-    /** Starts [request], or queues it behind the one running; a double tap is dropped. */
     fun play(request: PlayRequest) {
         if (request.starts) starting(request.queueId)
         synchronized(this) {
@@ -126,7 +121,7 @@ class PlayDispatcher(
             } finally {
                 finish(request.queueId)
             }
-            // Said once the play has finished, so a Retry is a new play, not a double tap of this one.
+            // Reported after finish(), so a Retry is a new play, not a double tap of this one.
             if (error != null) fail(request, error)
         }
     }
@@ -138,7 +133,7 @@ class PlayDispatcher(
     }
 
     private fun fail(request: PlayRequest, error: Exception) {
-        // Asked again, a mix of nothing is still a mix of nothing.
+        // Retried, a mix of nothing fails the same way.
         val retry = { play(request) }.takeIf { error !is NothingToMixException }
         _failures.tryEmit(CommandFailure(request.queueId, error, play = true, retry = retry))
     }
@@ -150,7 +145,6 @@ class PlayDispatcher(
         if (next != null) start(next) else publish(queueId)
     }
 
-    /** The latest play on its way to [queueId], running or waiting, since it was first asked for. */
     private fun publish(queueId: String) {
         val play = (listOfNotNull(running[queueId]) + waiting[queueId].orEmpty()).lastOrNull { it.starts }
         _pending.update { all ->
@@ -163,7 +157,7 @@ class PlayDispatcher(
     }
 }
 
-/** Replacing Up next starts playback; Play next and Add to Up next leave what plays alone. */
+/** Play next and Add to Up next leave what plays alone. */
 private val PlayRequest.starts: Boolean get() = option == QueueOption.Replace
 
 private const val MS_PER_SECOND = 1000.0

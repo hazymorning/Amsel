@@ -26,12 +26,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * The whole of Setup: the discovery run, the checked server, the typed fields and what is busy.
- * It outlives rotation, so turning the phone never starts the search again; the page and what was
- * typed (never the password) also outlive the process. Taps change the state at once; the network
- * answers behind them.
- */
 class SetupViewModel(
     handle: SavedStateHandle,
     private val discover: () -> Flow<List<FoundServer>>,
@@ -44,10 +38,8 @@ class SetupViewModel(
     private val _state = MutableStateFlow(SetupUiState())
     val state: StateFlow<SetupUiState> = _state.asStateFlow()
 
-    /** Servers that answered, in the order they answered. */
     private var found: List<FoundServer> = emptyList()
 
-    /** The server Sign in is for. */
     private var chosen: SelectedServer? = null
     private var search: Job? = null
     private var settle: Job? = null
@@ -58,13 +50,12 @@ class SetupViewModel(
         handle.setSavedStateProvider(KEPT) { encodeToSavedState(kept()) }
     }
 
-    /** "Find my server": look on the network for [SEARCH_MS]. */
     fun findServer() {
         if (_state.value.step != SetupStep.Welcome) return
         found = emptyList()
         _state.update { it.copy(step = SetupStep.Server, server = ServerUiState()) }
         search = viewModelScope.launch {
-            // No permission or no network service: the flow ends early, and the field appears at once.
+            // Without the permission or a discovery service the flow ends early, so the field appears at once.
             withTimeoutOrNull(SEARCH_MS) { discover().catch { }.collect(::onFound) }
             if (found.isEmpty()) showAddress() else connectLone()
         }
@@ -123,10 +114,7 @@ class SetupViewModel(
         }
     }
 
-    /**
-     * Home Assistant's page sent back Music Assistant's sign-in code: Sign in shows progress
-     * meanwhile. The page can call twice before it closes; only its first answer counts.
-     */
+    /** The page can deliver the code twice before it closes; only the first counts. */
     fun onHomeAssistantCode(code: String) {
         val server = chosen ?: return
         if (_state.value.homeAssistantUrl == null) return
@@ -136,10 +124,8 @@ class SetupViewModel(
         }
     }
 
-    /** Home Assistant's page returned without a code. */
     fun onHomeAssistantFailed() = leaveHomeAssistant(SignInError.HomeAssistant)
 
-    /** Closed on purpose (the close glyph or Back), which is not an error. */
     fun onHomeAssistantClose() = leaveHomeAssistant(error = null)
 
     private fun leaveHomeAssistant(error: SignInError?) {
@@ -147,7 +133,6 @@ class SetupViewModel(
         _state.update { it.copy(homeAssistantUrl = null, signIn = it.signIn?.copy(busy = null, error = error)) }
     }
 
-    /** One step up: Sign in to Your server, the address field to the list, Your server to Welcome. */
     fun back() {
         val state = _state.value
         when (state.step) {
@@ -167,8 +152,8 @@ class SetupViewModel(
             SetupStep.SignIn -> {
                 work?.cancel()
                 val server = chosen
-                // Back to the list it came from; a server found alone or typed comes back as an editable
-                // address, so Back never connects to it again by itself.
+                // Back to the list it came from; a lone or typed server comes back as an editable address,
+                // so Back never connects to it again by itself.
                 val next = if (server?.fromList == true && found.size > 1) {
                     state.server.copy(step = ServerStep.Choose)
                 } else {
@@ -197,7 +182,7 @@ class SetupViewModel(
         if (servers.size > 1) {
             settle?.cancel()
         } else if (servers.size == 1 && settle == null) {
-            // Wait a moment for a second server before taking this one; two answer close together.
+            // Two servers often answer close together: wait for another before taking this one.
             settle = viewModelScope.launch {
                 delay(SETTLE_MS)
                 connectLone()
@@ -205,18 +190,15 @@ class SetupViewModel(
         }
     }
 
-    /** While still searching, connects to the one server that answered. */
     private fun connectLone() {
         val lone = found.singleOrNull() ?: return
         if (_state.value.server.step == ServerStep.Searching) connect(lone.target(fromList = false))
     }
 
-    /** While still searching, gives up and shows the address field. */
     private fun showAddress() = updateServer {
         if (step == ServerStep.Searching) copy(step = ServerStep.Address, notFound = true) else this
     }
 
-    /** Checks [target] and opens Sign in; on failure the address step shows why. */
     private fun connect(target: ServerCheckRequest) {
         stopSearch()
         work?.cancel()
@@ -248,7 +230,7 @@ class SetupViewModel(
                 }
 
                 ServerCheck.NeedsSetup -> {
-                    // Stay put; a lone server found while searching gets its address filled in to retry.
+                    // Stays on the step; a lone server from the search moves to the address step, filled in, to retry.
                     updateServer {
                         if (step == ServerStep.Searching) {
                             copy(step = ServerStep.Address, address = target.field, connectingTo = null)
@@ -267,7 +249,7 @@ class SetupViewModel(
         }
     }
 
-    /** Retry from the message, unless the person has moved on meanwhile. */
+    /** The message can outlive the step: retry only while still on it and idle. */
     private fun connectAgain(target: ServerCheckRequest) {
         val state = _state.value
         if (state.step == SetupStep.Server && !state.server.connecting) connect(target)
@@ -280,7 +262,7 @@ class SetupViewModel(
         search = null
     }
 
-    /** Signed in: Sign in keeps showing progress until the app takes over. */
+    /** On success busy stays set: Sign in shows progress until the app replaces Setup. */
     private fun finish(result: SignInResult, error: SignInError) {
         if (result !is SignInResult.Success) updateSignIn { copy(busy = null, error = error) }
     }
@@ -289,7 +271,6 @@ class SetupViewModel(
 
     private fun restore(kept: SavedSetupState) {
         chosen = kept.chosen
-        // The search ended with the process: look again.
         kept.restored()?.let { _state.value = it } ?: findServer()
     }
 
@@ -302,23 +283,20 @@ class SetupViewModel(
     companion object {
         private const val KEPT = "setup"
 
-        /** How long to look on the network before offering the address field. */
         const val SEARCH_MS = 5_000L
 
-        /** How long a lone server waits for a second one before it is taken. */
         const val SETTLE_MS = 1_000L
     }
 }
 
 enum class SetupStep { Welcome, Server, SignIn }
 
-/** Everything Setup shows: the page on screen, and the state of each page. */
 @Immutable
 data class SetupUiState(
     val step: SetupStep = SetupStep.Welcome,
     val server: ServerUiState = ServerUiState(),
-    /** Sign in for the checked server; kept after Back so the page can fade out as it was. */
+    /** Kept after Back, so the Sign in page fades out as it was. */
     val signIn: SignInUiState? = null,
-    /** Home Assistant's sign-in page, covering Setup while it is open. */
+    /** Non-null while Home Assistant's sign-in page covers Setup. */
     val homeAssistantUrl: String? = null,
 )

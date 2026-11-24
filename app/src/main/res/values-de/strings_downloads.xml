@@ -5,7 +5,6 @@
     <string name="download_cancel">Download abbrechen</string>
     <string name="download_remove">Download entfernen</string>
     <string name="download_remove_question">„%1$s“ von diesem Handy entfernen? Es lässt sich wieder herunterladen.</string>
-    <!-- A message, once for a book or an episode, the first time it plays on this phone -->
     <string name="download_offer">„%1$s“ für unterwegs herunterladen?</string>
     <string name="downloaded">Heruntergeladen</string>
     <string name="downloading_percent">Lädt · %1$d %%</string>
@@ -21,7 +20,6 @@
     <string name="download_failed_space">„%1$s“ konnte nicht gespeichert werden. Ist auf dem Handy noch Platz?</string>
     <string name="download_not_saved">Der Download konnte nicht gespeichert werden. Ist auf dem Handy noch Platz?</string>
 
-    <!-- Audiobookshelf, woher Downloads kommen -->
     <string name="abs_intro">Hörbücher und Podcasts von Audiobookshelf kannst du herunterladen und offline hören. Melde dich dazu einmal mit deinem Audiobookshelf-Konto an.</string>
     <string name="abs_address">Audiobookshelf-Adresse</string>
     <string name="abs_address_example">Zum Beispiel buecher.example.com oder 192.168.1.20:13378</string>

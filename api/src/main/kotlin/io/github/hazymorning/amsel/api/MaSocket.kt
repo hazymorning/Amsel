@@ -18,11 +18,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 
-/**
- * One WebSocket connection to Music Assistant, for its whole life. Matches results to commands by
- * `message_id`, joins partial (streamed) results and hands events to [onEvent]. Once [closed]
- * completes the socket is dead; the caller opens a new one.
- */
+/** Single use: once [closed] completes, a new MaSocket is needed. */
 internal class MaSocket(
     private val http: OkHttpClient,
     private val address: ServerAddress,
@@ -35,10 +31,8 @@ internal class MaSocket(
 
     @Volatile private var endReason: Exception? = null
 
-    /** Completes when the connection ends. */
     val closed = CompletableDeferred<Unit>()
 
-    /** Opens the socket and waits for the server's first frame. */
     suspend fun open(): ServerInfo {
         socket =
             http.forUrl(address.baseUrl).newWebSocket(Request.Builder().url(address.webSocketUrl).build(), Listener())
@@ -51,10 +45,6 @@ internal class MaSocket(
         }
     }
 
-    /**
-     * Sends [command] and waits for its result. Throws [MaCommandException] for a server error and
-     * [MaConnectionException] when the connection ends or no answer comes within [timeout].
-     */
     suspend fun call(command: String, args: JsonObject? = null, timeout: Duration = CALL_TIMEOUT): JsonElement? {
         val id = nextId.getAndIncrement().toString()
         val call = PendingCall(command)
@@ -68,7 +58,7 @@ internal class MaSocket(
             }
             val ws = socket ?: throw MaConnectionException("Not connected")
             if (!ws.send(frame.toString())) throw MaConnectionException("Connection closed")
-            // A null result is a valid answer, so the wait carries it as JsonNull.
+            // withTimeoutOrNull's null means a timeout, so a null result is carried as JsonNull.
             val answer = withTimeoutOrNull(timeout) { call.result.await() ?: JsonNull }
                 ?: throw MaConnectionException("No answer to $command")
             return answer.takeUnless { it is JsonNull }
@@ -82,7 +72,7 @@ internal class MaSocket(
         end(MaConnectionException("Connection closed"))
     }
 
-    /** Fails what still waits; [endReason] is set first, so a call made meanwhile sees it. */
+    /** [endReason] is set before the waiters fail, so a call made meanwhile sees it. */
     private fun end(reason: Exception) {
         synchronized(this) {
             if (endReason != null) return
@@ -98,7 +88,7 @@ internal class MaSocket(
             val msg = try {
                 parseIncoming(text)
             } catch (e: IllegalArgumentException) {
-                // Not JSON, or not shaped as a frame (SerializationException is one too).
+                // Not JSON or not a frame; SerializationException is an IllegalArgumentException too.
                 IncomingMessage.Unknown
             }
             when (msg) {
@@ -106,8 +96,8 @@ internal class MaSocket(
 
                 is IncomingMessage.Event -> onEvent(msg.event)
 
-                // Sent right after server_info when the server has no users yet ("Setup required").
-                // Before it, nothing has said who answers: a refusal then ends this try, never a session.
+                // Sent after server_info when the server has no users yet. Before server_info nothing
+                // says which server answers, so a refusal then fails this attempt, never the session.
                 is IncomingMessage.Error -> if (msg.messageId == CONNECTION) {
                     end(
                         if (serverInfo.isCompleted) {

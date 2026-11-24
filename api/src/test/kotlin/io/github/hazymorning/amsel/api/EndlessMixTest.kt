@@ -20,7 +20,6 @@ class EndlessMixTest {
         return FakeMaServer.result(JsonArray(recorded.take(songs)))
     }
 
-    /** A server whose mix of [seed] would hold [songs] songs; [answers] replace its plain "done". */
     private fun withMix(
         version: String,
         songs: Int,

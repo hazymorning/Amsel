@@ -44,10 +44,8 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.spaced
 
-/**
- * A section's items in its layout, from its first edge to its last ink: a list's last row hangs
- * its inset below, so the next section measures from the cover's edge as it does from a tile's.
- */
+// A list overhangs its last row's bottom inset, so the next section measures from the cover's edge,
+// as it does from a tile's.
 @Composable
 internal fun SectionContent(
     section: SectionUi,
@@ -61,7 +59,7 @@ internal fun SectionContent(
         ListeningShelf(section.items, onResume, onMore, modifier)
         return
     }
-    // A card shows its title alone.
+    // A card shows only its title, so it gets no time left.
     val items = if (listening && section.layout != SectionLayout.Grid) withTimeLeft(section.items) else section.items
     when (section.layout) {
         SectionLayout.Grid -> CardGrid(items.size, modifier) { index, card ->
@@ -97,7 +95,7 @@ internal fun SectionContent(
     }
 }
 
-/** Static twins of [SectionContent], first load only. */
+// As tall as [SectionContent] in the same layout (SkeletonGeometryTest).
 @Composable
 internal fun SectionSkeleton(section: SectionUi, modifier: Modifier = Modifier) {
     val twoLines = section.option.twoLineCaptions
@@ -122,11 +120,9 @@ internal fun SectionSkeleton(section: SectionUi, modifier: Modifier = Modifier) 
     }
 }
 
-/**
- * Artists and stations have no second line, and a playlist's would mostly repeat its owner, so
- * their tiles end on the title's baseline. It follows the option, not the items, so a skeleton is
- * as tall as what replaces it; mixed options keep two lines, as their tiles share baselines.
- */
+// Artists and stations have no second line, and a playlist's would mostly repeat its owner. Decided
+// by the option, not the items, so a skeleton is as tall as what replaces it; mixed options keep two
+// lines so their tiles share baselines.
 internal val SectionOption.twoLineCaptions: Boolean
     get() = source !in OneLineSources
 
@@ -140,7 +136,6 @@ internal fun contentGap(layout: SectionLayout): Dp = if (layout == SectionLayout
     with(LocalDensity.current) { spaced(Space.Group) }
 }
 
-/** What edit mode shows for a section with nothing in it, where its items would be. */
 @Composable
 internal fun EmptySectionNote(option: SectionOption, modifier: Modifier = Modifier) {
     val text = stringResource(
@@ -196,7 +191,6 @@ private fun ShelfSkeleton(count: Int, width: Dp, gap: Dp, twoLines: Boolean, mod
     }
 }
 
-/** A shelf's covers in [layout]: small, a tile, or big. */
 @Composable
 internal fun tileWidth(layout: SectionLayout): Dp = when (layout) {
     SectionLayout.Small -> smallTileWidth()
@@ -206,18 +200,16 @@ internal fun tileWidth(layout: SectionLayout): Dp = when (layout) {
 
 internal fun tileGap(layout: SectionLayout): Dp = if (layout == SectionLayout.Small) Space.SmallTiles else Space.Tiles
 
-/** The layouts that are a sideways shelf of covers. */
 internal val SectionLayout.isShelf: Boolean
     get() = this == SectionLayout.Small || this == SectionLayout.Row || this == SectionLayout.Big
 
-/** Big covers: two to a screen; never smaller than a tile, which large text widens. */
+// Never narrower than a regular tile, which widens with large text.
 @Composable
 internal fun bigTileWidth(): Dp {
     val screen = LocalWindowInfo.current.containerDpSize.width
     return min(max(Sizes.bigTile(screen), shelfTileWidth()), screen - Keyline.Margin * 2)
 }
 
-/** Small covers: three to a screen and a third of the next; with large text, as wide as their titles need. */
 @Composable
 internal fun smallTileWidth(): Dp {
     val em = with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.fontSize.toDp() }
@@ -225,7 +217,7 @@ internal fun smallTileWidth(): Dp {
     return min(small, shelfTileWidth())
 }
 
-/** The fewest letters a small cover's title keeps at large font sizes. */
+// The fewest letters a small tile's title keeps at large font sizes.
 private const val SMALL_CAPTION_EMS = 6
 
 private const val SKELETON_CARDS = 4

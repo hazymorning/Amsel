@@ -56,7 +56,7 @@ class SettingsViewModelTest {
         appVersion = "0.1.0",
     )
 
-    /** Settings on screen: collects the state the way the screen does. */
+    /** Collects the state as the screen does, so the WhileSubscribed state stays live. */
     private fun TestScope.shown(vm: SettingsViewModel) =
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.state.collect {} }
 
@@ -75,7 +75,6 @@ class SettingsViewModelTest {
         assertEquals(SettingsUiState("Anna", "Living room", "192.168.1.20", ThemeMode.Dark, "0.1.0"), state)
         val https = ServerAddress.fromBaseUrl("https://music.example.com")
         assertEquals("music.example.com", settingsState(stored, anna, https, annaUser, null, "0.1.0").serverAddress)
-        // Ports never appear on screen, not even an unusual one.
         val otherPort = ServerAddress.fromBaseUrl("http://music.local:9000")
         assertEquals("music.local", settingsState(stored, anna, otherPort, annaUser, null, "0.1.0").serverAddress)
     }
@@ -134,7 +133,6 @@ class SettingsViewModelTest {
         }
         val shown = messages.pending.value
         assertEquals(listOf(R.string.settings_save_failed), shown.map { it.text })
-        // Retry saves the same choice again.
         saveTheme = { savedThemes += it }
         shown.single().retry?.invoke()
         assertEquals(listOf("light"), savedThemes)
@@ -165,7 +163,6 @@ class SettingsViewModelTest {
         assertEquals(1, signOuts)
         gate.complete(Unit)
         testScheduler.runCurrent()
-        // Done: a later sign-out (after signing in again) runs.
         vm.onSignOut()
         assertEquals(2, signOuts)
     }

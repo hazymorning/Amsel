@@ -28,41 +28,34 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** What the widgets show, from Amsel. */
 interface WidgetSource {
-    /** What plays where Amsel plays. */
+    /** For the speaker Amsel plays on. */
     val content: Flow<WidgetContent>
 
-    /** What plays on speaker [id], for a widget of its own. */
     fun contentOf(id: String): Flow<WidgetContent>
 
-    /** Commands that did not reach their speaker, from the app, the notification or a widget: its id, and the sentence. */
+    /** Failed commands from anywhere in Amsel, as (speaker id, message). */
     val failures: Flow<Pair<String, String>>
 }
 
-/**
- * Amsel's widgets: drawn anew whenever what they show changes, while Amsel follows the music and a
- * widget is on the home screen; while its socket is closed they look at the speakers now and then
- * ([refresh]); and their taps.
- */
+/** Redraws the widgets on every change while there are any; while the socket is closed, a job calls [refresh]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WidgetController(
     private val context: Context,
     private val store: WidgetStore,
     images: ImageLoader,
     private val scope: CoroutineScope,
-    /** Hands for a tap: on the speaker Amsel plays on (null), or on a widget's own. */
+    /** Null: the speaker Amsel plays on. */
     private val hands: (speaker: String?) -> WidgetTransport,
-    /** The book or episode heard last, from the server. */
+    /** The book or episode last in progress, for Continue listening. */
     private val lastStarted: suspend () -> WidgetItem?,
-    /** Asked for once there is a widget. */
+    /** Created only once a widget exists. */
     private val source: () -> WidgetSource,
-    /** Amsel follows the music in this run: a widget placed now follows it at once. */
+    /** Whether [redraw] also starts following, so a widget placed now updates at once. */
     private val live: Boolean = false,
     actions: WidgetActions = WidgetActions.None,
-    /** Whether Amsel's own socket is connected: the widgets follow what it hears. */
     private val connected: () -> Boolean = { false },
-    /** Reads what the speakers do on a glance while the socket is closed; false when the server did not answer. */
+    /** Reads the speakers over a socket of its own; false when the server did not answer. */
     private val refreshSpeakers: suspend () -> Boolean = { false },
     private val plan: WidgetRefreshScheduler = WidgetRefreshScheduler.None,
     elapsedRealtime: () -> Long = SystemClock::elapsedRealtime,
@@ -80,19 +73,17 @@ class WidgetController(
     private val setups = MutableStateFlow<Map<Int, WidgetSetup>>(emptyMap())
     private val _contents = MutableStateFlow<Map<String, WidgetContent>?>(null)
 
-    /** What the widgets show now, by speaker ([AMSELS] for Amsel's); null until Amsel drew them in this run. */
+    /** By speaker id, [AMSELS] for the speaker Amsel plays on; null until the first draw in this process. */
     val contents: StateFlow<Map<String, WidgetContent>?> = _contents.asStateFlow()
 
-    /** A tap that went wrong, said on the widgets while they show what they showed then. */
+    /** A failure message, shown only while the content equals the content it failed on. */
     private val said = MutableStateFlow<Pair<WidgetContent, String>?>(null)
 
-    /** Draws asked for and not done yet. */
     private val pending = MutableStateFlow(0)
 
-    /** Android may run both looks at once; one is enough. */
+    /** The periodic and the one-off job can run at once; one refresh is enough. */
     private val looking = Mutex()
 
-    /** The widgets on the home screen, of all three kinds. */
     fun ids(): IntArray = Providers.keys.flatMap {
         manager.getAppWidgetIds(ComponentName(context, it)).asList()
     }.toIntArray()
@@ -100,7 +91,6 @@ class WidgetController(
     fun kindOf(id: Int): WidgetKind =
         Providers[manager.getAppWidgetInfo(id)?.provider?.className?.let(::classFor)] ?: WidgetKind.NowPlaying
 
-    /** Draws what plays on the widgets from now on, while there are any. */
     @Synchronized
     fun follow() {
         if (following?.isActive == true || ids().isEmpty()) return
@@ -127,15 +117,15 @@ class WidgetController(
         wallpaper.listen(true)
     }
 
-    /** A look at the speakers while Amsel's socket is closed ([WidgetRefreshJobService]): read on a glance and drawn. */
+    /** From [WidgetRefreshJobService]: reads the speakers unless the socket is open, and waits for the redraw. */
     suspend fun refresh() {
         if (ids().isEmpty()) return plan.cancelAll()
         follow()
         if (connected() || !looking.tryLock()) return
         try {
             refreshSpeakers()
-            // What was read passes through the flows first; then every draw it asked for finishes,
-            // the first in this run of Amsel too.
+            // Lets the new state reach the flows, then waits for the draws it starts, a fresh process's
+            // first one included, before the job finishes.
             delay(PASS_ON_MS)
             withTimeoutOrNull(DRAWN_WITHIN_MS) {
                 contents.first { it != null }
@@ -146,7 +136,7 @@ class WidgetController(
         }
     }
 
-    /** Drawn at rest from what they showed (the phone or Amsel started anew, a widget placed): look once. */
+    /** After a draw from stored content (a reboot, an app start, a placement): one refresh unless connected. */
     fun refreshSoon() {
         plan.schedulePeriodic()
         if (!connected()) plan.scheduleOnce()
@@ -158,11 +148,10 @@ class WidgetController(
         said.value = shown.withoutFailure() to text
     }
 
-    /** [looks], the one a tap went wrong on with its sentence. */
     private fun withFailure(looks: Map<String, WidgetContent>, failure: Pair<WidgetContent, String>?) =
         looks.mapValues { (_, look) -> if (look == failure?.first) look.copy(failure = failure.second) else look }
 
-    /** A clear widget's words take ink or paper by the wallpaper: they are drawn again when it changes. */
+    /** A Clear widget's text colour follows the wallpaper. */
     private val wallpaper = WallpaperColorsListener(context) {
         if (setups.value.values.any { it.style == WidgetStyle.Clear }) {
             scope.launch { drawing.withLock { _contents.value?.let { drawLocked(it) } } }
@@ -175,7 +164,6 @@ class WidgetController(
         return combine(flows) { it.toMap() }
     }
 
-    /** What plays on [speaker], or where Amsel plays: for a widget's page, before its speaker is saved. */
     fun contentFor(speaker: String?): Flow<WidgetContent> = if (speaker ==
         null
     ) {
@@ -184,7 +172,7 @@ class WidgetController(
         source().contentOf(speaker)
     }
 
-    /** The last widget left the home screen. */
+    /** Called when the last widget is removed (onDisabled). */
     @Synchronized
     fun removed() {
         if (ids().isNotEmpty()) return
@@ -194,10 +182,10 @@ class WidgetController(
         wallpaper.listen(false)
     }
 
-    /** Widgets [ids] need drawing (Amsel started, or a widget changed size): as they showed, at rest, if Amsel follows no music yet. */
+    /** Before the first draw in this process, draws stored content as not playing ([WidgetContent.atRest]). */
     suspend fun redraw(ids: IntArray) {
         loadSetups()
-        // Read under the lock: a look read before it could be older than one drawn meanwhile, and cover it.
+        // Read under the lock: content read before it could be older than a draw made meanwhile, and overwrite it.
         drawing.withLock {
             val looks = _contents.value ?: store.contents().mapValues { (_, look) -> look.atRest() }
             for (id in ids) drawOne(id, looks)
@@ -205,7 +193,6 @@ class WidgetController(
         if (live) follow()
     }
 
-    /** Widget [id] is set up: it is drawn so at once. */
     suspend fun setUp(id: Int, setup: WidgetSetup) {
         store.setSetup(id, setup)
         setups.update { it + (id to setup) }
@@ -215,10 +202,9 @@ class WidgetController(
 
     suspend fun setup(id: Int): WidgetSetup = store.setup(id) ?: kindOf(id).setup
 
-    /** Widget [id]'s size in portrait, as the launcher gives it. */
+    /** The portrait size: the tallest the launcher lists. */
     fun size(id: Int): SizeF = render.sizes(id, kindOf(id)).maxBy { it.height }
 
-    /** Widget [id] as it would show [look] with [setup] at [size], for its page: nothing on it acts. */
     suspend fun picture(id: Int, setup: WidgetSetup, look: WidgetContent, size: SizeF): RemoteViews =
         render.draw(id, setup, look, listOf(size), taps = false)
 
@@ -227,19 +213,18 @@ class WidgetController(
         setups.update { it - ids.toSet() }
     }
 
-    /** Signing out: the widgets show none of what the last person played. */
+    /** On sign-out: nothing of the previous user's listening stays on disk or in memory. */
     suspend fun forgetContent() = drawing.withLock {
         store.forgetContents()
         render.forget()
     }
 
-    /** Button [slot] of widget [widgetId] was tapped while it showed [shownPlaying]. Main thread. */
+    /** [slot] is the button's index in the setup. Main thread only, as the transports require. */
     suspend fun tap(widgetId: Int, slot: Int, shownPlaying: Boolean) {
         val setup = setup(widgetId)
         val button = setup.slots.getOrNull(slot) ?: return
-        // Amsel may have been closed: from now on the widgets show what the speaker reports.
+        // The tap may have started the process, which then follows nothing yet.
         follow()
-        // What the widget shows now, or showed when Amsel last drew it.
         val shown = suspend { (_contents.value ?: store.contents())[setup.speaker ?: AMSELS] }
         taps.tap(button, hands(setup.speaker), shownPlaying, shown) { say(setup, it) }
     }
@@ -277,8 +262,7 @@ class WidgetController(
         try {
             manager.updateAppWidget(id, drawn)
         } catch (e: RuntimeException) {
-            // A launcher gone or an update Android refuses costs the widget one picture, never
-            // the music: this runs in the app's own scope.
+            // A dead launcher or a refused update loses one draw; uncaught, it would crash the app's scope.
         }
     }
 
@@ -287,7 +271,7 @@ class WidgetController(
     private companion object {
         const val PASS_ON_MS = 300L
 
-        /** A cover still on its way after this is drawn the next time. */
+        /** A cover still loading after this is drawn at the next update. */
         const val DRAWN_WITHIN_MS = 10_000L
 
         fun classFor(name: String): Class<*>? = Providers.keys.firstOrNull { it.name == name }

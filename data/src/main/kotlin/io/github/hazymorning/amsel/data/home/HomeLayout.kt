@@ -21,19 +21,14 @@ enum class SectionSource {
     Search,
 }
 
-/**
- * The first chip of a section's sentence, "Show [option] as [layout]": one of its source's
- * options. The section's title says the option in plain words.
- */
 @Serializable
 enum class SectionOption(val source: SectionSource) {
     Pinned(SectionSource.Pinned),
     Everything(SectionSource.RecentlyPlayed),
 
-    /** What last played on the speaker in use: "Recently played · Kitchen". */
+    /** Recently played on the speaker in use. */
     PlayedHere(SectionSource.RecentlyPlayed),
 
-    /** Books and episodes in progress. */
     ContinueListening(SectionSource.RecentlyPlayed),
     SmartPlaylists(SectionSource.Playlists),
     YourPlaylists(SectionSource.Playlists),
@@ -63,33 +58,20 @@ enum class SectionOption(val source: SectionSource) {
     NewEpisodes(SectionSource.Podcasts),
     YourPodcasts(SectionSource.Podcasts),
 
-    /** A field that opens Search, the keyboard up: the app's own, not the server's items, never empty. */
+    /** A field that opens Search with the keyboard up; it holds no items and is never empty. */
     Search(SectionSource.Search),
 }
 
-/** The second chip: how a section draws its items. Five layouts, one visual language. */
 @Serializable
 enum class SectionLayout(val maxItems: Int) {
-    /** Compact two-column cards: shortcuts. */
     Grid(8),
-
-    /** A sideways shelf of small square covers: three and a third per screen. */
     Small(12),
-
-    /** A sideways shelf of square covers: two and a third per screen. */
     Row(12),
-
-    /** Larger square covers: two per screen and a sliver of the third. */
     Big(8),
-
-    /** Rows with a thumbnail. */
     List(5),
     ;
 
-    /**
-     * How many of [available] items this layout shows. From four on, a grid shows whole rows (4, 6
-     * or 8) so it never ends on a lone card, except for pins: each one was chosen, so none is held back.
-     */
+    // From four on, a grid shows whole rows (4, 6 or 8), never a lone card; pins all show, as each was chosen.
     fun shown(available: Int, option: SectionOption): Int {
         val fits = minOf(available, maxItems)
         if (this != Grid || option == SectionOption.Pinned || fits < GRID_ROWS_FROM) return fits
@@ -101,10 +83,7 @@ enum class SectionLayout(val maxItems: Int) {
     }
 }
 
-/**
- * [title] is the person's own name for the section; null says the option in plain words. [titled]
- * shows or hides its heading; null leaves it to the option ([showsTitle]).
- */
+/** A null [title] uses the option's own name; a null [titled] leaves the heading to the option ([showsTitle]). */
 @Serializable
 data class HomeSection(
     val id: String,
@@ -113,16 +92,12 @@ data class HomeSection(
     val title: String? = null,
     val titled: Boolean? = null,
 ) {
-    /** Whether its heading shows: as the person set it, else for every option but Search, a field. */
     val showsTitle: Boolean get() = titled ?: (option != SectionOption.Search)
 }
 
 /**
- * The person's Home on one server: its sentences in order, as many as they like, and the items
- * they pinned (uris, newest first). Every edit is a pure function that returns the new layout.
- * [listeningOffered] is false on a Home made before Continue listening existed, until it is offered.
- * [stationsWidened] is false on a Home stored before every station became the default, until its
- * stations as they came are read once as every station.
+ * One server's Home; [pinned] holds uris, newest first. [listeningOffered] and [stationsWidened] are false only on
+ * a Home stored before Continue listening or all stations were defaults, until it is migrated once.
  */
 @Serializable
 data class HomeLayout(
@@ -133,10 +108,6 @@ data class HomeLayout(
 ) {
     fun isPinned(uri: String): Boolean = uri in pinned
 
-    /**
-     * A new section at the end, as a row, showing the first useful option not on Home yet; with
-     * all of those there, the first of them once more.
-     */
     fun add(): HomeLayout {
         val used = sections.map { it.option }.toSet()
         val option = SUGGESTED.firstOrNull { it !in used } ?: SUGGESTED.first()
@@ -145,10 +116,9 @@ data class HomeLayout(
 
     fun remove(id: String): HomeLayout = copy(sections = sections.filterNot { it.id == id })
 
-    /** A new person's sections again ([DEFAULT_SECTIONS]); the pins stay, for they are the person's own. */
+    /** Pins are kept: the user chose each one. */
     fun reset(): HomeLayout = copy(sections = DEFAULT_SECTIONS, listeningOffered = true)
 
-    /** Moves section [id] to [index] in the order (clamped to the list). */
     fun move(id: String, index: Int): HomeLayout {
         val from = sections.indexOfFirst { it.id == id }
         if (from < 0) return this
@@ -162,27 +132,19 @@ data class HomeLayout(
 
     fun moveDown(id: String): HomeLayout = move(id, sections.indexOfFirst { it.id == id } + 1)
 
-    /**
-     * A new option brings its own title, shown or not as that option is: a name given to the old one
-     * would no longer fit. The layout stays.
-     */
+    // Resets the title and heading: a name given to the old option would no longer fit.
     fun setOption(id: String, option: SectionOption): HomeLayout = update(id) {
         it.copy(option = option, title = null, titled = null)
     }
 
-    /** Shows or hides section [id]'s heading. */
     fun setTitled(id: String, titled: Boolean): HomeLayout = update(id) { it.copy(titled = titled) }
 
-    /** Names section [id]; a blank name gives back the option's own. */
     fun setTitle(id: String, title: String?): HomeLayout =
         update(id) { it.copy(title = title?.trim()?.takeIf(String::isNotEmpty)?.take(MAX_TITLE)) }
 
     fun setLayout(id: String, layout: SectionLayout): HomeLayout = update(id) { it.copy(layout = layout) }
 
-    /**
-     * Pins [uri] first. Without a Pinned section, one comes in at the top as a grid: a pin should
-     * show where the person looks.
-     */
+    // Without a Pinned section, one is added at the top as a grid, so the new pin is visible at once.
     fun pin(uri: String): HomeLayout {
         val pins = listOf(uri) + (pinned - uri)
         if (sections.any { it.option == SectionOption.Pinned }) return copy(pinned = pins)
@@ -192,17 +154,14 @@ data class HomeLayout(
 
     fun unpin(uri: String): HomeLayout = copy(pinned = pinned - uri)
 
-    /** The pins in [order] take that order, in the places they held; other pins stay where they are. */
+    /** Reorders the pins in [order] among the places they hold; other pins keep theirs. */
     fun arrangePins(order: List<String>): HomeLayout {
         val moving = order.distinct().filter { it in pinned }
         val next = moving.iterator()
         return copy(pinned = pinned.map { if (it in moving) next.next() else it })
     }
 
-    /**
-     * Continue listening at the top of a Home made before it existed, once, when the library first
-     * holds audiobooks or podcasts. Removed, it stays away.
-     */
+    /** Adds Continue listening at the top of a Home stored before it existed, once; removed, it stays removed. */
     fun offerListening(): HomeLayout {
         if (listeningOffered) return this
         if (sections.any { it.option == SectionOption.ContinueListening }) return copy(listeningOffered = true)
@@ -221,17 +180,10 @@ data class HomeLayout(
     }
 
     companion object {
-        /** Long enough for any heading, short enough to stay one. */
+        // Long enough for any heading, short enough to remain one.
         const val MAX_TITLE = 60
 
-        /**
-         * A new person's Home: Search's field, then Continue listening's cards, neither under a
-         * heading, as what is picked up first; Pinned, hidden while empty; then what is played
-         * and kept, in a rhythm of sizes: Recently played in covers, the person's playlists as a
-         * list, new albums in covers, the artists played most in small ones, the smart playlists
-         * in covers and the stations in small ones. The sections an older default had keep their
-         * ids, so a Home never changed keeps its snapshots.
-         */
+        // Sections from older defaults keep their ids, so a Home never changed keeps its snapshots.
         val DEFAULT_SECTIONS = listOf(
             HomeSection("s5", SectionOption.Search, SectionLayout.Row),
             HomeSection("s0", SectionOption.ContinueListening, SectionLayout.Big, titled = false),
@@ -244,15 +196,11 @@ data class HomeLayout(
             HomeSection("s7", SectionOption.AllStations, SectionLayout.Small),
         )
 
-        /**
-         * The stations an earlier default showed: only the favourite ones, so a library with
-         * stations and no favourite among them showed none on Home. Left as it came, it reads as
-         * every station.
-         */
+        // An earlier default's section, which showed nothing for a library without favourite stations. Left as it
+        // came, it is read as all stations.
         private val FAVOURITE_STATIONS_AS_THEY_CAME =
             HomeSection("s7", SectionOption.FavoriteStations, SectionLayout.Small)
 
-        /** What "Add section" offers, most useful first. */
         private val SUGGESTED = listOf(
             SectionOption.Everything,
             SectionOption.YourPlaylists,
@@ -264,9 +212,8 @@ data class HomeLayout(
         )
 
         /**
-         * The stored layout, or the defaults when nothing is stored yet or it cannot be read. One
-         * section this version does not know (a newer app wrote it, or an older one showed the
-         * speakers there) is dropped, not the whole Home.
+         * The defaults when nothing is stored or it cannot be read. A section this version does not know (a newer
+         * app wrote it, or an older one showed the speakers there) is dropped, not the whole Home.
          */
         fun decode(json: String?): HomeLayout {
             // Text that is not JSON, or JSON of another shape, throws IllegalArgumentException.
@@ -289,10 +236,7 @@ data class HomeLayout(
         }
     }
 
-    /**
-     * Unique ids and unique pins; once, the earlier default's favourite stations as every station.
-     * Favourite stations chosen since stay: the Home that chose them was stored widened.
-     */
+    // Favourite stations chosen since the widening stay: the Home that chose them was stored widened.
     private fun sanitized(): HomeLayout = HomeLayout(
         sections = sections.distinctBy { it.id }.map {
             val earlier = !stationsWidened && it == FAVOURITE_STATIONS_AS_THEY_CAME

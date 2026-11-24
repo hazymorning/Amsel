@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
-"""
-A fake speaker for the test server: a minimal Sendspin player that discards the audio.
+"""A fake speaker: a legacy Sendspin player on the server's /sendspin proxy that reads and drops the
+audio, so playback advances in real time. --seconds 0 runs until killed; Python 3 stdlib only.
 
-A test server has no speakers, so players/all is empty. This script connects to the
-server's authenticated Sendspin proxy (ws://<server>:8095/sendspin), speaks the legacy
-unencrypted Sendspin wire (a client/hello first frame, accepted while the sendspin
-provider's "allow_legacy_clients" option is on, which is its default in 2.10 and 2.11),
-and registers as a player with volume and mute. The server then streams PCM to it; the
-audio frames are read and dropped, so playback advances in real time like a real speaker.
-
-Usage: MA_TOKEN=... fake_player.py [--url http://localhost:8095] [--id amsel-fake-kitchen]
-                      [--name Kitchen] [--seconds 0 (= until killed)]
-Python 3 stdlib only. Also usable as a module: FakePlayer(...).start() runs it in a thread.
+The server takes the legacy protocol while the sendspin provider's allow_legacy_clients is on.
+See scripts/test-server/README.md, "Speakers on a test server".
 """
 
 from __future__ import annotations
@@ -27,8 +19,6 @@ from ma_client import WebSocket, log
 
 
 class FakePlayer:
-    """One legacy Sendspin player connection, served from a background thread."""
-
     def __init__(self, url: str, token: str, client_id: str, name: str, volume: int = 40) -> None:
         self.url = url.rstrip("/")
         self.token = token
@@ -66,7 +56,6 @@ class FakePlayer:
         }
 
     def connect(self) -> None:
-        """Open the proxy socket, authenticate, and exchange hellos."""
         self.ws = WebSocket(self.url.replace("http://", "ws://", 1) + "/sendspin", timeout=15)
         self._send({"type": "auth", "token": self.token, "client_id": self.client_id})
         auth = self.ws.recv_json(15)
@@ -129,14 +118,12 @@ class FakePlayer:
                 self._send(self._state())
 
     def start(self) -> FakePlayer:
-        """Connect and serve from a daemon thread."""
         self.connect()
         self.thread = threading.Thread(target=self._serve, name=f"fake-{self.client_id}", daemon=True)
         self.thread.start()
         return self
 
     def stop(self) -> None:
-        """Say goodbye and close."""
         self.stop_event.set()
         if self.ws is not None:
             try:

@@ -11,7 +11,6 @@ import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import java.io.File
 import kotlin.math.roundToLong
 
-/** A download playing on this phone as Now Playing shows it: its cover and chapters are on the phone too. */
 internal fun LocalPlaybackState.nowPlaying(speaker: SpeakerUi): NowPlayingUi = NowPlayingUi(
     title = manifest.title,
     artist = manifest.author.orEmpty(),
@@ -27,7 +26,7 @@ internal fun LocalPlaybackState.nowPlaying(speaker: SpeakerUi): NowPlayingUi = N
     chapters = manifest.chapterList(),
 )
 
-/** A downloaded cover, as artwork: its path in the app's own files, which need no escaping. */
+// The app's own file paths need no escaping in a file:// uri.
 fun File.art(): ArtRef = ArtRef("file://$absolutePath")
 
 val DownloadManifest.kind: MediaKind
@@ -35,7 +34,6 @@ val DownloadManifest.kind: MediaKind
 
 val DownloadManifest.durationMs: Long get() = (durationSec * MS).roundToLong()
 
-/** The chapters as Audiobookshelf has them, each ending where the next begins when it gives no end. */
 fun DownloadManifest.chapterList(): List<ChapterUi> {
     val sorted = chapters.sortedBy { it.startSec }
     return sorted.mapIndexed { i, chapter ->

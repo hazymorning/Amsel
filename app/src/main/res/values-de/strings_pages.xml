@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Album, artist and playlist pages -->
     <string name="pages_more_by">Mehr von %1$s</string>
     <string name="pages_popular">Beliebt</string>
     <string name="pages_similar_artists">Ähnliche Künstler</string>
@@ -20,7 +19,6 @@
     <string name="pages_length_hours">%1$d\u00A0Std.</string>
     <string name="pages_length_hours_minutes">%1$d\u00A0Std. %2$d\u00A0Min.</string>
 
-    <!-- Audiobook and podcast pages -->
     <string name="pages_audiobook_unavailable">Dieses Hörbuch ist nicht verfügbar</string>
     <string name="pages_podcast_unavailable">Dieser Podcast ist nicht verfügbar</string>
     <string name="pages_podcast_empty">Noch keine Folgen</string>

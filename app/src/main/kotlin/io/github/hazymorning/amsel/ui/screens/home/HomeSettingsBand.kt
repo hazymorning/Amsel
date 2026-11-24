@@ -49,15 +49,8 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 import kotlin.math.roundToInt
 
-/**
- * Home's top, where a pull down at the first section uncovers Settings: a band in the second
- * surface across the width, running up under the status bar ([top]), with the gear and the word in
- * the middle of what shows of it. Home opens on its sections. The band
- * follows the finger and tints in at once; its lower edge comes down over words that already stand
- * where they will rest, and they come in over the second half of the way. Let go, it opens whole
- * past its middle and closes otherwise; scrolling the list on closes it first. A fling never opens
- * it, only a pull. TalkBack cannot pull, so with TalkBack on it starts open.
- */
+// Only a drag opens the band, never a fling (user input only in onPostScroll). TalkBack cannot pull,
+// so with TalkBack on the band starts open.
 @Composable
 internal fun SettingsPull(
     onSettings: () -> Unit,
@@ -105,10 +98,6 @@ internal fun SettingsPull(
     }
 }
 
-/**
- * The band over what the list leaves at the top: from the screen's top down to [shown] under the
- * status bar. Once it is half open, all of it opens Settings.
- */
 @Composable
 private fun SettingsBand(shown: () -> Float, full: Float, top: Dp, onSettings: () -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -121,7 +110,7 @@ private fun SettingsBand(shown: () -> Float, full: Float, top: Dp, onSettings: (
                 val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
                 layout(placeable.width, height) { placeable.place(0, 0) }
             }
-            // At rest it would tint the status bar alone, so it tints in over the first steps of a pull.
+            // Closed, it covers only the status bar, so the tint fades in over the first 24 dp of a pull.
             .drawBehind {
                 drawRect(colors.surfaceContainerLow, alpha = (shown() / Space.Group.toPx()).coerceIn(0f, 1f))
             }
@@ -140,7 +129,7 @@ private fun SettingsBand(shown: () -> Float, full: Float, top: Dp, onSettings: (
             stringResource(R.string.settings),
             colors.onSurfaceVariant,
             Modifier
-                // Where the words rest: the middle of the open band under the status bar.
+                // At their final place from the start: centred in the open band below the status bar.
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Int.MAX_VALUE))
                     val y = top.roundToPx() + ((full - placeable.height) / 2).roundToInt()
@@ -156,7 +145,7 @@ private fun SettingsBand(shown: () -> Float, full: Float, top: Dp, onSettings: (
     }
 }
 
-/** The gear and the word, as a quiet action shows them; the band around them takes the tap. */
+// Not clickable: the band around it takes the tap.
 @Composable
 private fun GlyphAndWord(@DrawableRes icon: Int, text: String, color: Color, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyLarge
@@ -167,7 +156,7 @@ private fun GlyphAndWord(@DrawableRes icon: Int, text: String, color: Color, mod
     }
 }
 
-/** Whether a screen reader that explores by touch (TalkBack) is on, following changes. */
+/** Whether touch exploration (TalkBack) is on; updates when it changes. */
 @Composable
 internal fun touchExploration(): Boolean {
     val manager = LocalContext.current.getSystemService(AccessibilityManager::class.java) ?: return false
@@ -180,12 +169,10 @@ internal fun touchExploration(): Boolean {
     return on
 }
 
-/** How far the band opens: as much band under the status bar as the list's gap above its first section and 88 dp. */
+// The list's gap above its first section plus 88 dp.
 private val Open = Space.Group + 88.dp
 
-/** A release this fast opens or closes the band whichever way it goes, wherever it is. */
 private val QuickFling = 400.dp
 
-/** The words come in over the second half of the band's way down. */
 private const val WORDS_FROM = 0.5f
 private const val WORDS_START_SCALE = 0.94f

@@ -24,7 +24,6 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Downloads from a live-shaped Audiobookshelf ([FakeAbs]): whole, resumed, refreshed, waiting for Wi-Fi. */
 class DownloadRepositoryTest {
     private val abs = FakeAbs()
     private val root: File = Files.createTempDirectory("downloads").toFile()

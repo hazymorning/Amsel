@@ -17,39 +17,35 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** What a download is doing. */
 sealed interface DownloadState {
-    /** In line, or waiting for a network it may use: Wi-Fi only ([forWifi]), or any ([offline]). */
+    /** Queued; or waiting for Wi-Fi ([forWifi]) or for any network ([offline]). */
     data class Waiting(val forWifi: Boolean = false, val offline: Boolean = false) : DownloadState
 
     data class Running(val done: Long, val total: Long) : DownloadState {
         val fraction: Float get() = if (total > 0) (done.toFloat() / total).coerceIn(0f, 1f) else 0f
     }
 
-    /** It stopped for [reason]; null when the phone could not store it (full). */
+    /** A null [reason]: reading or writing failed while online, most likely a full phone. */
     data class Failed(val reason: AbsException.Reason?) : DownloadState
 
     data object Done : DownloadState
 }
 
-/** Whether the phone has a network, and one that costs nothing per byte (Wi-Fi, Ethernet). */
 interface NetworkState {
     val online: StateFlow<Boolean>
     val unmetered: StateFlow<Boolean>
 }
 
 /**
- * Books and episodes downloaded from Audiobookshelf for listening without a connection, and those
- * on their way, by Music Assistant uri. One downloads at a time, in the order asked; [work] runs
- * them, in the download service, and retries a lost connection with growing pauses. What was on its
- * way when the app stopped goes on at its next start.
+ * Keyed by Music Assistant uri. One download runs at a time, in the order asked, inside [work], which the
+ * download service runs.
  */
 class DownloadRepository(
     private val abs: AbsClient,
     private val store: DownloadStore,
     private val network: NetworkState,
     private val wifiOnly: StateFlow<Boolean>,
-    /** The item Music Assistant has at a uri, with where it comes from. */
+    /** With its provider mappings, which hold the Audiobookshelf id. */
     private val itemAt: suspend (String) -> MediaItem?,
     /** Starts the service that runs [work]. */
     private val onWork: () -> Unit,
@@ -64,16 +60,13 @@ class DownloadRepository(
 
     val states: StateFlow<Map<String, DownloadState>> = _states.asStateFlow()
 
-    /** Every download, complete or on its way: what it is, for a list of them. */
     val entries: StateFlow<Map<String, DownloadManifest>> = _entries.asStateFlow()
 
-    /** Every download that is complete. */
     val done: StateFlow<Map<String, DownloadManifest>> = _done.asStateFlow()
 
-    /** Something waits or downloads. */
     val pending: Boolean get() = _states.value.values.any { it is DownloadState.Waiting || it is DownloadState.Running }
 
-    /** Reads what is on the phone, once, at start and off the main thread; what changed meanwhile stays. */
+    /** Call once, at start, off the main thread; what changed meanwhile takes precedence. */
     fun load() {
         val manifests = store.all()
         _entries.update { manifests.associateBy { m -> m.uri } + it }
@@ -84,17 +77,14 @@ class DownloadRepository(
         resume()
     }
 
-    /** Starts the download service while something waits; Android lets it start only with the app in front. */
+    /** Call with the app in the foreground: Android starts the download service only then. */
     fun resume() {
         if (pending) onWork()
     }
 
     enum class Added { Yes, SignInFirst, NotFromAudiobookshelf, NotFound, NotSaved }
 
-    /**
-     * Downloads the book or episode at [uri]. One that stopped goes on where it was, without asking
-     * Music Assistant again, which is only asked where Audiobookshelf has a new one.
-     */
+    /** A failed download resumes from its manifest; Music Assistant is asked only for a new one. */
     suspend fun add(uri: String): Added {
         if (abs.account.value == null) return Added.SignInFirst
         val state = _states.value[uri]
@@ -119,7 +109,6 @@ class DownloadRepository(
         return Added.Yes
     }
 
-    /** Stops [uri]'s download, if it runs, and deletes what is on the phone of it. */
     fun remove(uri: String) {
         running?.takeIf { it.first == uri }?.second?.cancel()
         store.remove(uri)
@@ -128,10 +117,8 @@ class DownloadRepository(
         _done.update { it - uri }
     }
 
-    /** Removes every download: the person signed out of Music Assistant, whose items they were. */
     fun clear() = _states.value.keys.forEach(::remove)
 
-    /** What the downloads take up on the phone, in bytes. */
     suspend fun used(): Long = withContext(Dispatchers.IO) { store.used() }
 
     fun manifest(uri: String): DownloadManifest? = _done.value[uri]
@@ -144,7 +131,6 @@ class DownloadRepository(
 
     fun cover(uri: String) = store.cover(uri).takeIf { it.isFile }
 
-    /** Runs every download in line until none is left. */
     suspend fun work() = coroutineScope {
         try {
             while (true) {
@@ -153,11 +139,11 @@ class DownloadRepository(
                 running = uri to one
                 one.join()
                 running = null
-                // Removed while it ran: nothing of it may stay.
+                // Removed while it ran: delete what it wrote after the removal.
                 if (uri !in _states.value) store.remove(uri)
             }
         } finally {
-            // Stopped with the service (Android 15 gives it six hours a day): it waits for the next start.
+            // Stopped with the service (Android 15 allows it six hours a day): what ran waits for the next start.
             running = null
             _states.update { states ->
                 states.mapValues { (_, s) -> if (s is DownloadState.Running) DownloadState.Waiting() else s }
@@ -176,7 +162,7 @@ class DownloadRepository(
                 val transient = e.reason == AbsException.Reason.Unreachable || e.reason == AbsException.Reason.Server
                 if (!transient || ++attempt > RETRIES) return fail(uri, e.reason)
             } catch (e: IOException) {
-                // A connection cut mid-file, or a full phone: the first goes on where it stopped.
+                // A connection cut mid-file, which the retry resumes, or a full phone.
                 if (++attempt >
                     RETRIES
                 ) {
@@ -212,7 +198,6 @@ class DownloadRepository(
         _states.update { if (uri in it) it + (uri to DownloadState.Done) else it }
     }
 
-    /** Waits, saying so, until a network that [wifiOnly] allows is there. */
     private suspend fun awaitNetwork(uri: String) {
         combine(network.online, network.unmetered, wifiOnly) { online, unmetered, onlyWifi ->
             when {
@@ -230,7 +215,6 @@ class DownloadRepository(
         _states.update { if (uri in it) it + (uri to DownloadState.Failed(reason)) else it }
     }
 
-    /** The first download state of [item], from where Audiobookshelf has it; null when it does not. */
     private fun stubFor(uri: String, item: MediaItem): DownloadManifest? {
         val mapping = item.audiobookshelf ?: return null
         val episode = item.mediaType == MediaType.PodcastEpisode.api
@@ -262,7 +246,6 @@ private val MediaItem.audiobookshelf get() = providerMappings.firstOrNull {
         DownloadRepository.AUDIOBOOKSHELF
 }
 
-/** A book or an episode Music Assistant has from Audiobookshelf, which can be downloaded. */
 val MediaItem.downloadable: Boolean
     get() = audiobookshelf != null &&
         (mediaType == MediaType.Audiobook.api || mediaType == MediaType.PodcastEpisode.api)

@@ -419,7 +419,7 @@ class SetupViewModelTest {
         messages = messages,
     )
 
-    /** Servers answer at the given times after the search starts; the search then keeps listening. */
+    /** Each server answers at its time after the search starts; the flow then stays open, as discovery does. */
     private fun answering(vararg answers: Pair<Long, FoundServer>): () -> Flow<List<FoundServer>> = {
         flow {
             emit(emptyList())

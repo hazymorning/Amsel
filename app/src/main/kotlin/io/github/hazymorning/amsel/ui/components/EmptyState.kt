@@ -25,11 +25,9 @@ import kotlin.math.roundToInt
 private const val ANCHOR = 0.45f
 
 /**
- * The glyph sits at the same height in the window on every screen, with or without a button; it
- * moves only when the space it is given cannot hold it there. In a list, where the height is
- * unbounded, the sentence starts a group's distance under what precedes it; there a null [icon]
- * leaves out a glyph the page already shows. [messageModifier] goes to the sentence, the one part
- * TalkBack always stops on (an empty list's refresh action).
+ * The glyph centres at [ANCHOR] of the window height on every screen, unless the space given cannot
+ * hold it there; in a list (unbounded height) it starts [Space.Group] below. [messageModifier] goes to
+ * the message, which TalkBack always stops on (an empty list's refresh action).
  */
 @Composable
 fun EmptyState(
@@ -46,7 +44,7 @@ fun EmptyState(
     AnchoredMessage(glyph, message, modifier, actionLabel, onAction, messageModifier)
 }
 
-/** Waiting for something that has no skeleton (finding a server): a spinner in the glyph's place. */
+/** For a wait with no skeleton to show (finding a server). */
 @Composable
 fun WaitingState(message: String, modifier: Modifier = Modifier) {
     AnchoredMessage(

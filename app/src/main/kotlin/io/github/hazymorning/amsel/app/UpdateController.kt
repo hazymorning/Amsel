@@ -21,32 +21,23 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-/** What is known of Amsel's newest release. */
 sealed interface UpdateState {
-    /** Not asked yet in this run of the app. */
     data object Unknown : UpdateState
 
     data object Checking : UpdateState
 
-    /** This is the newest. */
     data object Newest : UpdateState
 
-    /** [version] is out; [apk] is its download, [size] bytes long (0 where GitHub does not say). */
+    /** [apk] is the download URL; [size] is 0 where GitHub does not say. */
     data class Available(val version: String, val apk: String, val size: Long = 0) : UpdateState
 
-    /** [update] is downloading, [share] of it in, from 0 to 1. */
+    /** [share] runs from 0 to 1. */
     data class Downloading(val update: Available, val share: Float) : UpdateState
 
-    /** GitHub could not be asked, or did not answer as expected. */
     data object Failed : UpdateState
 }
 
-/**
- * Asks GitHub for Amsel's newest release: when the person asks in Settings, and once when the app
- * starts, if they turned that on. Never in the background. [install] downloads it into [folder] and,
- * once the app is in front, hands it to Android's installer ([openInstaller]), which asks before it
- * replaces the app; cancelled there, all stays as it was.
- */
+/** Never in the background: only when asked in Settings, and once at the app's start if turned on. */
 class UpdateController(
     private val http: OkHttpClient,
     private val current: String,
@@ -54,7 +45,6 @@ class UpdateController(
     private val scope: CoroutineScope,
     private val inFront: StateFlow<Boolean>,
     private val folder: File,
-    /** Whether a downloaded APK is Amsel under this app's own name and key. */
     private val isOurs: (File) -> Boolean,
     private val openInstaller: (File) -> Boolean,
 ) {
@@ -63,12 +53,12 @@ class UpdateController(
 
     private val checkedAtStart = AtomicBoolean(false)
 
-    /** The version downloaded in this run, and where: tapped again, it opens the installer at once. */
+    // Lets a second tap open the installer without downloading again.
     @Volatile private var downloaded: Pair<String, File>? = null
 
     /**
-     * Once per run of the app, when it first comes to the front, if [enabled] says so. The download
-     * a last run left behind goes then: it is installed by now, or was not wanted.
+     * Once per run of the app. A download a previous run left behind is deleted then: it is
+     * installed by now, or was not wanted.
      */
     fun checkAtStart(enabled: suspend () -> Boolean) {
         if (!checkedAtStart.compareAndSet(false, true)) return
@@ -90,7 +80,6 @@ class UpdateController(
         scope.launch { fetchLatest() }
     }
 
-    /** Downloads [update], then opens Android's installer on it as soon as the app is in front. */
     fun install(update: UpdateState.Available) {
         if (_state.value is UpdateState.Downloading) return
         _state.value = UpdateState.Downloading(update, 0f)
@@ -185,34 +174,31 @@ class UpdateController(
     private data class Asset(val name: String, @SerialName("browser_download_url") val url: String, val size: Long = 0)
 
     private companion object {
-        /** Releases are published as regular releases, so the latest is the newest. */
+        // Releases are published as regular releases, so the latest is the newest.
         const val LATEST = "https://api.github.com/repos/hazymorning/Amsel/releases/latest"
 
-        /** Where an asset of Amsel's releases downloads from; GitHub sends it on to its file host. */
+        // Asset downloads start here; GitHub redirects them to its file host.
         val RELEASE_PATH = listOf("hazymorning", "Amsel", "releases", "download")
 
-        /** An asset of Amsel's releases on GitHub, by its path once dot segments are resolved, not its text. */
+        // Compares the parsed path, with dot segments resolved, not the URL text.
         fun isRelease(url: String): Boolean {
             val parsed = url.toHttpUrlOrNull() ?: return false
             return parsed.isHttps && parsed.host == "github.com" &&
                 parsed.pathSegments.take(RELEASE_PATH.size) == RELEASE_PATH
         }
 
-        /** Far over the 15 MB an APK may take (rule 6): what is larger is not Amsel. */
+        // Far over the 15 MB an APK may take (rule 6): what is larger is not Amsel.
         const val MAX_BYTES = 64L * 1024 * 1024
         const val BUFFER = 64 * 1024
 
-        /** How far a download moves before the sheet hears of it. */
         const val STEP = 0.02f
         val json = Json { ignoreUnknownKeys = true }
     }
 }
 
 /**
- * Whether [candidate] comes after [current], as versions such as `0.9.0-beta.14` are ordered:
- * numbers first, then a version without a suffix after one with, then the suffix part by part,
- * numbers by value. The versions counted by the calendar before 1.0 (`2026.11.57`) come before
- * every one since.
+ * SemVer precedence (`0.9.0-beta.14` before `0.9.0`), except that the calendar versions from
+ * before 1.0 (`2026.11.57`) come before every later one.
  */
 internal fun isNewer(candidate: String, current: String): Boolean = compareVersions(candidate, current) > 0
 
@@ -231,7 +217,6 @@ private fun compareVersions(a: String, b: String): Int {
     }
 }
 
-/** Counted by the calendar, as versions were before 1.0: its first number a year. */
 private fun byCalendar(version: String): Boolean =
     (version.substringBefore('.').toIntOrNull() ?: 0) >= FIRST_CALENDAR_YEAR
 

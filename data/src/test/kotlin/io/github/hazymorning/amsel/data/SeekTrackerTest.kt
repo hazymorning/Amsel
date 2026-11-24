@@ -22,11 +22,8 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Where a queue shows while the app has put it somewhere, with the events Music Assistant sent for
- * it (2.10.9 and 2.11.0b7 live, to a Sendspin player, times as recorded): after the target it
- * reports the old stream's time added to it, or 0, until the new stream runs.
- */
+// The events and their times are as recorded live from a Sendspin player.
+// See docs/API-NOTES.md, "Position after a seek or a play".
 class SeekTrackerTest {
     private var now = 0L
     private val api = MaApi(MaClient(OkHttpClient(), CoroutineScope(Dispatchers.Unconfined)))
@@ -70,11 +67,10 @@ class SeekTrackerTest {
 
     private fun SpeakerRepository.shown(): Double = at().seconds
 
-    /** A seek asked for and sent at once. */
     private fun SpeakerRepository.startAndSendSeek(seconds: Double, uri: String = BOOK): Long =
         startSeek(PHONE, ItemPosition(uri, seconds)).also { sent(PHONE, it) }
 
-    /** The live trace of a seek to 600 s, 7.4 s after the stream before it started. */
+    // A live trace: a seek to 600 s, 7.4 s into the stream before it.
     @Test fun `a seek stands at its target while the server reports the old stream on top of it`() {
         val s = speakers()
         s.onEvent(queue("playing", 6.3, inProgress = false))
@@ -93,7 +89,7 @@ class SeekTrackerTest {
         now = 8_060
         s.onEvent(queue("playing", 607.41, inProgress = false))
         assertEquals(600.0, s.shown(), 0.0)
-        // The new stream's time, a third of a second after the answer: kept, while the server has its moment.
+        // The new stream's time, a third of a second after the answer: not shown within SETTLE_MS.
         now = 8_320
         s.onEvent(time(600.25))
         assertEquals(600.0, s.shown(), 0.0)
@@ -102,16 +98,14 @@ class SeekTrackerTest {
         s.onEvent(time(601.15))
         assertEquals(PositionAnchor(601.15, 9_210), s.at())
         assertFalse(s.state().seeking)
-        // Settled: the server's word counts again, also for a jump nobody here asked for.
+        // Settled: the server's time counts again, also for a jump the app did not ask for.
         now = 12_000
         s.onEvent(time(1_100.0))
         assertEquals(1_100.0, s.shown(), 0.0)
     }
 
-    /**
-     * Found by the app's journey against 2.10.9 and 2.11.0b7: a song two seconds old, a seek to 4 s,
-     * and the server says 6.1, close enough to pass for the place sought. Its next word is right.
-     */
+    // A song 2.1 s in, sought to 4 s, reports 6.15, which fits the target; the next report is right.
+    // See docs/API-NOTES.md, "Position after a seek or a play".
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `the old stream's time on a young stream never shows`() {
@@ -131,7 +125,7 @@ class SeekTrackerTest {
         s.onEvent(time(4.25))
         assertEquals(4.0, s.shown(), 0.0)
         assertTrue(s.state().seeking)
-        // No further report comes while it plays on: the latest counts once the moment is over.
+        // No further report comes: the latest counts once SETTLE_MS is over.
         now = 110 + PendingSeek.SETTLE_MS + 1
         scope.advanceTimeBy(PendingSeek.SETTLE_MS + 1)
         scope.runCurrent()
@@ -139,7 +133,7 @@ class SeekTrackerTest {
         assertFalse(s.state().seeking)
     }
 
-    /** A paused speaker starts playing for a seek; its report came in the same moment as the answer, and none after. */
+    // A paused speaker plays for a seek; its report came with the answer, and none after.
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `the report that came with the answer counts`() {
@@ -176,8 +170,7 @@ class SeekTrackerTest {
         s.onEvent(queue("playing", 1_109.67, inProgress = false))
         s.answered(PHONE, ticket)
         assertEquals(960.0, s.shown(), 0.0)
-        // The server resumes half a second early, and says so twice (live: the same 959.25 came
-        // again 5 ms later): the chapter shows from its start all the same.
+        // The server starts the chapter 0.5 s early and reports that twice; the chapter shows from its start.
         now = 430
         s.onEvent(time(959.25))
         now = 435
@@ -188,7 +181,7 @@ class SeekTrackerTest {
         scope.runCurrent()
         assertEquals(PositionAnchor(960.0, 435 + 750), s.at())
         assertFalse(s.state().seeking)
-        // Once it reports the chapter reached, its word counts again.
+        // Once a report reaches the chapter, the server's time counts again.
         now = 2_000
         s.onEvent(time(961.0))
         now = 3_000
@@ -209,11 +202,8 @@ class SeekTrackerTest {
         assertEquals(985.9, s.shown(), 0.0)
     }
 
-    /**
-     * The owner's test of 2026.11.9: a chapter picked deep in a long file played, and Now Playing
-     * showed chapter 1. The server answers a seek once the new stream runs, which can take minutes,
-     * and says 0 meanwhile.
-     */
+    // The server answers a seek once the new stream runs, which can take long, and reports 0 meanwhile.
+    // See docs/API-NOTES.md, "Seek".
     @Test fun `a seek the server answers late stands at its target until it answers`() {
         val s = speakers()
         s.onEvent(queue("playing", 400.0, inProgress = false))
@@ -285,13 +275,13 @@ class SeekTrackerTest {
         val first = s.startAndSendSeek(985.0)
         now = 500
         val second = s.startSeek(PHONE, ItemPosition(BOOK, 1_500.0))
-        // The first seek's answer and its stream: neither is where the second one goes.
+        // The first seek's answer and stream do not end the second.
         now = 900
         s.onEvent(queue("playing", 985.3, inProgress = false))
         s.answered(PHONE, first)
         assertEquals(1_500.0, s.shown(), 0.0)
         assertTrue(s.state().seeking)
-        // Nor does a failure of the first take the second back.
+        // Nor does a failure of the first undo the second.
         s.failed(PHONE, first)
         assertEquals(1_500.0, s.shown(), 0.0)
         now = 1_000
@@ -345,9 +335,9 @@ class SeekTrackerTest {
         assertTrue(seek.fits(PositionAnchor(105.9, 2_000), speed = 1.5))
         assertFalse(seek.fits(PositionAnchor(106.1, 2_000), speed = 1.5))
         assertFalse(seek.fits(PositionAnchor(0.0, 300), speed = 1.0))
-        // Counted from when the command went out, not from the tap that waited for others.
+        // Counted from when the command was sent, not from the tap, which may have waited for others.
         assertFalse(seek.copy(sentAtMs = 1_500).fits(PositionAnchor(104.0, 2_000), speed = 1.0))
-        // And no report ends it before the server has had its moment after the answer.
+        // No report ends it within SETTLE_MS of the answer.
         assertFalse(seek.settled(5_000))
         assertFalse(seek.copy(answeredAtMs = 4_500).settled(5_000))
         assertTrue(seek.copy(answeredAtMs = 4_000).settled(5_000))
@@ -379,13 +369,13 @@ class SeekTrackerTest {
         assertEquals(961.3, s.shown(), 0.0)
     }
 
-    /** The owner's wish: a skip, then a pause before the skip went out. The pause takes a moment to show. */
+    // A skip, then a pause before the skip was sent: the server reports playing for a moment after the pause.
     @Test fun `a paused position set with a pause on its way outlasts the server's last playing reports`() {
         val s = speakers()
         s.onEvent(queue("playing", 100.0, inProgress = false))
         now = 1_000
         s.setPausedPosition(PHONE, ItemPosition(BOOK, 130.0))
-        // Paused, as far as anyone looking can tell, and standing at the place.
+        // Shown paused, at the place.
         assertFalse(s.state().isPlaying)
         assertEquals(130.0, s.state().secondsAt(now + 5_000), 0.0)
         now = 1_010
@@ -397,7 +387,7 @@ class SeekTrackerTest {
         s.onEvent(queue("idle", 101.3, inProgress = false))
         assertEquals(130.0, s.shown(), 0.0)
         assertEquals(ItemPosition(BOOK, 130.0), s.pausedPosition(PHONE))
-        // Once it has rested, playing means someone started it again: its own time counts.
+        // After the pause showed, a playing report means a new start: the server's time counts.
         now = 60_000
         s.onEvent(queue("playing", 101.5, inProgress = false))
         assertEquals(101.5, s.shown(), 0.0)
@@ -446,7 +436,7 @@ class SeekTrackerTest {
         s.awaitStarted(PHONE)
     }
 
-    /** AirPlay or an input has the speaker: a seek there is that source's, not the queue's. */
+    // AirPlay or an input has the speaker: a seek there is that source's, not the queue's.
     @Test fun `a queue that is not what its speaker plays holds nothing to seek in`() {
         val s = speakers()
         s.onEvent(queue("idle", 120.0, inProgress = false, active = false))
@@ -458,7 +448,7 @@ class SeekTrackerTest {
         assertNull(s.currentItemStatus(PHONE))
     }
 
-    /** The owner's case, live on 2.10.9: chapter 25 picked, the connection lost while it played. */
+    // Chapter 25 picked, the connection lost while it played. See docs/API-NOTES.md, "This phone (Sendspin)".
     private fun SpeakerRepository.rebuiltAfterChapter25() {
         onEvent(queue("playing", 7225.0, inProgress = false))
         now = 5_000

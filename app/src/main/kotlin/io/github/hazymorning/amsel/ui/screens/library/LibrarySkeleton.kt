@@ -14,10 +14,6 @@ import io.github.hazymorning.amsel.ui.components.TilePlaceholder
 
 private const val SKELETON_ROWS = 12
 
-/**
- * The screen's own header over still blocks in the first surface tone, first load only; without
- * [placeholders] the header alone, while the index has only just been asked.
- */
 @Composable
 internal fun LibrarySkeleton(kind: LibraryKind, header: LibraryHeader, insets: PaddingValues, placeholders: Boolean) {
     val loading = stringResource(R.string.library_loading)

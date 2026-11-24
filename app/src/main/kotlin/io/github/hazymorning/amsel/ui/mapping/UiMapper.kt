@@ -26,19 +26,18 @@ import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
 import kotlin.math.roundToLong
 
-/** Turns server and index data into the UI's immutable models. Pure functions, no I/O. */
 class UiMapper(private val images: () -> ImageUrls?) {
     fun art(image: MediaItemImage?): ArtRef? = images()?.url(image)?.let(::ArtRef)
 
     fun artFromProxyId(proxyId: String?): ArtRef? = proxyId?.let { art(MediaItemImage(proxyId = it)) }
 
-    /** An artist without a picture wears its albums' [covers], in order: four two by two, else the first alone. */
+    /** For an artist without a picture, which the server has no stand-in for; see docs/API-NOTES.md, "Images". */
     fun albumsArt(covers: List<String>): ArtRef? {
         val parts = covers.distinct().take(ALBUM_COVERS).mapNotNull(::artFromProxyId)
         return parts.firstOrNull()?.copy(quarters = parts.takeIf { it.size == ALBUM_COVERS }.orEmpty())
     }
 
-    /** What an item is to the UI; one of a type the app does not list (a stream, an announcement) plays as a track. */
+    /** A type the app does not list (a stream, an announcement) plays as a track. */
     private fun kind(mediaType: String?): MediaKind = when (mediaType) {
         MediaType.Album.api -> MediaKind.Album
         MediaType.Artist.api -> MediaKind.Artist
@@ -132,7 +131,6 @@ class UiMapper(private val images: () -> ImageUrls?) {
         )
     }
 
-    /** A speaker row: what it plays, from its current media; [others] is how many play in step with it. */
     fun speaker(player: Player, isPhone: Boolean, others: Int = 0): SpeakerUi {
         val media = player.currentMedia
         return SpeakerUi(
@@ -149,8 +147,8 @@ class UiMapper(private val images: () -> ImageUrls?) {
     }
 
     /**
-     * Now Playing for a speaker: what plays and the transport as its [snapshot] has them (the same
-     * the notification shows), and from the queue's item, when that is what plays, its links.
+     * What plays and the transport come from [snapshot], as in the notification; links come only from
+     * the queue's current item, and only while that is what plays.
      */
     fun nowPlaying(player: Player, queue: PlayerQueue?, snapshot: SpeakerSnapshot, speaker: SpeakerUi): NowPlayingUi? {
         val current = snapshot.current ?: return null
@@ -165,7 +163,7 @@ class UiMapper(private val images: () -> ImageUrls?) {
         }
     }
 
-    /** Now Playing once a skip reaches the queue's next item, from its start; null when none follows. */
+    /** What a skip shows at once: the queue's next item from its start; null when none follows. */
     fun nowPlayingNext(queue: PlayerQueue?, snapshot: SpeakerSnapshot, speaker: SpeakerUi): NowPlayingUi? {
         val next = snapshot.next ?: return null
         val item = queue?.nextItem?.takeIf { it.queueItemId == next.queueItemId }
@@ -188,7 +186,7 @@ class UiMapper(private val images: () -> ImageUrls?) {
             durationMs = (entry.durationSeconds ?: 0) * 1000L,
             positionMs = (snapshot.elapsedSeconds * 1000).roundToLong(),
             positionAtMs = snapshot.elapsedAtMs,
-            // A seek starts the speaker playing, whatever it did before.
+            // A seek starts playback; see docs/API-NOTES.md, "A seek starts playback".
             isPlaying = snapshot.playing || snapshot.seeking,
             arriving = snapshot.seeking,
             canSkip = snapshot.canSkip && snapshot.available,
@@ -207,22 +205,19 @@ class UiMapper(private val images: () -> ImageUrls?) {
             chapters = media?.let(::chapterList).orEmpty(),
             parentKey = media?.podcast?.uri,
             fullyPlayed = media?.fullyPlayed == true,
-            // Another source on the speaker is not the mix its queue still holds.
+            // While another source plays, the mix the queue still holds is not what plays.
             mix = mix.takeIf { item != null },
             djBreak = media?.isDjBreak == true,
         )
     }
 }
 
-/** What the DJ says between two songs: its plugin puts each as an item of its own into the queue. */
+/** The DJ plugin queues what it says as items of their own; see docs/API-NOTES.md, "DJ changes". */
 private val MediaItem.isDjBreak: Boolean get() = mediaType == SOUND_EFFECT && provider == DJ_PLUGIN
 
 private const val SOUND_EFFECT = "sound_effect"
 
-/**
- * A song's album, or null for a single: an album named as the song is, a "- Single" or "(EP)" after
- * it aside, would only say the title again.
- */
+/** Null for an album named as the song, give or take a "- Single" or "(EP)": it would repeat the title. */
 internal fun albumBesides(title: String, album: String?): String? {
     val name = album?.trim()?.takeIf { it.isNotEmpty() } ?: return null
     return name.takeUnless { it.withoutRelease().equals(title.trim().withoutRelease(), ignoreCase = true) }
@@ -232,10 +227,6 @@ private fun String.withoutRelease(): String = replace(RELEASE, "").trim()
 
 private val RELEASE = Regex("""\s*(?:[-–—]\s*(?:single|ep)|[(\[](?:single|ep)[)\]])\s*$""", RegexOption.IGNORE_CASE)
 
-/**
- * A station names the song on air, where the speaker reports one: the song is the title and the
- * station stands under it, after the song's artist. Without one the station keeps the title.
- */
 internal fun NowPlayingUi.onAir(player: Player): NowPlayingUi {
     if (kind != MediaKind.Radio) return this
     val media = player.currentMedia

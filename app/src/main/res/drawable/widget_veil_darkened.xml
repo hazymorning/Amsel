@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Over the sharp cover of the Darkened look: dark enough everywhere that paper reads on any cover. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/widget_veil_darkened" />
 </shape>

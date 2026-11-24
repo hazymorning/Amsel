@@ -43,10 +43,7 @@ import io.github.hazymorning.amsel.ui.navigation.rememberOpenItem
 import io.github.hazymorning.amsel.ui.rememberRetry
 import kotlinx.coroutines.flow.map
 
-/**
- * An empty field shows what was found lately. While a search is on its way the field's glyph turns into a
- * spinner, so nothing under the field moves; the previous results stay until the answer arrives.
- */
+/** A running search shows as a spinner in the field, so nothing below it moves; earlier results stay meanwhile. */
 @Composable
 fun SearchScreen(
     state: SearchUiState,
@@ -60,12 +57,9 @@ fun SearchScreen(
     recent: List<RecentItem> = emptyList(),
     onClearRecent: () -> Unit = {},
     focus: FocusRequester = remember { FocusRequester() },
-    /** A slim bar in place of the tab's title: the widget's page picks with Search. */
+    /** Replaces the tab's title, for the widget picker. */
     bar: (@Composable BoxScope.() -> Unit)? = null,
-    /**
-     * What shows while the field is empty, in place of what was found lately, with the screen's room;
-     * the field then waits for a tap before the keyboard comes up.
-     */
+    /** Shown in place of recent items while the field is empty; the field then waits for a tap to focus. */
     browse: (@Composable (PaddingValues) -> Unit)? = null,
 ) {
     MaterialScreen(modifier, bar = bar) { insets ->
@@ -106,7 +100,7 @@ fun SearchScreen(
     }
 }
 
-/** Takes focus when Search opens with an empty field: tapping the tab means you want to type. */
+/** Focuses when Search opens with an empty field: opening Search means the user wants to type. */
 @Composable
 private fun QueryField(
     query: String,
@@ -133,10 +127,6 @@ private fun QueryField(
     )
 }
 
-/**
- * The Search tab, wired to Music Assistant's search. A song or a radio station plays when tapped;
- * anything else opens.
- */
 @Composable
 fun SearchRoute(navigator: Navigator, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -154,8 +144,8 @@ fun SearchRoute(navigator: Navigator, modifier: Modifier = Modifier) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val recent by graph.recentSearches.items.collectAsStateWithLifecycle()
     val open = rememberOpenItem(navigator)
-    // A Search shortcut or link: a new search, the field empty and the keyboard up. Search shown
-    // for the first time is that already.
+    // A Search shortcut or link bumps LocalNewSearch: clear the field and focus it. answered starts at
+    // the current value, as Search shown for the first time is a new search already.
     val focus = remember { FocusRequester() }
     val asked = LocalNewSearch.current
     var answered by rememberSaveable { mutableIntStateOf(asked) }

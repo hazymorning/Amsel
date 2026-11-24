@@ -17,12 +17,10 @@ class PagesShots : ScreenshotTest() {
 
     @Test fun playlist() = snap("playlist") { Playlist(PagesSample.playlist) }
 
-    /** The page's end: the last albums, then the shelf of similar artists. */
     @Test fun artistSimilar() = snap("artist_similar", before = { toTheEnd() }) {
         Artist(PagesSample.artist)
     }
 
-    /** A book from Audiobookshelf on its way to the phone: the ring beside play fills, its stop ends it. */
     @Test fun audiobookDownloading() = snap("audiobook_downloading", ShotVariant.entries) {
         val page = SpokenSample.audiobookPage
         AudiobookScreen(
@@ -36,7 +34,6 @@ class PagesShots : ScreenshotTest() {
         )
     }
 
-    /** One episode on the phone, the next on its way: each says so first in its line. */
     @Test fun podcastDownloads() = snap("podcast_downloads") {
         val episodes = SpokenSample.podcastPage.episodes
         PodcastScreen(

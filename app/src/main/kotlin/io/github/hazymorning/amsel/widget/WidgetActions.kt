@@ -4,23 +4,21 @@ import io.github.hazymorning.amsel.api.RepeatMode
 import io.github.hazymorning.amsel.ui.model.next
 
 /**
- * What a widget's volume, shuffle, repeat and heart ask of the speaker it shows, through Amsel:
- * each shows at once, on the widgets and in Amsel, and the speaker confirms it. A failure throws
- * [io.github.hazymorning.amsel.api.MaException] and the speaker's own state shows again.
+ * Each change shows at once; a failure throws [io.github.hazymorning.amsel.api.MaException] and the
+ * speaker's own state shows again.
  */
 interface WidgetActions {
     /** The level Louder stops at; 0 for none. */
     fun volumeLimit(): Int
 
-    /** The step the server's volume up and down take from [level], as its settings last said; never waits for it. */
+    /** The step the server's volume up and down take from [level], by the setting last read; never blocks. */
     fun volumeStep(level: Int): Int
 
-    /** The server's own step up or down, shown at once as [shown]. */
+    /** The server's own volume step up or down; [shown] is the level displayed until the speaker reports. */
     suspend fun nudge(speakerId: String, up: Boolean, shown: Int)
 
     suspend fun volume(speakerId: String, level: Int)
 
-    /** This phone's own media volume, one of Android's steps. */
     fun phoneVolume(up: Boolean)
 
     suspend fun shuffle(speakerId: String, on: Boolean)
@@ -50,7 +48,7 @@ interface WidgetActions {
     }
 }
 
-/** The server's own step at [level] where its settings name none: finer near silence and near full. */
+/** The server's ladder where its volume_step is 0. See docs/API-NOTES.md, 5.3 "Player commands". */
 internal fun serverStep(level: Int): Int = when {
     level < LADDER_FINE || level > MAX_LEVEL - LADDER_FINE -> 1
     level < LADDER_MID || level > MAX_LEVEL - LADDER_MID -> 2
@@ -61,16 +59,10 @@ private const val LADDER_FINE = 10
 private const val LADDER_MID = 30
 private const val MAX_LEVEL = 100
 
-/**
- * Taps on the buttons that change the speaker a widget shows ([shown]): what they ask follows from
- * what the widget shows, not from the speaker Amsel had picked when the tap started it, which on a
- * cold start it does not know yet. Two taps in a row step on from the first, before the speaker
- * reports it.
- */
+/** Acts on what the widget shows, not on Amsel's current speaker, which a cold start does not know yet. */
 internal class StateButtonHandler(private val actions: WidgetActions, private val elapsedRealtime: () -> Long) {
     private val asked = mutableMapOf<String, Pair<Int, Long>>()
 
-    /** Says why nothing changed, or null. */
     suspend fun tap(button: WidgetButton, shown: WidgetContent): Refusal? {
         when (button) {
             WidgetButton.Quieter -> return volume(shown, up = false)
@@ -84,10 +76,9 @@ internal class StateButtonHandler(private val actions: WidgetActions, private va
     }
 
     /**
-     * The server takes the step, by its own setting and from the level it last set, so taps in a row
-     * add up; the widget shows at once where it lands by the setting last read. Louder stops at the
-     * person's limit: a step that would pass it sets the limit, one from the limit or above it does
-     * nothing and says so.
+     * The server steps from the level it last set, so taps in a row add up before the speaker reports
+     * (docs/API-NOTES.md, 5.3); `asked` follows that for STEP_ON_MS. Louder past the limit sets the
+     * limit, and at or above it refuses.
      */
     private suspend fun volume(shown: WidgetContent, up: Boolean): Refusal? {
         if (shown.phone) {
@@ -117,7 +108,6 @@ internal class StateButtonHandler(private val actions: WidgetActions, private va
     }
 
     private companion object {
-        /** A tap within this of the last steps on from what that one asked. */
         const val STEP_ON_MS = 2_000L
     }
 }

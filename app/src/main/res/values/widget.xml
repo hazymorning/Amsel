@@ -1,35 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Below Android 12 a launcher does not round a widget; the widget stays square, as widgets were. -->
+    <!-- Before Android 12 launchers do not round widgets. -->
     <dimen name="widget_radius">0dp</dimen>
-    <!-- A widget's inner frame: the same room on every side, as Android has it for widgets
-         (system_app_widget_internal_padding). -->
+    <!-- Android's system_app_widget_internal_padding; WidgetSizes.PADDING. -->
     <dimen name="widget_padding">16dp</dimen>
-    <!-- A row of cells spans the widget's width; its padding keeps the cells in the frame. -->
     <dimen name="widget_padding_out">-16dp</dimen>
-    <!-- Bare buttons, and a low row's targets, reach into the frame to 4 dp from the edge
-         (WidgetSizes.REACH). -->
+    <!-- To WidgetSizes.REACH (4dp) from the edge, for bare buttons and a low row's targets. -->
     <dimen name="widget_reach_out">-12dp</dimen>
-    <!-- Half the 4 dp gap between cells: a cell's shape stands this far inside its touch target on
-         either side, and a row of targets reaches this far into the frame. -->
+    <!-- Half of WidgetSizes.GAP: a cell's inset in its touch target, and how far a row of targets
+         reaches into the frame. -->
     <dimen name="widget_cell_inset">2dp</dimen>
     <dimen name="widget_cell_inset_out">-2dp</dimen>
     <dimen name="widget_bar_cell">52dp</dimen>
-    <!-- A tile's cell stands on the frame: its shape is inset by half a gap at the sides. -->
+    <!-- The padding less the cell drawables' 2dp side inset, so a tile's cell meets the frame. -->
     <dimen name="widget_tile_side">14dp</dimen>
     <dimen name="widget_cell_height">56dp</dimen>
     <dimen name="widget_cell_gap">4dp</dimen>
-    <!-- The words' view stands this much outside its box at either side, and each line moves back in
-         by what its first letter leaves (WidgetWordsViews); at the end, by the lead itself, and the
-         speaker's row by less, as the level's last letter leaves. -->
+    <!-- WidgetSizes.LEAD: the text view stands this far outside its box; WidgetWordsViews pads each
+         line back in. -->
     <dimen name="widget_words_lead_out">-6dp</dimen>
     <dimen name="widget_words_lead">6dp</dimen>
-    <!-- Words in the middle stand there by their ink: their box may reach half the lead past the
-         frame above and below (WidgetFit.centred). -->
+    <!-- Centred text may overflow the frame by half the lead above and below (`centred` in WidgetFit.kt). -->
     <dimen name="widget_words_lead_out_half">-3dp</dimen>
     <dimen name="widget_art_to_words">12dp</dimen>
-    <!-- From a poster's cover to the words' ink under it: 12, less the words' lead. -->
+    <!-- widget_art_to_words less the lead, which the text box adds above the cap top. -->
     <dimen name="widget_art_to_words_lead">6dp</dimen>
-    <!-- A cell's corner: the widget's own (28) less the frame (16), so the two curves run alike. -->
+    <!-- Concentric with a 28dp widget corner: 28 less the 16dp padding. -->
     <dimen name="widget_cell_radius">12dp</dimen>
 </resources>

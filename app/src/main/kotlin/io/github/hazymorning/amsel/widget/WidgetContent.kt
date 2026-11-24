@@ -8,66 +8,60 @@ import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import kotlin.math.abs
 import kotlinx.serialization.Serializable
 
-/** What a widget shows: a speaker and what plays there. Kept on the phone between runs. */
 @Immutable
 @Serializable
 data class WidgetContent(
     val signedIn: Boolean = true,
-    /** The speaker's player id; null before Amsel knows one. */
+    /** Null until the speaker is known. */
     val speakerId: String? = null,
-    /** As the dock names it: "This phone" in the person's language, a group's "+2" after it. */
     val speaker: String = "",
-    /** 0 to 100; null for This phone and a speaker whose volume is fixed. */
+    /** 0 to 100; null for This phone and a speaker without volume control. */
     val volume: Int? = null,
-    /** This phone: its volume is the phone's own. */
     val phone: Boolean = false,
-    /** Null while nothing plays there: "Not playing". */
+    /** Null while nothing plays. */
     val title: String? = null,
     val subtitle: String? = null,
-    /** The cover's address on the server, at [COVER_PX], for the blurred ground. */
+    /** At [COVER_PX], for the blurred background. */
     val art: String? = null,
-    /** The same cover at [ART_PX], for a bar's, a player's or a tile's cover, and the Darkened look's ground. */
+    /** At [ART_PX], for covers shown sharp and the Darkened background. */
     val artLarge: String? = null,
     val playing: Boolean = false,
-    /** A book or an episode: the skips are 30 s forward and 15 s back, as on the dock. */
+    /** A book or an episode. */
     val spoken: Boolean = false,
-    /** A tap that did not reach the speaker, said where the artist stands until the next change. */
+    /** A failed tap's message, shown in place of the subtitle until the content changes. */
     val failure: String? = null,
-    /** The item's uri, for its heart. */
+    /** The item's uri. */
     val key: String? = null,
-    /** Whether it is a favourite; null where it cannot be one or the person may not change that. */
+    /** Null where the item cannot be a favourite or the user may not change it. */
     val favourite: Boolean? = null,
-    /** Null, as [repeat], where what plays is a book, an episode or a station. */
+    /** Null, as [repeat], for a book, an episode, a station, or where shuffle is unavailable. */
     val shuffle: Boolean? = null,
     val repeat: RepeatMode? = null,
-    /** Its length; 0 where none is known, a station's. */
+    /** 0 where unknown, as for a station. */
     val durationMs: Long = 0,
     /**
-     * Its time, on the clock since the phone started ([android.os.SystemClock.elapsedRealtime]), to
-     * the second: while a song plays, when it would have begun; while a book or an episode plays,
-     * when it ends at its speed. Null while it rests.
+     * [android.os.SystemClock.elapsedRealtime] to the second, for a Chronometer: a song's virtual
+     * start, or a book's or an episode's end at its speed. Null while not playing.
      */
     val clockMs: Long? = null,
-    /** While it rests: where a song stands, or how long a book or an episode has left at its speed. */
+    /** While not playing: a song's position, or the time a book or an episode has left at its speed. */
     val restMs: Long? = null,
 ) {
-    /** Whether its time can show: it has a length and Amsel knows where it stands. */
     val hasTime: Boolean get() = signedIn && title != null && durationMs > 0 && (clockMs != null || restMs != null)
 
-    /** As it shows from the phone's files at the next start: at rest, where it stood unknown. */
+    /** For stored content read after a restart: not playing, position unknown. */
     fun atRest(): WidgetContent = copy(playing = false, failure = null, clockMs = null, restMs = null)
 }
 
-/** The size the cover is asked for: it is blurred down to [WidgetArt.SIDE] anyway. */
+/** Small: the cover is scaled down to [WidgetArt.SIDE] for the blur. */
 const val COVER_PX = 128
 
-/** A cover shown sharp: a player's, four cells by two, is about 140 dp, 420 px. */
+/** For covers shown sharp: a 4 × 3 player on a 411 dp phone shows one of 162 dp, 486 px at xxhdpi. */
 const val ART_PX = 512
 
 /**
- * What the widgets show for [speaker], named [name], and what plays there ([nowPlaying]). Unless
- * what the server last said still holds ([current]: connected, closed on purpose since, or read on
- * a glance since) the music rests as last heard: nothing says it still plays.
+ * Without [current] (connected, closed on purpose, or refreshed since) the last known state shows
+ * as not playing and without a position: it may be stale.
  */
 fun widgetContent(
     speaker: SpeakerUi,
@@ -114,15 +108,12 @@ fun widgetContent(
 
 private val NowPlayingUi.pace: Double get() = speed.toDouble().takeIf { it > 0 } ?: 1.0
 
-/** To the second, so the reports a playing song sends on its way do not draw the widgets again. */
+/** Rounded so the jitter of position reports during playback does not redraw the widgets. */
 private fun toSecond(atMs: Long): Long = Math.floorDiv(atMs + SECOND_MS / 2, SECOND_MS) * SECOND_MS
 
 private const val SECOND_MS = 1000L
 
-/**
- * [looks], each clock that moved by a second and a half or less since [shown] kept as shown: the
- * reports a playing song sends on its way jitter, and the widgets would be drawn again for nothing.
- */
+/** A clock within CLOCK_SLACK_MS of [shown] keeps the shown value: position reports jitter, and each change redraws. */
 internal fun steadyClocks(
     looks: Map<String, WidgetContent>,
     shown: Map<String, WidgetContent>?,

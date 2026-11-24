@@ -12,7 +12,6 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.api.RepeatMode
 import kotlinx.coroutines.runBlocking
 
-/** Widgets as they stand on a home screen: what plays, a book, nothing, signed out; at a usual phone's sizes. */
 object WidgetSample {
     val blueHour = WidgetItem("library://album/1", "Blue Hour", "sample:album/1")
 
@@ -30,7 +29,7 @@ object WidgetSample {
         shuffle = false,
         repeat = RepeatMode.Off,
         durationMs = 222_000,
-        // Standing, so a picture of it shows the same time every time.
+        // A paused position, not a running clock, so screenshots stay the same.
         restMs = 83_000,
     )
 
@@ -52,7 +51,6 @@ object WidgetSample {
 
     val signedOut = WidgetContent(signedIn = false)
 
-    /** Quieter, Louder, Continue listening, and Blue Hour. */
     val ownButtons = listOf(
         WidgetSlot(WidgetButton.Quieter),
         WidgetSlot(WidgetButton.Louder),
@@ -60,26 +58,23 @@ object WidgetSample {
         WidgetSlot(WidgetButton.PlayItem, blueHour),
     )
 
-    /** On a phone 411 dp wide with four columns: cells 92 dp apart, a widget 12 dp less than its cells. */
+    /** A 411 dp phone with four columns: cells 92 dp apart, a widget 12 dp smaller than its cells. */
     val tile = SizeF(80f, 96f)
     val row = SizeF(172f, 96f)
     val card = SizeF(172f, 204f)
     val bar = SizeF(356f, 96f)
     val player = SizeF(356f, 204f)
 
-    /** One row on a phone with lower rows, as the owner's 65 dp: a strip lower than the others. */
+    /** One row on a phone with low rows, as the owner's (about 65 dp). */
     val strip = SizeF(356f, 66f)
 
-    /** Two cells by three. */
     val tallCard = SizeF(172f, 312f)
 
-    /** Four cells by three. */
     val tallPlayer = SizeF(356f, 312f)
 
     fun cover(name: String): Bitmap =
         checkNotNull(javaClass.classLoader?.getResourceAsStream("covers/$name.jpg")?.use(BitmapFactory::decodeStream))
 
-    /** [setup] showing [look] at [size], with its pictures, as Amsel draws it; nothing on it acts. */
     fun drawn(
         context: Context,
         setup: WidgetSetup,
@@ -91,7 +86,7 @@ object WidgetSample {
             .draw(1, setup, look, listOf(size), taps = false, clearInk = clearInk)
     }
 
-    /** [setup] showing [look] at [size] without covers (an empty one where a cover stands), for what the views say. */
+    /** Without cover images (blank shapes instead), for tests of the views alone. */
     fun plain(context: Context, setup: WidgetSetup, look: WidgetContent, size: SizeF = card): RemoteViews {
         val views = WidgetViews(context)
         val fit = views.fit(size.width, size.height, setup, look)
@@ -102,7 +97,7 @@ object WidgetSample {
     }
 }
 
-/** The buttons a drawn widget shows, in the order they stand: rows from the top, each from its start. */
+/** Visible button cells in reading order: rows from the top, each from its start. */
 fun View.cells(): List<View> = when {
     visibility != View.VISIBLE -> emptyList()
     id == R.id.widget_cell -> listOf(this)

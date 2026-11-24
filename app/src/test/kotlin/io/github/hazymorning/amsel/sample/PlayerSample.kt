@@ -10,10 +10,8 @@ import io.github.hazymorning.amsel.ui.model.SpeakerUi
 import io.github.hazymorning.amsel.ui.model.TrackUi
 
 object PlayerSample {
-    /** Shuffle on, repeat off: one control in moss, its neighbour plain. */
     val nowPlaying = SampleData.nowPlaying.copy(shuffle = true, repeat = RepeatMode.Off)
 
-    /** Paused on the phone, which has no volume bar here, with a title that needs two lines. */
     val pausedLongTitle = NowPlayingUi(
         title = "Harbour Lights (Extended Version Recorded Live at the Old Theatre)",
         artist = "Kestrel & Finch",
@@ -29,7 +27,6 @@ object PlayerSample {
         key = "library://track/31",
     )
 
-    /** Moby-Dick on the kitchen speaker, four minutes into The Spouter-Inn. */
     val book = NowPlayingUi(
         title = "Moby-Dick",
         artist = "Herman Melville",
@@ -59,13 +56,11 @@ object PlayerSample {
         TrackUi("library://track/24", "Saltwater", "Ines Okafor", "Saltwater", ArtRef("sample:album/3"), 207),
     )
 
-    /** One played song, the current one, then what comes next. */
     val upNext: List<QueueItemUi> = (listOf(SampleData.tracks[5]) + SampleData.tracks.take(5) + more)
         .mapIndexed { i, t -> QueueItemUi("q$i", t, isCurrent = i == 1) }
 
     val speakers: List<SpeakerUi> = SampleData.speakers
 
-    /** The DJ's hosts as its plugin names them out of the box. */
     val djHosts = listOf(
         DjHost("minimal_dj", "Minimal DJ"),
         DjHost("morning_show", "Morning show"),
@@ -73,7 +68,6 @@ object PlayerSample {
         DjHost("party_host", "Party host"),
     )
 
-    /** What the DJ says between two songs, under the server's name for it. */
     val djWords = TrackUi(
         "ai_radio://sound_effect/dj_005",
         "Artist fact + Transition",
@@ -83,10 +77,8 @@ object PlayerSample {
         djBreak = true,
     )
 
-    /** [upNext] with the DJ talking after the song that plays. */
     val upNextWithDj: List<QueueItemUi> = upNext.take(2) + QueueItemUi("dj", djWords) + upNext.drop(2)
 
-    /** The DJ talks on the kitchen speaker. */
     val djTalking = nowPlaying.copy(
         title = djWords.title,
         artist = "",

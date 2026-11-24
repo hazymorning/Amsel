@@ -7,7 +7,6 @@ import io.github.hazymorning.amsel.api.isEndlessMix
 import io.github.hazymorning.amsel.data.ServerExtras
 import io.github.hazymorning.amsel.data.downloads.DownloadState
 
-/** Everything the ⋮ sheet can offer; [ItemActionsUiState] lists them in order. */
 enum class ItemAction {
     Play,
     Shuffle,
@@ -40,17 +39,10 @@ enum class ItemAction {
     Dj,
 }
 
-/**
- * Where the sheet was opened: Up next and an editable playlist add their removal; Now Playing adds
- * the sleep timer, moving the music to another speaker, the DJ and, for a book, the way to its page.
- * On an item's own page, Play and Shuffle are the page's buttons, so the sheet leaves them out.
- */
 enum class ActionsContext { Library, UpNext, EditablePlaylist, NowPlaying, Page }
 
-/** [ActionsContext.Page] for a page's own item, [ActionsContext.Library] for one listed on it. */
 fun ownPage(own: Boolean): ActionsContext = if (own) ActionsContext.Page else ActionsContext.Library
 
-/** The ⋮ sheet for one song, album, artist or playlist: a header, then [actions] in order. */
 @Immutable
 data class ItemActionsUiState(
     val title: String,
@@ -58,16 +50,13 @@ data class ItemActionsUiState(
     val art: ArtRef? = null,
     val kind: MediaKind = MediaKind.Track,
     val actions: List<ItemAction> = emptyList(),
-    /** The DJ's words between two songs: the header names them as Up next does, over "DJ". */
     val djBreak: Boolean = false,
 ) {
     companion object {
         /**
-         * A song's actions. In Up next, "Add to Up next" would repeat what is already there, so it
-         * gives way to "Remove from Up next"; a playlist the person can edit adds "Remove from this playlist".
-         * [extras] and [dynamicQueue] as for [forMedia]. [dj]: the speaker that plays has a DJ to
-         * choose, which Now Playing offers with its other speaker rows. What the DJ says between
-         * two songs is no song: Up next can drop it, and Now Playing keeps only the speaker's rows.
+         * In Up next, Remove from Up next replaces Add to Up next, which would repeat the row. [dj]: the
+         * playing speaker has DJ hosts to choose from. A DJ break is no song: it keeps only Up next's
+         * removal and Now Playing's speaker rows.
          */
         fun forTrack(
             track: TrackUi,
@@ -87,7 +76,7 @@ data class ItemActionsUiState(
                     if (context == ActionsContext.UpNext) add(ItemAction.RemoveFromUpNext)
                     return@buildList
                 }
-                // Up next's own Play next moves the row, which any queue allows.
+                // In Up next, Play next moves the row, which any queue allows.
                 if (context == ActionsContext.UpNext) {
                     add(ItemAction.PlayNext)
                 } else {
@@ -104,15 +93,7 @@ data class ItemActionsUiState(
             },
         )
 
-        /**
-         * An album's, artist's, playlist's, station's, book's, podcast's or episode's actions. Only
-         * albums go into playlists and lead to their artist, and books to their author, when known.
-         * A book or episode is marked finished, or unfinished once it is, and downloaded, when it is
-         * from Audiobookshelf, as far as [download] has come. [pinned] says whether it is on Home,
-         * for Pin to Home or Unpin from Home; null leaves both out. [extras] is what the server has
-         * beyond playing what it holds; [dynamicQueue] says the speaker that plays is in a mix the
-         * server keeps filling.
-         */
+        /** [pinned] null leaves out both Pin to Home and Unpin from Home. */
         fun forMedia(
             item: MediaUi,
             pinned: Boolean? = null,
@@ -128,7 +109,7 @@ data class ItemActionsUiState(
             actions = buildList {
                 val nowPlaying = context == ActionsContext.NowPlaying
                 if (nowPlaying) addAll(PLAYBACK)
-                // A tap on a cover opens its page; a long press starts it from where it is.
+                // In a list a tap opens the page, so the sheet offers Play and Shuffle; a page has its own.
                 if (context == ActionsContext.Library && item.kind in STARTED_WHOLE) {
                     add(ItemAction.Play)
                     add(ItemAction.Shuffle)
@@ -172,7 +153,6 @@ data class ItemActionsUiState(
     }
 }
 
-/** Download while it can be, stop it on its way, remove it once there; one that stopped is tried again or removed. */
 private fun downloadActions(item: MediaUi, download: DownloadState?): List<ItemAction> = when (download) {
     null -> listOfNotNull(ItemAction.Download.takeIf { item.downloadable })
     is DownloadState.Failed -> listOf(ItemAction.Download, ItemAction.RemoveDownload)
@@ -181,9 +161,8 @@ private fun downloadActions(item: MediaUi, download: DownloadState?): List<ItemA
 }
 
 /**
- * Play next and Add to Up next for [key]. A queue the server keeps filling ([dynamicQueue]) places
- * only a song that is to play next; anything else it takes as one more source of the mix and builds
- * what is coming anew, so those rows would not do what they say.
+ * A mix the server keeps filling ([dynamicQueue]) inserts only a song as Play next; anything else
+ * becomes one more source of the mix. See docs/API-NOTES.md, "Play next and Add to Up next in a mix".
  */
 private fun queueActions(key: String, dynamicQueue: Boolean): List<ItemAction> = when {
     !dynamicQueue -> listOf(ItemAction.PlayNext, ItemAction.AddToUpNext)
@@ -192,21 +171,19 @@ private fun queueActions(key: String, dynamicQueue: Boolean): List<ItemAction> =
 }
 
 /**
- * By the uri's own type, not the kind shown: that calls everything the app does not list a song (a
- * stream, a spoken break), and a row of Up next the server names no item for has no uri at all.
+ * By the uri's type, not [MediaKind], which shows unlisted types (a stream, a DJ break) as Track; an
+ * Up next row without a server item has a queue item id, not a uri.
  */
 internal fun isSong(key: String): Boolean = ItemUri.parse(key)?.mediaType == MediaType.Track.api
 
-/** What the server makes an endless mix of; a mix has no mix of its own. */
+/** A mix's own uri names a playlist, but a mix seeds no mix of its own. */
 private fun seedsMix(key: String): Boolean = ItemUri.parse(key)?.mediaType in MIX_SEEDS && !isEndlessMix(key)
 
 private val MIX_SEEDS = setOf(MediaType.Track, MediaType.Album, MediaType.Artist, MediaType.Playlist).map { it.api }
 
-/** Now Playing's own: about the speaker rather than the item. The DJ joins them where there is one. */
 private val PLAYBACK = listOf(ItemAction.SleepTimer, ItemAction.TransferPlayback)
 
-/** The kinds that are listened to rather than played: they keep bookmarks. */
 private val SPOKEN = setOf(MediaKind.Audiobook, MediaKind.Episode, MediaKind.Podcast)
 
-/** What plays as a whole and can be shuffled; a song or a station plays at a tap. */
+/** Played as a whole and shuffled; a song or a station plays at a tap. */
 private val STARTED_WHOLE = setOf(MediaKind.Album, MediaKind.Playlist, MediaKind.Artist)

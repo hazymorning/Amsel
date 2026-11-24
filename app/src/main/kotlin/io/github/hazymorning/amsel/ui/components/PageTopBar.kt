@@ -55,19 +55,13 @@ import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.controls
 import kotlin.math.min
 
-/**
- * What the dock covers at the foot of the screen; scrolling content keeps its last items clear of it.
- * The shell provides it as state, read where it is laid out: it moves with the dock's animation.
- */
+/** The height the dock covers at the screen's foot, as State: read it in layout, not composition, as it animates. */
 val LocalDockInset = staticCompositionLocalOf<State<Dp>> { mutableStateOf(0.dp) }
 
 /**
- * A screen whose content scrolls up under the status bar, where a strip of the page's own paper
- * covers it ([statusBarBackground]) once content runs under it. With a [bar] the strip also lies behind that
- * slim bar, and the content starts under it. Given [barShown], the content starts under the status
- * bar instead and the bar comes over it, folded away while false: for a screen whose own big title is
- * still in view. [content] gets the room the strip, the bar and the dock take, to keep its items
- * clear of them.
+ * [bar] reserves its height above the content, unless [barShown] is given: then it lies over the
+ * content and shows only while true, for a screen with its own large title. [content] gets the
+ * padding that keeps its items clear of the status strip, the bar and the dock.
  */
 @Composable
 fun MaterialScreen(
@@ -76,12 +70,12 @@ fun MaterialScreen(
     barShown: Boolean? = null,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    // The status bar and a cutout, not safeDrawing: the keyboard never reaches the top, and reading it
-    // here would recompose the screen on every frame the keyboard moves.
+    // Not safeDrawing: it includes the keyboard, which never reaches the top, and reading it here would
+    // recompose the screen on every frame the keyboard moves.
     val top = WindowInsets.systemBars.union(WindowInsets.displayCutout)
     val status = top.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding()
     val barOverlaps = barShown != null
-    // Read only in layout and drawing, so the fold does not recompose the screen.
+    // Read only in layout and drawing, so the animation does not recompose the screen.
     val shown = animateFloatAsState(if (bar != null && barShown != false) 1f else 0f, Motion.effects(), label = "bar")
     val reserved = if (bar != null && !barOverlaps) Sizes.TopBarHeight else 0.dp
     val dock = LocalDockInset.current
@@ -120,13 +114,9 @@ fun MaterialScreen(
 
 private val TabTitleCapTop = Space.Sibling
 
-/** The title's own baseline, so an action beside it never sets the header's frame. */
+/** The title's baseline alone, so a text action beside it never sets the header's frame. */
 private val TitleBaseline = HorizontalAlignmentLine(::min)
 
-/**
- * A tab's title in the Display style, its capitals 16 under the top (the status bar's edge in a
- * [MaterialScreen]). Actions sit on the right margin, centred on the capitals.
- */
 @Composable
 fun TabHeader(
     title: String,
@@ -159,13 +149,9 @@ fun TabHeader(
 }
 
 /**
- * The slim bar on the status strip: back on the left margin, actions on the right, and the title
- * centred between them in the body size. [showTitle] fades the title in once the page's own title
- * has scrolled away. A [quiet] title is a line about the screen rather than its name, smaller and in
- * the secondary tone, and no heading. [inset] sets the glyphs that far in from the margins, where a
- * screen's words stand in from them (Now Playing); [titleInset] keeps the title clear of more than
- * one action, and [shorterTitle] stands in where the title does not fit its line. Actions wider
- * than a glyph (a word) narrow the title's room to what they leave ([barTitleBounds]).
+ * A [quiet] title describes the screen rather than naming it (Now Playing's "from Blue Hour"), so it
+ * is no heading. [titleInset] clears more than one action; [shorterTitle] replaces a title that does
+ * not fit its line.
  */
 @Composable
 fun PageTopBar(
@@ -242,22 +228,19 @@ fun PageTopBar(
     }
 }
 
-/** A quiet bar title (Now Playing's "from Blue Hour"): a line about the screen, at the captions' size. */
 @Composable
 private fun quietTitle() = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Normal)
 
-/** A centred bar title keeps clear of a glyph's target on either side. */
 internal val BarTitleInset = Keyline.Margin + Sizes.TouchTarget + Space.S2
 
 /**
- * These paddings with [horizontal] more on either side, [top] and [bottom] more, each read only when
- * asked for: a screen's room holds the dock, whose height animates, and read in composition it would
- * recompose the screen on every frame.
+ * Adds to these paddings lazily: they hold the dock's animated height, and reading it in composition
+ * would recompose the screen on every frame.
  */
 fun PaddingValues.plus(horizontal: Dp = 0.dp, top: Dp = 0.dp, bottom: Dp = 0.dp): PaddingValues =
     AddedPadding(this, horizontal, top, bottom, baseTop = true)
 
-/** As [plus], for a part of a screen that starts below its top: [top] in place of this padding's own. */
+/** As [plus], but [top] replaces this padding's top, for a part of a screen that starts below its top. */
 fun PaddingValues.withTop(top: Dp, bottom: Dp = 0.dp): PaddingValues =
     AddedPadding(this, 0.dp, top, bottom, baseTop = false)
 
@@ -279,7 +262,7 @@ private class AddedPadding(
     override fun calculateBottomPadding(): Dp = base.calculateBottomPadding() + bottom
 }
 
-/** A screen's room: [top] as given, the dock's at the bottom, read only when it is asked for. */
+/** Reads the dock's height only when asked for, in layout. */
 private class ContentPadding(private val top: Dp, private val dock: State<Dp>) : PaddingValues {
     override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = 0.dp
 

@@ -21,7 +21,6 @@ internal data class AbsUser(
     val token: String? = null,
 )
 
-/** A library item as `GET /api/items/{id}?expanded=1` gives it: a book, or a podcast with its episodes. */
 @Serializable
 internal data class AbsItem(val id: String, val media: AbsMedia = AbsMedia())
 
@@ -29,7 +28,7 @@ internal data class AbsItem(val id: String, val media: AbsMedia = AbsMedia())
 internal data class AbsMedia(
     val metadata: AbsMetadata = AbsMetadata(),
     val duration: Double = 0.0,
-    /** A book's audio files in playing order, each with its start on the book's timeline. */
+    /** In timeline order; [AbsTrack.startOffset] is on the book's timeline. */
     val tracks: List<AbsTrack> = emptyList(),
     val chapters: List<AbsChapter> = emptyList(),
     val episodes: List<AbsEpisode> = emptyList(),
@@ -63,7 +62,7 @@ internal data class AbsEpisode(
     val chapters: List<AbsChapter> = emptyList(),
 )
 
-/** The signed-in user's progress in an item, as Audiobookshelf keeps it; [lastUpdate] in epoch ms. */
+/** [lastUpdate] in epoch ms. */
 @Serializable
 data class AbsProgress(
     val currentTime: Double = 0.0,

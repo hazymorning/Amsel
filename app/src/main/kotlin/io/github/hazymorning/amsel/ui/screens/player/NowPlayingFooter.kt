@@ -48,17 +48,9 @@ import io.github.hazymorning.amsel.ui.theme.controls
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 import io.github.hazymorning.amsel.ui.theme.tabular
 
-/**
- * The speaker's pill at the start, as wide as its words; at the end, in a row, the volume with its
- * level, a bookmark for a book or an episode, and last Up next, or a book's or an episode's
- * chapters (always, as the owner asked). The pill and the glyphs that open something stand on a
- * quiet ground of one height: the grounds' outer edges are on the page's margins, under the
- * artwork's edges, and exactly as far from the screen's foot as from its sides; each glyph stands
- * in the middle of its ground. The volume is a reading more than a place to go and stands bare.
- *
- * The speaker's name comes first: where the row is too short for it, the volume gives up its
- * level, then the pill its caret, and where even then only a few letters would be left, its name.
- */
+// Where the row is too short, the volume drops its level first, then the pill its caret, then the
+// speaker's name once only a few letters would be left. Spoken items always show the chapters
+// button, as the owner asked.
 @Composable
 internal fun Footer(
     state: NowPlayingUi,
@@ -113,10 +105,9 @@ private enum class FooterSlot { Pill, Plain, Glyph, Utilities, Bare }
 
 private val PillToUtilities = Space.S3
 
-/** Between two grounds at the footer's end. */
 private val GroundGap = 6.dp
 
-/** What stands at the footer's end; [level] sets the volume's level beside its glyph. */
+/** [level] shows the volume level beside its glyph. */
 @Composable
 private fun Utilities(
     state: NowPlayingUi,
@@ -147,10 +138,7 @@ private fun Utilities(
     }
 }
 
-/**
- * A glyph on a quiet disc as high as the speaker's pill, or bare in the disc's place ([ground]
- * false); its 48 dp target reaches past the disc.
- */
+/** [ground] false leaves out the disc; the 48 dp target reaches past it either way. */
 @Composable
 private fun GlyphGround(
     @DrawableRes icon: Int,
@@ -176,7 +164,6 @@ private fun GlyphGround(
     }
 }
 
-/** The volume's glyph and its level, bare, as high as the speaker's pill and in the footer's words. */
 @Composable
 private fun VolumeLevel(level: String, description: String, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme

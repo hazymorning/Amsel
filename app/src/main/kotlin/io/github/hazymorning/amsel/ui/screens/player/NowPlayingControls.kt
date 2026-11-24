@@ -49,12 +49,6 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.controls
 import kotlin.math.roundToInt
 
-/**
- * Five controls: play, the one filled circle, in the middle; previous and next beside it; shuffle
- * and repeat outside them, their ink on the words' keyline ([NowPlayingInset] in from the margin);
- * previous and next [SkipReach] from play's centre.
- * A book or an episode skips by seconds where music shuffles and repeats, and steps by chapter.
- */
 @Composable
 internal fun TransportRow(state: NowPlayingUi, onControl: (PlayerControl) -> Unit, modifier: Modifier = Modifier) {
     val outer = when {
@@ -62,7 +56,8 @@ internal fun TransportRow(state: NowPlayingUi, onControl: (PlayerControl) -> Uni
         state.repeat == RepeatMode.One -> R.drawable.ic_shuffle to R.drawable.ic_repeat_one
         else -> R.drawable.ic_shuffle to R.drawable.ic_repeat
     }
-    // A mix shuffles and repeats as the server has it: said where TalkBack tells a control's state.
+    // In a mix the server fixes shuffle and repeat (docs/API-NOTES.md, "Extras"); TalkBack hears it as
+    // their state.
     val fixed = if (state.mix != null) stringResource(R.string.endless_mix_fixed) else null
     Layout(
         content = {
@@ -140,7 +135,7 @@ internal fun TransportRow(state: NowPlayingUi, onControl: (PlayerControl) -> Uni
         val p = measurables.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
         val height = p.maxOf { it.height }
         val width = constraints.maxWidth
-        // The outer glyphs' ink, not their boxes, stands on the margins.
+        // The outer glyphs themselves, not their touch targets, align with the words' keyline.
         val keyline = (Keyline.Margin + NowPlayingInset).toPx()
         val middle = width / 2f
         val reach = SkipReach.toPx()
@@ -162,11 +157,7 @@ internal fun TransportRow(state: NowPlayingUi, onControl: (PlayerControl) -> Uni
     }
 }
 
-/**
- * The title and the artist on the left; at the right the like heart in ink (left out when [onLike]
- * is null), centred on the words, its glyph ending on the margin. The words' cap top and last
- * baseline are the block's edges.
- */
+// The block spans the title's cap top to the artist's last baseline.
 @Composable
 internal fun TrackInfo(
     title: String,
@@ -208,16 +199,12 @@ internal fun TrackInfo(
     }
 }
 
-/**
- * The title in the Title style, two lines at most and cut at a word; the artist under it in the
- * secondary tone, a link to the artist when there is one. As the track changes, the words cross-fade.
- */
 @Composable
 private fun TrackWords(title: String, artist: String, onArtist: (() -> Unit)?, linkLabel: String) {
     val type = MaterialTheme.typography
     val colors = MaterialTheme.colorScheme
     val second = type.bodyLarge.copy(fontWeight = FontWeight.Normal)
-    // Keyed on the words alone: an artist link that arrives after the title must not move them.
+    // Keyed on the words only, so an artist link arriving after the title does not animate them.
     AnimatedContent(
         title to artist,
         transitionSpec = { fadeIn(Motion.effects()) togetherWith fadeOut(Motion.effectsFast()) },
@@ -257,13 +244,12 @@ private fun TrackWords(title: String, artist: String, onArtist: (() -> Unit)?, l
     }
 }
 
-/** Shuffle, repeat and the heart: a step up from a list's glyphs, as the words are. */
+// One size up from a list's glyphs, as Now Playing's words are.
 private val SideGlyph = Sizes.IconLarge
 
-/** Now Playing's words, line and controls stand this far in from the margin, as words under a cover do. */
+// Words, line and controls start this far in from the margin, as words under a cover do.
 internal val NowPlayingInset = Radius.under(Radius.Large)
 
-/** Previous and next stand this far from play's centre. */
 private val SkipReach = 80.dp
 
 /** The title's baseline to the artist's. */

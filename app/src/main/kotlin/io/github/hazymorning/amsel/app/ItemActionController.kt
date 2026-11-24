@@ -35,9 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-/** What the ⋮ sheet was opened for. */
 sealed interface ActionTarget {
-    /** The item's uri. */
     val key: String
 
     data class Media(val item: MediaUi, val context: ActionsContext = ActionsContext.Library) : ActionTarget {
@@ -47,29 +45,26 @@ sealed interface ActionTarget {
     data class Track(
         val track: TrackUi,
         val context: ActionsContext = ActionsContext.Library,
-        /** For Up next: the queue item to remove. */
         val queueItemId: String? = null,
-        /** For an editable playlist: which playlist, and the track's 1-based position in it. */
         val playlistKey: String? = null,
+        /** 1-based, as the server numbers a playlist's tracks. */
         val position: Int? = null,
-        /** The playlist's name, for the question asked before removing the track from it. */
         val playlistName: String? = null,
     ) : ActionTarget {
         override val key: String get() = track.key
     }
 }
 
-/** What the ⋮ sheet asks of an Up next row; Up next makes the change, so it shows and is ordered there. */
+/** Applied by the open Up next, so the change shows there at once and keeps its order with its other edits. */
 sealed interface UpNextEdit {
     val queueItemId: String
 
     data class Remove(override val queueItemId: String) : UpNextEdit
 
-    /** Moves the row to play next; one the server will not move (it has played) is queued again. */
+    /** A row the server will not move (it has played) is queued again from [uri]. */
     data class PlayNext(override val queueItemId: String, val uri: String) : UpNextEdit
 }
 
-/** Runs ⋮ actions. Favourites, finished marks and removals from a playlist show at once; the server confirms them. */
 class ItemActionController(
     private val api: MaApi,
     private val library: LibraryRepository,
@@ -83,20 +78,17 @@ class ItemActionController(
     session: StateFlow<SessionState>,
     private val scope: CoroutineScope,
     private val extras: StateFlow<ServerExtras>,
-    /** Whether the speaker that plays is in a mix the server keeps filling. */
     private val dynamicQueue: () -> Boolean,
-    /** "Endless mix · Blue Hour", in the person's language. */
     private val mixTitle: (of: String) -> String,
-    /** Whether what plays comes from the speaker's queue on the server, not from this phone's files. */
+    /** False while a download plays from this phone's files. */
     private val serverQueue: () -> Boolean,
 ) {
-    /** Marks waiting to be sent again, by item. */
     private val markAgain = ConcurrentHashMap<String, Job>()
 
     init {
         scope.launch {
             session.collect { state ->
-                // Signed out: a mark waiting to go again is that person's, on that server.
+                // A waiting mark belongs to the signed-out user and server.
                 if (state == SessionState.NeedsSetup) markAgain.values.forEach(Job::cancel)
             }
         }
@@ -105,7 +97,6 @@ class ItemActionController(
     private val _upNextEdits =
         MutableSharedFlow<UpNextEdit>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** The ⋮ sheet's changes to Up next, made by the open Up next, which the sheet's rows come from. */
     val upNextEdits: SharedFlow<UpNextEdit> = _upNextEdits.asSharedFlow()
 
     fun state(target: ActionTarget): ItemActionsUiState {
@@ -191,17 +182,13 @@ class ItemActionController(
         }
     }
 
-    /**
-     * In Up next the song is already queued, so Play next moves it to the front of what is coming,
-     * as dragging does; one the server will not move (it has played) is queued again instead.
-     */
+    // In Up next the song is already queued: Play next moves it, as dragging does, instead of adding it again.
     private fun playNext(target: ActionTarget, uri: String) {
         val queued = (target as? ActionTarget.Track)?.takeIf { it.context == ActionsContext.UpNext }?.queueItemId
         if (queued == null) return playback.play(listOf(uri), option = QueueOption.Next)
         _upNextEdits.tryEmit(UpNextEdit.PlayNext(queued, uri))
     }
 
-    /** Marks [media] played or not; a refused mark puts back where the person stood, as the sheet showed it. */
     private fun setPlayed(media: MediaUi, played: Boolean): Unit = send {
         val uri = media.key
         val name = media.title
@@ -213,14 +200,13 @@ class ItemActionController(
             undo()
             throw e
         }
-        // The server's Audiobookshelf link drops a mark that comes within 8 s of its last update,
-        // and its next sync undoes it; sent again after that, it holds. A newer mark of the same
-        // item replaces the one waiting.
+        // The Audiobookshelf provider drops a mark within 8 s of its last update and its next sync undoes
+        // it, so the mark goes again past that guard (docs/API-NOTES.md, "Audiobooks and podcasts").
         markAgain.put(
             uri,
             scope.launch {
                 delay(MARK_AGAIN_MS)
-                // The copy that holds when the first fell inside the guard: a failure loses the mark.
+                // If the first fell inside the guard, this one is the mark: a failure here loses it.
                 val error = try {
                     api.setPlayed(item, name, played)
                     return@launch
@@ -243,7 +229,6 @@ class ItemActionController(
         }
     }
 
-    /** Runs [change] in the app's scope; a failure says what went wrong, with Retry. */
     private fun send(change: suspend () -> Unit) {
         scope.launch {
             try {
@@ -278,12 +263,8 @@ class ItemActionController(
     }
 }
 
-/**
- * Whether the DJ can be chosen for [playing]: the server has hosts, what plays comes from the
- * speaker's queue there ([serverQueue]), and it is a song or the DJ itself, talking between two.
- */
 internal fun offersDj(playing: TrackUi, extras: ServerExtras, serverQueue: Boolean): Boolean =
     extras.djHosts.isNotEmpty() && serverQueue && (playing.djBreak || isSong(playing.key))
 
-/** Past the Audiobookshelf link's 8 s guard. */
+// Past the Audiobookshelf provider's 8 s guard.
 private const val MARK_AGAIN_MS = 9_000L

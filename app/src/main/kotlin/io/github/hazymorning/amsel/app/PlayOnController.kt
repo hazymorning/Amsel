@@ -31,11 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * Which speaker the app plays on and controls. A tap on another one in "Play on" ([choose]) takes
- * This phone's music along; music that plays on a speaker moves, or is replaced, only once the
- * person has said so ([PlayOnAction]).
- */
 class PlayOnController(
     private val data: DataGraph,
     private val playing: PlaybackState,
@@ -56,7 +51,7 @@ class PlayOnController(
         override fun releasePhoneHold() = phone.hold(false)
 
         override suspend fun transfer(from: String, to: String, play: Boolean) {
-            // A place sought while the music was paused is one the server has not heard of: it moves along.
+            // A seek made while paused stays the paused position and is never sent, so a transfer cannot carry it.
             val pausedPosition = data.speakers.pausedPosition(from)
             if (play) commands.starting(to)
             data.session.api.transfer(from, to, play)
@@ -68,12 +63,11 @@ class PlayOnController(
         }
     }
 
-    /** Where "Transfer playback" can move the music: every speaker in reach but the current one. */
     val transferTargets: StateFlow<List<SpeakerUi>> = combine(playing.speakers, playing.speaker) { all, current ->
         all.filter { it.available && it.id != current.id }
     }.stateIn(scope, SharingStarted.Eagerly, emptyList())
 
-    /** A tap on [target] in "Play on". [PlayOnAction.Ask] has done nothing yet: [moveTo] or [select] answers it. */
+    /** On [PlayOnAction.Ask] nothing has happened yet: the caller answers with [moveTo] or [select]. */
     suspend fun choose(target: SpeakerUi): PlayOnAction {
         val current = playing.speaker.value
         val music = held(current)
@@ -92,25 +86,18 @@ class PlayOnController(
         return choice
     }
 
-    /**
-     * What [speaker] holds that can go to another one: its own queue's item, or a download playing
-     * from this phone. Not another source's music (AirPlay, an input), nor a play still on its way.
-     */
+    // Only the speaker's own queue item or a download playing here: not another source's music
+    // (AirPlay, an input), nor a play still on its way.
     private fun held(speaker: SpeakerUi): NowPlayingUi? = playing.nowPlaying.value?.takeIf {
         val own = playing.playsDownload(speaker.id) || data.speakers.currentItemStatus(speaker.id) != null
         own && speaker.id !in dispatcher.pending.value
     }
 
-    /**
-     * The music on [from] goes to [target], which becomes the speaker: it plays on there when [play],
-     * else it rests there at the same place. It runs in the app's scope, so closing the sheet (or
-     * leaving the screen) does not stop it halfway; the speaker button changes at once, and the
-     * music shows there on its way.
-     */
+    /** Runs in the app's scope, so closing the sheet or leaving the screen does not stop it halfway. */
     fun moveTo(target: SpeakerUi, from: SpeakerUi = playing.speaker.value, play: Boolean = true) {
         val now = SystemClock.elapsedRealtime()
         val held = playing.nowPlaying.value
-        // It stands where it is until the speaker reports it; its volume is the speaker's own.
+        // The position stands until the target reports it, and the source's volume is not the target's.
         val music = held?.copy(
             speaker = target,
             volume = null,
@@ -153,10 +140,7 @@ class PlayOnController(
         }
     }
 
-    /**
-     * A download plays from this phone's files, which no speaker can reach: the server starts the
-     * item on [to] at [place], or lets it rest there, and the phone lets go of it.
-     */
+    // No speaker can reach this phone's files: the server plays the item on [to] from [place] instead.
     private suspend fun sendDownload(place: ItemPosition, title: String, to: SpeakerUi, play: Boolean) {
         store(to)
         withContext(Dispatchers.Main) { local.stop() }
@@ -171,14 +155,13 @@ class PlayOnController(
         }
     }
 
-    /** On this phone a download plays from its files, as any play of it here does: [from] pauses. */
+    // On this phone a download always plays from its files, so [from] only pauses.
     private suspend fun playDownloadHere(place: ItemPosition, from: SpeakerUi) {
         store(playing.speakers.value.first { it.isPhone })
         data.session.api.pause(from.id)
         withContext(Dispatchers.Main) { local.play(place.uri, (place.seconds * MS_PER_SECOND).toLong()) }
     }
 
-    /** Once [queueId] reports [place]'s item, it shows there, resting, and its next play starts there. */
     private suspend fun setPausedPositionOnceReported(queueId: String, place: ItemPosition) {
         withTimeoutOrNull(REPORT_WAIT_MS) {
             data.speakers.queues.first { it[queueId]?.queue?.currentItem?.mediaItem?.uri == place.uri }
@@ -197,9 +180,8 @@ class PlayOnController(
     }
 
     /**
-     * The music becomes the speaker ([speakerToFollow]). It reads the server's list as this
-     * connection has it, waiting for one after a reconnect, and changes nothing without one rather
-     * than follow an old list.
+     * Waits for this connection's speaker list, and changes nothing without one rather than follow
+     * an old list.
      */
     suspend fun followPlaying() {
         val speakers = data.speakers
@@ -221,9 +203,8 @@ class PlayOnController(
 }
 
 /**
- * Whom following the music picks: This phone (null) whenever it plays itself; else the speaker
- * that plays, of several the one leading the most others (a group's leader); with none playing,
- * This phone. A speaker [skipped] in Settings is followed only as the group of one that is not.
+ * Null is This phone. Of several speakers that play, the one leading the most others wins; one
+ * [skipped] in Settings counts only as the leader of one that is not.
  */
 internal fun speakerToFollow(
     players: Map<String, Player>,
@@ -242,7 +223,7 @@ internal fun speakerToFollow(
         ?.takeUnless { it.playerId == phoneId }
 }
 
-/** [retry], first connecting This phone afresh when its client had stopped for good. */
+/** Reconnects This phone before [retry] when its client had stopped for good. */
 internal fun PhoneSpeaker.afterStop(error: Throwable, scope: CoroutineScope, retry: () -> Unit): () -> Unit =
     if ((error as? PhoneNotReadyException)?.stopped == true) {
         {
@@ -255,10 +236,8 @@ internal fun PhoneSpeaker.afterStop(error: Throwable, scope: CoroutineScope, ret
         retry
     }
 
-/** How long opening waits for the server's list of speakers before it leaves the speaker as it is. */
 private const val LIST_WAIT_MS = 10_000L
 
-/** How long a speaker may take to report the item it was just given. */
 private const val REPORT_WAIT_MS = 5_000L
 
 private const val MS_PER_SECOND = 1000.0

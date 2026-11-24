@@ -5,14 +5,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Home's sections differ a lot in height; a drag past one must swap with it once, not flicker. */
 class ReorderRuleTest {
     private val heights = mapOf("small" to 100, "tall" to 400, "mid" to 150)
 
     /**
-     * Drags [dragged] from [start] by [steps] px, one drag event each, as the list would: the list
-     * lays the order out top to bottom, the dragged item stays under the finger. Returns every order
-     * a swap made.
+     * Simulates a drag, one event per step in px, with the order laid out top to bottom and the dragged
+     * item under the finger. Returns the order after each swap.
      */
     private fun drag(start: List<String>, steps: List<Int>, dragged: String = "small"): List<List<String>> {
         val order = start.toMutableList()
@@ -53,8 +51,8 @@ class ReorderRuleTest {
     }
 
     @Test fun holdingStillAfterASwapDoesNotSwapBack() {
-        // Just past the tall section's middle, the finger rests: the tall one, moved up into the
-        // dragged item's old slot, now holds its middle in its span, which must not swap them back.
+        // The finger holds still just past the tall section's middle. The tall one, now in the dragged
+        // item's old slot, spans the dragged item's middle, which must not swap them back.
         val swaps = drag(listOf("small", "tall", "mid"), listOf(201) + List(20) { 0 })
         assertEquals(listOf(listOf("tall", "small", "mid")), swaps)
     }

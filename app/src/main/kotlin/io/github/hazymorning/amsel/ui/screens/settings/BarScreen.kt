@@ -16,10 +16,7 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import kotlinx.coroutines.launch
 
-/**
- * Which places the bottom bar shows, five at most, and in what order. Home always stays. Settings
- * taken out of the bar say where they are then: behind a pull down at Home's top.
- */
+/** Settings out of the bar opens by a pull down at Home's top, which its row's note says. */
 @Composable
 fun BarScreen(
     places: OrderedToggles<BarItem>,
@@ -45,7 +42,6 @@ fun BarScreen(
     },
 )
 
-/** Which controls the mini player shows beside what plays, and in what order. Play always stays. */
 @Composable
 fun DockScreen(
     controls: OrderedToggles<DockControl>,

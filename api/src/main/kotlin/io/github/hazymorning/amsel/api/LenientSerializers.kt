@@ -24,9 +24,8 @@ import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 
 /*
- * A provider can fill a field the models declare as int with a float, a string or a number far
- * beyond Int (Audiobookshelf's episode `position` is a publish time in epoch milliseconds). One
- * such value must cost that field, never the item, and never the queue that holds the item.
+ * Providers fill int fields with floats, strings or values beyond Int (Audiobookshelf's episode
+ * `position` is epoch milliseconds). Such a value reads as null instead of failing the item or queue.
  */
 
 private fun Decoder.element(): JsonElement? = (this as? JsonDecoder)?.decodeJsonElement()
@@ -39,7 +38,6 @@ private fun JsonElement?.asLong(): Long? {
 
 private val LONG_RANGE = Long.MIN_VALUE.toDouble()..Long.MAX_VALUE.toDouble()
 
-/** A whole number sent as an int, a float or a numeric string; anything else reads as null. */
 internal object LenientLongSerializer : KSerializer<Long?> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LenientLong", PrimitiveKind.LONG).nullable
 
@@ -50,7 +48,6 @@ internal object LenientLongSerializer : KSerializer<Long?> {
         if (value == null) encoder.encodeNull() else encoder.encodeLong(value)
 }
 
-/** As [LenientLongSerializer]; a value outside Int reads as null. */
 internal object LenientIntSerializer : KSerializer<Int?> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LenientInt", PrimitiveKind.INT).nullable
 
@@ -62,7 +59,7 @@ internal object LenientIntSerializer : KSerializer<Int?> {
         if (value == null) encoder.encodeNull() else encoder.encodeInt(value)
 }
 
-/** A repeat mode by its name; one this app does not know (MA's `unknown`) reads as off. */
+/** A mode not in [RepeatMode], such as MA's `unknown`, reads as off. */
 internal object RepeatModeSerializer : KSerializer<RepeatMode> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("RepeatMode", PrimitiveKind.STRING)
 
@@ -74,7 +71,6 @@ internal object RepeatModeSerializer : KSerializer<RepeatMode> {
     override fun serialize(encoder: Encoder, value: RepeatMode) = encoder.encodeString(value.api)
 }
 
-/** An object that reads as null when it does not decode, instead of failing what holds it. */
 internal open class OrNullSerializer<T : Any>(private val inner: KSerializer<T>) : KSerializer<T?> {
     override val descriptor: SerialDescriptor = inner.nullable.descriptor
 
@@ -88,7 +84,6 @@ internal open class OrNullSerializer<T : Any>(private val inner: KSerializer<T>)
         if (value == null) encoder.encodeNull() else encoder.encodeSerializableValue(inner, value)
 }
 
-/** A list whose entries that do not decode are left out, instead of failing the list. */
 internal open class SkipInvalidSerializer<T>(private val inner: KSerializer<T>) : KSerializer<List<T>> {
     private val list = ListSerializer(inner)
 
@@ -102,10 +97,7 @@ internal open class SkipInvalidSerializer<T>(private val inner: KSerializer<T>) 
     override fun serialize(encoder: Encoder, value: List<T>) = encoder.encodeSerializableValue(list, value)
 }
 
-/**
- * An author or narrator. Library items name them as artists (an ItemMapping with a uri), while
- * some providers send plain names (2.10 local files).
- */
+/** An author or narrator: an ItemMapping with a uri from library items, a plain name from 2.10 local files. */
 @kotlinx.serialization.Serializable(with = CreditSerializer::class)
 public data class Credit(val name: String, val uri: String? = null)
 
@@ -127,7 +119,7 @@ internal object CreditSerializer : KSerializer<Credit> {
         else -> throw SerializationException("Not a credit: $element")
     }
 
-    // As the server sends it, so a page kept on the phone reads back with its author's link.
+    // As the server sends it, so an item stored on the phone reads back with its author's uri.
     override fun serialize(encoder: Encoder, value: Credit) {
         val json = encoder as? JsonEncoder ?: return encoder.encodeString(value.name)
         json.encodeJsonElement(

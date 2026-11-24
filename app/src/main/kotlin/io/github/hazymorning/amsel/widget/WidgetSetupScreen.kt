@@ -56,7 +56,6 @@ import io.github.hazymorning.amsel.ui.theme.SmoothShape
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.flow.map
 
-/** Widget [widgetId]'s page; Play … picks with Search on a page of its own. */
 @Composable
 fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBack: () -> Unit) {
     val graph = LocalContext.current.graph
@@ -124,11 +123,6 @@ fun WidgetSetupRoute(widgetId: Int, wallpaper: Color?, onDone: () -> Unit, onBac
     }
 }
 
-/**
- * The widget as it will look, at its size on the home screen, over the wallpaper's own colour; under
- * it which speaker it keeps to and how it looks, then its parts in their order: what plays, and the
- * buttons, which can be none.
- */
 @Composable
 fun WidgetSetupScreen(
     state: WidgetSetupUiState,
@@ -144,13 +138,13 @@ fun WidgetSetupScreen(
 ) {
     val haptics = LocalHapticFeedback.current
     val slots = state.setup.slots
-    // The order while a drag swaps rows; the saved one replaces it on drop.
+    // The order during a drag; the saved setup replaces it after the drop.
     val at = state.setup.words
     var parts by remember(slots, at) { mutableStateOf(widgetParts(slots, at)) }
     val list = rememberLazyListState()
     val reorder = rememberReorderState(
         list,
-        // What plays stands at either end: the buttons move past each other, never past it.
+        // Only buttons are swap targets: a dragged button never passes the text row.
         movable = { key -> parts.any { it is WidgetPart.Button && it.key == key } },
         onSwap = { from, to ->
             val a = parts.indexOfFirst { it.key == from }
@@ -200,7 +194,6 @@ fun WidgetSetupScreen(
     }
 }
 
-/** Which speaker the widget keeps to, its background, and which buttons stand on a cell. */
 @Composable
 private fun WidgetSettings(state: WidgetSetupUiState, onSheet: (WidgetSheet) -> Unit) = SettingsBlock {
     row { shape ->
@@ -220,7 +213,6 @@ private fun WidgetSettings(state: WidgetSetupUiState, onSheet: (WidgetSheet) -> 
     }
 }
 
-/** The parts' name, and where the widget is too small for every button, which ones it shows. */
 @Composable
 private fun PartsLabel(state: WidgetSetupUiState) {
     val hidden = state.setup.slots.size - state.fits
@@ -242,7 +234,6 @@ private fun PartsLabel(state: WidgetSetupUiState) {
     }
 }
 
-/** A few words under a label, set as a setting's detail, wrapping at any type size. */
 @Composable
 private fun WidgetHint(text: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyMedium
@@ -255,7 +246,6 @@ private fun WidgetHint(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** The widget drawn from the same views the launcher shows, at its size there; nothing on it acts here. */
 @Composable
 private fun WidgetStage(state: WidgetSetupUiState, wallpaper: Color?) {
     val picture = state.picture

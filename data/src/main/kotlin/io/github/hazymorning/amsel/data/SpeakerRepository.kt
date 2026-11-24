@@ -23,15 +23,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
-/**
- * Every speaker and its queue, kept current from server events. Speakers are Music Assistant
- * players; "This phone" is one of them once Sendspin runs. A queue's position is the server's,
- * except where the app has put it ([SeekTracker]).
- */
 class SpeakerRepository(
     private val api: MaApi,
     private val elapsedRealtime: () -> Long,
-    /** Ends a seek the server never confirmed (without one the next report after it does). */
+    // Times out a seek the server never confirms; without it, the next report after the window does.
     private val scope: CoroutineScope? = null,
 ) : SeekTracker {
     private val _players = MutableStateFlow<Map<String, Player>>(emptyMap())
@@ -40,56 +35,53 @@ class SpeakerRepository(
         MutableSharedFlow<String>(extraBufferCapacity = 16, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     private val _gone = MutableStateFlow<Set<String>>(emptySet())
 
-    /** Server clock minus phone clock, in seconds. */
+    // Server clock minus phone clock, in seconds.
     @Volatile private var skew = 0.0
 
-    /** One reload at a time; [heard] holds the events that came while its lists were on their way. */
+    // One reload at a time; [heard] holds the events that arrive while its lists load.
     private val reloading = Mutex()
     private var heard: MutableList<Pair<MaEvent, Long>>? = null
 
     private val _loads = MutableStateFlow(0)
 
-    /** By queue id; read and written with this object's lock held, as every queue change is. */
+    // By queue id; guarded by this object's lock, like every queue change.
     private val seeks = mutableMapOf<String, PendingSeek>()
     private var tickets = 0L
 
-    /** What This phone's queue held, and where, when its client left the server; under the lock too. */
+    // This phone's item and position when its client left the server; guarded by the lock too.
     private val away = mutableMapOf<String, ItemPosition>()
 
     val players: StateFlow<Map<String, Player>> = _players.asStateFlow()
 
-    /** How often the server's lists were read since the last [clear]; events keep them current between reads. */
+    /** List reads since the last [clear]; 0 means not listed yet. */
     val loads: StateFlow<Int> = _loads.asStateFlow()
     val queues: StateFlow<Map<String, QueueState>> = _queues.asStateFlow()
 
-    /** Queue ids whose Up next changed; re-fetch their items. */
+    /** Queue ids whose items changed; the event carries no items, so re-fetch them. */
     val queueItemsChanged: SharedFlow<String> = _queueItemsChanged.asSharedFlow()
 
     /**
-     * Players the server has dropped: This phone's, when its Sendspin client closes after the
-     * socket's idle close (no event may tell us) or the server says it is unavailable. They stay in
-     * [players], so the notification keeps the paused song, but are not on the server again until it
-     * adds them again or a reload lists them; an update does not count, as 2.11.0b7 sends one calling
-     * the phone available a second after dropping it (live).
+     * Players the server dropped (This phone after the idle close, or reported unavailable), kept in [players] for
+     * the notification. Back only on player_added or a reload: an update can still call a dropped player
+     * available. See docs/API-NOTES.md, "This phone (Sendspin)".
      */
     val gone: StateFlow<Set<String>> = _gone.asStateFlow()
 
-    /** The server dropped [id] while no event could reach us (see [gone]). */
+    /** The server dropped [id] while the socket was closed, so no event says so. */
     fun markGone(id: String) = _gone.update { it + id }
 
-    /** A moment the server names in Unix seconds, on this phone's clock in milliseconds. */
+    /** Server Unix seconds to phone wall-clock milliseconds. */
     fun phoneMillis(serverSeconds: Double): Long = ((serverSeconds - skew) * MS_PER_SECOND).toLong()
 
     /**
-     * Loads everything after (re)connecting: events are not replayed. The lists can be older than
-     * events heard while they were on their way, so those apply again over them.
+     * Call after every connect: events are not replayed. Events heard during the load are applied again over its
+     * older lists.
      */
     suspend fun refresh() = reloading.withLock { load() }
 
-    /** Lists the speakers unless that was done since the last [clear]: what each holds is known then. */
     suspend fun ensureListed() = reloading.withLock { if (_loads.value == 0) load() }
 
-    /** Reads the lists over [api], a socket of its own: no events follow them, so the next read does. */
+    /** Over a socket of its own (the widget's): no events follow, so only the next read updates them. */
     suspend fun read(api: MaApi) = reloading.withLock { load(api) }
 
     private suspend fun load(from: MaApi = api) {
@@ -100,7 +92,7 @@ class SpeakerRepository(
             val queues = from.queues()
             synchronized(this) {
                 _players.value = players.associate { it.playerId to it.asShown() }
-                // The reload is the server's own list: whatever it holds is there.
+                // The server's own list: nothing in it is gone.
                 _gone.value = emptySet()
                 _queues.value = queues.associate { it.queueId to shown(it, anchor(it)) }
                 heard?.forEach { (event, at) -> apply(event, at) }
@@ -117,7 +109,7 @@ class SpeakerRepository(
         apply(event, at)
     }
 
-    /** [at]: when the event came, on this phone's monotonic clock. */
+    // [at] is on the monotonic clock.
     private fun apply(event: MaEvent, at: Long) {
         val id = event.objectId ?: return
         when (event.name) {
@@ -142,7 +134,7 @@ class SpeakerRepository(
 
             "queue_time_updated" -> {
                 val seconds = (event.data as? JsonPrimitive)?.doubleOrNull ?: return
-                // A queue not known yet brings its own time when it comes.
+                // An unknown queue brings its own time when it arrives.
                 val state = _queues.value[id] ?: return
                 _queues.value += id to shown(state.queue, PositionAnchor(seconds, at))
             }
@@ -159,10 +151,8 @@ class SpeakerRepository(
     }
 
     /**
-     * This phone's client left the server, which rebuilds the queue at the next join from a cache
-     * that keeps the time of its last pause or new item, never of a seek (2.10.9 and 2.11, live): a
-     * book whose chapter was picked came back at the old one, as far back as chapter 1. So what the
-     * queue [queueId] holds and where is kept for [rejoined], for a book or an episode.
+     * This phone's client left: at the next join the server rebuilds its queue from a cache that never holds a
+     * seek, so a book's or episode's place is kept for [rejoined]. See docs/API-NOTES.md, "This phone (Sendspin)".
      */
     fun left(queueId: String) = synchronized(this) {
         val state = _queues.value[queueId]
@@ -174,7 +164,7 @@ class SpeakerRepository(
         }
     }
 
-    /** This phone's client joined again: its queue shows where it was, and the next play starts there. */
+    /** Shows the queue at the place kept by [left]; the next play starts there. */
     fun rejoined(queueId: String) = synchronized(this) { away.remove(queueId)?.let { setPausedPosition(queueId, it) } }
 
     override fun currentItemStatus(queueId: String): CurrentItemStatus? = synchronized(this) {
@@ -189,7 +179,7 @@ class SpeakerRepository(
         val state = _queues.value[queueId]
         val at = elapsedRealtime()
         val here = state?.queue?.currentUri == place.uri
-        // Where the server has the queue, not where an earlier seek of ours put it.
+        // The server's position, not where an earlier seek of ours put it.
         val before = when (val earlier = seeks[queueId]) {
             is PendingSeek.Seeking -> earlier.reported ?: earlier.before
             is PendingSeek.Paused -> null
@@ -247,7 +237,7 @@ class SpeakerRepository(
     private fun currentSeek(queueId: String, ticket: Long): PendingSeek.Seeking? =
         (seeks[queueId] as? PendingSeek.Seeking)?.takeIf { it.ticket == ticket }
 
-    /** The server's latest word since the answer counts now, if it fits: none may follow it for a while. */
+    // The latest report since the answer counts now, if it fits: none may follow it for a while.
     private fun applyLastReport(queueId: String, ticket: Long) = synchronized(this) {
         val seek = currentSeek(queueId, ticket) ?: return@synchronized
         val state = _queues.value[queueId] ?: return@synchronized
@@ -255,24 +245,19 @@ class SpeakerRepository(
         _queues.value += queueId to shown(state.queue, last, elapsedRealtime())
     }
 
-    /** A seek the server never reported reached gives way to what it last said. */
     private fun expireSeek(queueId: String, ticket: Long) = synchronized(this) {
         val seek = currentSeek(queueId, ticket)?.takeIf { it.over(elapsedRealtime()) } ?: return@synchronized
         seeks.remove(queueId)
         showServers(queueId, seek.reported)
     }
 
-    /** The queue shows [position] again, moving with the server's word; where it stands when none is known. */
     private fun showServers(queueId: String, position: PositionAnchor?) {
         val state = _queues.value[queueId] ?: return
         val at = position ?: PositionAnchor(state.position.seconds, elapsedRealtime())
         _queues.value += queueId to QueueState(state.queue, at)
     }
 
-    /**
-     * What [queue] shows, given the position [reported] for it and weighed at [nowMs]: the report,
-     * unless the app has put the queue elsewhere ([PendingSeek]). Call with the lock held.
-     */
+    // Call with the lock held.
     private fun shown(queue: PlayerQueue, reported: PositionAnchor, nowMs: Long = reported.atElapsedMs): QueueState {
         val seek = seeks[queue.queueId] ?: return QueueState(queue, reported)
         val (state, still) = seek.shows(queue, reported, nowMs)
@@ -281,9 +266,8 @@ class SpeakerRepository(
     }
 
     /**
-     * Where [media] is now, from the time the server last gave for it; null when it gave none.
-     * Another source than the speaker's queue (AirPlay, Spotify Connect, a group's leader) reports
-     * its time only there.
+     * For a source other than the speaker's queue (AirPlay, Spotify Connect, a group's leader), which reports its
+     * time only in [media].
      */
     fun position(media: PlayerMedia, playing: Boolean): PositionAnchor? {
         val seconds = media.elapsedTime ?: return null
@@ -297,7 +281,7 @@ class SpeakerRepository(
     private fun anchor(queue: PlayerQueue) =
         anchor(queue.elapsedTime, queue.elapsedTimeLastUpdated, queue.isPlaying, queue.speed)
 
-    /** [seconds] as the server gave them at [updated] (its clock), moved on to now while [playing]. */
+    // [updated] is on the server's clock.
     private fun anchor(seconds: Double, updated: Double?, playing: Boolean, speed: Double): PositionAnchor {
         val drift = if (playing && updated != null) epochSeconds() + skew - updated else 0.0
         return PositionAnchor(seconds + drift.coerceIn(0.0, MAX_DRIFT_S) * speed, elapsedRealtime())

@@ -25,7 +25,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Edit Home's bar, a title beside a word, in German: where the title stands as the type grows. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class PageTopBarTest {
@@ -45,7 +44,7 @@ class PageTopBarTest {
 
     private fun room(): DpRect = compose.onNodeWithText(TITLE).getUnclippedBoundsInRoot()
 
-    /** The word's layout, which is its letters. */
+    /** TextAction's layout is its visible text, so these are its letters' bounds. */
     private fun done(): DpRect = compose.onNodeWithTag(DONE).getUnclippedBoundsInRoot()
 
     @Test fun theTitleStandsInTheBarsMiddleWhileItFitsThere() {

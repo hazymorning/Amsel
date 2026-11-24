@@ -12,40 +12,34 @@ import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.ui.components.glyphBoundsOf
 import io.github.hazymorning.amsel.ui.components.weighted
 
-/** A widget's three kinds of words, as res/layout/widget_words.xml sets them: size and line in sp. */
+/** Text size and line height in sp, and weight; keep in step with res/layout/widget_words.xml. */
 internal enum class WidgetLine(val size: Float, val weight: Int, val line: Float) {
     Speaker(13f, 400, 16f),
     Title(16f, 700, 20f),
     Subtitle(13f, 400, 16f),
 }
 
-/** A glyph's ink, in dp. */
+/** A glyph's visible bounds in dp. */
 internal data class WidgetGlyphBounds(val width: Float, val height: Float)
 
-/** A glyph's ink in its square of [side] dp, and how far its middle stands off the square's. */
+/** [dx], [dy]: the offset in dp of the visible bounds' centre from the drawable's centre. */
 internal data class GlyphPosition(val ink: WidgetGlyphBounds, val dx: Float, val dy: Float)
 
-/**
- * The phone's type and Amsel's glyphs as a widget sets them, in dp: where ink starts, so the widget
- * lines up by its ink as Amsel's screens do. The words are in the phone's own sans-serif (the widget's
- * layouts name it), which this process measures as the launcher draws it, at the phone's text size,
- * as large as [size] sets them.
- */
+/** Measures in this process what the launcher draws: the layouts use the system sans-serif, so the metrics match. */
 internal class WidgetTextMetrics(private val context: Context, val size: WordSize = WordSize.Regular) {
     private val metrics get() = context.resources.displayMetrics
     private val scale get() = size.scale
 
-    /** The type as [size]'s layout sets it. */
     fun sized(size: WordSize) = if (size == this.size) this else WidgetTextMetrics(context, size)
 
-    /** [sp] at the phone's text size, which grows large text less than small. */
+    /** Through applyDimension, which applies Android 14's non-linear font scaling. */
     fun dp(sp: Float): Float = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, metrics) / metrics.density
 
     val type: WidgetLineHeights
         get() = WidgetLineHeights(dp(WidgetLine.Speaker.line), dp(WidgetLine.Title.line), dp(WidgetLine.Subtitle.line))
             .scaled(scale)
 
-    /** The speaker's glyph is as large as its name is set, as beside words in Amsel. */
+    /** The speaker glyph's side: widget_words.xml sizes it in sp, as the name. */
     val speakerGlyph: Float get() = dp(WidgetLine.Speaker.size * scale)
 
     private fun paint(line: WidgetLine) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -53,23 +47,19 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, line.size * scale, metrics)
     }
 
-    /** One line's height without the room a second line adds. */
+    /** Ascent to descent of one line, without line spacing. */
     fun height(line: WidgetLine): Float = paint(line).fontMetricsInt.let { it.descent - it.ascent } / metrics.density
 
-    /**
-     * How far below a line's top its capitals start: the words line up there, whatever the title,
-     * so the widget does not shift from song to song.
-     */
+    /** Measured on "H", not the text itself, so the alignment does not shift between titles. */
     fun capTop(line: WidgetLine): Float {
         val paint = paint(line)
         val bounds = Rect().also { paint.getTextBounds("H", 0, 1, it) }
         return (-paint.fontMetricsInt.ascent + bounds.top) / metrics.density
     }
 
-    /** [text]'s width set in [line], from its first letter's start to its last one's end. */
     fun width(text: String, line: WidgetLine): Float = paint(line).measureText(text) / metrics.density
 
-    /** How far [text]'s first letter's ink stands in from its start; 0 for words set right to left. */
+    /** The first glyph's left side bearing in dp; 0 for right-to-left text. */
     fun sideBearing(text: String, line: WidgetLine): Float {
         if (text.isEmpty() || Character.getDirectionality(text.codePointAt(0)).isRightToLeft()) return 0f
         val end = text.offsetByCodePoints(0, 1)
@@ -77,7 +67,6 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         return bounds.left / metrics.density
     }
 
-    /** How far [text]'s last letter's ink stands in from its end. */
     fun endBearing(text: String, line: WidgetLine): Float {
         if (text.isEmpty()) return 0f
         val start = text.offsetByCodePoints(text.length, -1)
@@ -86,7 +75,7 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         return (paint.measureText(text, start, text.length) - bounds.right) / metrics.density
     }
 
-    /** Where the words' ink starts below their top: the speaker's glyph, or its name's capitals. */
+    /** The visible top below the box's top: the speaker glyph's or name's, whichever is higher, else the title's. */
     fun wordsTop(words: WidgetWords): Float {
         if (!words.speaker) return capTop(WidgetLine.Title)
         val glyph = speakerGlyph
@@ -99,10 +88,7 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
 
     private fun paintMetrics(line: WidgetLine) = paint(line).fontMetricsInt
 
-    /**
-     * The words' box, as the layout stacks them, and their last line's baseline below its top: the
-     * speaker's row, [titleLines] of the title, and the line under it and the time where they show.
-     */
+    /** (box height, last baseline from its top) in dp, stacked as the layout does; [below]: lines under the title. */
     fun wordsStack(speaker: Boolean, titleLines: Int, below: Int): Pair<Float, Float> {
         var y = if (speaker) maxOf(speakerGlyph, height(WidgetLine.Speaker)) + size.speakerToTitle else 0f
         val more = (titleLines - 1).coerceAtLeast(0) * dp(WidgetLine.Title.line * scale)
@@ -116,7 +102,6 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         return y to baseline
     }
 
-    /** How many of at most [max] lines [text] takes set in [line] [width] dp wide. */
     fun lines(text: String, line: WidgetLine, width: Float, max: Int): Int {
         if (max <= 1 || width <= 0f) return 1
         val layout = StaticLayout.Builder
@@ -127,11 +112,10 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         return layout.lineCount.coerceIn(1, max)
     }
 
-    /** The cut of [glyph] Amsel draws [side] dp square, its line 1.5 dp at any size. */
+    /** The weight of [glyph] whose stroke at [side] dp is nearest 1.5 dp. */
     @DrawableRes
     fun cut(@DrawableRes glyph: Int, side: Float): Int = weighted(glyph, side.dp)
 
-    /** [glyph] drawn [side] dp square, in the cut Amsel draws at that size. */
     fun glyph(@DrawableRes glyph: Int, side: Float): GlyphPosition {
         val ink = glyphBoundsOf(weighted(glyph, side.dp))
         val scale = side / GRID
@@ -142,10 +126,8 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         )
     }
 
-    /** How far the speaker's glyph's ink stands in from its square's start and end. */
     fun speakerSides(): Pair<Float, Float> = sides(SPEAKER)
 
-    /** How far the level's glyph's ink stands in from its square's start and end. */
     fun levelSides(): Pair<Float, Float> = sides(VOLUME)
 
     private fun sides(@DrawableRes glyph: Int): Pair<Float, Float> {
@@ -157,7 +139,6 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
     @get:DrawableRes
     val speakerCut: Int get() = weighted(SPEAKER, speakerGlyph.dp)
 
-    /** The level's glyph, as large as the speaker's. */
     @get:DrawableRes
     val levelCut: Int get() = weighted(VOLUME, speakerGlyph.dp)
 
@@ -168,7 +149,7 @@ internal class WidgetTextMetrics(private val context: Context, val size: WordSiz
         val SPEAKER = io.github.hazymorning.amsel.R.drawable.ic_speaker
         val VOLUME = io.github.hazymorning.amsel.R.drawable.ic_volume
 
-        /** Phosphor's grid. */
+        /** The Phosphor icons' viewport. */
         const val GRID = 256f
     }
 }

@@ -23,11 +23,8 @@ import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.lineHeight
 
 /**
- * One line of text in the secondary tone that can be tapped under a title (an artist). Its layout is its ink, from the
- * cap top to the baseline, so [modifier] places it by its baseline. The pressed shape is its own
- * line and 2 dp more above and below: it holds accents and descenders but never touches the lines
- * next to it, while the target still reaches 48 dp around the ink. [centred] centres it by its ink,
- * else its first letter's ink starts the line.
+ * Laid out from cap top to baseline; the 48 dp target overhangs. The press shape is the line box plus
+ * [PressRoom] above and below: space for accents and descenders, clear of the neighbouring lines.
  */
 @Composable
 fun TextLink(

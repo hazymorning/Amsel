@@ -11,9 +11,8 @@ import io.github.hazymorning.amsel.ui.components.shelfTileWidth
 import io.github.hazymorning.amsel.ui.model.MediaUi
 
 /**
- * A page's last section, one a page: [title] over a sideways shelf of [items], nothing at all when
- * there are none. [above] is how far the last ink before it sits inside its layout; [twoLines]
- * false leaves out the tiles' second line (artists).
+ * One per page, as its item keys are fixed. [above] is how far the last glyph before it sits inside
+ * its layout.
  */
 internal fun LazyListScope.pageShelf(
     title: String,

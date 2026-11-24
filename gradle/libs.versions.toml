@@ -1,5 +1,4 @@
-# Every library the release ships is on the allowlist in docs/dependencies.txt. Adding one needs a
-# written reason in the pull request; CI fails if the release runtime classpath drifts from it.
+# The release runtime classpath must match docs/dependencies.txt (:app:checkBudgets).
 [versions]
 agp = "9.5.0"
 kotlin = "2.4.21"
@@ -31,7 +30,7 @@ turbine = "1.2.1"
 ktlintGradle = "14.2.0"
 ktlint = "1.8.0"
 
-# Sendspin (vendored module, see sendspin/VENDORED.md); versions follow upstream.
+# Sendspin's dependencies: versions follow upstream (sendspin/VENDORED.md).
 ktor = "3.5.2"
 kermit = "2.1.0"
 atomicfu = "0.33.0"
@@ -79,7 +78,7 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 
 junit = { module = "junit:junit", version.ref = "junit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-# The Android 16 (SDK 36) that this Robolectric runs on; offline, a Robolectric that wants another names it.
+# Robolectric's SDK 36 jar; tests run offline, so a Robolectric that wants another fails naming it.
 robolectric-android-all = { module = "org.robolectric:android-all-instrumented", version = "16-robolectric-13921718-i7" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

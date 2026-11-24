@@ -10,7 +10,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
-/** What a page last showed: its item and lists as the server sent them, the first [PageCache.ROWS] of each. */
 @Serializable
 data class CachedPage(
     val item: MediaItem,
@@ -20,11 +19,6 @@ data class CachedPage(
     val shelf: List<MediaItem> = emptyList(),
 )
 
-/**
- * The pages last shown on this phone, so the next visit paints at once while the server is asked
- * again: a file per server and item uri, the least recently shown going past [PAGES]. A cache:
- * Android may clear it, and a page it no longer holds loads as it always did.
- */
 class PageCache(private val dir: File, private val serverId: suspend () -> String?) {
     suspend fun read(uri: String): CachedPage? {
         val file = file(uri) ?: return null
@@ -58,12 +52,11 @@ class PageCache(private val dir: File, private val serverId: suspend () -> Strin
                     ?.drop(PAGES)
                     ?.forEach { it.delete() }
             } catch (e: IOException) {
-                // Not kept: the next visit loads from the server, as before.
+                // Not cached: the next visit loads from the server.
             }
         }
     }
 
-    /** Forgets every page, as the server's other data is forgotten on signing out. */
     suspend fun clear() {
         withContext(Dispatchers.IO) { dir.deleteRecursively() }
     }
@@ -79,7 +72,7 @@ class PageCache(private val dir: File, private val serverId: suspend () -> Strin
         }
 
     companion object {
-        /** A few screens: the rest load under them as before. */
+        // A few screens' worth; the rest loads from the server below them.
         const val ROWS = 100
         const val PAGES = 200
         private const val NAME_BYTES = 12

@@ -39,7 +39,7 @@ class RecentSearchStoreTest {
             recent.add(mix)
             recent.items.first { it.size == 2 }
         }
-        // Read again from the phone, as after the app was closed.
+        // Read back from the file, as after the app was closed.
         val kept = stored { recent -> recent.items.first { it.size == 2 } }
         assertEquals(listOf(RecentItem.Other(mix), RecentItem.Other(plain)), kept)
     }

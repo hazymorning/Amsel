@@ -12,11 +12,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.ui.theme.isNight
 
-/**
- * A short shadow over the dock's top edge, as if the dock stood a little above the page: darkest
- * at the edge and gone [ShadowHeight] above it, falling off as a shadow does, so it reads as depth
- * and not as a line. Stronger at night, where a shadow on dark paper would vanish. It takes no touch.
- */
 @Composable
 fun DockShadow(modifier: Modifier = Modifier) {
     val strength = if (MaterialTheme.colorScheme.isNight) NIGHT_SHADOW else DAY_SHADOW
@@ -32,7 +27,7 @@ fun DockShadow(modifier: Modifier = Modifier) {
     )
 }
 
-/** The square of the way down: faint where it starts, whole at the dock. */
+/** Alpha share = position squared: a falloff that reads as depth, not as a line. */
 private val ShadowStops = listOf(0f to 0f, 0.4f to 0.16f, 0.7f to 0.49f, 0.9f to 0.81f, 1f to 1f)
 
 internal val ShadowHeight = 12.dp

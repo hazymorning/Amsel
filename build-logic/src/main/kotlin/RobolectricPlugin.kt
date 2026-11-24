@@ -9,9 +9,8 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.process.CommandLineArgumentProvider
 
 /**
- * Robolectric's Android as a Gradle dependency, kept in Gradle's cache with the others. Left to
- * itself, Robolectric downloads it on a machine's first test run into ~/.m2, which no CI cache
- * holds: more than 200 MB from Maven Central for every job that runs Robolectric.
+ * Resolves android-all through Gradle, so CI's Gradle cache keeps it: Robolectric's own download goes
+ * to ~/.m2, which no CI cache holds, more than 200 MB for every job that runs Robolectric.
  */
 class RobolectricPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -27,7 +26,7 @@ class RobolectricPlugin : Plugin<Project> {
     }
 }
 
-/** Robolectric offline: it finds its Android by file name, in the jar's own folder in Gradle's cache. */
+/** Offline, Robolectric looks the jar up by its file name in robolectric.dependency.dir. */
 class OfflineAndroid(@get:InputFiles @get:PathSensitive(PathSensitivity.NAME_ONLY) val jars: FileCollection) :
     CommandLineArgumentProvider {
     override fun asArguments(): Iterable<String> = listOf(

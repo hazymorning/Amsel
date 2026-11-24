@@ -10,9 +10,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
-/** The speaker the person picked, or This phone: where the app plays and what it controls. */
 class SpeakerSelection(data: DataGraph, phone: PhoneSpeaker, scope: CoroutineScope) {
-    /** Prefs hold the picked speaker; null means "This phone", the default. */
     val target: StateFlow<PlaybackTarget> =
         combine(data.prefs.prefs.filterNotNull().map { it.speakerId }, phone.playerId) { selected, phoneId ->
             if (selected == null ||

@@ -9,12 +9,11 @@ import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 
-/** How many rows from either end of a paged list it asks for more. */
 private const val LOAD_AHEAD = 10
 
 /**
- * Asks a paged list for more as it nears its end ([onNearEnd]), and its start when it pages both
- * ways ([onNearStart]): each time the rows left there come within [LOAD_AHEAD].
+ * Calls [onNearEnd] or [onNearStart] each time the rows left before that end change while within
+ * [LOAD_AHEAD], so calls repeat; the callee must ignore them while a page loads.
  */
 @Composable
 fun LoadAhead(list: LazyListState, onNearEnd: () -> Unit, onNearStart: (() -> Unit)? = null) {

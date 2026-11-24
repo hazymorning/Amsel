@@ -29,11 +29,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.controls
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/**
- * A small glyph-and-word button on a quiet pill: Search's Clear. 36 dp high, its glyph's ink and
- * its word's ink [PillPadding] from its ends and [PillGap] apart, in the controls' ink; its 48 dp
- * target reaches past the pill. The glyph is as large as the word ([wordGlyph]).
- */
+/** The layout is the visible pill; its 48 dp target overhangs it vertically. */
 @Composable
 fun QuietPill(@DrawableRes icon: Int, text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -50,13 +46,12 @@ fun QuietPill(@DrawableRes icon: Int, text: String, onClick: () -> Unit, modifie
             color = colors.controls,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            // From the capitals to the baseline, so the word is centred by its letters, not its line.
+            // Cap top to baseline, so the word centres by its letters, not its line box.
             modifier = Modifier.clearAndSetSemantics {}.capToBaseline(style).trimSideBearings(text, style),
         )
     }
 }
 
-/** The pill's ground and the 48 dp target that reaches above and below it. */
 @Composable
 private fun Modifier.quietGround(onClick: () -> Unit, description: String): Modifier {
     val reach = (Sizes.TouchTarget - Sizes.PillHeight) / 2

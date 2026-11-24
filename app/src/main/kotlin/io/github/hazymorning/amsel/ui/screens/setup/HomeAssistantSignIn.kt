@@ -48,10 +48,8 @@ import io.github.hazymorning.amsel.ui.components.WaitingState
 enum class HomeAssistantPageState { Opening, Shown, Unreachable }
 
 /**
- * Home Assistant's own sign-in page, inside the app. JavaScript and DOM storage are on because Music Assistant's callback page needs them. When the page sends the
- * browser to the return URL, its `code` is the session token: [onCode] receives it and the page
- * never loads; a return without one is [onFailed]. Back or the close glyph is [onClose]. The page
- * lasts as long as this step, through the activity being made again (a turned phone).
+ * JavaScript and DOM storage are on because Music Assistant's callback page needs them. The return URL
+ * never loads: its `code` is the session token (docs/API-NOTES.md, "Sign in with Home Assistant").
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -88,7 +86,7 @@ fun HomeAssistantSignIn(
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
                     settings.allowContentAccess = false
-                    // Set again in each activity, so the page answers the one on screen.
+                    // Set on every attach, so the callbacks reach the current activity's composition.
                     webViewClient = object : WebViewClient() {
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             val target = request.url.toString()
@@ -98,8 +96,8 @@ fun HomeAssistantSignIn(
                             return true
                         }
 
-                        // Plain http only to a home address by its form, as the app's own client allows it: DNS
-                        // on a hostile network names anything a private address.
+                        // Plain http only to a host that is local by its form (isLanHost), as the app's client
+                        // allows: a hostile network's DNS can map any name to a private address.
                         override fun shouldInterceptRequest(
                             view: WebView,
                             request: WebResourceRequest,
@@ -136,15 +134,14 @@ fun HomeAssistantSignIn(
 }
 
 /**
- * The page and how far it got, kept while the sign-in step lasts. Between activities its view holds
- * the application, never the activity that is gone; when the step ends it is wiped and destroyed.
+ * Outlives activity recreation for as long as the step lasts. Between activities the WebView's context is
+ * the application, so no destroyed activity leaks; when the step ends it is wiped and destroyed.
  */
 private class RetainedPage(context: Context, url: String) : RetainObserver {
     private val host = MutableContextWrapper(context)
     val web = WebView(host).apply { loadUrl(url) }
     val page = mutableStateOf(HomeAssistantPageState.Opening)
 
-    /** The view, in [context]'s activity. */
     fun attach(context: Context): WebView {
         host.baseContext = context
         (web.parent as? ViewGroup)?.removeView(web)
@@ -164,18 +161,15 @@ private class RetainedPage(context: Context, url: String) : RetainObserver {
     override fun onEnteredComposition() = Unit
 
     private fun end() {
-        // Music Assistant's callback page leaves the session token in localStorage.
+        // Music Assistant's callback page leaves the session token in localStorage
+        // (docs/API-NOTES.md, "Sign in with Home Assistant").
         WebStorage.getInstance().deleteAllData()
         CookieManager.getInstance().removeAllCookies(null)
         web.destroy()
     }
 }
 
-/**
- * The frame around the page: a bar with the close glyph, and while the page is not shown, the
- * waiting or "can't reach" state in its place. [web] stays composed underneath, hidden, so it keeps
- * loading and never flashes a blank page.
- */
+/** [web] stays composed under the waiting and error states, hidden, so it keeps loading and never flashes blank. */
 @Composable
 fun HomeAssistantFrame(
     page: HomeAssistantPageState,

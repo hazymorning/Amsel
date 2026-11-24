@@ -12,11 +12,7 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.app.MessageAction
 import io.github.hazymorning.amsel.app.MessageController
 
-/**
- * Puts [messages] into [host] one at a time, for a `MessageHost` to show. A message with Retry,
- * Update or Download stays longer, so there is time to read it and decide; Undo goes with the
- * moment it belongs to.
- */
+/** Retry, Update and Download stay long enough to read and decide; Undo belongs to the moment and is short. */
 @Composable
 fun ShowMessages(messages: MessageController, host: SnackbarHostState) {
     val resources = LocalResources.current

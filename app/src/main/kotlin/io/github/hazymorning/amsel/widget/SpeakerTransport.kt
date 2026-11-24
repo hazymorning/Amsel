@@ -6,15 +6,10 @@ import androidx.media3.common.Player
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * A widget's taps on a speaker of its own, whichever Amsel is on: put to that speaker as Amsel's own
- * buttons put theirs to the one it plays on, through a player for it alone ([player]), let go after
- * the command. So a book's skips hold here too. Main thread only.
- */
+/** Taps for a widget kept to its own speaker, through a player made for that speaker per command. Main thread only. */
 internal class SpeakerTransport(
     private val wakeSession: () -> Unit,
     private val player: () -> Player,
-    /** The tap shows at once on the widgets and in Amsel, before the speaker answers. */
     private val showPlaying: (Boolean) -> Unit,
 ) : WidgetTransport {
     override fun wake() = wakeSession()
@@ -43,10 +38,7 @@ internal class SpeakerTransport(
         it.play()
     }
 
-    /**
-     * Waits until the speaker offers one of [commands] (it may not have reported yet: Amsel was
-     * closed), runs [command], and lets the player go once the command is on its way.
-     */
+    /** Waits for one of [commands] to be offered: after a cold start the speaker has not reported yet. */
     private suspend fun control(vararg commands: Int, command: (Player) -> Unit) {
         val player = player()
         try {
@@ -63,11 +55,11 @@ internal class SpeakerTransport(
     }
 
     private companion object {
-        /** A speaker reports within a second or two of the connection opening. */
+        /** A speaker's first report usually comes 1 to 2 s after the connection opens. */
         const val OFFER_WAIT_MS = 5_000L
         const val POLL_MS = 100L
 
-        /** Long enough for the command to leave before the player lets go. */
+        /** Time for the command to go out before the player is released. */
         const val SETTLE_MS = 500L
     }
 }

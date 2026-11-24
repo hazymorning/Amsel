@@ -33,10 +33,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/**
- * The blackbird at the foot of Settings stands on the page's end, never makes a page scroll that fits
- * without it, stays the README's picture and is a picture only.
- */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
@@ -124,7 +120,7 @@ class SettingsBirdTest {
         return scroll
     }
 
-    /** What is drawn on the page's lower edge, on the screen's centre line, where the front crown stands. */
+    /** The page's bottom edge on the centre line, where the front crown is drawn. */
     private fun footPixel(): Color {
         compose.waitForIdle()
         val pixels = compose.onNodeWithTag(PAGE).captureToImage().toPixelMap()
@@ -134,7 +130,7 @@ class SettingsBirdTest {
     private fun px(dp: Dp) = (dp.value * compose.density.density).roundToInt()
 }
 
-/** The README's header as `scripts/design/readme-header.py` drew it: the disc, two crowns, the bird, a crown. */
+/** The header `scripts/design/readme-header.py` draws, in its order: the disc, two crowns, the bird, a crown. */
 private class HeaderSvg(mode: String) {
     private val svg = File("../docs/design/readme/header-$mode.svg").readText()
     val height = checkNotNull(VIEW_BOX.find(svg)).groupValues[1].toFloat()

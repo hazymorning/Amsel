@@ -158,7 +158,7 @@ class PlayerScreenTest {
         compose.onRoot().performTouchInput {
             swipe(Offset(width * 0.25f, height * cover.y), Offset(width * 0.75f, height * cover.y), 200)
         }
-        // Too short to mean it.
+        // Too short to count as a swipe.
         compose.onRoot().performTouchInput {
             swipe(Offset(width * 0.5f, height * cover.y), Offset(width * 0.55f, height * cover.y), 200)
         }
@@ -338,7 +338,7 @@ class PlayerScreenTest {
         show { PlayOnSheetContent(PlayOnUiState(speakers, "phone"), onSelect = {}) }
         val playing = SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Now playing")
         compose.onNode(hasText("Lanterns · Marlene Vogt") and playing).assertIsDisplayed()
-        // It plays something that has no name here, an input of its own: still it plays.
+        // It plays something unnamed here, such as an input of its own: still playing.
         compose.onNode(hasText("Playing") and playing).assertExists()
         compose.onNodeWithText("Paused · Cooking · Playlist").assertExists()
         compose.onAllNodes(playing).assertCountEquals(2)
@@ -390,7 +390,8 @@ class PlayerScreenTest {
     @Test fun aBooksChaptersOpenOnlyFromTheButtonAtTheBottomRight() {
         val opened = mutableListOf<String>()
         showNowPlaying(PlayerSample.book, opened)
-        // Named under the title, never listed on the page, where a stray touch went to another chapter.
+        // The chapter heads the title block and is never listed on the page, where a stray touch went
+        // to another chapter.
         compose.onNodeWithText("Chapter 3 · The Spouter-Inn").assertExists()
         compose.onNodeWithText("The Spouter-Inn").assertDoesNotExist()
         compose.onNodeWithText("The Counterpane").assertDoesNotExist()

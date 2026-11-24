@@ -3,7 +3,6 @@ package io.github.hazymorning.amsel.ui.navigation
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** The bar from what is stored: each known place once, Home always. */
 class BarItemTest {
     @Test fun nothingStoredIsTheBarAsItComes() {
         assertEquals(
@@ -17,19 +16,18 @@ class BarItemTest {
             listOf(BarItem.Home, BarItem.Search, BarItem.Settings),
             BarItem.of(listOf("home", "-speaker", "search")),
         )
-        // Full, it stays as it was; Settings wait, left out, at the end.
         val full = BarItem.arrangement(listOf("home", "speaker", "search", "library", "albums"))
         assertEquals(
             listOf(BarItem.Home, BarItem.Speaker, BarItem.Search, BarItem.Library, BarItem.Albums),
             full.visible,
         )
         assertEquals(BarItem.Settings, full.order.last())
-        // Once stored with Settings out, they stay out.
+        // Stored hidden ("-settings"), Settings stay hidden.
         assertEquals(listOf(BarItem.Home, BarItem.Search), BarItem.of(listOf("home", "search", "-settings")))
     }
 
     @Test fun theKindsWaitTheirTurnAtTheEnd() {
-        // A bar stored before the kinds could stand in it keeps its places; the kinds join it left out.
+        // Stored by a version without the library kinds in the bar: they join at the end, hidden.
         val stored = BarItem.arrangement(listOf("home", "speaker", "search", "library"))
         assertEquals(BarItem.entries, stored.order)
         assertEquals(

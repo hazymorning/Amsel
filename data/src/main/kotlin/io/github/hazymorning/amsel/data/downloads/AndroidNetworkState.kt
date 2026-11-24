@@ -10,11 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/**
- * The phone's networks as [NetworkState]. Online means the default network carries the internet,
- * validated or not: a home server answers on a network whose internet check fails. Unmetered means
- * some Wi-Fi or Ethernet is up, also beneath a VPN, which Android counts as metered by itself.
- */
+// Online: the default network has INTERNET, validated or not, as a home server answers where the internet check
+// fails. Unmetered: some unmetered network is up, also under a VPN, which Android counts as metered itself.
 class AndroidNetworkState(context: Context) : NetworkState {
     private val manager = context.getSystemService(ConnectivityManager::class.java)
     private val _online = MutableStateFlow(false)
@@ -39,7 +36,7 @@ class AndroidNetworkState(context: Context) : NetworkState {
                 }
             },
         )
-        // A request leaves VPNs out by itself, so this hears the networks beneath one.
+        // A NetworkRequest excludes VPNs by default (NOT_VPN), so this reports the networks under one.
         val unmetered = NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)

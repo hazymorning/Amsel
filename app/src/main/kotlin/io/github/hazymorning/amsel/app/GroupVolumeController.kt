@@ -12,14 +12,10 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** One speaker of a group in the volume sheet. */
 @Immutable
 data class MemberVolume(val id: String, val name: String, val level: Int)
 
-/**
- * The volume of each speaker in a group, beside the group's own (which [PlaybackController] sets). A drag
- * sends at most one level every 150 ms per speaker, and always the last.
- */
+/** Each member's own volume in a group; the group's own volume is [PlaybackController]'s. */
 class GroupVolumeController(
     private val data: DataGraph,
     private val messages: MessageController,
@@ -41,10 +37,6 @@ class GroupVolumeController(
         }
     }
 
-    /**
-     * The speakers [leaderId] plays with whose volume can be set, in the server's order; empty
-     * when it plays alone.
-     */
     fun members(players: Map<String, Player>, leaderId: String): List<MemberVolume> {
         val members = listOfNotNull(players[leaderId]) + players.membersOf(leaderId)
         if (members.size < 2) return emptyList()

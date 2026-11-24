@@ -43,12 +43,8 @@ import io.github.hazymorning.amsel.ui.model.MediaUi
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.capHeight
 
-/**
- * Home's sections in their order, under a tip while there is one to give; in edit mode each can
- * be carried to another place, and Add section stands under the last. A long press on a free spot
- * edits Home, as one on the phone's own home screen does, so Home stays editable with every
- * heading hidden; a cover's, a card's or a heading's own long press comes first.
- */
+// A long press on empty space starts editing, as on the launcher, so Home stays editable with every
+// heading hidden; a cover's, card's or heading's own long press takes precedence.
 @Composable
 internal fun Sections(
     state: HomeUiState,
@@ -65,13 +61,13 @@ internal fun Sections(
 ) {
     val list = rememberLazyListState()
     ScrollEdges(list)
-    // What the list shows between the bar and the dock, so a carried pin scrolls it at those edges.
+    // The list's visible area between the bar and the dock: a carried pin scrolls it at those edges.
     var listBox by remember { mutableStateOf(Rect.Zero) }
     val density = LocalDensity.current
     val shown by rememberUpdatedState(
         with(density) { insets.calculateTopPadding().toPx() to insets.calculateBottomPadding().toPx() },
     )
-    // One for the list's life: a new one at each recomposition would keep every section from skipping.
+    // A new instance on each recomposition would keep every section from skipping.
     val home = remember(list) {
         DragScrollArea(list, vertical = true) {
             listBox.copy(top = listBox.top + shown.first, bottom = listBox.bottom - shown.second)
@@ -136,7 +132,7 @@ internal fun Sections(
                     onSectionMore = { sheet = EditSheet.Actions to section.id },
                     onRename = { editor.setTitle(section.id, it) },
                     onResume = onResume,
-                    // In edit mode the field is a section to arrange, not a way out of Home.
+                    // In edit mode the search field is a section to arrange and does not open Search.
                     onSearch = if (state.editing) ({}) else onSearch,
                     onMoveUp = { editor.moveUp(section.id) }.takeIf { i > 0 },
                     onMoveDown = { editor.moveDown(section.id) }.takeIf { i < sections.lastIndex },
@@ -149,7 +145,7 @@ internal fun Sections(
         }
         if (!state.loading) {
             item(key = FOOTER, contentType = FOOTER) {
-                // Home ends a section's distance above the dock, as if the dock were the next section.
+                // Home ends one section gap above the dock, as if the dock were the next section.
                 if (state.editing) {
                     EditFooter(editor, onReset = { sheet = EditSheet.Reset to "" })
                 } else {
@@ -161,10 +157,6 @@ internal fun Sections(
     EditSheets(sheet, sections, editor, onClose = { sheet = null }, spoken = state.spoken)
 }
 
-/**
- * In edit mode, Add section, centred under the last section a section's distance down, and under
- * it, quieter, the way back to a new person's Home ([onReset] asks first).
- */
 @Composable
 private fun EditFooter(editor: HomeEditor, onReset: () -> Unit) {
     val cap = with(LocalDensity.current) { capHeight(MaterialTheme.typography.bodyLarge) }
@@ -185,7 +177,6 @@ private fun EditFooter(editor: HomeEditor, onReset: () -> Unit) {
 
 private const val FOOTER = "footer"
 
-/** An accessibility action that does this and says it was done. */
 internal fun (() -> Unit).done(): () -> Boolean = {
     this()
     true

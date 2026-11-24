@@ -20,10 +20,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * The songs the server finds similar to the song [key], asked when the page opens and again on
- * Retry. [playing] is the uri playing on the current speaker (or starting there).
- */
+/** [playing] is the URI playing on the current speaker, or starting there. */
 class SimilarSongsViewModel(
     private val key: String,
     private val source: PageSource,
@@ -51,11 +48,11 @@ class SimilarSongsViewModel(
             val found = try {
                 source.similarSongs(key)
             } catch (e: MaCommandException) {
-                // The server refuses where no music service knows the song: nothing to show, nothing to retry.
+                // No music service knows the song: nothing to show or retry (docs/API-NOTES.md, "Extras").
                 emptyList()
             } catch (e: MaConnectionException) {
                 page.value = SimilarSongsUiState(failure = failureText(e))
-                // As every page, it fills in once the server is connected anew.
+                // Like every page, it fills in once the server reconnects.
                 source.connectedAgain()
                 return@launch retry()
             }
@@ -64,17 +61,13 @@ class SimilarSongsViewModel(
     }
 }
 
-/** Up to 25 songs like one song, in the server's order. */
 @Immutable
 data class SimilarSongsUiState(
     val songs: List<TrackUi> = emptyList(),
-    /** The track playing on the current speaker; drawn highlighted when it is among [songs]. */
     val currentTrackKey: String? = null,
-    /** Nothing has come yet: draw the skeleton. */
     val loading: Boolean = false,
-    /** Why the server could not be asked, said in place of the songs with Retry. */
     @StringRes val failure: Int? = null,
 ) {
-    /** What a tap on [track] plays: the list from that song on. */
+    /** The song URIs from [track] on, which a tap plays. */
     fun from(track: TrackUi): List<String> = songs.drop(songs.indexOf(track).coerceAtLeast(0)).map { it.key }
 }

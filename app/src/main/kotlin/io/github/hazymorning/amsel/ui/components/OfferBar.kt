@@ -55,14 +55,8 @@ import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 import kotlinx.coroutines.delay
 
-/** How long an offer waits for its button before it goes. */
 private const val OFFER_MS = 8_000L
 
-/**
- * The [offer] over the dock: it rises into place, and goes after a while, with a swipe aside, or
- * once taken. [speaker] is the one music plays on, named where the offer has no line of its own;
- * a tap on it opens the speakers ([onSpeaker]).
- */
 @Composable
 fun OfferHost(
     offer: Offer?,
@@ -82,7 +76,7 @@ fun OfferHost(
         )
         onDismiss(shown)
     }
-    // The last offer stays drawn while it goes.
+    // Keeps the last offer drawn during the exit animation.
     var last by remember { mutableStateOf(offer) }
     if (offer != null) last = offer
     val still = LocalReducedMotion.current
@@ -136,11 +130,6 @@ fun OfferHost(
     }
 }
 
-/**
- * An offer: the cover of what it is about, its title, and under it the speaker it plays on or a
- * short [line]; one big [button] at the end. A bar on the margins in the second surface tone, as a
- * message is, set apart by tone rather than a line or a shadow.
- */
 @Composable
 fun OfferBar(
     title: String,
@@ -218,5 +207,4 @@ fun OfferBar(
     }
 }
 
-/** The bar's content stands this far in: its cover as far from the edge as a row's from the margin's. */
 private val OfferInset = Space.S3

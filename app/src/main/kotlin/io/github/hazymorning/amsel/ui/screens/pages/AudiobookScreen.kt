@@ -48,11 +48,6 @@ import io.github.hazymorning.amsel.ui.navigation.Route
 import io.github.hazymorning.amsel.ui.rememberRetry
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * A book: its cover and title as an album's, the author and who reads it, how far the person is,
- * one button that resumes (or plays a book not started), then its chapters. A chapter plays from
- * its start; the one the person is in shows the playing mark while it plays.
- */
 @Composable
 fun AudiobookScreen(
     state: AudiobookUiState,
@@ -149,10 +144,6 @@ private fun BookTitle(book: AudiobookUi?, onOpenAuthor: (String) -> Unit) {
     )
 }
 
-/**
- * "2 h 10 min left" over a line of how far the person is, while they are in the middle of the book;
- * otherwise its length, or that they finished it.
- */
 @Composable
 private fun WhereYouAre(state: AudiobookUiState, now: Long) {
     val book = state.book ?: return
@@ -190,9 +181,8 @@ private fun label(state: AudiobookUiState): String = stringResource(
 )
 
 /**
- * The audiobook page for [key] (`library://audiobook/3`). The server resumes a book where the
- * person stopped; once it is on the current speaker, the button plays and pauses it there and a
- * chapter is a seek, so nothing starts over.
+ * [key] is the book's URI, such as `library://audiobook/3`. A play without a start item resumes where
+ * the user stopped (docs/API-NOTES.md, "Audiobooks and podcasts").
  */
 @Composable
 fun AudiobookRoute(navigator: Navigator, key: String, modifier: Modifier = Modifier) {
@@ -206,13 +196,13 @@ fun AudiobookRoute(navigator: Navigator, key: String, modifier: Modifier = Modif
     AudiobookScreen(
         state = state,
         onBack = { navigator.back() },
-        // The play button ticks by itself.
+        // No haptic here: the play button gives its own.
         onResume = { graph.playback.playOrPause(key, state.book?.title) },
         onPlayChapter = { chapter ->
             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
             val on = state.playback
             when {
-                // On the speaker already: a seek, so nothing starts over; and a play, should it rest.
+                // Already on the speaker: a seek, so nothing restarts, then a play if it is paused.
                 on != null -> {
                     graph.playback.control(PlayerControl.Seek(chapter.startMs))
                     if (!on.isPlaying) graph.playback.control(PlayerControl.PlayPause)

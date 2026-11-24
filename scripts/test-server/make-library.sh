@@ -1,19 +1,8 @@
 #!/usr/bin/env bash
-# Generate a tiny, freely licensed test music library for the Music Assistant test server.
-#
-# Everything here is synthesised with ffmpeg (sine tones and filtered noise, solid-colour
-# cover art), so the library carries no third-party copyright and can live in CI caches.
-#
-#   3 artists, 4 albums, 12 tracks, 1 playlist, well under 5 MB.
-#   Formats: FLAC (Vorbis comments + folder.jpg), MP3 (ID3v2.3 + embedded cover),
-#            Ogg Vorbis (Vorbis comments + folder.jpg).
-#
-# Usage: make-library.sh [OUT_DIR]      (default: ./build/test-library next to this script)
-# The output is deterministic for a given ffmpeg version (bitexact flags, fixed seeds).
-#
-# ffmpeg comes from the PATH or, where there is none, from the Docker image named in
-# FFMPEG_IMAGE: the Music Assistant server's carries one, and start.sh has pulled it anyway.
-# CI takes that way, so no package server has to answer for a run.
+# Synthesised with ffmpeg (sine tones, solid-colour covers), so the library holds no third-party
+# copyright; the bitexact flags keep the output the same for a given ffmpeg version.
+# Without ffmpeg on the PATH, FFMPEG_IMAGE runs it: the server image start.sh pulled has one, so CI
+# installs nothing.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -34,18 +23,15 @@ fi
 FF+=(-hide_banner -loglevel error -nostdin -y)
 BITEXACT=(-fflags +bitexact -flags:a +bitexact)
 
-# cover <file> <hex colour> : 600x600 solid-colour JPEG
 cover() {
   "${FF[@]}" -f lavfi -i "color=c=0x$2:s=600x600:d=1" -frames:v 1 -q:v 4 \
     -fflags +bitexact -flags:v +bitexact "$1"
 }
 
-# tone <freq> <seconds> : lavfi source string for a plain sine tone
 tone() {
   echo "sine=frequency=$1:sample_rate=22050:duration=$2"
 }
 
-# flac_track <dir> <file> <freq> <secs> <title> <artist> <albumartist> <album> <n> <total> <date> <genre>
 flac_track() {
   local dir=$1 file=$2 freq=$3 secs=$4 title=$5 artist=$6 aa=$7 album=$8 n=$9 total=${10} date=${11} genre=${12}
   "${FF[@]}" -f lavfi -i "$(tone "$freq" "$secs")" -af "volume=0.3" -ac 1 -ar 22050 \
@@ -56,7 +42,6 @@ flac_track() {
     "$dir/$file"
 }
 
-# mp3_track <dir> <file> <freq> <secs> <title> <artist> <albumartist> <album> <n> <total> <date> <genre> <cover>
 mp3_track() {
   local dir=$1 file=$2 freq=$3 secs=$4 title=$5 artist=$6 aa=$7 album=$8 n=$9 total=${10} date=${11} genre=${12} art=${13}
   "${FF[@]}" -f lavfi -i "$(tone "$freq" "$secs")" -i "$art" \
@@ -69,7 +54,6 @@ mp3_track() {
     "$dir/$file"
 }
 
-# ogg_track <dir> <file> <freq> <secs> <title> <artist> <albumartist> <album> <n> <total> <date> <genre>
 ogg_track() {
   local dir=$1 file=$2 freq=$3 secs=$4 title=$5 artist=$6 aa=$7 album=$8 n=$9 total=${10} date=${11} genre=${12}
   "${FF[@]}" -f lavfi -i "$(tone "$freq" "$secs")" -af "volume=0.3" -ac 1 -ar 22050 \
@@ -80,7 +64,6 @@ ogg_track() {
     "$dir/$file"
 }
 
-# ---------------------------------------------------------------- Aurora Tone (2 albums)
 A="Aurora Tone"
 mkdir -p "$OUT/$A"
 cover "$OUT/$A/artist.jpg" "F2A65A"
@@ -100,7 +83,6 @@ mp3_track "$D" "02 - Updraft.mp3"     659 16 "Updraft"     "$A" "$A" "Second Win
 mp3_track "$D" "03 - Still Air.mp3"   698 20 "Still Air"   "$A" "$A" "Second Wind" 3 3 2023 Electronic "$OUT/.second-wind.jpg"
 rm -f "$OUT/.second-wind.jpg"
 
-# ---------------------------------------------------------------- Basso Continuo (1 album)
 B="Basso Continuo"
 mkdir -p "$OUT/$B"
 cover "$OUT/$B/artist.jpg" "81B29A"
@@ -111,7 +93,6 @@ ogg_track "$D" "01 - Ground Bass.ogg"  110 13 "Ground Bass"  "$B" "$B" "Low End"
 ogg_track "$D" "02 - Pedal Point.ogg"  131 17 "Pedal Point"  "$B" "$B" "Low End" 2 3 2022 Classical
 ogg_track "$D" "03 - Drone Lullaby.ogg" 147 19 "Drone Lullaby" "$B" "$B" "Low End" 3 3 2022 Classical
 
-# ---------------------------------------------------------------- Cirrus (1 album, one guest)
 C="Cirrus"
 mkdir -p "$OUT/$C"
 cover "$OUT/$C/artist.jpg" "F4F1DE"
@@ -123,7 +104,6 @@ mp3_track "$D" "02 - Jet Stream.mp3"    880 15 "Jet Stream"    "$C feat. $A"    
 mp3_track "$D" "03 - Thin Air.mp3"      988 18 "Thin Air"      "$C"                 "$C" "High Clouds" 3 3 2024 Pop "$OUT/.high-clouds.jpg"
 rm -f "$OUT/.high-clouds.jpg"
 
-# ---------------------------------------------------------------- Playlist
 mkdir -p "$OUT/Playlists"
 cat > "$OUT/Playlists/Amsel Mix.m3u" <<'EOF'
 #EXTM3U

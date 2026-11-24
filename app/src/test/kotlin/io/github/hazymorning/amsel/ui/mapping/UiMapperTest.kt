@@ -34,7 +34,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Radio stations, books and podcasts as the recorded servers send them, in the UI's models. */
 class UiMapperTest {
     private val address = ServerAddress.parse("http://ma.local:8095") ?: error("address")
     private val mapper = UiMapper { ImageUrls(address) }
@@ -167,14 +166,13 @@ class UiMapperTest {
     ).forEach { v ->
         val mix = queue(v, "player_queues_get__endless_mix")
         assertEquals("First Light", nowPlaying(mix).mix)
-        // A skip shows the next song at once, in the same mix.
         val skipping = mix.copy(nextItem = mix.currentItem)
         assertEquals("First Light", mapper.nowPlayingNext(skipping, snapshot(skipping), speaker)?.mix)
         assertNull(nowPlaying(queue(v, "player_queues_get__playing")).mix)
         assertNull(nowPlaying(queue(v, "player_queues_get__radio")).mix)
-        // One of the server's own "Infinite Mix" playlists fills a queue as well, and is no endless mix.
+        // A dynamic queue without the mix's source, as an "Infinite Mix" playlist fills one, is no endless mix.
         assertNull(nowPlaying(mix.copy(sources = emptyList())).mix)
-        // AirPlay has the speaker: what it plays is not the mix its queue still holds.
+        // AirPlay has taken the speaker, while its queue still holds the mix.
         val airplay = Player("player", activeSource = "airplay", currentMedia = PlayerMedia(title = "Elsewhere"))
         assertNull(nowPlaying(mix.copy(active = false), airplay).mix)
     }
@@ -194,9 +192,8 @@ class UiMapperTest {
         assertEquals("Artist fact + Transition", playing.title)
         assertEquals("ai_radio://sound_effect/djbdee4d328816_005", playing.key)
         assertNull(playing.heart(canWrite = true))
-        // A skip shows the song that follows, which is a song again.
         assertEquals(false, mapper.nowPlayingNext(queue, snapshot(queue), speaker)?.djBreak)
-        // Another plugin's sound is not the DJ's.
+        // A sound effect from another plugin is no DJ break.
         val rain = item.copy(mediaItem = item.mediaItem?.copy(provider = "ambient_sounds"))
         assertFalse(mapper.queueItem(rain, null).track.djBreak)
         assertFalse(nowPlaying(queue.copy(currentItem = rain)).djBreak)
@@ -206,10 +203,10 @@ class UiMapperTest {
     @Test fun `shuffle and repeat are for a queue of songs alone`() = listOf("2.10", "2.11").forEach { v ->
         val songs = queue(v, "player_queues_get__playing")
         assertTrue(nowPlaying(songs).canShuffle)
-        // A station is one stream, and a mix keeps its own order.
+        // A station is one stream, and the server forces shuffle on in a mix.
         assertFalse(nowPlaying(queue(v, "player_queues_get__radio")).canShuffle)
         assertFalse(nowPlaying(queue(v, "player_queues_get__endless_mix")).canShuffle)
-        // AirPlay has the speaker: the queue's order is not what plays.
+        // AirPlay has taken the speaker, so the queue's order is not what plays.
         val airplay = Player("player", activeSource = "airplay", currentMedia = PlayerMedia(title = "Elsewhere"))
         assertFalse(nowPlaying(songs.copy(active = false), airplay).canShuffle)
     }
@@ -244,7 +241,6 @@ class UiMapperTest {
         val onAir = station.onAir(player.copy(currentMedia = media.copy(title = "Lanterns", artist = "Marlene Vogt")))
         assertEquals("Lanterns", onAir.title)
         assertEquals("Marlene Vogt · Amsel Test Radio", onAir.artist)
-        // Without a song of its own, the station keeps its name.
         assertEquals(station, station.onAir(player.copy(currentMedia = media.copy(title = "Amsel Test Radio"))))
     }
 }

@@ -17,10 +17,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * What plays stands on the dock's margin: its cover as far under the dock's edge as in from the
- * screen's, its skip's ink on the margin across.
- */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class DockCardTest {
@@ -32,14 +28,14 @@ class DockCardTest {
             AmselTheme { Dock(playing, playing.speaker, onOpen = {}, onControl = {}, onSpeaker = {}) {} }
         }
         val dock = compose.onRoot().getUnclippedBoundsInRoot()
-        // Play stands in the row's middle, which is the cover's.
+        // Play is centred on the row, which is the cover's middle.
         val button = compose.onNode(hasContentDescription("Pause").or(hasContentDescription("Play")))
             .getUnclippedBoundsInRoot()
         val coverMiddle = Keyline.Margin + Sizes.DockArt / 2
         assertEquals(coverMiddle.value, ((button.top + button.bottom) / 2 - dock.top).value, HALF_A_PIXEL)
         val next = compose.onNode(hasContentDescription("Next")).getUnclippedBoundsInRoot()
         val inkEnd = (next.left + next.right) / 2 + glyphWidth(R.drawable.ic_skip_next) / 2
-        // The controls stand off the screen's edge, where a thumb finds them: 40 in, not on the margin.
+        // The controls end 40 dp in from the screen's edge, within thumb reach, not on the margin.
         assertEquals(40f, (dock.right - inkEnd).value, 1.dp.value)
     }
 }

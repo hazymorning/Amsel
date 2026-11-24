@@ -5,10 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
-/**
- * A fake speaker: commands change the snapshot the way the server's events would.
- * [calls] records every command for tests.
- */
 class FakeSpeaker(
     initial: SpeakerSnapshot,
     private val queue: List<QueueEntry>,
@@ -55,7 +51,7 @@ class FakeSpeaker(
         if (s.elapsedSeconds >= 5) jumpTo(index()) else jumpTo((index() - 1).coerceAtLeast(0))
     }
 
-    /** As the real one: the place shows at once, standing still while the speaker plays, until it is there. */
+    /** As the real one: the place shows at once, standing still while the speaker plays. */
     override fun seek(playerId: String, positionSeconds: Int, step: Boolean) {
         calls += "seek:$positionSeconds"
         state.update {
@@ -98,6 +94,5 @@ class FakeSpeaker(
         state.update { it?.copy(playActionInProgress = true) }
     }
 
-    /** Simulates a server event, e.g. another household member changing the speaker. */
     fun push(transform: (SpeakerSnapshot) -> SpeakerSnapshot) = state.update { it?.let(transform) }
 }

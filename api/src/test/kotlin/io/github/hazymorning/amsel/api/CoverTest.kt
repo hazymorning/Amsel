@@ -5,7 +5,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Which of the pictures the server sends is an item's cover. */
 class CoverTest {
     @Test fun `a queue's song wears the album nested whole in it, as the server's own choice does`() {
         val item = decodeList("2.11", "player_queues_items", QueueItem.serializer()).first()
@@ -37,7 +36,6 @@ class CoverTest {
         assertEquals("album", pictured("discart").copy(album = album).cover?.proxyId)
     }
 
-    /** An item whose pictures are of [types], each one's proxy id its type. */
     private fun pictured(vararg types: String) = MediaItem(
         itemId = "1",
         provider = "library",

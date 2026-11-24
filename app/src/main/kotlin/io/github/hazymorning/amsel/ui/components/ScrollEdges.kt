@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.ui.theme.HAIRLINE_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Motion
 
-/** Whether content runs under the status strip, so its paper and hairline show; see [ScrollEdges]. */
+/** [under]: content has scrolled under the status strip, which then draws its background and hairline. */
 @Stable
 class ScrollEdgeState {
     var under by mutableStateOf(false)
@@ -29,7 +29,6 @@ class ScrollEdgeState {
 
 val LocalTopEdge = staticCompositionLocalOf<ScrollEdgeState?> { null }
 
-/** Tells the status strip whether [state]'s content runs under it. */
 @Composable
 fun ScrollEdges(state: ScrollableState) {
     val top = LocalTopEdge.current
@@ -50,11 +49,7 @@ fun ScrollEdges(state: ScrollableState) {
     }
 }
 
-/**
- * The page's own paper under the status bar (and a slim bar on it), solid, with a hairline along its
- * lower edge. Both come only while content runs under it ([edge]), so at rest a page's wash shows
- * through and nothing marks the top of the screen.
- */
+/** Drawn only while content is under the strip; otherwise the page's own background shows through. */
 @Composable
 fun Modifier.statusBarBackground(edge: ScrollEdgeState): Modifier {
     val colors = MaterialTheme.colorScheme
@@ -70,5 +65,4 @@ fun Modifier.statusBarBackground(edge: ScrollEdgeState): Modifier {
     }
 }
 
-/** Half a dp: the hairline under the status strip, on the dock and inside every cover. */
 val HairlineWidth = 0.5.dp

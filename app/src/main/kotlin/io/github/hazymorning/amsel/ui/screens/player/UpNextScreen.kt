@@ -55,10 +55,6 @@ import io.github.hazymorning.amsel.ui.model.QueueItemUi
 import io.github.hazymorning.amsel.ui.rememberRetry
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * The list opens on the song that plays, right under the bar; the songs already played wait above
- * it, under the bar, and come into view with a pull.
- */
 @Composable
 fun UpNextScreen(
     state: UpNextUiState,
@@ -106,7 +102,7 @@ fun UpNextScreen(
     }
 }
 
-/** The current song's cover stays clear of the bar's edge. */
+// Keeps the current song's cover clear of the bar's edge.
 private val BelowBar = Space.S2
 
 @Composable
@@ -121,7 +117,7 @@ private fun QueueList(
     onLoadEarlier: () -> Unit,
     onLoadLater: () -> Unit,
 ) {
-    // It moves under the finger and settles when the next state arrives.
+    // Local order: follows the finger and gives way when the next state arrives.
     var order by remember(state.items) { mutableStateOf(state.items) }
     val list = rememberLazyListState(initialFirstVisibleItemIndex = state.currentIndex)
     ScrollEdges(list)
@@ -147,7 +143,7 @@ private fun QueueList(
     val bars = insets.calculateBottomPadding() + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val row = rowBand(RowLead.Cover, twoLines = true) + rowGrowth(RowLead.Cover, twoLines = true)
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        // A short Up next still opens on the song that plays: room under the last song lets it reach the top.
+        // Space under the last song lets a short Up next still open with the playing song at the top.
         val ahead = order.size - playingIndex.coerceAtLeast(0)
         val bottom = max(bars, maxHeight - top - row * ahead)
         LazyColumn(
@@ -166,8 +162,8 @@ private fun QueueList(
                 } else {
                     Modifier.animateItem()
                 }
-                // Not saved: the list keeps a gone row's saved state, so a row a failed removal brings
-                // back would return dismissed and remove itself again.
+                // Not saveable: the list keeps a removed row's saved state, so a row restored after a
+                // failed removal would come back dismissed and remove itself again.
                 val threshold = SwipeToDismissBoxDefaults.positionalThreshold
                 val dismiss = remember(item.id) { SwipeToDismissBoxState(SwipeToDismissBoxValue.Settled, threshold) }
                 SwipeToDismissBox(
@@ -185,7 +181,7 @@ private fun QueueList(
                         reorder = if (index < state.firstEditable) null else reorder,
                         actions = rowActions(index, order.lastIndex, state.firstEditable, item, move, remove),
                         onClick = { onPlay(item.id) },
-                        // The DJ's words can only be removed, and no longer once the speaker holds them.
+                        // A DJ break's only action is removal, which ends once the speaker holds it.
                         onMore = { onMore(item) }.takeIf { !item.track.djBreak || index >= state.firstEditable },
                     )
                 }
@@ -194,10 +190,7 @@ private fun QueueList(
     }
 }
 
-/**
- * Its bar and empty states drag the layer; its list hands a pull past its top to the layer. Its
- * ViewModel ends with the layer, so it opens again around the song that plays now.
- */
+// The ViewModel lives as long as the layer, so Up next reopens around the song playing now.
 @Composable
 fun UpNextRoute(queueId: String, onClose: () -> Unit, layer: PlayerLayerState, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -225,7 +218,7 @@ fun UpNextRoute(queueId: String, onClose: () -> Unit, layer: PlayerLayerState, m
         onMove = vm::move,
         onRemove = vm::remove,
         onMore = { item ->
-            // A song the speaker already holds stays where it is: offered again rather than moved or removed.
+            // A song the speaker already holds stays put: its sheet offers it again instead.
             val editable = state.items.indexOf(item) >= state.firstEditable
             val context = if (editable) ActionsContext.UpNext else ActionsContext.Library
             actions.more(ActionTarget.Track(item.track, context, queueItemId = item.id.takeIf { editable }))

@@ -15,15 +15,13 @@ android {
         applicationId = "io.github.hazymorning.amsel"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        // The version being released (v0.9.0-beta.1 -> 0.9.0-beta.1): the workflow's, else release/VERSION.
         val version = System.getenv("AMSEL_VERSION_NAME") ?: rootProject.file("release/VERSION").readText()
         versionName = version.trim().removePrefix("v")
         versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
     }
 
     signingConfigs {
-        // Release signing comes only from the environment (CI secrets or a local shell).
-        // Without it the release build is left unsigned; it is never signed with a debug key.
+        // Without AMSEL_KEYSTORE_PATH the release APK stays unsigned; it is never signed with the debug key.
         val storePath = System.getenv("AMSEL_KEYSTORE_PATH")
         if (storePath != null) {
             create("release") {
@@ -41,7 +39,7 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
             signingConfig = signingConfigs.findByName("release")
-            // The git revision, which only Google Play reads (as the dependency blob below).
+            // Only Google Play reads the embedded git revision, as it does the dependency blob below.
             vcsInfo { include = false }
         }
     }
@@ -52,10 +50,9 @@ android {
     }
 
     androidResources {
-        // Only the app's languages, so a library's strings never appear in a third one.
+        // The app's languages only, so a library's own translation never mixes in a third one.
         localeFilters += listOf("en", "de")
-        // OkHttp's public suffix list (130 KB) is read only to check cookie domains, and no client
-        // here keeps cookies.
+        // OkHttp's public suffix list (130 KB) is read only to check cookie domains; no client here keeps cookies.
         ignoreAssetsPatterns += "!PublicSuffixDatabase.list"
     }
 
@@ -74,30 +71,28 @@ android {
             "kotlin/**.kotlin_builtins",
             // GraalVM's configuration, for native images only.
             "META-INF/native-image/**",
-            // The same Apache 2.0 text once per AndroidX library, DataStore's protobuf licence and
-            // Bouncy Castle's: each ships once in assets/licences.
+            // AndroidX's Apache 2.0 copies and the protobuf and Bouncy Castle licences: each ships in assets/licences.
             "META-INF/androidx/**/LICENSE.txt",
             "META-INF/LICENSE.md",
         )
-        // DataStore's counter for several processes sharing one file; each of the app's has one.
+        // Only multi-process DataStore uses it; every DataStore here lives in one process.
         jniLibs.excludes += "**/libdatastore_shared_counter.so"
     }
 
     lint {
         warningsAsErrors = true
-        // Every pull request lints with warnings as errors; a release build need not again.
+        // Pull requests lint already; the release build skips it.
         checkReleaseBuilds = false
     }
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
-        // Screenshots draw through Android's hardware pipeline, so the covers' soft shadows show as
-        // they do on a phone.
+        // Hardware rendering, so the covers' soft shadows render as on a phone.
         unitTests.all { test ->
             test.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
-            // -Plook=de-w360dp: every shot in German on a narrow phone, into build/look (ScreenshotTest).
+            // -Plook=<qualifiers>, such as de-w360dp: see ScreenshotTest.
             providers.gradleProperty("look").orNull?.let { test.systemProperty("amsel.look", it) }
-            // Tests read these files straight from the tree, so a cached result stands only while they stay.
+            // Tests read these from the source tree; as inputs, a change to them reruns the tests.
             for (read in listOf("../docs/design/readme", "../playback/src/main/res")) {
                 test.inputs.dir(read).withPathSensitivity(PathSensitivity.RELATIVE)
             }
@@ -124,7 +119,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.profileinstaller)
-    // A cover's hue, for Now Playing's glow and Continue listening's card.
+    // A cover's hue, which tints Now Playing, item pages' heads and Continue listening's cards.
     implementation(libs.androidx.palette)
 
     implementation(platform(libs.compose.bom))

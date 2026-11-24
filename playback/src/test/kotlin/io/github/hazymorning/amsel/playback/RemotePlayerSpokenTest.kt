@@ -15,7 +15,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
-/** A book on a speaker: skips by seconds, steps by chapter, moves at its speed. */
 @RunWith(RobolectricTestRunner::class)
 class RemotePlayerSpokenTest {
     private val commandScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -23,7 +22,6 @@ class RemotePlayerSpokenTest {
     private var now = 1_000_000L
     private val elapsedRealtime = { now }
 
-    /** Three chapters of 90 s, as the test library's "The Lantern Road". */
     private val book = QueueEntry(
         "b1",
         "library://audiobook/2",
@@ -87,7 +85,7 @@ class RemotePlayerSpokenTest {
         assertEquals(MediaMetadata.MEDIA_TYPE_MUSIC, song.mediaMetadata.mediaType)
     }
 
-    /** Each tap steps on from where the last one went, though the speaker is not there yet. */
+    /** Each tap steps on from the last one's target, before the speaker is there. */
     @Test fun quickSkipsAddUp() {
         val speaker = speaker(100.0)
         val p = player(speaker)
@@ -188,7 +186,7 @@ class RemotePlayerSpokenTest {
 
     @Test fun aChapterStepStaysOnTheBookWhileItLands() {
         val speaker = speaker(100.0)
-        // The place has not reached the snapshot yet: Media3 holds it meanwhile.
+        // The place has not reached the snapshot yet: Media3's placeholder holds it meanwhile.
         val silent = object : SpeakerCommands by speaker {
             override fun seek(playerId: String, positionSeconds: Int, step: Boolean) = Unit
         }

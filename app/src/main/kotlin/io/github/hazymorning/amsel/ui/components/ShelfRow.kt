@@ -14,10 +14,6 @@ import androidx.compose.ui.unit.Dp
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * A sideways shelf of covers from the start margin, [gap] apart. A fling comes to rest with a
- * whole cover on the margin, never one cut through.
- */
 @Composable
 fun <T> ShelfRow(
     items: List<T>,

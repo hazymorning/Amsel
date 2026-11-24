@@ -20,26 +20,20 @@ import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import org.junit.Test
 
 class PlayerShots : ScreenshotTest() {
-    /** Playing, shuffle on; colours derived from the sample cover through Coil and Palette, as in the app. */
+    // Colours come from the sample cover through Coil and Palette, as in the app.
     @Test fun nowPlaying() = snap("now_playing", listOf(Light, Dark)) { NowPlaying(PlayerSample.nowPlaying) }
 
-    /**
-     * A book: back 15 and forward 30 for shuffle and repeat, the chapter under the title, the times
-     * under the line, Chapters for Up next.
-     */
+    // Skip buttons for shuffle and repeat, the chapter heading the title block, the times under the line,
+    // Chapters for Up next.
     @Test fun nowPlayingBook() = snap("now_playing_book", listOf(Light, LargeFont)) { NowPlaying(PlayerSample.book) }
 
     @Test fun upNext() = snap("up_next") { UpNext(UpNextUiState(PlayerSample.upNext, firstEditable = 2)) }
 
-    /**
-     * Kitchen plays and is ticked; the Bedroom rests on a playlist. No speakers play along: Group,
-     * under the speakers, offers to make a group for the speaker in use.
-     */
+    // No group yet: Group, under the speakers, offers one for the speaker in use.
     @Test fun playOn() = snapScreen("play_on") {
         OverNowPlaying { PlayOn(PlayOnUiState(PlayerSample.speakers, "kitchen", kitchen, alongside)) }
     }
 
-    /** A group: its bar, then one for each of its speakers under a quiet line. */
     @Test fun volumeOfAGroup() = snapScreen("volume_group") {
         OverNowPlaying {
             VolumeSheetContent(
@@ -56,14 +50,14 @@ class PlayerShots : ScreenshotTest() {
         }
     }
 
-    /** At 200 % the second button's words take two lines in a pill that rounds less. */
+    // At 200 % the second button's label takes two lines in a pill that rounds less.
     @Test fun playOnAsks() = snapScreen("play_on_question", listOf(Light, LargeFont)) {
         val speakers = PlayerSample.speakers
         val question = PlayOnQuestion(speakers.first { it.isPlaying }, "Moby-Dick", speakers.first { it.isPhone })
         OverNowPlaying { PlayOn(PlayOnUiState(speakers, currentId = "phone", question = question)) }
     }
 
-    /** Now Playing's menu where the server has a DJ: the third of the speaker's rows, before the song's own. */
+    // With a DJ on the server: the DJ is the third of the speaker's rows, before the song's own.
     @Test fun itemActionsNowPlaying() = snapScreen("item_actions_now_playing") {
         val target = PlayerSample.nowPlaying.moreTarget() as ActionTarget.Track
         OverNowPlaying {
@@ -74,10 +68,8 @@ class PlayerShots : ScreenshotTest() {
         }
     }
 
-    /**
-     * The sleep timer in German on the phone, set to the chapter's end, its longest length: the
-     * title has its line to itself, and the length stands on the line under it.
-     */
+    // The chapter's end is the longest length: the title keeps its line, the length goes on the line
+    // under it.
     @Test fun sleepTimerInGerman() = snapScreen("sleep_timer_german", qualifiers = "de") {
         NowPlaying(PlayerSample.book.copy(speaker = phone))
         AmselSheet(onDismiss = {}) {
@@ -98,7 +90,7 @@ private val phone = PlayerSample.speakers.first { it.isPhone }
 
 private val kitchen = PlayerSample.speakers.first { it.id == "kitchen" }
 
-/** The speakers that could play along with Kitchen; none does. */
+// Could play along with Kitchen; none does.
 private val alongside = listOf(
     GroupCandidate("bedroom", "Bedroom", isPhone = false, member = false),
     GroupCandidate("living", "Living room", isPhone = false, member = false),
@@ -130,7 +122,6 @@ private fun UpNext(state: UpNextUiState) = UpNextScreen(
 @Composable
 private fun PlayOn(state: PlayOnUiState) = PlayOnSheetContent(state, onSelect = {})
 
-/** The real sheet, in its own window over Now Playing, as the speaker button and ⋮ open it there. */
 @Composable
 private fun OverNowPlaying(content: @Composable () -> Unit) {
     NowPlaying(PlayerSample.nowPlaying)

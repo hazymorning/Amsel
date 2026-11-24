@@ -8,9 +8,7 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.playback.SKIP_BACK_MS
 import io.github.hazymorning.amsel.playback.SKIP_FORWARD_MS
 
-/** What a widget's buttons say and show. */
 internal class WidgetSlots(private val context: Context) {
-    /** What TalkBack says for a button, and what the widget's page calls it. */
     fun label(slot: WidgetSlot, look: WidgetContent): String {
         val res = context.resources
         return when (slot.button) {
@@ -53,7 +51,6 @@ internal class WidgetSlots(private val context: Context) {
         }
     }
 
-    /** What TalkBack says for the widget as a whole: what plays, by whom, where, and how loud. */
     fun summary(look: WidgetContent): String {
         if (!look.signedIn) return context.getString(R.string.widget_sign_in)
         val volume = look.volume?.let { ". " + context.getString(R.string.player_volume_now, it) }.orEmpty()
@@ -76,7 +73,6 @@ internal class WidgetSlots(private val context: Context) {
     }
 }
 
-/** A button's glyph: a book's skips are by seconds, as on the dock; its Up next, its chapters. */
 @DrawableRes
 internal fun WidgetButton.glyphFor(look: WidgetContent): Int = when {
     this == WidgetButton.PlayPause -> if (look.playing) R.drawable.ic_pause_slim else R.drawable.ic_play
@@ -88,14 +84,12 @@ internal fun WidgetButton.glyphFor(look: WidgetContent): Int = when {
     else -> glyph
 }
 
-/** A shuffle or repeat that is off shows quieter than one that is on. */
 internal fun WidgetButton.isOff(look: WidgetContent): Boolean = when (this) {
     WidgetButton.Shuffle -> look.shuffle != true
     WidgetButton.Repeat -> look.repeat == RepeatMode.Off
     else -> false
 }
 
-/** Whether the button has something to act on in what [look] shows; one that has not gives way. */
 internal fun WidgetButton.availableIn(look: WidgetContent): Boolean = when (this) {
     WidgetButton.Favourite -> look.favourite != null
     WidgetButton.Shuffle -> look.shuffle != null

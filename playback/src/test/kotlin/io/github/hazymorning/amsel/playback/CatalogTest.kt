@@ -32,13 +32,11 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The car's reads of books and episodes, against the recorded 2.11 test library. */
 class CatalogTest {
     private val book =
         fixture("2.11", "music_audiobooks_library_items__in_progress")
             .getValue("response").jsonObject.getValue("result").jsonArray[0]
 
-    /** The uris the car asked the index for covers. */
     private val askedCovers = mutableListOf<List<String>>()
 
     private fun answer(command: String): JsonObject = when (command) {
@@ -163,7 +161,6 @@ class CatalogTest {
         assertEquals(null, BrowseIds.toPlayRequest("car", listOf(""), 0))
     }
 
-    /** A recently played item as the server lists it, with its [image] proxy id if it has one. */
     private fun played(uri: String, name: String, type: String, image: String? = null) = buildJsonObject {
         put("item_id", uri.substringAfterLast('/'))
         put("provider", "library")

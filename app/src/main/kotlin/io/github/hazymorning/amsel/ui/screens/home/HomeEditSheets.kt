@@ -34,11 +34,7 @@ import io.github.hazymorning.amsel.ui.theme.spaced
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.first
 
-/**
- * What a section shows: every choice the library offers, in groups parted by space ([WhatGroups]).
- * Nothing on the sheet but its title is anything other than a choice. It opens with the [current]
- * one in its middle, as far as the list scrolls, so a choice far down never opens at the sheet's edge.
- */
+// Opens with the [current] choice scrolled to the middle, so one far down never opens at the edge.
 @Composable
 internal fun WhatSheetContent(current: SectionOption, spoken: SpokenWord, onSelect: (SectionOption) -> Unit) {
     val scroll = rememberScrollState()
@@ -93,10 +89,7 @@ internal fun HowSheetContent(current: SectionLayout, onSelect: (SectionLayout) -
     }
 }
 
-/**
- * A section's ⋯ in edit mode: its heading hidden or shown on Home, and Remove; moving it is a held
- * press, or TalkBack's actions.
- */
+// No move action: a section moves by long-press and drag, or by TalkBack's custom actions.
 @Composable
 internal fun SectionActionsSheetContent(
     title: String,
@@ -116,7 +109,6 @@ internal fun SectionActionsSheetContent(
     }
 }
 
-/** A choice applies at once, under the sheet as it slides away. */
 @Composable
 internal fun EditSheets(
     open: Pair<EditSheet, String>?,
@@ -141,6 +133,7 @@ internal fun EditSheets(
     }
     val section = sections.firstOrNull { it.id == id } ?: return
     AmselSheet(onDismiss = onClose) {
+        // A choice applies at once, under the sheet as it slides away.
         fun done(change: () -> Unit) {
             change()
             close()

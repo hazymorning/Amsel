@@ -42,17 +42,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 
 /**
- * "This phone" as a Music Assistant speaker: the vendored Sendspin player plays the audio the
- * server streams. It connects while the phone is the selected speaker, while its music plays or
- * waits paused (choosing another speaker leaves it playing), or while work still needs it on the
- * server ([keepConnectedDuring]), and keeps its server while the control socket reconnects, where
- * its own retries reach no one else ([sendspinServer]); otherwise nothing touches the network.
- * Transport never goes to the module: the control plane is the Music Assistant API, as for any
- * speaker.
- *
- * Audio focus, becoming-noisy and call handling live in the module's AudioTrackSink; this class
- * adds the wake and Wi-Fi locks while audio plays, tells the server of the pauses and plays the
- * phone makes by itself (focus lost or regained), and keeps the session open through a call.
+ * Transport goes through the Music Assistant API, as for any speaker, never to the Sendspin module;
+ * audio focus, becoming-noisy and calls are handled in the module's AudioTrackSink.
  */
 @OptIn(UnstableApi::class)
 class PhoneSpeaker(
@@ -61,7 +52,7 @@ class PhoneSpeaker(
     okHttp: OkHttpClient,
     private val versionName: String,
     debug: Boolean,
-    /** The app's: the phone is a speaker for as long as the app runs. */
+    /** The app's scope: the phone stays a speaker for as long as the app runs. */
     appScope: CoroutineScope,
 ) : LocalOutput {
     private val app = context.applicationContext
@@ -69,10 +60,8 @@ class PhoneSpeaker(
     private val config = MutableStateFlow<LocalPlayerConfig?>(null)
     private val wanted = MutableStateFlow(false)
 
-    /** Work that still needs the phone on the server after another speaker was picked. */
     private val keptBy = MutableStateFlow(0)
 
-    /** The Sendspin client's state since the phone was first wanted. */
     private val sendspin = MutableStateFlow<PlayerState>(PlayerState.Disabled)
 
     // Taking and releasing a lock is a binder call that may block, so not on the main thread.
@@ -84,19 +73,18 @@ class PhoneSpeaker(
     private val audio = app.getSystemService(AudioManager::class.java)
     private var heldForCall = false
 
-    // From Android 12 the call's end lets the session close even when the music cannot resume.
+    // Android 12+: the call's end releases the hold even when the music does not resume.
     private val callEnd: Any? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         AudioManager.OnModeChangedListener { mode -> if (mode == AudioManager.MODE_NORMAL) holdForCall(false) }
     } else {
         null
     }
 
-    /** The phone's player id on the server, known after the first connection (persisted). */
+    /** Null until the phone's first join; persisted across runs. */
     val playerId: StateFlow<String?> = _playerId.asStateFlow()
 
     private val _audible = MutableStateFlow(false)
 
-    /** Whether its audio plays or is about to, whichever speaker is selected. */
     val audible: StateFlow<Boolean> = _audible.asStateFlow()
 
     /** Over TLS the token reaches only the server; over plain http, only on the network checked last. */
@@ -104,7 +92,7 @@ class PhoneSpeaker(
         here || address?.baseUrl?.isHttps == true
     }
 
-    /** The server drops the phone's queue when it leaves, so it stays while there is music to go on with. */
+    /** The server drops the phone's queue when it leaves, so it stays connected while that queue holds music. */
     private val hasMusic = combine(_playerId, data.speakers.players, data.speakers.gone) { id, players, gone ->
         id !in gone && players[id]?.hasMusic == true
     }
@@ -112,7 +100,6 @@ class PhoneSpeaker(
     private val _failures =
         MutableSharedFlow<CommandFailure>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** The pauses and plays the phone sends by itself (a call, a held stream) that did not reach the server. */
     val failures: SharedFlow<CommandFailure> = _failures.asSharedFlow()
 
     private val player: SendspinPlayer by lazy {
@@ -141,24 +128,22 @@ class PhoneSpeaker(
             }.runningFold(null as ServerInfo?) { last, (want, connection, safe) ->
                 sendspinServer(want, connection, last, safe)
             }
-                // The same address and token make an equal config, so a reconnect of the control
-                // socket leaves Sendspin's own connection alone.
+                // The same address and token give an equal config, so a control-socket reconnect leaves
+                // Sendspin's own connection alone.
                 .map { server -> server?.let(::configFor) }
                 .distinctUntilChanged()
                 .collect { config.value = it }
         }
     }
 
-    /** True while "This phone" is the selected speaker. */
     fun setWanted(value: Boolean) {
         wanted.value = value
         if (value) startObserving() else holdForCall(false)
     }
 
     /**
-     * Keeps the phone connected while [block] runs, even if another speaker is picked meanwhile:
-     * moving the music away from the phone reads the phone's queue on the server, and the server
-     * removes that queue the moment the phone's Sendspin client disconnects.
+     * Even if another speaker is picked meanwhile: moving the music away reads the phone's queue on the
+     * server, which drops that queue the moment the phone's Sendspin client disconnects.
      */
     suspend fun <T> keepConnectedDuring(block: suspend () -> T): T {
         keptBy.update { it + 1 }
@@ -179,8 +164,8 @@ class PhoneSpeaker(
     }
 
     /**
-     * Connects This phone's client afresh, for a Retry after it stopped for good: it waits for a new
-     * configuration, and the one it has would not count as new.
+     * For a Retry after the client stopped for good: it reconnects only on a new config, so the same one
+     * is set again after null.
      */
     suspend fun reconnect() {
         val current = config.value ?: return
@@ -207,25 +192,25 @@ class PhoneSpeaker(
                     try {
                         data.prefs.setPhonePlayerId(state.playerId)
                     } catch (e: IOException) {
-                        // Held for this run; the next join tells it again.
+                        // Kept in memory for this run; the next join stores it again.
                     }
                 }
                 val awake = awakeFor(state, _audible.value)
                 wakeLock.setStayAwake(awake)
                 wifiLock.setStayAwake(awake)
                 _audible.value = awake
-                // After playerId, so whoever awaited the connection finds the id it was given.
+                // sendspin changes after playerId, so whoever awaited the join reads the id it joined with.
                 val was = (sendspin.value as? PlayerState.Connected)?.playerId
-                // Each join makes the server rebuild the phone's queue without its time; before
-                // sendspin, so a command waiting for the join finds where the queue was.
+                // Each join makes the server rebuild the phone's queue without its time; noted before
+                // sendspin changes, so a command waiting for the join finds where the queue was.
                 when {
                     was != null && state !is PlayerState.Connected -> data.speakers.left(was)
                     was == null && state is PlayerState.Connected -> data.speakers.rejoined(state.playerId)
                 }
                 sendspin.value = state
-                // Turned off on purpose (another speaker, the idle close, signing out): the module
-                // says goodbye with user_request and the server drops the phone at once. After the
-                // idle close no event tells us, and the stale entry must not pass for a new join.
+                // Turned off on purpose, the client says goodbye with user_request and the server drops
+                // the phone at once; after the idle close no event reports that, and the stale entry
+                // must not pass for a new join.
                 if (state is PlayerState.Disabled && was != null) data.speakers.markGone(was)
             }
         }
@@ -267,8 +252,8 @@ class PhoneSpeaker(
     }
 
     /**
-     * A call can outlast the session's idle close, which would take the phone and its queue off the
-     * server, so the music could not resume after it: the session stays open until the call ends.
+     * A call can outlast the session's idle close, which would drop the phone and its queue from the
+     * server so the music could not resume: the session stays open until the call ends.
      */
     private fun holdForCall(hold: Boolean) {
         synchronized(this) {
@@ -286,13 +271,11 @@ class PhoneSpeaker(
         }
     }
 
-    /** Silence at once, then tell the server. */
     private suspend fun localPause(id: String) {
         player.hold(true)
         tell(id) { pause(it) }
     }
 
-    /** Sends [command] for the phone's player [id]; one that does not reach the server is reported with Retry. */
     private suspend fun tell(id: String, command: suspend MaApi.(String) -> Unit) {
         val error = try {
             data.session.api.command(id)
@@ -310,7 +293,6 @@ class PhoneSpeaker(
     }
 
     companion object {
-        /** How long a command for the phone waits for its Sendspin client to join the server. */
         private const val CONNECT_WAIT_MS = 15_000L
 
         private val CALL_MODES =
@@ -318,18 +300,15 @@ class PhoneSpeaker(
     }
 }
 
-/** What a player on this phone's own output needs beyond the Music Assistant commands. */
 interface LocalOutput {
-    /** The phone's player id on the server, once known. */
     val id: String?
 
-    /** Silence the output at once (before the server round trip), or release it. */
+    /** Silences the output at once, ahead of the server's pause; false releases it. */
     fun hold(held: Boolean)
 
     /**
-     * Waits until this phone's Sendspin client is connected and the server lists its player
-     * (opening the control socket if it was closed); the player id. Throws [PhoneNotReadyException]
-     * after 15 s, or at once when the server turned the client away for good.
+     * The player id once the server lists the joined phone, opening the control socket if needed.
+     * Throws [PhoneNotReadyException] after 15 s, or at once when the client stopped for good.
      */
     suspend fun awaitConnected(): String
 }

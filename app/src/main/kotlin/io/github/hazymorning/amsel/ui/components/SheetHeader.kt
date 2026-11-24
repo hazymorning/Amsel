@@ -24,12 +24,8 @@ import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
 /**
- * A sheet's title as its first ink, on the margin like every other title: the layout runs from its
- * capitals to its last baseline. A title too long for a line takes a second before it is cut. A
- * sheet of one speaker names it after the title ("Volume · Kitchen"); where one line cannot hold
- * both, [name] stands under the title, on two lines if it must, and only a name longer than that
- * loses its end. [value] (a volume) stands at the end on the last baseline, in the room
- * [widestValue] takes: a title never loses a letter to a value, and nothing moves as it changes.
+ * [name] follows the title ("Volume · Kitchen") or, where one line cannot hold both, goes under it.
+ * [value] keeps the width of [widestValue], so the title never moves or loses a letter as it changes.
  */
 @Composable
 fun SheetHeader(
@@ -64,20 +60,14 @@ fun SheetHeader(
 private const val TITLE_LINES = 2
 
 /**
- * What a sheet keeps under its last row of [lead] so the row's last ink (its last baseline, or its
- * cover's bottom) stands [Space.SheetEdge] over the sheet's bottom edge, as the title's capitals
- * stand under its top. Content that ends in its own ink (a button, a bar, a sentence) keeps
- * [Space.SheetEdge] itself.
+ * Bottom padding that puts a last row's visible bottom [Space.SheetEdge] above the sheet's edge.
+ * Content whose layout ends at its visible bottom (a button, a sentence) uses [Space.SheetEdge] itself.
  */
 @Composable
 fun sheetEnd(lead: RowLead, twoLines: Boolean): Dp =
     (Space.SheetEdge - rowGlyphBottom(lead, twoLines)).coerceAtLeast(0.dp)
 
-/**
- * A value at a line's end, in the secondary tone, on the baseline of what it belongs to. It keeps
- * the room of its [widest] form and ends where that ends, so the words before it never move or
- * lose a letter while it changes (a volume under a finger).
- */
+/** Keeps the width of [widest], so the text before it never moves while the value changes (a volume being dragged). */
 @Composable
 internal fun EndValue(value: String, widest: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyMedium

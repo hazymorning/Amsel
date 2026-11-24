@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.Serializable
 
-/** Something opened or played from Search. A song keeps what its ⋮ offers, its album and its artist. */
+// A song keeps its TrackUi, so its ⋮ still offers its album and artist.
 @Immutable
 sealed interface RecentItem {
     val key: String
@@ -28,7 +28,6 @@ sealed interface RecentItem {
     }
 }
 
-/** What was opened or played from Search lately, newest first, kept on this phone for an empty field. */
 class RecentSearchStore(context: Context, scope: CoroutineScope) {
     private val store = JsonListStore(File(context.filesDir, "recent_searches.json"), Stored.serializer(), scope)
 
@@ -57,7 +56,7 @@ class RecentSearchStore(context: Context, scope: CoroutineScope) {
         val albumKey: String? = null,
         val artistKey: String? = null,
         val dynamic: Boolean = false,
-        /** An artist's album covers two by two, or a smart playlist's crop of the server's collage. */
+        // An artist's album covers in a 2x2 grid, or a smart playlist's crop of the server's collage.
         val quarters: List<String> = emptyList(),
         val mosaic: Boolean = false,
     ) {

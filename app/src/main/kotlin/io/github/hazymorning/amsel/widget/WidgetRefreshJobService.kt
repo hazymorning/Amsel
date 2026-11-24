@@ -11,12 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-/**
- * Looks at the speakers for the widgets while Amsel's own socket is closed: music started elsewhere
- * (Music Assistant itself, Home Assistant, another phone), a widget's own speaker, a speaker that
- * played on after Amsel let its socket go. While the socket is open the widgets follow it as it
- * hears; nothing on the server can wake the phone, so the widgets look by themselves (`WidgetRefreshJobScheduler`).
- */
+/** Refreshes the widgets while the socket is closed: events come only over an open socket (docs/API-NOTES.md, 9). */
 class WidgetRefreshJobService : JobService() {
     private val running = ConcurrentHashMap<Int, Job>()
 
@@ -26,7 +21,7 @@ class WidgetRefreshJobService : JobService() {
             try {
                 graph.widgets.refresh()
             } finally {
-                // A job Android stopped is not finished again.
+                // onStopJob already removed a stopped job; jobFinished must not follow it.
                 if (running.remove(params.jobId) != null) jobFinished(params, false)
             }
         }
@@ -39,15 +34,11 @@ class WidgetRefreshJobService : JobService() {
     }
 }
 
-/** When the widgets look at the speakers while Amsel's socket is closed. */
 interface WidgetRefreshScheduler {
-    /** Every half hour from now on, while there are widgets. */
     fun schedulePeriodic()
 
-    /** Once, as soon as Android lets it run. */
     fun scheduleOnce()
 
-    /** No more looks: the last widget left the home screen. */
     fun cancelAll()
 
     companion object {
@@ -61,18 +52,13 @@ interface WidgetRefreshScheduler {
     }
 }
 
-/**
- * The looks as Android's jobs: every 30 minutes, and once when Android asks for the widgets anew.
- * Both wait for a network and leave a low battery alone; while the phone sleeps Android holds them
- * back, and one that is due runs as soon as it wakes. Not kept over a restart, which would take a
- * permission: the widgets' own update after it plans them again.
- */
+/** Not persisted, which needs RECEIVE_BOOT_COMPLETED: after a reboot the providers' onUpdate schedules again. */
 class WidgetRefreshJobScheduler(private val context: Context) : WidgetRefreshScheduler {
     private val jobs: JobScheduler? get() = context.getSystemService(JobScheduler::class.java)
 
     override fun schedulePeriodic() {
         val jobs = jobs ?: return
-        // A job planned by an earlier version keeps its shorter period until replaced.
+        // Rescheduling would restart the period; a job from an earlier version with a shorter one is replaced.
         if (jobs.getPendingJob(EVERY)?.intervalMillis == PERIOD_MS) return
         jobs.schedule(job(EVERY).setPeriodic(PERIOD_MS, FLEX_MS).build())
     }
@@ -91,7 +77,7 @@ class WidgetRefreshJobScheduler(private val context: Context) : WidgetRefreshSch
         .setRequiresBatteryNotLow(true)
 
     private companion object {
-        // Amsel's only jobs.
+        // Job ids are app-wide; these are Amsel's only jobs.
         const val EVERY = 1
         const val ONCE = 2
         const val PERIOD_MS = 30 * 60_000L

@@ -2,37 +2,26 @@ package io.github.hazymorning.amsel.app
 
 import io.github.hazymorning.amsel.ui.model.SpeakerUi
 
-/**
- * What moving music needs from the speakers, so the order of the steps (which the server is
- * sensitive to) lives in one tested place. [PlayOnController] implements it on the real graph.
- */
+// The server is sensitive to the order of these steps, so moveMusic keeps it in one tested place.
 internal interface SpeakerSteps {
     suspend fun select(target: SpeakerUi)
 
     /** Runs [block] with This phone kept on the server, even if another speaker is selected meanwhile. */
     suspend fun keepPhoneDuring(block: suspend () -> Unit)
 
-    /**
-     * This phone's player id once its Sendspin client has joined the server; [PhoneNotReadyException]
-     * if it does not.
-     */
+    /** Throws [PhoneNotReadyException] if This phone's Sendspin client does not join the server. */
     suspend fun awaitPhone(): String
 
-    /** Lets This phone make sound again after a local pause. */
+    /** Ends the local pause that keeps This phone silent. */
     fun releasePhoneHold()
 
-    /** `player_queues/transfer`: the music plays on [to] when [play], else it rests there. */
+    /** `player_queues/transfer` with `auto_play` = [play]. */
     suspend fun transfer(from: String, to: String, play: Boolean)
 }
 
-/**
- * Moves the music from [from] to [to], where it plays on when [play]. Throws what kept it from moving.
- * - Away from This phone, the phone stays on the server until the transfer is done: the server
- *   reads the phone's queue for the transfer and removes it once the phone disconnects, which
- *   selecting another speaker starts.
- * - To This phone, the transfer waits until the phone has joined the server, and releases its
- *   local hold first when it is to play.
- */
+// Away from This phone, the phone stays on the server until the transfer is done: the server drops
+// a disconnected phone's queue, and selecting another speaker disconnects it.
+// See docs/API-NOTES.md, "This phone (Sendspin)".
 internal suspend fun moveMusic(from: SpeakerUi, to: SpeakerUi, steps: SpeakerSteps, play: Boolean = true) {
     val move: suspend () -> Unit = {
         steps.select(to)
@@ -42,26 +31,21 @@ internal suspend fun moveMusic(from: SpeakerUi, to: SpeakerUi, steps: SpeakerSte
     if (from.isPhone) steps.keepPhoneDuring(move) else move()
 }
 
-/** What a tap on a speaker in "Play on" does. */
 enum class PlayOnAction {
-    /** It is the speaker already. */
     Stay,
 
-    /** It becomes the speaker; music stays where it is. */
+    /** The music stays where it is. */
     Select,
 
-    /** The music goes there with the person. */
     Move,
 
-    /** Music plays that would stop or be replaced: the person says which. */
+    /** Music plays that would stop or be replaced: the user decides. */
     Ask,
 }
 
-/**
- * This phone's music is its owner's alone and goes along, playing or paused, unless the speaker
- * tapped plays something itself. A speaker is shared: music that plays on one stays, or is
- * replaced, only when the person says so, and what rests on one stays there.
- */
+// This phone's music is private and moves along, playing or paused, unless the tapped speaker plays.
+// A speaker is shared: its playing music is stopped or replaced only when the user says so, and
+// paused music stays on it.
 internal fun choiceOf(
     sameSpeaker: Boolean,
     fromPhone: Boolean,

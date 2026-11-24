@@ -40,48 +40,38 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * The Library tab: the chosen kind in the chosen order, straight from the library index, so it
- * paints instantly from the cache. Kind and order survive process death in [handle].
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LibraryViewModel(
     private val handle: SavedStateHandle,
     private val observe: (MediaType, LibrarySort) -> Flow<List<LibraryItemEntity>>,
     syncing: Flow<Boolean>,
-    /** The kinds the index has synced at least once (LibraryRepository.synced). */
+    /** Kinds synced at least once. */
     synced: Flow<Set<MediaType>>,
-    /** Why a kind's last sync failed (LibraryRepository.failures). */
     failures: Flow<Map<MediaType, Exception>>,
     session: Flow<SessionState>,
-    /** Who is signed in, kept by the session while offline. */
     user: Flow<MaUser?>,
     private val mapper: UiMapper,
-    /** Syncs one kind of the library index with the server again; throws when that fails. */
+    /** Throws [MaException] when the sync fails. */
     private val resync: suspend (MediaType) -> Unit,
     private val messages: MessageController,
     work: CoroutineDispatcher = Dispatchers.Default,
-    /** The kinds the index holds any of: the Audiobooks, Podcasts and Radio chips show only then. */
+    /** Types the index holds at least one item of. */
     held: Flow<Set<MediaType>>,
-    /** The kinds the person shows in the Library, in their order (Settings, Library). */
     arranged: Flow<List<LibraryKind>> = flowOf(LibraryKind.Default.visible),
-    /** What plays now and what it comes from (the track, its album, the book or podcast). */
     playing: Flow<Set<String>> = flowOf(emptySet()),
-    /** What is downloaded to the phone, or on its way, as rows: the Downloads chip shows while there is some. */
+    /** Downloaded items and those still downloading. */
     private val downloads: Flow<List<MediaUi>> = flowOf(emptyList()),
-    /** One kind alone, as a place of its own in the bar: its name for a title, and no chips. */
     private val only: LibraryKind? = null,
 ) : ViewModel() {
     private val kinds: Flow<List<LibraryKind>> = if (only != null) {
         flowOf(listOf(only))
     } else {
-        // Read once for the selection, the state and warm(), not once for each: it asks the index.
+        // Shared: the selection, the state and warm() all collect it, and each collection queries the index.
         combine(arranged, held, downloads.map { it.isNotEmpty() }.distinctUntilChanged(), ::libraryKinds)
             .distinctUntilChanged()
             .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), replay = 1)
     }
 
-    // A chosen kind the library no longer holds, or the person no longer shows, gives way to the first chip.
     private val selection = combine(
         handle.getStateFlow(KIND, only?.name ?: LibraryKind.Playlists.name),
         handle.getStateFlow(SORT, LibrarySort.RecentlyPlayed.name),
@@ -92,20 +82,19 @@ class LibraryViewModel(
         }
     }.distinctUntilChanged()
 
-    /** The signed-in person's names. */
     private val you: Flow<Set<String>> = user
         .map { u ->
             u?.let { setOfNotNull(it.username, it.displayName).map { n -> n.trim().lowercase() }.toSet() }.orEmpty()
         }
         .distinctUntilChanged()
 
-    /** Each kind's last list, so a swipe or a chip shows it at once while the index answers. */
+    /** The last page per selection, shown at once on a switch while the index query runs. */
     private val seen = ConcurrentHashMap<LibrarySelection, LibraryPage>()
 
-    // A new chip or order switches together with its list, so nothing flashes; if the index takes
-    // longer than PENDING_MS, the new selection shows as loading so the tap is answered anyway.
+    // The selection switches together with its list, so nothing flashes; past PENDING_MS without the
+    // index's answer it shows as loading, so the tap still gets an answer in time.
     private val pages: Flow<LibraryPage> = selection.flatMapLatest { selected ->
-        // Downloads are on the phone, not in the index: newest first, whatever the order.
+        // Downloads are not in the index; their order is fixed, newest first.
         val type = selected.kind.type ?: return@flatMapLatest downloads.map { LibraryPage(selected, it) }
         channelFlow {
             val cached = seen[selected]?.also { send(it) }
@@ -131,7 +120,7 @@ class LibraryViewModel(
         }
     }
 
-    /** The other kinds in [sort], read once beside the chosen one, so the first swipe finds them ready. */
+    /** Fills [seen] for the other kinds in [sort], so the first swipe shows them at once. */
     private suspend fun warm(sort: LibrarySort) {
         val me = you.first()
         for (kind in kinds.first()) {
@@ -143,11 +132,11 @@ class LibraryViewModel(
 
     private val serverStatus: Flow<ServerStatus> = session.map(::serverStatusOf).distinctUntilChanged()
 
-    /** The kind a pull is syncing: its chip spins, the others do not. */
+    /** The kind a pull is syncing; only its list shows the refresh indicator. */
     private val refreshing = MutableStateFlow<LibraryKind?>(null)
     private val syncs = mutableMapOf<LibraryKind, Job>()
 
-    // A pull's own spinner says the list is on its way; the sync it starts is not a first load.
+    // A pulled sync shows the pull indicator, not the first-load skeleton.
     val state: StateFlow<LibraryUiState> =
         combine(
             combine(pages, combine(syncing, synced, ::Pair), serverStatus, refreshing, kinds) {
@@ -184,18 +173,13 @@ class LibraryViewModel(
         handle[SORT] = sort.name
     }
 
-    /**
-     * Pull to refresh: the chip's kind syncs with the server again, and its list follows the index
-     * as it changes. A pull while that kind syncs joins it.
-     */
     fun refresh() = sync(state.value.kind, pulled = true)
 
-    /** Retry: the kind on screen syncs again when its sync failed; offline, reconnecting syncs it. */
+    /** Offline there is no failure to retry: the reconnect that Retry also starts syncs the kind. */
     fun retry() {
         if (state.value.failure != null) sync(state.value.kind, pulled = false)
     }
 
-    /** [kind] is the one on screen: a chosen kind with nothing left in it shows another one. */
     private fun sync(kind: LibraryKind, pulled: Boolean) {
         val type = kind.type ?: return
         if (syncs[kind]?.isActive == true) return
@@ -211,7 +195,7 @@ class LibraryViewModel(
         }
     }
 
-    /** A pull's failure is said in a message; a Retry's shows in place again, as the kind's failure. */
+    /** A Retry's failure shows in place, through the failures flow; only a pull's needs a message. */
     private fun failed(kind: LibraryKind, pulled: Boolean) {
         if (pulled) {
             messages.show(
@@ -230,17 +214,15 @@ class LibraryViewModel(
     }
 }
 
-/** What the chips and the sort button have selected. */
 internal data class LibrarySelection(val kind: LibraryKind, val sort: LibrarySort)
 
-/** One kind's list in one order; [items] is null while the index has not answered yet. */
+/** [items] is null until the index answers. */
 internal data class LibraryPage(
     val selection: LibrarySelection,
     val items: List<MediaUi>?,
     val letters: List<LetterJump> = emptyList(),
 )
 
-/** What the screen believes about the server while a list is empty. */
 internal fun serverStatusOf(state: SessionState): ServerStatus = when (state) {
     is SessionState.Offline -> ServerStatus.Offline
 
@@ -258,10 +240,7 @@ internal fun selectionOf(kind: String?, sort: String?) = LibrarySelection(
     LibrarySort.entries.firstOrNull { it.name == sort } ?: LibrarySort.RecentlyPlayed,
 )
 
-/**
- * A playlist names its owner only when that is someone else: the person's own name on every row
- * says nothing. [you] holds the signed-in person's names, in lower case.
- */
+/** Drops a playlist's owner when it is the user ([you]: lower-case names), as it would repeat on every row. */
 internal fun pageOf(
     selection: LibrarySelection,
     entities: List<LibraryItemEntity>,
@@ -276,10 +255,7 @@ internal fun pageOf(
     letters = if (selection.sort == LibrarySort.AToZ) letterJumps(entities.map { it.sortName }) else emptyList(),
 )
 
-/**
- * Skeletons while the list is unknown, or empty on its kind's first sync ([synced] once one has
- * finished); "Can't reach" only for an empty list.
- */
+/** An empty list before its kind's first finished sync ([synced]) is still loading, not empty. */
 internal fun libraryState(page: LibraryPage, syncing: Boolean, status: ServerStatus, synced: Boolean): LibraryUiState {
     val items = page.items
     val empty = items != null && items.isEmpty()
@@ -299,25 +275,22 @@ internal fun libraryState(page: LibraryPage, syncing: Boolean, status: ServerSta
 data class LibraryUiState(
     val kind: LibraryKind = LibraryKind.Playlists,
     val sort: LibrarySort = LibrarySort.RecentlyPlayed,
-    /** The selected kind's items, already in [sort] order. */
     val items: List<MediaUi> = emptyList(),
-    /** The very first load, with nothing cached yet: skeletons. Afterwards the cache paints instantly. */
+    /** First load only, with nothing cached: skeletons. */
     val loading: Boolean = false,
-    /** The index has not answered yet, but only just: the header shows alone until it is slow. */
+    /** Before the index's first answer, within PENDING_MS: the header shows alone. */
     val pending: Boolean = false,
-    /** Nothing cached and Music Assistant cannot be reached. */
+    /** Only for an empty list; cached items still show offline. */
     val offline: Boolean = false,
-    /** Nothing cached and the kind's last sync failed: why, with Retry. */
+    /** Only for an empty list: why the kind's last sync failed. */
     @StringRes val failure: Int? = null,
-    /** The scrubber's letters (see [letterJumps]); empty hides the scrubber. */
     val letters: List<LetterJump> = emptyList(),
-    /** A pull to refresh is syncing the list with the server. */
     val refreshing: Boolean = false,
-    /** The chips, in order; null until the library says what it holds. */
+    /** Null until the kinds are known. */
     val kinds: List<LibraryKind>? = libraryKinds(LibraryKind.Default.visible, held = emptySet()),
-    /** One kind alone, a place of its own in the bar: named in the title, with no chips. */
+    /** One kind as its own bar tab: the kind is the title, with no chips. */
     val single: Boolean = false,
-    /** What plays now and what it comes from; such an item carries the playing ring. */
+    /** Keys of what plays and what it comes from (its album, book or podcast). */
     val playing: Set<String> = emptySet(),
 ) {
     val isEmpty: Boolean get() = !pending && !loading && !offline && failure == null && items.isEmpty()

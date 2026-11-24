@@ -28,7 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** The book and podcast pages against the recorded 2.11 shapes. */
+// Fixtures are recorded 2.11 server replies.
 @OptIn(ExperimentalCoroutinesApi::class)
 class SpokenPagesViewModelTest {
     private val messages = MessageController(MutableStateFlow(true))

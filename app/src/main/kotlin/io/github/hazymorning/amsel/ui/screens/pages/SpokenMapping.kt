@@ -11,7 +11,8 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
 
-/** A book page's header from the library index: the same fields the server fills, so nothing jumps. */
+// The server header's fields except downloadable, which only the server knows, so nothing jumps
+// when it answers.
 internal fun UiMapper.audiobookHeader(row: LibraryItemEntity) = AudiobookUi(
     key = row.uri,
     title = row.name,
@@ -56,7 +57,7 @@ internal fun UiMapper.episode(item: MediaItem): EpisodeUi {
     )
 }
 
-/** The episode as an item, for its ⋮ sheet; on its podcast's page, without the way there. */
+// No parentKey: on its podcast's page the ⋮ sheet offers no "Go to podcast".
 internal fun EpisodeUi.media(podcast: MediaUi?) = MediaUi(
     key = key,
     kind = MediaKind.Episode,
@@ -68,7 +69,7 @@ internal fun EpisodeUi.media(podcast: MediaUi?) = MediaUi(
     downloadable = downloadable,
 )
 
-/** The day of an ISO 8601 date-time or date, as the server sends a release date. */
+// The server sends a release date as an ISO 8601 date-time or a plain date.
 internal fun dayOf(iso: String): LocalDate? = try {
     OffsetDateTime.parse(iso).toLocalDate()
 } catch (e: DateTimeParseException) {

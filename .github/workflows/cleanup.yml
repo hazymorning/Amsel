@@ -1,10 +1,5 @@
 name: Cleanup
 
-# By hand only: Actions → Cleanup → Run workflow. Keeps the newest release and deletes the older
-# ones with their tags, every tag no release keeps, every branch but main and signing (which holds
-# the release key; a branch with an open pull request stays, so no work in progress is lost), the
-# Actions caches, and every workflow run but the newest of each workflow.
-
 on:
   workflow_dispatch:
     inputs:
@@ -59,6 +54,7 @@ jobs:
           open=$(gh pr list --state open --limit 1000 --json headRefName --jq '.[].headRefName')
           branches=$(gh api --paginate "repos/$GH_REPO/branches" --jq '.[].name')
           while read -r branch; do
+            # signing holds the release key.
             case "$branch" in ''|main|signing) continue ;; esac
             if grep -qxF -- "$branch" <<< "$open"; then
               echo "Kept $branch: its pull request is open"

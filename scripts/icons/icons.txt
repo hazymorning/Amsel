@@ -1,19 +1,12 @@
-# Phosphor icons, copied in as vector drawables by scripts/icons/fetch-icons.py. Each comes in the
-# Regular, Bold and Light cuts, whose lines are 1.5 dp at 24, 16 and 32 dp; the app draws the cut
-# whose line is nearest 1.5 dp at the size it is drawn. One icon per line:
-#   <drawable name, written as ic_<name>.xml>  <phosphor icon>  [fill|bold]  [mirrored]  [custom]
-#   [heavy]  [stroke:<units>]
-# "fill" (transport glyphs and the selected tab) and "bold" (three dots, which have no line to
-# keep) come in that one cut only.
-# "heavy" adds a cut with a 32 unit line, 1.5 dp at 12 dp, for a glyph inside a download's ring.
-# "stroke:<units>" draws Phosphor's own line drawing with lines that wide, in one cut: the caret
-# after words is a step smaller than they are, and 29 units keep its line at 1.5 dp there.
-# "mirrored" flips the glyph in right-to-left layouts (arrows and lists that point somewhere).
-# "custom" takes scripts/icons/custom/<icon>.svg instead: Amsel's own glyphs, drawn to Phosphor's
-# spec (a 16 unit stroke on its 256 grid, round ends), in the same three cuts.
-# Run scripts/icons/fetch-icons.py after editing; icons that leave this list are deleted.
+# Run scripts/icons/fetch-icons.py after editing; an icon that leaves this list is deleted. Per line:
+#   <name, written as ic_<name>.xml>  <Phosphor icon>  [fill|bold]  [mirrored]  [custom]  [heavy]  [stroke:<units>]
+# fill, bold: that cut only; bold for the three dots, which have no line to keep.
+# heavy: adds a cut with a 32 unit line, 1.5 dp at 12 dp, for a glyph inside a download's ring.
+# stroke:<units>: Phosphor's line drawing at that width, one cut; 29 keeps the smaller caret after words at 1.5 dp.
+# mirrored: flipped in right-to-left layouts, for arrows and lists that point somewhere.
+# custom: scripts/icons/custom/<icon>.svg, drawn to Phosphor's spec (a 16 unit stroke with round ends on its 256 grid).
 
-# Tabs: outline when not selected, filled when selected.
+# Tabs: filled when selected.
 home                house
 home_selected       house                  fill
 search              magnifying-glass
@@ -28,7 +21,7 @@ audiobook_selected  book-open              fill
 podcast_selected    microphone             fill
 settings_selected   gear-six               fill
 
-# Transport: filled, as on every media control.
+# Transport: filled, as media controls are.
 play                play                   fill
 pause_slim          pause_slim             custom
 skip_next           skip-forward           fill
@@ -39,7 +32,6 @@ repeat_one          repeat-once
 skip_back           arrow-counter-clockwise
 skip_forward        arrow-clockwise
 
-# Navigation and actions.
 back                arrow-left             mirrored
 collapse            caret-down
 close               x
@@ -59,7 +51,6 @@ add                 plus
 sleep               moon
 dropdown            caret-down             stroke:29
 
-# Items and their actions.
 album               vinyl-record
 artist              user
 playlist            playlist               mirrored
@@ -86,7 +77,6 @@ mix                 infinity
 similar             music-notes
 dj                  microphone-stage
 
-# Speakers and volume.
 speaker             room                   custom
 queue               queue                  custom
 phone               device-mobile
@@ -94,8 +84,6 @@ group               link-simple
 volume              speaker-high
 volume_low          speaker-low
 
-# States.
 offline             wifi-slash
 
-# A tip's mark.
 tip                 lightbulb

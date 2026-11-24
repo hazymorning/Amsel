@@ -10,7 +10,6 @@ import io.github.hazymorning.amsel.ui.screens.pages.EpisodeUi
 import io.github.hazymorning.amsel.ui.screens.pages.PodcastUiState
 import java.time.LocalDate
 
-/** Sample audiobooks, podcasts and episodes; covers `sample:audiobook/1..4`, `podcast/1..3`. */
 object SpokenSample {
     private fun art(key: String) = ArtRef("sample:$key")
 
@@ -35,7 +34,6 @@ object SpokenSample {
     val longWalk = podcast(1, "The Long Walk", "Footpath Audio")
     val kitchenScience = podcast(2, "Kitchen Science", "Weekly")
 
-    /** Moby-Dick's first chapters, with their lengths in seconds. */
     private val mobyDickChapters = listOf(
         "Loomings" to 705, "The Carpet-Bag" to 612, "The Spouter-Inn" to 1338, "The Counterpane" to 812,
         "Breakfast" to 431, "The Street" to 395, "The Chapel" to 489, "The Pulpit" to 371, "The Sermon" to 1544,
@@ -51,7 +49,6 @@ object SpokenSample {
 
     private const val MOBY_DICK_SEC = 24 * HOUR + 49 * 60
 
-    /** Four minutes into The Spouter-Inn. */
     val mobyDickAtMs: Long = chapters[2].startMs + 254_000
 
     val audiobookPage = AudiobookUiState(
@@ -104,7 +101,6 @@ object SpokenSample {
         currentKey = episodes.first().key,
     )
 
-    /** Two books and an episode the person is in the middle of, last played first. */
     val continueListening = listOf(
         mobyDick.copy(
             progress = mobyDickAtMs / 1000f / MOBY_DICK_SEC,

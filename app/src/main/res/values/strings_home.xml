@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Home -->
     <string name="home_no_sections">Nothing on Home yet</string>
 
-    <!-- Section titles: what a section shows, in plain words -->
     <string name="home_option_pinned">Pinned</string>
     <string name="home_your_albums">Your albums</string>
     <string name="home_option_smart_playlists">Smart playlists</string>
@@ -27,14 +25,12 @@
     <string name="home_option_played_here_choice">Recently played here</string>
     <string name="home_option_search">Search</string>
 
-    <!-- How a section shows its items -->
     <string name="home_layout_grid">Grid</string>
     <string name="home_layout_small">Small covers</string>
     <string name="home_layout_row">Row</string>
     <string name="home_layout_big">Big covers</string>
     <string name="home_layout_list">List</string>
 
-    <!-- Editing Home: each section is a sentence; %1$s is what it shows, %2$s how -->
     <string name="home_edit">Edit Home</string>
     <string name="home_edit_short">Edit</string>
     <string name="home_edit_done">Done</string>
@@ -44,7 +40,7 @@
     <string name="home_edit_what_is">What to show: %1$s</string>
     <string name="home_edit_how_is">Show as: %1$s</string>
 
-    <!-- The sentence's chips: what and how as the sentence says them ("Show your pins as a grid") -->
+    <!-- The parts of home_edit_sentence, worded to fit into it: "Show your pins as a grid" -->
     <string name="home_sentence_option_pinned">your pins</string>
     <string name="home_sentence_option_everything">recently played</string>
     <string name="home_sentence_option_played_here">recently played here</string>
@@ -79,7 +75,6 @@
     <string name="home_section_empty">Nothing here yet</string>
     <string name="home_section_empty_pinned">Nothing pinned yet. Long-press an album, playlist, artist, station, book or podcast and choose Pin to Home.</string>
 
-    <!-- Pins, from any item's ⋮ sheet -->
     <string name="home_action_pin">Pin to Home</string>
     <string name="home_action_unpin">Unpin from Home</string>
     <string name="home_pinned">Pinned to Home</string>
@@ -93,7 +88,6 @@
     <string name="move_earlier">Move earlier</string>
     <string name="move_later">Move later</string>
 
-    <!-- Tips: what the app keeps out of sight, each said once above Home's first section -->
     <string name="tip_edit_home">Long-press a heading or a free spot to edit Home.</string>
     <string name="tip_settings">Pull Home down to open Settings.</string>
     <string name="tip_more">Long-press an album, a playlist or a song for more options.</string>

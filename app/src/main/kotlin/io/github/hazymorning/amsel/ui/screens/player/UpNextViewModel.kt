@@ -45,10 +45,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * Up next for one speaker, loaded while shown: a page around the song that plays, then more as the
- * list nears either end. What is shown loads again when the server says its items changed or the
- * connection comes back (events are not replayed). Taps, moves and removals show at once and run
- * in [appScope], so closing Up next does not cancel them.
+ * Reloads when the server reports changed items and after a reconnect, as events are not replayed.
+ * Taps, moves and removals show at once and run in [appScope], so closing Up next does not cancel them.
  */
 class UpNextViewModel(
     private val queueId: String,
@@ -58,9 +56,8 @@ class UpNextViewModel(
     private val mapper: UiMapper,
     private val messages: MessageController,
     private val appScope: CoroutineScope,
-    /** Runs before a tapped song starts: on This phone it releases the hold a pause left. */
+    /** Runs before a tapped song starts; on This phone it releases the session hold a pause left. */
     private val beforePlay: (queueId: String) -> Unit,
-    /** The ⋮ sheet's changes to these rows. */
     sheetEdits: Flow<UpNextEdit>,
     /** Queues a song again to play next, for one the server will not move. */
     private val queueNext: (uri: String) -> Unit,
@@ -68,16 +65,16 @@ class UpNextViewModel(
     private val shown = MutableStateFlow(UpNextUiState(loading = true))
     private val sending = Mutex()
 
-    /** The row tapped to play: current here until the server reports it, or until the speaker's confirm time runs out. */
+    /** The row tapped to play, shown as current until the server reports it or the confirm time runs out. */
     private val tapped = MutableStateFlow<String?>(null)
     private var tapHold: Job? = null
     private var paging: Job? = null
 
-    /** Changes made here; a load that saw one made meanwhile is stale, and the next one applies. */
+    /** Counts local changes: a load that overlaps one is stale and dropped for the next. */
     private var changes = 0
     private val reloads = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    // Reads that end with this screen: their Retry is taken back with it.
+    // Their Retry is withdrawn when this screen closes.
     private val retryEarlier = retryWhileOpen(messages) { more(earlier = true) }
     private val retryLater = retryWhileOpen(messages) { more(earlier = false) }
     private val retryReload = retryWhileOpen(messages, ::reload)
@@ -113,15 +110,13 @@ class UpNextViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), shown.value)
 
     fun reload() {
-        // Retry in place of the list shows it loading at once: the read may wait for the connection.
+        // Retry in place of the list shows loading at once, as the read may wait for the connection.
         shown.update { if (it.failure != null) it.copy(loading = true, failure = null) else it }
         reloads.tryEmit(Unit)
     }
 
-    /** The songs before the first one shown, as the list nears its top. */
     fun loadEarlier() = more(earlier = true)
 
-    /** The songs after the last one shown, as the list nears its end. */
     fun loadLater() = more(earlier = false)
 
     private fun more(earlier: Boolean) {
@@ -136,7 +131,7 @@ class UpNextViewModel(
                 } catch (e: MaException) {
                     return@withLock messages.show(failureText(e), retry = retry)
                 }
-                // A reload meanwhile shows another stretch, which this page does not join.
+                // A reload meanwhile shows another stretch, which this page does not belong to.
                 if (shown.value.start != now.start) return@withLock
                 val queue = speakers.queues.value[queueId]?.queue
                 val rows = page.items.map { mapper.queueItem(it, queue?.currentItem?.queueItemId) }
@@ -183,7 +178,7 @@ class UpNextViewModel(
         send(undo = { it.withRow(row, at) }, retry = { remove(itemId) }) { api.deleteItem(queueId, itemId) }
     }
 
-    /** The ⋮ sheet's Play next: the row moves up to play next. */
+    // A song the server will not move is queued again instead (docs/API-NOTES.md, "Queue commands").
     private fun playNext(itemId: String, uri: String) {
         val state = shown.value
         val from = state.items.indexOfFirst { it.id == itemId }
@@ -199,12 +194,9 @@ class UpNextViewModel(
         }
     }
 
-    /**
-     * A change the screen already shows. A failure takes it back ([undo]) and says so; one the
-     * server refused reloads its list, and a lost connection reloads once it is back. Changes reach
-     * the server in the order they were made: each queues on the fair [sending] lock before the
-     * call returns, as a move or removal counts on the ones before it.
-     */
+    // A failure undoes the shown change and says so; a refused one also reloads. Changes reach the
+    // server in order: each queues on the fair [sending] lock before this returns (undispatched), as a
+    // move or removal counts on the ones before it.
     private fun send(undo: (UpNextUiState) -> UpNextUiState, retry: () -> Unit, change: suspend () -> Unit) {
         appScope.launch(start = CoroutineStart.UNDISPATCHED) {
             sending.withLock {
@@ -224,10 +216,8 @@ class UpNextViewModel(
         }
     }
 
-    /**
-     * After the changes on their way, so the list it reads holds them. The first load opens a page
-     * around the song that plays; a reload reads again the stretch that is shown.
-     */
+    // Waits behind pending changes on the lock, so the list it reads holds them. A reload reads the
+    // shown stretch again.
     private suspend fun load() = sending.withLock {
         val before = changes
         val now = shown.value
@@ -245,7 +235,6 @@ class UpNextViewModel(
         }
     }
 
-    /** At least [count] items from [from] (one page at the least), a page at a time, or all there are. */
     private suspend fun stretch(from: Int, count: Int): List<QueueItem> {
         val items = mutableListOf<QueueItem>()
         var at = from
@@ -257,7 +246,6 @@ class UpNextViewModel(
         return items
     }
 
-    /** Said in place of the list while it is empty, else in a message. */
     private fun loadFailed(error: Exception) {
         if (shown.value.items.isEmpty()) {
             shown.update { it.copy(loading = false, failure = failureText(error)) }
@@ -267,10 +255,6 @@ class UpNextViewModel(
     }
 }
 
-/**
- * Up next for the current speaker: songs already played, the current one (marked), then what
- * comes next, in play order; [items] is the stretch loaded so far, from the queue's [start].
- */
 @Immutable
 data class UpNextUiState(
     val items: List<QueueItemUi> = emptyList(),
@@ -278,11 +262,12 @@ data class UpNextUiState(
     val start: Int = 0,
     /** How many items the queue holds, loaded or not. */
     val total: Int = 0,
-    /** The very first load, with nothing to show yet: skeleton rows. */
     val loading: Boolean = false,
-    /** Why nothing could be loaded, said in place of the list. */
     @StringRes val failure: Int? = null,
-    /** The first row that may move or go: the server keeps what the speaker already holds. */
+    /**
+     * The first row that may move or go: the server keeps what the speaker already holds
+     * (docs/API-NOTES.md, "Queue commands").
+     */
     val firstEditable: Int = 0,
 ) {
     val isEmpty: Boolean get() = !loading && failure == null && items.isEmpty()
@@ -291,15 +276,11 @@ data class UpNextUiState(
 
     val hasLater: Boolean get() = start + items.size < total
 
-    /** Where the list opens: the songs already played wait above it, under the bar. */
     val currentIndex: Int get() = items.indexOfFirst { it.isCurrent }.coerceAtLeast(0)
 }
 
-/**
- * [state] as the server has [queue]: its current item marked ([tapped] while the server has not
- * reported it yet), and nothing at or before what the speaker already holds (the current item, and
- * the next once buffered) editable.
- */
+// Marks the current item ([tapped] until the server reports it); nothing up to the current or the
+// buffered item is editable.
 internal fun UpNextUiState.following(queue: PlayerQueue?, tapped: String? = null): UpNextUiState {
     val current = tapped ?: queue?.currentItem?.queueItemId
     val held = listOfNotNull(queue?.currentIndex, queue?.indexInBuffer).maxOrNull() ?: -1
@@ -310,10 +291,9 @@ internal fun UpNextUiState.following(queue: PlayerQueue?, tapped: String? = null
     )
 }
 
-/** How many played songs the first load shows above the one that plays; more come with a pull. */
+// Played songs the first load shows above the current one.
 private const val PLAYED_ABOVE = 50
 
-/** [row] back at [index], unless it is there. */
 private fun UpNextUiState.withRow(row: QueueItemUi, index: Int): UpNextUiState = if (items.any {
         it.id == row.id
     }
@@ -323,7 +303,6 @@ private fun UpNextUiState.withRow(row: QueueItemUi, index: Int): UpNextUiState =
     copy(items = items.toMutableList().apply { add(index.coerceAtMost(size), row) })
 }
 
-/** Row [id] back at [index], wherever it is now. */
 private fun UpNextUiState.withRowAt(id: String, index: Int): UpNextUiState {
     val at = items.indexOfFirst { it.id == id }
     return if (at < 0) this else copy(items = items.moved(at, index.coerceAtMost(items.lastIndex)))

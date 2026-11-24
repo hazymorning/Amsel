@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Measure a screenshot the way a designer would: ink boxes in dp, alignment near-misses, gaps.
+"""Measures a screenshot in dp: ink boxes, near-miss alignments and gaps.
 
   measure.py boxes   SHOT.png            boxes, edge clusters, near-misses, vertical gaps
   measure.py overlay SHOT.png OUT.png    boxes, keylines and an 8 dp grid drawn over the shot
   measure.py zoom    SHOT.png OUT.png X Y W H [SCALE]   a region in dp, enlarged
 
-Screenshots are xxhdpi (3 px per dp). "Ink" is anything that differs from the row's background,
-sampled at the screen's outer columns, so tinted and gradient backgrounds work too.
+Shots are xxhdpi (3 px per dp). "Ink" is what differs from its row's background, sampled at the
+outer columns, so tinted and gradient backgrounds work too.
 """
 import sys
 from collections import deque

@@ -22,10 +22,9 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 
-/** The Audiobookshelf account downloads come from: its server and who signed in. */
 data class AbsAccount(val url: String, val username: String)
 
-/** Where the account and its refresh token are kept, the token sealed. */
+/** Implementations keep the refresh token sealed. */
 interface AbsAccountStore {
     val account: StateFlow<AbsAccount?>
 
@@ -38,13 +37,11 @@ interface AbsAccountStore {
     suspend fun clear()
 }
 
-/** What went wrong with Audiobookshelf, said so a person can act on it. */
 class AbsException(val reason: Reason, cause: Throwable? = null) : IOException(reason.name, cause) {
     /**
-     * [Refused]: the server will not give this file to this account, which stays signed in.
-     * [Certificate]: TLS answered with a certificate this phone does not trust. [HttpsFailed]: a
-     * name off the home network did not answer over https, and plain http must be typed.
-     * [AwayFromHome]: plain http, where Music Assistant does not answer over plain http.
+     * [Refused]: the server denies this file to the account, which stays signed in. [HttpsFailed]: https failed
+     * for a name that is not a home address, so plain http must be typed. [AwayFromHome]: plain http off the
+     * checked network.
      */
     enum class Reason {
         BadAddress,
@@ -60,19 +57,12 @@ class AbsException(val reason: Reason, cause: Throwable? = null) : IOException(r
     }
 }
 
-/**
- * The Audiobookshelf server the books and podcasts are on, signed in to for downloads: Music
- * Assistant streams them but cannot hand out their files. An access token lasts an hour (2.37);
- * the refresh token is renewed by every refresh, as the server rotates it, and kept sealed. A
- * server before 2.26 gives one long-lived token, kept the same way.
- */
+// Downloads use Audiobookshelf's own API: Music Assistant cannot hand out the files. The refresh token rotates
+// with every refresh. See docs/API-NOTES.md, "Audiobookshelf for downloads".
 class AbsClient(
     private val http: OkHttpClient,
     private val store: AbsAccountStore,
-    /**
-     * Whether plain http reaches the household's network from where the phone is now
-     * ([io.github.hazymorning.amsel.data.Session.reachesHome]); https needs no such check.
-     */
+    // [io.github.hazymorning.amsel.data.Session.reachesHome]: whether plain http may go out; https needs no check.
     private val reachesHome: suspend () -> Boolean,
 ) {
     private val refreshing = Mutex()
@@ -82,9 +72,8 @@ class AbsClient(
     val account: StateFlow<AbsAccount?> get() = store.account
 
     /**
-     * Signs in at [address]; throws [AbsException]. An address typed without a scheme is tried
-     * with https first, as a server outside the home is reached, then with http where it is a home
-     * address by its form, as one at home is. A certificate this phone does not trust ends it.
+     * Throws [AbsException]. Without a scheme, https is tried first, then plain http only for a home address by its
+     * form, never after an untrusted certificate. See docs/API-NOTES.md, "Audiobookshelf for downloads".
      */
     suspend fun signIn(address: String, username: String, password: String) = withContext(Dispatchers.IO) {
         val typed = address.trim()
@@ -144,7 +133,7 @@ class AbsClient(
         send(progressPath(itemId, episodeId), verb = "PATCH", body = body) { }
     }
 
-    /** An audio file of [itemId] from byte [from] on; the caller reads it off the main thread and closes it. */
+    /** From byte [from] on; the caller must close it and read it off the main thread. */
     internal suspend fun file(itemId: String, ino: String, from: Long): Response =
         authorized("api/items/$itemId/file/$ino/download") { if (from > 0) header("Range", "bytes=$from-") }
 
@@ -153,7 +142,6 @@ class AbsClient(
     private fun progressPath(itemId: String, episodeId: String?) =
         "api/me/progress/$itemId" + (episodeId?.let { "/$it" } ?: "")
 
-    /** [read] of the answer to [path]; null for 404, an [AbsException] for any other failure. */
     private suspend fun <T> send(
         path: String,
         verb: String = "GET",
@@ -169,7 +157,6 @@ class AbsClient(
         }
     }
 
-    /** The response for [path], signed in, after one refresh of the access token if it ran out. */
     private suspend fun authorized(path: String, build: Request.Builder.() -> Unit = {}): Response {
         val account = store.account.value ?: throw AbsException(AbsException.Reason.SignedOut)
         val base = baseUrl(account.url) ?: throw AbsException(AbsException.Reason.BadAddress)
@@ -185,7 +172,7 @@ class AbsClient(
         throw AbsException(AbsException.Reason.SignedOut)
     }
 
-    /** A new access token, unless another call already replaced [stale]. */
+    // Serialised, and a token another call already put in place of [stale] is reused: the refresh token rotates.
     private suspend fun refresh(base: HttpUrl, stale: String?): String = refreshing.withLock {
         access?.takeIf { it != stale }?.let { return it }
         val refreshToken = store.refreshToken() ?: throw AbsException(AbsException.Reason.SignedOut)
@@ -218,10 +205,9 @@ class AbsClient(
             }
         }
 
-    // An answer is read where it was asked for: on IO, as Android ends the app at any network
-    // read on its main thread, where the screens ask from.
+    // Responses are read on IO too: screens call from the main thread, where Android throws on any network read.
     private suspend fun call(base: HttpUrl, request: Request): Response {
-        // Away from the household's network a home address may lead to anyone, who would get the token.
+        // Off the checked network a home address may reach any machine, which would get the token.
         if (!base.isHttps && !reachesHome()) throw AbsException(AbsException.Reason.AwayFromHome)
         return try {
             runInterruptible(Dispatchers.IO) { http.forUrl(base).newCall(request).execute() }
@@ -246,7 +232,6 @@ class AbsClient(
         private val JSON = "application/json".toMediaType()
         private val SERVER_ERRORS = 500..599
 
-        /** [address] as typed or taken from Music Assistant: a scheme is added, and a path kept as the base. */
         fun baseUrl(address: String): HttpUrl? {
             val trimmed = address.trim().trimEnd('/')
             if (trimmed.isEmpty()) return null

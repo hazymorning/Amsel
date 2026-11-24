@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Turns the owner's icon artwork (docs/design/icon/amsel-icon.png, 1024 px, full bleed) into the
-adaptive-icon vector layers and the notification glyph. Dev tool: needs `pip install pillow potracer`.
+"""Traces docs/design/icon/amsel-icon.png (1024 px, full bleed) into the icon drawables; needs pillow, potracer.
 
-The PNG is the visible 72 dp of a 108 dp adaptive-icon layer, so it maps to dp 18..90; the body,
-which runs off the bottom edge, is extended to the layer's edge so masks and parallax never show a
-cut. Writes res/drawable/ic_launcher_{foreground,monochrome}.xml and
-media3_notification_small_icon.xml.
+The PNG is the visible 72 dp of a 108 dp adaptive-icon layer, dp 18 to 90. The body, which runs off
+the bottom edge, is extended to the layer's edge so masks and parallax never show a cut.
 """
 import pathlib
 import sys
@@ -17,18 +14,17 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SRC = ROOT / "docs/design/icon/amsel-icon.png"
 RES = ROOT / "app/src/main/res"
 INK, AMBER, CREAM = (0x13, 0x12, 0x11), (0xF0, 0xA0, 0x30), (0xF1, 0xE9, 0xDA)
-# The artwork's amber marks the beak and the eye; the icon wears moss there (owner). The beak is a
-# step lighter than the day's moss, which reads as black beside the bird at icon size; the eye, on
-# the black head, is the night's.
+# The artwork's amber becomes moss, the owner's choice: the beak a step lighter than Day.Moss, which
+# looks black beside the bird at icon size, and the eye Night.Moss.
 BEAK, EYE = (0x6B, 0x8E, 0x4E), (0xA3, 0xB4, 0x86)
 SCALE = 72 / 1024
 OFFSET = 18
-# The beak is the amber above this line; the eye ring the amber below it.
+# Fraction of the height: amber above it is the beak, below it the eye ring.
 BEAK_LINE = 0.47
-# The one-colour glyphs show at 24 dp and less, where the eye's thin ring closes up: there the eye is
-# a single round hole, this much wider than the ring, about 2.5 dp across in the status bar.
+# At 24 dp and below the eye's thin ring closes up, so the one-colour glyphs get a round hole this
+# much wider than the ring, about 2.5 dp across in the status bar.
 GLYPH_EYE = 1.45
-# The notification glyph frames the bird so it fills the 24 dp square.
+# Scales the bird up to fill the 24 dp notification icon.
 NOTIFICATION_FRAME = {"pivotX": 54, "pivotY": 54, "scaleX": 1.85, "scaleY": 1.85, "translateX": 7, "translateY": -4}
 
 
@@ -130,7 +126,6 @@ def main() -> int:
     beak = trace(lambda c, x, y: near(c, AMBER) and y < h * BEAK_LINE, im)
     ring = trace(lambda c, x, y: near(c, AMBER) and y >= h * BEAK_LINE, im)
     ext = body_extension(im)
-    # One colour: bird and beak solid, the eye a round hole.
     cx, cy, r = eye(im)
     hole = (r * GLYPH_EYE) ** 2
 

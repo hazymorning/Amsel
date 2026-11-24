@@ -16,10 +16,10 @@ import androidx.compose.ui.unit.dp
 import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.model.DownloadMark
 
-/** The downloads by uri, from the app's root, so every row and tile marks its own item. */
+/** Keyed by item uri; provided once at the app root. */
 val LocalDownloadMarks = staticCompositionLocalOf<State<Map<String, DownloadMark>>> { mutableStateOf(emptyMap()) }
 
-/** [key]'s mark; a row changes when its own does, not each time another download moves on. */
+/** A row recomposes when its own mark changes, not on every other download's progress. */
 @Composable
 fun downloadMark(key: String): DownloadMark? {
     val marks = LocalDownloadMarks.current
@@ -27,17 +27,15 @@ fun downloadMark(key: String): DownloadMark? {
     return mark
 }
 
-/** [key]'s mark as the glyph before an item's second line, or null when the phone holds none of it. */
 @Composable
 fun downloadMarkGlyph(key: String): (@Composable () -> Unit)? =
     downloadMark(key)?.let { mark -> { DownloadMarkGlyph(mark) } }
 
-/** The filled arrow once the item is on the phone, a turning ring while it comes, as large as a capital. */
 @Composable
 fun DownloadMarkGlyph(mark: DownloadMark, modifier: Modifier = Modifier) {
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
     when (mark) {
-        // In ink, beside the quieter words: at a glance, which books are on the phone.
+        // Stronger than the subtitle beside it, so downloaded items stand out in a list.
         DownloadMark.Done -> AlignedGlyph(
             R.drawable.ic_downloaded,
             modifier,

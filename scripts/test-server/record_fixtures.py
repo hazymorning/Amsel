@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
-"""
-Record real Music Assistant WebSocket request/response pairs as JSON test fixtures.
+"""Records Music Assistant's answers as JSON fixtures, from a server start.sh and setup.py prepared.
 
-Run against a server prepared by start.sh + setup.py. Every fixture file is
-    {"request": <what the client sent, or null>, "response": <the server's final frame>}
-plus "partials": [...] when the server streamed the answer in several frames, and
-"notes" when something about the recording is worth knowing. Server-pushed messages
-(server_info on connect, events) have "request": null. JWTs are replaced by
-"<redacted-jwt>"; everything else is verbatim.
-
-Two fake Sendspin speakers ("Kitchen", "Living Room", see fake_player.py) are connected
-half-way, so the playback fixtures come from a real queue on a real (fake) player.
-
-Usage: record_fixtures.py --token TOKEN --out DIR [--url http://localhost:8095]
-Python 3 stdlib only.
+The file format: scripts/test-server/README.md, "Fixtures". Python 3 stdlib only.
 """
 
 from __future__ import annotations
@@ -87,7 +75,7 @@ class Recorder:
         notes: str | None = None,
         sock: MassSocket | None = None,
     ) -> Any:
-        """Send a command, save it as a fixture, and return the result (or None on error)."""
+        """Returns the result, or None on an error or where the server lacks the command."""
         sock = sock or self.ma
         assert sock is not None
         if command not in self.commands and command != "auth":
@@ -100,7 +88,7 @@ class Recorder:
             log(f"  {label}: error {final['error_code']} {final.get('details')}")
             return None
         result = final.get("result")
-        if len(frames) > 1:  # streamed listing: stitch the pages together for the caller
+        if len(frames) > 1:  # a streamed listing: join its pages
             result = [x for f in frames for x in (f.get("result") or [])]
         log(f"  {label}: ok")
         return result
@@ -114,7 +102,7 @@ def find(items: list[dict[str, Any]], name: str) -> dict[str, Any]:
 
 
 def wait_players(r: Recorder, names: set[str], timeout: float = 60) -> list[dict[str, Any]]:
-    """Wait until the universal players wrapping the fake speakers are visible."""
+    """Waits until the server has wrapped the fake speakers in visible universal players."""
     assert r.ma is not None
     deadline = time.monotonic() + timeout
     while True:
@@ -142,17 +130,13 @@ RADIO_NAME = "Amsel Test Radio"
 
 
 def sort_args(r: Recorder, field: str, direction: str, legacy: str) -> dict[str, Any]:
-    """Typed sort on 2.11 (schema 86+), order_by on 2.10."""
+    """sort_field from schema 86, order_by before. See docs/API-NOTES.md, "Versions and schema gates"."""
     if r.has("music/sort_options"):
         return {"sort_field": field, "sort_direction": direction}
     return {"order_by": legacy}
 
 
 def record_radios(r: Recorder, radio_url: str | None, player_id: str | None) -> None:
-    """
-    Radio stations: the library's empty answer, then, given a stream URL the server can reach,
-    adding a station (builtin provider), listing, favouriting and playing it on [player_id].
-    """
     assert r.ma is not None
     paging = {"limit": 50, "offset": 0}
     r.rec("music/radios/count")
@@ -195,7 +179,6 @@ def record_radios(r: Recorder, radio_url: str | None, player_id: str | None) -> 
 
 
 def record_radios_only(r: Recorder, url: str, token: str, radio_url: str | None) -> None:
-    """Adds the radio fixtures to an existing fixture directory, with one fake speaker."""
     r.ma = MassSocket(url)
     r.ma.command("auth", {"token": token})
     kitchen = FakePlayer(url, token, "amsel-fake-kitchen", "Kitchen").start()
@@ -230,13 +213,11 @@ def main() -> None:  # noqa: PLR0915
         record_radios_only(r, url, args.token, args.radio_url)
         return
 
-    # ------------------------------------------------------------ HTTP: GET /info
     info = http_json(f"{url}/info")
     r.save("http_info", {"method": "GET", "path": "/info"}, info,
            notes="Unauthenticated HTTP endpoint; same payload as the server_info WebSocket message.")
     log(f"recording {info['server_version']} (schema {info['schema_version']}) into {r.out}")
 
-    # ------------------------------------------------------------ connection 1: before auth
     pre = MassSocket(url)
     r.save("server_info", None, pre.server_info,
            notes="First frame the server sends on every new /ws connection, before any command.")
@@ -250,7 +231,6 @@ def main() -> None:  # noqa: PLR0915
     r.rec("auth", {"token": "not-a-valid-token"}, variant="invalid_token", sock=pre)
     pre.close()
 
-    # ------------------------------------------------------------ connection 2: the app session
     r.ma = ma = MassSocket(url)
     r.rec("auth", {"token": args.token},
           notes="'auth' is handled by the WebSocket handler itself; it is not in /api-docs. "
@@ -266,7 +246,6 @@ def main() -> None:  # noqa: PLR0915
                 "browser or Sendspin client connects.")
     r.rec("player_queues/all", variant="no_players")
 
-    # ------------------------------------------------------------ library listings
     paging = {"limit": 50, "offset": 0}
     artists = r.rec("music/artists/library_items", paging)
     albums = r.rec("music/albums/library_items", paging)
@@ -294,7 +273,6 @@ def main() -> None:  # noqa: PLR0915
     r.rec("music/albums/library_items", {**paging, "search": "light"}, variant="search")
     r.rec("music/recently_added_tracks", {"limit": 10})
 
-    # ------------------------------------------------------------ detail pages
     album = find(albums, "First Light")
     lib = "library"
     r.rec("music/albums/get", {"item_id": album["item_id"], "provider_instance_id_or_domain": lib})
@@ -309,14 +287,12 @@ def main() -> None:  # noqa: PLR0915
     r.rec("music/item_by_uri", {"uri": album["uri"]})
     r.rec("music/albums/get", {"item_id": "999999", "provider_instance_id_or_domain": lib}, variant="not_found")
 
-    # ------------------------------------------------------------ search
     r.rec("music/search", {"search_query": "aurora", "limit": 5})
     r.rec("music/search", {"search_query": "air", "media_types": ["track"], "limit": 10}, variant="tracks_only")
     r.rec("music/search", {"search_query": "zzzz-no-match", "limit": 5}, variant="no_results")
     r.rec("music/recently_played_items", {"limit": 6, "media_types": ["album", "playlist", "artist"]},
           variant="before_playback")
 
-    # ------------------------------------------------------------ speakers: two fake Sendspin players
     kitchen = FakePlayer(url, args.token, "amsel-fake-kitchen", "Kitchen").start()
     living = FakePlayer(url, args.token, "amsel-fake-living-room", "Living Room").start()
     try:
@@ -375,7 +351,6 @@ def main() -> None:  # noqa: PLR0915
         r.rec("music/recently_played_items", {"limit": 6, "media_types": ["album", "playlist", "artist"],
                                               "fully_played_only": False}, variant="include_partial")
 
-        # ------------------------------------------------------------ favourites
         if r.has("music/favorites/set_item"):
             r.rec("music/favorites/set_item", {"item": album["uri"], "favorite": True},
                   notes="2.11: per-user like (true), dislike (false) or clear (null).")
@@ -386,13 +361,12 @@ def main() -> None:  # noqa: PLR0915
         r.rec("music/albums/library_items", {**paging, "favorite": True}, variant="favorites")
         time.sleep(2)
 
-        # ------------------------------------------------------------ radio stations
         record_radios(r, args.radio_url, k_id)
     finally:
         kitchen.stop()
         living.stop()
 
-    # ------------------------------------------------------------ events seen on the app session
+    # Takes in the events still on their way: the predicate accepts none.
     ma.wait_for_event(lambda e: False, timeout=2)
     by_type: dict[str, list[dict[str, Any]]] = {}
     for evt in ma.events:

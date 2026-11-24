@@ -32,7 +32,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The endless mix in Now Playing, the DJ's sheet, and what the DJ says in Up next and Now Playing. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class ExtrasScreenTest {

@@ -25,12 +25,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.lineHeight
 
-/**
- * A tip: one sentence about what the app keeps out of sight, after a tip's mark, on a card of the
- * first surface between the margins. The mark is its own and no control's: the glyph of what the
- * tip tells of would look like the button for it. The card goes with a swipe to either side or
- * by its close glyph, [onGone], and is not said again. A longer sentence wraps and the card grows.
- */
+/** The mark is the tip glyph, never the glyph of what the tip is about, which users would take for its button. */
 @Composable
 fun TipCard(text: String, onGone: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -61,7 +56,7 @@ fun TipCard(text: String, onGone: () -> Unit, modifier: Modifier = Modifier) {
             color = colors.onSurface,
             modifier = Modifier.weight(1f).padding(vertical = Inside),
         )
-        // The close glyph's target reaches the card's corner; its ink stands as far in as the words do below.
+        // The target reaches the card's corner; the glyph sits as far in as the text does.
         IconAction(
             R.drawable.ic_close,
             stringResource(R.string.tip_dismiss),

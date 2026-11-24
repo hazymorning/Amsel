@@ -15,7 +15,6 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The endless mix, similar artists and songs, and the AI Radio plugin's DJ, on answers recorded from 2.10.9 and 2.11.0b7. */
 class ExtrasApiTest {
     private val versions = listOf("2.10", "2.11")
 

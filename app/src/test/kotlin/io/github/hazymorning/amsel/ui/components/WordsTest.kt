@@ -3,7 +3,6 @@ package io.github.hazymorning.amsel.ui.components
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Where a line is cut, what stood after its last word goes with the cut. */
 class WordsTest {
     @Test fun aFullStopGoesWithTheCutSoThereAreNeverFourDots() {
         assertEquals("Gehört · 30. Sept. 2025 · 1 Std…", "Gehört · 30. Sept. 2025 · 1 Std. ".cutShort())

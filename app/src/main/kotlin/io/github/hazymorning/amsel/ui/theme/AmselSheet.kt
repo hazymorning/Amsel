@@ -17,24 +17,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-/**
- * What a sheet leaves of the screen behind it: black over it, a third by day, and more at night,
- * when the page is near black itself and only real black still sets the sheet apart from it.
- */
+// Darker at night: the page is near black there, and only real black still sets the sheet apart.
 private const val SHEET_DIM_DAY = 0.32f
 private const val SHEET_DIM_NIGHT = 0.6f
 
-/** What a sheet's content can do besides lay itself out. */
 interface SheetScope : ColumnScope {
-    /** Slides the sheet away; once it is gone, the sheet's onDismiss and then [then] run. */
+    /** Hides the sheet, then runs the sheet's onDismiss, then [then]. */
     fun close(then: () -> Unit = {})
 }
 
 /**
- * No handle: content puts its first ink at its own top, [Space.SheetEdge] under the sheet's edge,
- * and ends its last ink as far over the bottom ([sheetEnd]), so a sheet is framed evenly. A pull
- * down or a tap beside it still closes it. ModalBottomSheet is experimental in Material 3; opt-ins
- * live only in this package.
+ * The handle is a [Space.SheetEdge] spacer, so content starts at its own top and ends with [sheetEnd]
+ * padding, framing the sheet evenly.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

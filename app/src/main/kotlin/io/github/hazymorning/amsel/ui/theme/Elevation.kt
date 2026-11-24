@@ -20,13 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.core.graphics.withTranslation
 
-/** One shade as CSS writes it: `0 drop blur spread color`. */
+/** As CSS box-shadow writes it: `0 drop blur spread color`. */
 class ShadowLayer(val drop: Dp, val blur: Dp, val spread: Dp, val color: Color)
 
-/**
- * How far a large cover and a play button stand off the page (docs/DESIGN.md, "Shadows"): a cover
- * on a warm shade that falls below it, with a faint contact line; a play button on a short one.
- */
+/** Values from docs/DESIGN.md, "Shadows". */
 enum class Elevation(vararg val shades: ShadowLayer) {
     Cover(
         ShadowLayer(drop = 1.dp, blur = 2.dp, spread = 0.dp, color = Umber.copy(alpha = 0.05f)),
@@ -35,16 +32,16 @@ enum class Elevation(vararg val shades: ShadowLayer) {
     Button(ShadowLayer(drop = 6.dp, blur = 16.dp, spread = (-8).dp, color = Color(0xFF1E1D19).copy(alpha = 0.4f))),
     ;
 
-    /** How far past the bounds the shades show: a blur fades out over one and a half times its length. */
+    /** How far past the bounds the shades show: a blur fades out over 1.5 times its length. */
     val overflow: Dp get() = shades.maxOf { it.spread + it.drop + it.blur * BLUR_OVERFLOW }
 }
 
-/** The cover shade's warm brown, from the page's paper rather than black. */
+/** A warm brown in the page's hue rather than black. */
 private val Umber = Color(0xFF3C3018)
 
 /**
- * Draws the shades behind what follows. A blurred path, not Compose's drop shadow: that one stops a
- * blur's length out, where its shade still shows as an edge.
+ * A blurred path, not Compose's drop shadow: that one stops a blur's length out, where its shade still
+ * shows as an edge.
  */
 fun Modifier.elevationShadow(shape: Shape, elevation: Elevation): Modifier = drawWithCache {
     val layers = elevation.shades.map { shade ->
@@ -69,10 +66,8 @@ fun Modifier.elevationShadow(shape: Shape, elevation: Elevation): Modifier = dra
 }
 
 /**
- * Room for the shades of an [elevation] in [layers] that move or fade what follows: they are set
- * [Elevation.overflow] larger on every side, and what follows keeps its size and place. A layer that fades
- * is drawn off screen first and cut at its own bounds, which without this are the cover's, so the
- * shade went whenever the cover faded.
+ * Grows [layers] by [Elevation.overflow] on every side without moving what follows: a layer that fades
+ * is drawn offscreen and clipped to its bounds, which would otherwise cut off the shade.
  */
 fun Modifier.extendForShadow(elevation: Elevation, layers: Modifier): Modifier = layout { measurable, constraints ->
     val overflow = elevation.overflow.roundToPx()

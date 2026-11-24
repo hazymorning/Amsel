@@ -21,25 +21,18 @@ import io.github.hazymorning.amsel.ui.theme.HAIRLINE_ALPHA
 import io.github.hazymorning.amsel.ui.theme.Shapes
 import kotlin.math.pow
 
-/**
- * The cover as the widget lays it down: blurred small, or sharp under the Darkened look's veil;
- * whether ink reads on it better than paper; and its own colour for play and pause, if it has one
- * ([WidgetArt.accent]).
- */
+/** [light]: dark text reads better on it than light text ([WidgetArt.darkTextReadsBetter]). */
 class WidgetCover(val bitmap: Bitmap, val light: Boolean, val accent: WidgetAccent? = null)
 
-/** Play and pause's cell in a cover's colour, and its glyph in ink or paper, whichever reads. */
+/** ARGB colours of the play button's cell and glyph. */
 class WidgetAccent(val cell: Int, val glyph: Int)
 
-/**
- * The widget's pictures, made on the phone: a launcher shows a widget's views as they are, so the
- * blur and the cover corners are drawn into the bitmaps themselves.
- */
+/** RemoteViews offer no blur and no continuous-corner clip, so both are drawn into the bitmaps. */
 object WidgetArt {
-    /** The blurred cover's side; the launcher scales it up, which softens it further. */
+    /** Blurred at this side; the launcher's upscaling softens it further. */
     const val SIDE = 96
 
-    /** The words stand in the upper part; the buttons have their own grounds. */
+    /** The share from the top that is measured: the text's place by default; the buttons have their own backgrounds. */
     private const val WORDS_SHARE = 0.6f
 
     fun cover(source: Bitmap): WidgetCover {
@@ -54,10 +47,7 @@ object WidgetArt {
         return WidgetCover(blurred, light, accent(sharp, light))
     }
 
-    /**
-     * The cover itself for the Darkened look, square, which the widget crops to its own shape: the
-     * veil over it lets paper read whatever it shows, so play takes the cover's colour bright.
-     */
+    /** Light text always reads under the Darkened veil, so [WidgetCover.light] is false and the accent bright. */
     fun darkened(source: Bitmap): WidgetCover {
         val square = centerSquare(source)
         val sharp = IntArray(SIDE * SIDE)
@@ -65,11 +55,7 @@ object WidgetArt {
         return WidgetCover(square, light = false, accent(sharp, light = false))
     }
 
-    /**
-     * The cover's strongest colour, as Android's own media controls take theirs: the hue most of its
-     * coloured pixels share, deep on a light ground and bright on a dark one. Null for a cover with
-     * too little colour to name one.
-     */
+    /** The dominant hue of the saturated pixels, as Android's media controls pick theirs; null for a grey cover. */
     internal fun accent(pixels: IntArray, light: Boolean): WidgetAccent? {
         val weights = DoubleArray(HUES)
         val sums = Array(HUES) { DoubleArray(3) }
@@ -101,11 +87,7 @@ object WidgetArt {
         return WidgetAccent(cell, glyph)
     }
 
-    /**
-     * A cover [px] wide and [height] high in Amsel's cover corners for its size at [density], with the
-     * hairline every cover carries just inside its edge, cut from the picture's middle: a tile's, a
-     * bar's, a player's or a poster's cover, square, and a Play … button's, as large as its cell.
-     */
+    /** [source] cropped from its middle to [px] by [height], in [Shapes.cover]'s corners with the cover hairline. */
     fun shaped(source: Bitmap, px: Int, density: Float, height: Int = px): Bitmap {
         val out = createBitmap(px, height)
         val path = outline(px, height, density) ?: return out
@@ -130,7 +112,7 @@ object WidgetArt {
         return out
     }
 
-    /** The cover's shape [px] square, empty: white, for the widget to tint in its tone's shade. */
+    /** The cover shape in white, for an ImageView tint (src_in) to colour. */
     fun blank(px: Int, density: Float): Bitmap {
         val out = createBitmap(px, px)
         val path = outline(px, px, density) ?: return out
@@ -138,7 +120,6 @@ object WidgetArt {
         return out
     }
 
-    /** A cover's corners at its shorter side, as Amsel rounds a cover of that size. */
     private fun outline(width: Int, height: Int, density: Float): Path? {
         val side = (minOf(width, height) / density).dp
         val size = Size(width.toFloat(), height.toFloat())
@@ -152,7 +133,7 @@ object WidgetArt {
         return Bitmap.createBitmap(source, (source.width - side) / 2, (source.height - side) / 2, side, side)
     }
 
-    /** Three box passes each way: close to a gaussian, and cheap at this size. */
+    /** Three box-blur passes each way approximate a Gaussian, cheaply at this size. */
     private fun blur(pixels: IntArray, width: Int, height: Int, radius: Int) {
         val scratch = IntArray(pixels.size)
         repeat(BLUR_PASSES) {
@@ -191,10 +172,7 @@ object WidgetArt {
         }
     }
 
-    /**
-     * Whether ink over the light veil reads better than paper over the dark one, on the part the
-     * words stand on: the contrast of each against the cover as its veil leaves it.
-     */
+    /** Each text colour is judged over its own veil: dark text over the light one, light text over the dark one. */
     internal fun darkTextReadsBetter(pixels: IntArray, width: Int, height: Int): Boolean {
         val rows = (height * WORDS_SHARE).toInt().coerceAtLeast(1)
         var underInk = 0.0
@@ -215,14 +193,14 @@ object WidgetArt {
         return ink >= paper
     }
 
-    /** The veil's strength [depth] down the widget: its gradient's top, middle and foot. */
+    /** The alpha at [depth] (0 top, 1 foot) of a three-stop gradient, as the veil drawables interpolate it. */
     private fun veil(depth: Float, stops: FloatArray): Float = if (depth < 0.5f) {
         stops[0] + (stops[1] - stops[0]) * depth * 2
     } else {
         stops[1] + (stops[2] - stops[1]) * (depth - 0.5f) * 2
     }
 
-    /** Relative luminance of [pixel] under [veil] at [alpha], blended as Android blends. */
+    /** The WCAG relative luminance of [pixel] under [veil] at [alpha], blended source-over. */
     private fun luminance(pixel: Int, veil: Int, alpha: Float): Double {
         fun channel(shift: Int): Double {
             val c = (pixel shr shift and 0xFF) * (1 - alpha) + (veil shr shift and 0xFF) * alpha
@@ -239,7 +217,6 @@ object WidgetArt {
     private const val MIN_VALUE = 0.2f
     private const val MAX_VALUE = 0.97f
 
-    /** Below this share of coloured pixels a cover is grey, and play keeps the tone's own cell. */
     private const val MIN_COLOURED = 0.08
     private const val ACCENT_SATURATION_MIN = 0.35f
     private const val ACCENT_SATURATION_MAX = 0.8f
@@ -251,7 +228,7 @@ object WidgetArt {
     private const val PAPER = 0xFFF2F1EC.toInt()
     private const val BLACK = 0xFF0A0A09.toInt()
 
-    /** The day's veils (res/values/widget.xml): top, middle, foot. */
+    /** The day veils' alphas at top, middle and foot; keep in step with res/values/widget_colors.xml. */
     private val LIGHT_VEIL = floatArrayOf(0.30f, 0.38f, 0.52f)
     private val DARK_VEIL = floatArrayOf(0.22f, 0.30f, 0.46f)
 }

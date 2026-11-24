@@ -38,16 +38,7 @@ import io.github.hazymorning.amsel.ui.screens.downloads.AbsSignInAction
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * Settings in three blocks, as the platforms' own settings set them, each a rounded block of rows
- * under its name, each row led by its glyph and saying what it holds now: the account and whether
- * the server answers; playback, from which speaker Amsel opens on to how the sleep timer ends; and
- * the rest. What is set once and seldom looked at again, the sleep timer's ways and how the app
- * looks and what its pages and bars show, is a page of its own, so the first page stays short.
- * Signing out asks first. Amsel's line, the licence and the blackbird close the page, quietly
- * ([PageWithBird]). The version stands under Updates, a moss dot before it while a newer one waits.
- * As a place of its own in the bar ([onBack] null) the page has its big title, as every place has.
- */
+/** [onBack] is null where Settings is a place in the bar, which gives it a big title as every place has. */
 @Composable
 fun SettingsScreen(
     state: SettingsUiState,
@@ -55,16 +46,12 @@ fun SettingsScreen(
     onOpenWebUi: () -> Unit,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
-    /** The speakers Follow the music may pick, named under it, and its page. */
     followSpeakers: List<FollowSpeaker> = emptyList(),
     onFollow: () -> Unit = {},
     onVolumeLimitChange: (Int) -> Unit = {},
-    /** The sleep timer's page: how it ends and when it starts by itself. */
     onSleepTimer: () -> Unit = {},
-    /** The kinds of suggestion turned off, and their page. */
     hintsOff: Set<String> = emptySet(),
     onHints: () -> Unit = {},
-    /** The appearance page: the theme, the language, and what Home, the Library and the bars show. */
     onAppearance: () -> Unit = {},
     update: UpdateState = UpdateState.Unknown,
     onCheckForUpdatesChange: (Boolean) -> Unit = {},
@@ -74,7 +61,6 @@ fun SettingsScreen(
     onDownloadOnWifiChange: (Boolean) -> Unit = {},
     onAbsSignIn: AbsSignInAction = { _, _, _ -> null },
     onAbsSignOut: () -> Unit = {},
-    /** The page of Amsel's licence, the privacy notice and the licences of software by others. */
     onLicences: () -> Unit = {},
 ) {
     val title = stringResource(R.string.settings)
@@ -83,8 +69,6 @@ fun SettingsScreen(
     val place = onBack == null
     val titleHeight = remember { mutableIntStateOf(0) }
     val scrolled by remember { derivedStateOf { titleHeight.intValue > 0 && scroll.value >= titleHeight.intValue } }
-    // Opened from Home, the title stays in the bar with the way back, as on every Android settings
-    // screen; as a place, its big title scrolls away and the slim bar names it then.
     MaterialScreen(
         modifier,
         bar = { PageTopBar(title, onBack, showTitle = !place || scrolled) },
@@ -93,7 +77,6 @@ fun SettingsScreen(
         ScrollEdges(scroll)
         PageWithBird(Modifier.fillMaxSize().verticalScroll(scroll).padding(insets)) {
             if (place) TabHeader(title, Modifier.onSizeChanged { titleHeight.intValue = it.height }, below = 0.dp)
-            // Blank until Music Assistant has said who is signed in (Settings opened while offline).
             val signedIn = if (state.userName.isBlank()) {
                 stringResource(R.string.settings_signed_in)
             } else {
@@ -118,7 +101,6 @@ fun SettingsScreen(
                     )
                 }
             }
-            // Where the music goes, how loud it may get, when it stops, and what Amsel suggests on the way.
             SettingsGroup(stringResource(R.string.settings_playback), above = BetweenGroups) {
                 row { shape ->
                     SettingRow(
@@ -220,7 +202,6 @@ fun SettingsScreen(
         }
     }
     choosing?.let { choice ->
-        // A choice applies at once, under the sheet as it slides away.
         AmselSheet(onDismiss = { choosing = null }) {
             when (choice) {
                 SettingsSheet.Updates -> UpdatesSheetContent(
@@ -264,10 +245,9 @@ fun SettingsScreen(
     }
 }
 
-/** From one block's foot to the next group's name. */
 internal val BetweenGroups = Space.S8
 
-/** From the big title's baseline, where Settings are a place of their own, to the first group's name. */
+/** From the big title's baseline to the first group's name. */
 private val TitleToGroup = Space.S8
 
 private enum class SettingsSheet { VolumeLimit, Updates, Downloads, SignOut }
@@ -276,10 +256,9 @@ private enum class SettingsSheet { VolumeLimit, Updates, Downloads, SignOut }
 private fun limitLabel(level: Int): String =
     if (level == 0) stringResource(R.string.sleep_off) else stringResource(R.string.player_volume_percent, level)
 
-/** No limit, or one of these: loud enough for a room, short of what startles. */
+/** 0 is no limit; the others are loud enough for a room and short of startling. */
 private val LIMITS = listOf(0, 40, 50, 60, 70, 80)
 
-/** Settings, opened from Home's pull with the way back, or as a place of its own in the bar ([asPlace]). */
 @Composable
 fun SettingsRoute(navigator: Navigator, modifier: Modifier = Modifier, asPlace: Boolean = false) {
     val graph = LocalContext.current.graph

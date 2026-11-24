@@ -6,7 +6,6 @@ import io.github.hazymorning.amsel.R
 import io.github.hazymorning.amsel.ui.components.lengthText
 import io.github.hazymorning.amsel.ui.model.DOT_SEPARATOR
 
-/** "12 songs · 48 min", with an optional leading part such as the year. */
 @Composable
 internal fun songsAndLength(songs: Int, durationSec: Int, lead: String? = null): String {
     val count = pluralStringResource(R.plurals.pages_songs, songs, songs)

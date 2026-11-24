@@ -17,12 +17,10 @@ object HomeSample {
     private fun station(n: Int, title: String) =
         MediaUi("library://radio/$n", MediaKind.Radio, title, art = ArtRef("sample:radio/$n"))
 
-    /** The person's playlists with their owners, as the server sends them. */
     private val playlists = SampleData.playlists.mapIndexed { i, playlist ->
         playlist.copy(subtitle = if (i == 2) "Jonas" else "Anna")
     }
 
-    /** Music Assistant's own playlists. */
     val smartPlaylists = listOf(
         playlist(20, "All favourited tracks", "Music Assistant"),
         playlist(21, "Recently added tracks", "Music Assistant"),
@@ -38,7 +36,6 @@ object HomeSample {
         station(4, "KEXP"),
     )
 
-    /** Albums newest first. */
     val recentlyAdded = SampleData.albums.reversed()
 
     private fun section(
@@ -69,10 +66,8 @@ object HomeSample {
             SampleData.albums.take(2),
     )
 
-    /** A new person's Home: Pinned (hidden until the first pin), then three rows. */
     val home = HomeUiState(listOf(noPins, recent, smart, newAlbums))
 
-    /** A household that listens to books and podcasts: Continue listening opens Home. */
     val listening = HomeUiState(
         listOf(
             section("s0", SectionOption.ContinueListening, SectionLayout.Big, SpokenSample.continueListening),
@@ -85,7 +80,6 @@ object HomeSample {
 
     val grid = HomeUiState(listOf(pins, recent, smart))
 
-    /** Home as a new person finds it ([HomeLayout.DEFAULT_SECTIONS]), with music to show. */
     val asItComes = HomeUiState(
         HomeLayout.DEFAULT_SECTIONS.map { section ->
             val items = when (section.option) {
@@ -103,7 +97,6 @@ object HomeSample {
         spoken = SpokenWord(books = true, podcasts = true),
     )
 
-    /** The other layouts: big covers, small covers of every kind, and a list. */
     val layouts = HomeUiState(
         listOf(
             section("s5", SectionOption.NewAlbums, SectionLayout.Big, recentlyAdded, more = true),
@@ -124,7 +117,6 @@ object HomeSample {
         libraryEmpty = true,
     )
 
-    /** Only Pinned, with nothing pinned, after Done: the library has music, Home has none of it. */
     val nothingShown = HomeUiState(listOf(noPins), libraryEmpty = false)
 
     val noSections = HomeUiState()

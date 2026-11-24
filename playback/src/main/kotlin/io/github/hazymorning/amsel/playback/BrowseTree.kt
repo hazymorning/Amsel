@@ -26,17 +26,11 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/** Why the car has nothing to browse. */
 enum class BrowseBlockReason { SignIn, TooOld }
 
 /**
- * Android Auto tree: root -> four tabs (Recently played, Playlists, Albums, and Artists, or Library
- * once the library holds books or podcasts), then library pages read live from the server. A play
- * from the car goes to This phone, since the car hears the phone: [beforeCarPlay] selects it,
- * and returns once the session holds it. Plays from any other controller go to whatever player the
- * session holds (the selected speaker). [text] reads the titles from `:playback`'s strings, so
- * they are translated with the app's; the root carries the app's own name, [rootTitle]. Covers are
- * [artwork] URIs, which a car that [cars] accepts may read once it connects.
+ * A play from the car goes to This phone, as the car plays the phone's audio: [beforeCarPlay]
+ * selects it and returns once the session holds it. Other controllers play on the session's player.
  */
 @OptIn(UnstableApi::class)
 class BrowseTree(
@@ -47,24 +41,17 @@ class BrowseTree(
     private val artwork: CarArtwork,
     private val cars: CarDetector,
     private val beforeCarPlay: suspend () -> Boolean,
-    /** Why there is nothing to browse, once the stored session is known; null when signed in. */
     private val blocked: suspend () -> BrowseBlockReason?,
-    /** What a voice request plays: [PlaybackGraph.voiceUri]. */
     private val voiceUri: suspend (query: String?, focus: String?) -> String?,
-    /** Opens Amsel on the phone: the car offers it while no one is signed in. */
     private val openApp: PendingIntent?,
-    /** The heart beside the controls ([HEART]): Now Playing's, for what plays. */
     private val onHeart: () -> Unit = {},
 ) : MediaLibrarySession.Callback {
-    /** The root tabs each browser shows at most, as it says when it asks for the root. */
     private val rootLimits = ConcurrentHashMap<String, Int>()
     private val pages = BrowsePages(catalog, text, artwork)
 
     /**
-     * The service is exported for the system, the car and Bluetooth. They and the notification
-     * browse the library and control playback, also when Android does not count the car as trusted
-     * but [cars] finds it is one; any other app gets Media3's untrusted commands, which neither
-     * browse nor control.
+     * The service is exported: only trusted controllers, and cars [cars] verifies though Android may not
+     * trust them, browse and control. Any other app gets Media3's untrusted commands, which do neither.
      */
     override fun onConnectAsync(
         session: MediaSession,
@@ -85,11 +72,8 @@ class BrowseTree(
     }
 
     /**
-     * A media button (a headset, a widget) while Amsel is closed: the speaker carries on with what
-     * it holds on the server, as a pause and play would. The item stands in for it, under Amsel's
-     * name, only until the speaker reports, so the notification has something to show at once;
-     * RemotePlayer never sends it as a play. A card to resume from later there is not (see
-     * onGetLibraryRoot).
+     * A media button while Amsel is closed resumes what the speaker holds on the server; the stand-in
+     * item fills the notification until the speaker reports. No card to resume from (see onGetLibraryRoot).
      */
     override fun onPlaybackResumption(
         mediaSession: MediaSession,
@@ -122,16 +106,15 @@ class BrowseTree(
         browser: MediaSession.ControllerInfo,
         params: LibraryParams?,
     ): ListenableFuture<LibraryResult<MediaItem>> {
-        // No card to resume from in SystemUI's "recent" root: a stale card for a speaker someone
-        // else now uses would mislead. A media button resumes (onPlaybackResumption).
+        // No card in SystemUI's "recent" root: a stale card for a speaker someone else now uses would mislead.
         if (params?.isRecent == true) {
             return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_NOT_SUPPORTED))
         }
         params?.extras?.getInt(MediaConstants.EXTRAS_KEY_ROOT_CHILDREN_LIMIT)?.takeIf { it > 0 }?.let {
             rootLimits[browser.packageName] = it
         }
-        // A legacy browser (the car) blocks the main thread until the root is there, so it never
-        // waits for the session; whether anyone is signed in is answered with the tabs below it.
+        // A legacy browser (the car) blocks its main thread until the root arrives, so the root never
+        // waits for the session; a sign-in error comes with the children.
         return Futures.immediateFuture(root())
     }
 
@@ -151,7 +134,6 @@ class BrowseTree(
         return LibraryResult.ofItem(root, LibraryParams.Builder().setExtras(extras).build())
     }
 
-    /** Said in the car; signing in offers to open Amsel on the phone. */
     private fun errorFor(blocked: BrowseBlockReason): SessionError = when (blocked) {
         BrowseBlockReason.SignIn -> SessionError(
             SessionError.ERROR_SESSION_AUTHENTICATION_EXPIRED,
@@ -188,14 +170,13 @@ class BrowseTree(
                     ),
                 )
             } ?: return@launch
-            // Media3 passes a legacy browser (the car) only an authentication error; any other is sent.
+            // Media3 passes a legacy browser (the car) only an authentication error; any other goes by sendError.
             if (error.code != SessionError.ERROR_SESSION_AUTHENTICATION_EXPIRED) session.sendError(browser, error)
             future.set(LibraryResult.ofError(error))
         }
         return future
     }
 
-    /** Runs [read]; what to tell the car when the server cannot be asked, or null. */
     private suspend fun readError(read: suspend () -> Unit): SessionError? = try {
         read()
         null
@@ -206,10 +187,8 @@ class BrowseTree(
     }
 
     /**
-     * Browse items carry only ids; pass them through, RemotePlayer.handleSetMediaItems maps them. A
-     * voice request ("play X") carries a search query instead and plays what [voiceUri] finds, or
-     * fails when it finds nothing. With nothing named ("play music") and the speaker holding
-     * something, the empty item passes through and play() resumes it.
+     * Browse items pass on as ids (RemotePlayer.handleSetMediaItems maps them). A voice request has an
+     * empty id; for "play music" while the speaker holds something it passes on too, and play() resumes.
      */
     override fun onAddMediaItems(
         mediaSession: MediaSession,
@@ -220,13 +199,13 @@ class BrowseTree(
             ?: return Futures.immediateFuture(mediaItems)
         val future = SettableFuture.create<MutableList<MediaItem>>()
 
-        // The assistant and the car hear only an error sent to them; a failed future alone says nothing.
+        // The assistant and the car learn only of an error sent to them, not of a failed future.
         fun fail(error: SessionError, cause: Exception) {
             mediaSession.sendError(controller, error)
             future.setException(cause)
         }
         scope.launch {
-            // Signed out, the search would wait out the connection and then blame the network.
+            // Signed out, the search would wait for a connection and then report a network error.
             val error = blocked()?.let(::errorFor) ?: readError {
                 val query = request.searchQuery?.takeIf { it.isNotBlank() }
                 val uri = try {
@@ -258,14 +237,13 @@ class BrowseTree(
         if (!fromCar) return super.onSetMediaItems(mediaSession, controller, mediaItems, startIndex, startPositionMs)
         val future = SettableFuture.create<MediaSession.MediaItemsWithStartPosition>()
         scope.launch {
-            // Resolved once the session holds This phone: "play music" asks what it holds.
             if (beforeCarPlay()) {
                 future.setFuture(
                     super.onSetMediaItems(mediaSession, controller, mediaItems, startIndex, startPositionMs),
                 )
                 return@launch
             }
-            // The car hears the phone: a play the phone cannot take goes to no other speaker.
+            // The car plays the phone's audio: a play the phone cannot take goes to no other speaker.
             val error = SessionError(SessionError.ERROR_IO, text(R.string.error_phone_not_ready))
             mediaSession.sendError(controller, error)
             future.setException(IllegalStateException(error.message))
@@ -274,13 +252,11 @@ class BrowseTree(
     }
 
     companion object {
-        /** Like or unlike what plays, from the notification, the lock screen or the car. */
         val HEART = SessionCommand("io.github.hazymorning.amsel.HEART", Bundle.EMPTY)
 
         /**
-         * Browsing and control, without the library search the tree does not answer: offered, the
-         * car shows a search box that never returns. A spoken "play X" plays through onAddMediaItems.
-         * The heart rides along.
+         * Without library search, which the tree does not answer: offered, the car shows a search box
+         * that never returns. A spoken "play X" plays through onAddMediaItems.
          */
         private val LIBRARY_COMMANDS: SessionCommands =
             MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()

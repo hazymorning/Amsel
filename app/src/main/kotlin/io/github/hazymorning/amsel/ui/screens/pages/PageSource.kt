@@ -32,19 +32,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
-/**
- * What the pages load, by item uri: the library index's row for the first paint (and a book's or
- * podcast's progress as it changes), then the server's item and its lists. One seam, so the
- * ViewModels test without a socket.
- */
+/** Keys are item URIs. An interface, so the ViewModels test without a socket. */
 interface PageSource {
-    /** The index's row for [key] as it changes; null when the index does not hold it. */
+    /** Null while the index does not hold [key]. */
     fun row(key: String): Flow<LibraryItemEntity?>
 
-    /** The index's albums by the artist [key] (as their first artist), for the first paint. */
+    /** Index albums whose first artist is [key]. */
     suspend fun cachedAlbums(key: String): List<LibraryItemEntity>
 
-    /** The item itself, a book's chapters included; null, or a not-found error, when it no longer exists. */
+    /** Includes a book's chapters; null or a not-found error when the item no longer exists. */
     suspend fun item(key: String): MediaItem?
 
     suspend fun albumTracks(key: String): List<MediaItem>
@@ -54,47 +50,49 @@ interface PageSource {
     /** At most five, as the server ranks them. */
     suspend fun artistTopTracks(key: String): List<MediaItem>
 
-    /** A playlist's tracks from [offset], each with its 1-based position: a page of [limit], or all of them on 2.10. */
+    /**
+     * Tracks from [offset], each with its 1-based position: a page of [limit], or everything from
+     * [offset] on 2.10 (docs/API-NOTES.md, "Pages and sub-listings").
+     */
     suspend fun playlistTracks(key: String, offset: Int, limit: Int): ItemPage<MediaItem>
 
-    /** A podcast's episodes from [offset], newest first: a page of [limit], or all of them on 2.10. */
+    /**
+     * Episodes from [offset], newest first: a page of [limit], or everything from [offset] on 2.10
+     * (docs/API-NOTES.md, "Audiobooks and podcasts").
+     */
     suspend fun episodes(key: String, offset: Int, limit: Int): ItemPage<MediaItem>
 
-    /** Artists like the artist [key], as the server finds them; none for local files. */
+    /** Empty for local files (docs/API-NOTES.md, "Extras"). */
     suspend fun similarArtists(key: String): List<MediaItem>
 
-    /** Songs like the song [key]; a command error where no music service knows any. */
+    /** Fails with a command error where no music service knows the song (docs/API-NOTES.md, "Extras"). */
     suspend fun similarSongs(key: String): List<MediaItem>
 
-    /** Books and episodes the person moved through, finished or marked, as it happens. */
     val progress: Flow<ProgressUpdate>
 
-    /** What the page of [key] showed last time, for its first paint; null when this phone holds none. */
+    /** The page as last shown, for the first paint; null when none is cached. */
     suspend fun shown(key: String): CachedPage?
 
-    /** Keeps what the page of [key] now shows, for the next visit's first paint. */
     suspend fun keep(key: String, page: CachedPage)
 
-    /** The index's album covers of each of the artists [keys] that has no picture; none it does not hold. */
+    /** Album covers for each of [keys] without a picture of its own; artists the index lacks are left out. */
     suspend fun albumCovers(keys: List<String>): Map<String, List<String>>
 
-    /** Returns once the server is connected anew: after the connection in use ends, or at the first one. */
+    /** Returns at the next new connection: after the current one ends, or at the first. */
     suspend fun connectedAgain()
 }
 
-/** The real [PageSource]: the server, and the library index and the pages last shown for the first paint. */
 class ServerPageSource(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
     private val memory: PageCache,
-    /** Whether the server is connected, as it changes. */
     private val connected: Flow<Boolean>,
 ) : PageSource {
     override fun row(key: String): Flow<LibraryItemEntity?> = flow { emitAll(library().observeRow(key)) }
 
     override suspend fun cachedAlbums(key: String): List<LibraryItemEntity> = library().albumsBy(key)
 
-    /** A book's row in the index takes the person's progress from the server's fresh copy. */
+    // A book's index row takes the user's progress from this fresh copy.
     override suspend fun item(key: String): MediaItem? = api.itemByUri(key)?.also {
         if (it.mediaType == MediaType.Audiobook.api) library().rememberProgress(it)
     }
@@ -151,7 +149,6 @@ class ServerPageSource(
     }
 }
 
-/** The pages' [PageSource] on the app's session and library index. */
 internal fun AppGraph.pageSource(): PageSource = ServerPageSource(
     data.session.api,
     { data.library },
@@ -159,17 +156,12 @@ internal fun AppGraph.pageSource(): PageSource = ServerPageSource(
     data.session.client.state.map { it is ConnectionState.Connected },
 )
 
-/**
- * The server's similar items as a page lists them: without the item [key] they were asked for,
- * which the server may return under another id ([seed], once it is known), and each once.
- */
+// Without the item [key] asked for, which the server may return under another id ([seed]), and each
+// once (docs/API-NOTES.md, "Extras").
 internal fun List<MediaItem>.similarTo(key: String, seed: MediaItem?): List<MediaItem> =
     (seed?.let(::withoutSeed) ?: this).filterNot { it.uri == key }.distinctBy { it.uri }
 
-/**
- * The calls of one page load: each answers, or is null when the server could not be asked or
- * refused, and the first such [failure] is kept for the page to say.
- */
+/** [attempt] returns null on a server error; the first error is kept as [failure]. */
 internal class PageLoad {
     var failure: Exception? = null
         private set
@@ -182,20 +174,16 @@ internal class PageLoad {
     }
 }
 
-/**
- * Where [load] could not reach the server, [again] once it is connected anew: a page opened while
- * Amsel connects, as it does coming back to the front, fills in by itself, as Home and the Library do.
- */
+// After a connection failure, runs [again] at the next connection, so a page opened while Amsel
+// reconnects (as on returning to the foreground) fills in by itself, as Home and the Library do.
 internal suspend fun PageSource.againOnceConnected(load: PageLoad, again: () -> Unit) {
     if (load.failure !is MaConnectionException) return
     connectedAgain()
     again()
 }
 
-/**
- * A page that still shows what it has says why [load] failed, with Retry; one with nothing to show
- * says so in its own place ([showUnavailable]).
- */
+// A page with content shows the failure as a message with Retry; an empty one says so itself
+// ([showUnavailable]).
 internal fun MessageController.loadFailed(load: PageLoad, showUnavailable: Boolean, retry: () -> Unit) {
     val failure = load.failure ?: return
     if (!showUnavailable) show(failureText(failure), retry = retry)

@@ -54,11 +54,7 @@ import io.github.hazymorning.amsel.ui.theme.lineHeight
 import java.time.Instant
 import java.time.ZoneId
 
-/**
- * Bookmarks, newest first: each names its chapter, time and date, and its note. A tap plays from
- * there, a swipe deletes it, a tap on the note edits it. [titles] adds the item's title, where the
- * list holds several items (a podcast's episodes).
- */
+/** [titles] adds each bookmark's item title, for a list that spans several items (a podcast's episodes). */
 @Composable
 fun BookmarksSheetContent(
     bookmarks: List<Bookmark>,
@@ -169,10 +165,8 @@ private fun BookmarkRow(
     }
 }
 
-/**
- * Under the last bookmark, what the sheet keeps so the note's line, the bookmark's last words, has
- * its baseline [Space.SheetEdge] over the sheet's edge: the line's own room under it counts.
- */
+// Puts the last note's baseline [Space.SheetEdge] above the sheet's edge, less the note's own bottom
+// padding and the space under its baseline.
 @Composable
 private fun bookmarkEnd(): Dp {
     val style = MaterialTheme.typography.bodyMedium
@@ -180,7 +174,7 @@ private fun bookmarkEnd(): Dp {
     return (Space.SheetEdge - Space.S3 - below).coerceAtLeast(0.dp)
 }
 
-/** The note is kept however the field goes: Done, another note, or the sheet closing. */
+// Saves the note however the field goes: Done, editing another note, or the sheet closing.
 @Composable
 private fun NoteField(bookmark: Bookmark, onSave: (String) -> Unit, onFinish: () -> Unit) {
     var text by rememberSaveable(bookmark.id) { mutableStateOf(bookmark.note) }

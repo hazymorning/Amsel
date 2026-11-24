@@ -199,75 +199,53 @@ private val ServerError.message: Int
         ServerError.HttpsFailed -> R.string.setup_error_https
     }
 
-/** A Music Assistant server that answered on the network. */
 @Immutable
 data class FoundServerUi(
-    /** The server's own id (`server_id`), stable whatever address it answers on. */
+    /** `server_id`: stable per install, whatever address the server answers on. */
     val id: String,
-    /** Servers before schema 29 send no name; they are called Music Assistant. */
+    /** Null from servers before schema 29, which send no name (docs/API-NOTES.md, "server_info"). */
     val name: String?,
-    /** For display, host only: `192.168.1.20` or `music.example.com`. Never a port. */
+    /** Host only, without scheme or port: for display. */
     val address: String,
 )
 
-/** The three faces of "Your server". */
 enum class ServerStep {
-    /**
-     * Looking on the network. A single server that answers is picked automatically and connects
-     * from here, so this step leads straight to Sign in.
-     */
+    /** A single server that answers connects from here, skipping [Choose]. */
     Searching,
 
-    /** Two or more servers answered: the person taps the one they use. */
     Choose,
 
     /**
-     * One field for the address: nothing answered within five seconds, the person asked to type an
-     * address, or a found server could not be reached (its address is then filled in).
+     * Entered when nothing answers within [SetupViewModel.SEARCH_MS], the user asks to type an address,
+     * or a found server cannot be reached (its address is then filled in).
      */
     Address,
 }
 
-/** Why the typed address did not lead to a server. Shown under the field, in plain words. */
 enum class ServerError {
-    /** Nothing answered as Music Assistant at that address. */
     Unreachable,
 
-    /** Music Assistant answered, but it is older than the oldest release the app supports (2.10). */
     TooOld,
 
-    /** TLS answered with a certificate this phone does not trust. */
     Certificate,
 
-    /** A name typed without a scheme did not answer over https; plain http must be typed. */
+    /** A name typed without a scheme failed over https; plain http must be typed explicitly. */
     HttpsFailed,
 }
 
-/**
- * Everything "Your server" draws. Ports never appear: the logic adds `http://` and port 8095 to a
- * home address people type (`https://` to any other name) and shows addresses without a port;
- * TLS shows only when it fails.
- */
 @Immutable
 data class ServerUiState(
     val step: ServerStep = ServerStep.Searching,
-    /** Servers found so far, in the order they answered. */
     val servers: List<FoundServerUi> = emptyList(),
-    /** The address field, exactly as typed. */
+    /** As typed; parsed only on connect. */
     val address: String = "",
-    /**
-     * What is being connected to while the app checks it and reads its sign-in methods: a found
-     * server's [FoundServerUi.id] (its row shows progress), or the typed address (the button
-     * shows progress). Null when nothing is connecting.
-     */
+    /** A found server's [FoundServerUi.id] or the typed address, while it is checked and its sign-in methods read. */
     val connectingTo: String? = null,
-    /** Only for the typed address. Cleared when the address changes. */
+    /** About the typed address; cleared when it changes. */
     val error: ServerError? = null,
-    /** The search ended without an answer, so the address step says why it is there. */
     val notFound: Boolean = false,
 ) {
     val connecting: Boolean get() = connectingTo != null
 
-    /** Connect is offered once something is typed, and not twice. */
     val canConnect: Boolean get() = address.isNotBlank() && !connecting
 }

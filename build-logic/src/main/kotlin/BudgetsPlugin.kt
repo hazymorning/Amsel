@@ -19,10 +19,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 
-/**
- * The budgets as build failures: permissions in the merged manifest, the release runtime classpath
- * against docs/dependencies.txt, and the release APK size.
- */
 class BudgetsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val allowlistFile = project.rootProject.layout.projectDirectory.file("docs/dependencies.txt")
@@ -81,10 +77,10 @@ class BudgetsPlugin : Plugin<Project> {
             "android.permission.FOREGROUND_SERVICE",
             "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
             "android.permission.WAKE_LOCK",
-            // Downloads, which the owner asked for with a notification: the service that runs them, and its notice.
+            // Downloads, at the owner's request: their foreground service and its notification.
             "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
             "android.permission.POST_NOTIFICATIONS",
-            // Updates installed from the app itself, which the owner asked for: Android's installer needs it.
+            // In-app updates, at the owner's request: the package installer needs it.
             "android.permission.REQUEST_INSTALL_PACKAGES",
         )
     }

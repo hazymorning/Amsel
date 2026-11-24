@@ -27,7 +27,7 @@ import org.robolectric.ParameterizedRobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
-/** Nothing jumps: every skeleton block is exactly as tall as the content that replaces it. */
+/** Every skeleton block is as tall as the content that replaces it, so nothing jumps on load. */
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class SkeletonGeometryTest(private val fontScale: Float) {
@@ -41,7 +41,7 @@ class SkeletonGeometryTest(private val fontScale: Float) {
 
     @Before fun setFontScale() = RuntimeEnvironment.setFontScale(fontScale)
 
-    /** Titles of one line, as most are; a two-line title makes its card row taller than the skeleton's. */
+    // One-line titles, as most are: a two-line title makes its card row taller than the skeleton's.
     private fun section(
         layout: SectionLayout,
         count: Int,
@@ -74,13 +74,13 @@ class SkeletonGeometryTest(private val fontScale: Float) {
         compose.setContent {
             AmselTheme(mode = ThemeMode.Light) {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    // A box per block, so the bounds are the whole layout, space a row keeps under its band included.
+                    // A box per block, so the bounds include the space a row keeps under its band.
                     Box(Modifier.testTag("content")) { content(Modifier) }
                     Box(Modifier.testTag("skeleton")) { skeleton(Modifier) }
                 }
             }
         }
-        // Rows round their text to whole pixels; over a few rows at 200% that can settle by one dp, unseen.
+        // Rows round their text to whole pixels; over a few rows at 200% that adds up to about a dp.
         assertEquals(height("content").value, height("skeleton").value, 2f)
     }
 

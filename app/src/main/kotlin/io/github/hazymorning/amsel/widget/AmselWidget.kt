@@ -7,10 +7,7 @@ import android.os.Bundle
 import io.github.hazymorning.amsel.graph
 import kotlinx.coroutines.launch
 
-/**
- * A widget as Android knows it. Amsel draws it itself whenever what it shows changes; Android asks
- * here after a restart, an update of Amsel, a launcher that lost its views, or a new size.
- */
+/** [WidgetController] pushes redraws; Android calls here after a reboot, an app update, a launcher reset, a resize. */
 open class WidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         work(context) {
@@ -44,16 +41,13 @@ open class WidgetProvider : AppWidgetProvider() {
     }
 }
 
-/** Now playing: two cells by two as it comes. Its name stays from the first widget, so placed ones stay. */
+/** Now playing, under the first kind's name: launchers bind placed widgets to the provider's class name. */
 class AmselWidget : WidgetProvider()
 
-/** One button: one cell, the size of an app's icon. */
 class AmselButtonWidget : WidgetProvider()
 
-/** Buttons: two cells in one row. */
 class AmselButtonsWidget : WidgetProvider()
 
-/** Each kind's provider, as the launcher names it. */
 internal val Providers: Map<Class<*>, WidgetKind> = mapOf(
     AmselButtonWidget::class.java to WidgetKind.Button,
     AmselButtonsWidget::class.java to WidgetKind.Buttons,

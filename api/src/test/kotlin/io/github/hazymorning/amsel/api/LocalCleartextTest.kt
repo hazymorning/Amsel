@@ -55,7 +55,7 @@ class LocalCleartextTest {
     }
 
     @Test fun `where the app's rule allows it, plain http still goes to the home network`() {
-        // Nothing listens on port 1 here: the connection is tried, and refused by the phone itself.
+        // Nothing listens on port 1: the connection is tried and refused by the system, not the guard.
         val nobody = requireNotNull(ServerAddress.parse("127.0.0.1:1"))
         val allowing = OkHttpClient().plainHttpOnlyWhen { true }
         val call = allowing.forUrl(nobody.baseUrl).newCall(Request.Builder().url(nobody.baseUrl).build())
@@ -65,7 +65,7 @@ class LocalCleartextTest {
 
     private fun causes(error: Throwable) = generateSequence(error) { it.cause }
 
-    /** A proxy on this device, as a network's settings or a PAC file give one. */
+    /** A proxy on this device, as network settings or a PAC file give one, which the guard takes as local. */
     private object LocalProxy : ProxySelector() {
         override fun select(uri: URI) = listOf(Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", 9)))
 

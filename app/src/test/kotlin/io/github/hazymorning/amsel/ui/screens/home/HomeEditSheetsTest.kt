@@ -26,13 +26,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** What to show, in a sheet lower than its list: where it opens, and what stands on it. */
+/** The What sheet in a box shorter than its list, so it scrolls. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class HomeEditSheetsTest {
     @get:Rule val compose = createComposeRule()
 
-    /** What a choice row keeps under its words, as the sheet measures its foot from them. */
+    // The space a choice row keeps under its glyphs; the sheet's bottom is measured from them.
     private var under = 0.dp
 
     private fun show(current: SectionOption) = compose.setContent {
@@ -53,7 +53,7 @@ class HomeEditSheetsTest {
     @Test fun theLastChoiceOpensWholeAboveTheSheetsFoot() {
         show(SectionOption.YourPodcasts)
         val row = compose.onNodeWithText("Your podcasts").assertIsDisplayed().getUnclippedBoundsInRoot()
-        // Its words stand the sheet's frame over the foot, as the title's capitals under the top.
+        // Its glyphs end Space.SheetEdge above the bottom, as the title's capitals start that far below the top.
         assertEquals((SHEET - Space.SheetEdge).value, (row.bottom - under).value, 1f)
     }
 

@@ -19,15 +19,10 @@ import io.github.hazymorning.amsel.ui.theme.Motion
 import kotlin.math.abs
 import kotlin.math.sign
 
-/** Dragged this share of its width, or thrown, it goes. */
 private const val AWAY_SHARE = 0.3f
 private val ThrowSpeed = 400.dp
 
-/**
- * Follows a finger sideways, fading as it goes; let go past [AWAY_SHARE] of its width, or thrown,
- * it leaves to that side and [onGone] is told. Otherwise it settles back. A message and a tip go
- * this way.
- */
+/** [onGone] is called once it has animated out, let go past [AWAY_SHARE] of its width or thrown. */
 @Composable
 internal fun Modifier.swipeAway(onGone: () -> Unit): Modifier {
     var offset by remember { mutableFloatStateOf(0f) }

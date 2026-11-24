@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** A speaker a widget can keep to. */
 @Immutable
 data class WidgetSpeaker(val id: String, val name: String)
 
@@ -29,20 +28,19 @@ data class WidgetSpeaker(val id: String, val name: String)
 data class WidgetSetupUiState(
     val setup: WidgetSetup = WidgetSetup(),
     val look: WidgetContent = WidgetContent(),
-    /** The widget as it will show, at its size; null until drawn. */
     val picture: RemoteViews? = null,
-    /** Its size on the home screen, in dp. */
+    /** In dp. */
     val size: SizeF = WidgetKind.NowPlaying.start,
-    /** How many of its buttons show at that size. */
+    /** How many buttons fit at [size]. */
     val fits: Int = 0,
-    /** Which of them, by their place: play and pause, and those nearest the end ([standing]). */
+    /** Indices into the setup's slots of the buttons that show ([standing]). */
     val standing: Set<Int> = emptySet(),
     val speakers: List<WidgetSpeaker> = emptyList(),
-    /** The volume limit, 0 for none: Louder stops there. */
+    /** 0 for none. */
     val volumeLimit: Int = 0,
 )
 
-/** One widget's look, speaker and buttons while its page is open; saved by Done alone. */
+/** Changes stay in memory until [done] saves them. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class WidgetSetupViewModel(
     private val widgetId: Int,
@@ -78,23 +76,20 @@ class WidgetSetupViewModel(
 
     fun style(style: WidgetStyle) = change { it.copy(style = style) }
 
-    /** Null: where Amsel plays. */
+    /** Null follows the speaker Amsel plays on. */
     fun speaker(id: String?) = change { it.copy(speaker = id) }
 
     fun cells(cells: WidgetCells) = change { it.copy(cells = cells) }
 
-    /** What plays shows, or is left out; a widget without buttons keeps it. */
     fun showWords(on: Boolean) = change { if (!on && it.slots.isEmpty()) it else it.copy(showsWords = on) }
 
-    /** What plays moves before the buttons or after them. */
     fun moveWords(place: WidgetWordsPosition) = change { it.copy(words = place) }
 
-    /** Button [index] does [button]; one past the last adds it. */
+    /** [index] one past the last adds a button, up to [MAX_BUTTONS]. */
     fun choose(index: Int, button: WidgetButton) = put(index, WidgetSlot(button))
 
     fun pick(index: Int, item: WidgetItem) = put(index, WidgetSlot(WidgetButton.PlayItem, item))
 
-    /** Takes button [index] away, unless it is all the widget shows. */
     fun remove(index: Int) = change { setup ->
         if (!setup.showsWords && setup.slots.size == 1) {
             setup
@@ -103,7 +98,7 @@ class WidgetSetupViewModel(
         }
     }
 
-    /** The buttons in a new [order], given as their places in the old one. */
+    /** [order]: the old indices in their new order; anything but a permutation is ignored. */
     fun reorder(order: List<Int>) = change { setup ->
         if (order.sorted() != setup.slots.indices.toList()) setup else setup.copy(slots = order.map(setup.slots::get))
     }
@@ -120,7 +115,6 @@ class WidgetSetupViewModel(
 
     private fun change(block: (WidgetSetup) -> WidgetSetup) = setup.update { it?.let(block) }
 
-    /** Saves the setup and draws the widget with it, then [then]. */
     fun done(then: () -> Unit) {
         val chosen = setup.value ?: return then()
         viewModelScope.launch {

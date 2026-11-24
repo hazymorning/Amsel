@@ -45,13 +45,12 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlin.math.roundToInt
 
-/** BasicTextField's caret, which Compose does not let a field change. */
+/** BasicTextField's cursor width, which Compose does not let a field change. */
 private val Caret = 2.dp
 
 /**
- * The text of a field and its placeholder, both with their first letter's ink on the field's text
- * keyline. An empty field's caret stands just before that keyline, so it never covers the
- * placeholder's first letter; typed text then moves onto the keyline.
+ * Puts the first glyph of the text or the placeholder on the keyline. While empty, the cursor sits
+ * just before the keyline instead, so it never covers the placeholder's first letter.
  */
 @Composable
 private fun FieldText(
@@ -97,10 +96,6 @@ private fun FieldBox(
     )
 }
 
-/**
- * A 48 dp field in the first surface tone with the tile radius: the glyph 16 inside its edge, the
- * query 12 after it. [busy] turns the glyph into a spinner of the same size while a search is on its way.
- */
 @Composable
 fun SearchField(
     value: String,
@@ -158,10 +153,7 @@ fun SearchField(
     )
 }
 
-/**
- * The search field at rest, as a button: Home's Search section. It looks as Search's own field does
- * while empty; a tap opens Search, the keyboard up, where that field takes the words.
- */
+/** A button drawn as an empty [SearchField] (Home's Search section); keep the two in step. */
 @Composable
 fun SearchEntry(placeholder: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -184,11 +176,7 @@ fun SearchEntry(placeholder: String, label: String, onClick: () -> Unit, modifie
     }
 }
 
-/**
- * A labelled field: the label's baseline 8 dp above the field, the text 16 dp inside it, and a
- * [FieldNote] under it. Label, field edge and note share the margin. The label is part of the
- * field, so TalkBack names the field by it and a tap on the label focuses it.
- */
+/** The label sits inside the decoration box, so TalkBack names the field by it and a tap on it focuses the field. */
 @Composable
 fun LabelledField(
     value: String,
@@ -203,7 +191,7 @@ fun LabelledField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     fieldModifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null,
-    /** The field's tone: the first surface tone on a page; a sheet, which is in that tone, takes a higher one. */
+    /** A sheet is already surfaceContainerLow, so a field on one passes a higher tone. */
     fill: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -223,7 +211,7 @@ fun LabelledField(
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
             decorationBox = { field ->
-                // What the field draws: a password's bullets, whose ink sets the keyline, not the secret's.
+                // The shown text (a password's bullets), not the value, sets the keyline shift.
                 val shown = remember(value, visualTransformation) {
                     visualTransformation.filter(AnnotatedString(value)).text.text
                 }
@@ -252,10 +240,6 @@ fun LabelledField(
     }
 }
 
-/**
- * A helper or error line, set by its capitals [Space.Part] under the edge above it: a field's, or
- * a button's when the error is about that button. TalkBack reads an error as it appears.
- */
 @Composable
 fun FieldNote(text: String, modifier: Modifier = Modifier, error: Boolean = false) {
     val style = MaterialTheme.typography.bodyMedium

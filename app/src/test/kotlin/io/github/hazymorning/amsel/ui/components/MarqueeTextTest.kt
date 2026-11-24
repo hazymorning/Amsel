@@ -21,7 +21,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** A line longer than its room glides to its end and back, again and again; one that fits, or does not run, rests. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
@@ -50,7 +49,6 @@ class MarqueeTextTest {
 
     private fun frame() = compose.onNodeWithTag("line").captureToImage().asAndroidBitmap()
 
-    /** Whether the line stands at its start at each half second of the next [seconds]. */
     private fun atStart(seconds: Int): List<Boolean> {
         val start = frame()
         return List(seconds * 2) {

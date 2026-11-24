@@ -10,7 +10,6 @@ import io.github.hazymorning.amsel.app.Tip
 import io.github.hazymorning.amsel.ui.components.TipCard
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** The tip above Home's first section, which closes up when it goes. */
 internal fun LazyListScope.tip(tip: Tip, onGone: (Tip) -> Unit) {
     item(key = TIP, contentType = TIP) {
         TipCard(

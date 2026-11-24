@@ -9,11 +9,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-/**
- * One [SeekController] a speaker, built on first use: the plays ([PlayDispatcher]) and the commands
- * ([MaSpeakerCommands]) share them. A seek [wake]s the session first, and one for This phone waits
- * until its Sendspin client has joined the server, and releases its output.
- */
+/** One [SeekController] per speaker, shared by [PlayDispatcher] and [MaSpeakerCommands]. */
 class SeekDispatcher(
     private val api: MaApi,
     private val wake: () -> Unit,
@@ -26,13 +22,10 @@ class SeekDispatcher(
     private val _failures =
         MutableSharedFlow<CommandFailure>(extraBufferCapacity = 4, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-    /** Seeks that did not reach their speaker. */
     val failures: SharedFlow<CommandFailure> = _failures.asSharedFlow()
 
-    /** A seek in [place]'s item, which [queueId] is starting: a book started at a chapter no `start_item` leads to. */
     fun seekIn(queueId: String, place: ItemPosition) = controller(queueId).seekIn(place)
 
-    /** A play that starts playback was asked of [playerId] ([SpeakerCommands.starting]). */
     fun starting(playerId: String) = controller(playerId).starting()
 
     internal fun controller(playerId: String): SeekController = synchronized(controllers) {

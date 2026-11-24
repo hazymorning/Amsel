@@ -39,10 +39,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * A tab always opens at its top, whether it is switched to or re-selected; the dock offers the
- * speaker whether or not anything plays.
- */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class AppShellTest {
@@ -89,7 +85,7 @@ class AppShellTest {
                         }
                     },
                     nowPlaying = { _, _ ->
-                        // As Now Playing answers: its own layer for Up next, opened in full.
+                        // As Now Playing does: a layer of its own for Up next, which the answer opens in full.
                         val upNext = rememberPlayerLayerState()
                         AnswerUpNext { upNext.open() }
                         Column {
@@ -179,7 +175,6 @@ class AppShellTest {
     @Test fun theMiniPlayersSpeakerButtonChoosesASpeaker() {
         shell(SampleData.nowPlaying)
         val speaker = SampleData.nowPlaying.speaker.name
-        // The speaker plays: TalkBack says so.
         compose.onNodeWithContentDescription("Speaker: $speaker, playing. Choose speaker").performClick()
         assertEquals(1, speakerTaps)
     }
@@ -206,11 +201,9 @@ class AppShellTest {
         compose.onNodeWithContentDescription("Settings").performClick()
         compose.onNodeWithText("open album").performClick()
         compose.waitForIdle()
-        // Taken out of the bar from its own pages, the place keeps them open...
         bar.value = BarItem.Default - BarItem.Settings
         compose.waitForIdle()
         compose.onNodeWithText("page Album(key=a1)").assertExists()
-        // ...and back at its top, which the bar no longer opens, the person is Home.
         compose.onNodeWithText("back").performClick()
         compose.waitForIdle()
         compose.onNodeWithText("page Home").assertExists()
@@ -236,7 +229,6 @@ class AppShellTest {
         compose.onNodeWithText("page Album(key=a1)").assertDoesNotExist()
     }
 
-    /** Similar artists lead from one to another and back again: A, B, A is three pages, each its own step back. */
     @Test fun anArtistOpenedAgainFromAnotherIsItsOwnStepBack() {
         shell()
         for (artist in listOf("a", "b", "a")) {
@@ -272,7 +264,6 @@ class AppShellTest {
         compose.onNodeWithText("open artist b").performClick()
         compose.onNodeWithText("open artist a").performClick()
         compose.waitForIdle()
-        // The page opened again starts as a new one, not where the first was left.
         compose.onNodeWithText("page Artist(key=a)").assertExists()
         compose.onNodeWithText("mark, 0 so far").assertExists()
         compose.onNodeWithText("back").performClick()
@@ -293,7 +284,6 @@ class AppShellTest {
         compose.onNodeWithText("new search 1").assertExists()
         compose.onNodeWithText("now playing layer").assertDoesNotExist()
         assertEquals(1, opened)
-        // From a page in Search, again: back at its top, a second new search.
         compose.onNodeWithText("open album").performClick()
         compose.waitForIdle()
         opening.value = DeepLink.Search
@@ -323,14 +313,12 @@ class AppShellTest {
         compose.mainClock.advanceTimeBy(6_000)
         compose.waitForIdle()
         assertEquals(1, opened)
-        // Playing later does not bring Now Playing up out of nowhere.
         playing.value = SampleData.nowPlaying
         compose.waitForIdle()
         compose.onNodeWithText("now playing layer").assertDoesNotExist()
         compose.onNodeWithText("page Home").assertExists()
     }
 
-    /** A widget's Up next button: Now Playing opens, and Up next over it, all the way. */
     @Test fun anUpNextLinkOpensNowPlayingAndAsksForUpNext() {
         val playing = mutableStateOf<NowPlayingUi?>(null)
         shell(playing)
@@ -344,7 +332,6 @@ class AppShellTest {
         assertEquals(1, opened)
     }
 
-    /** A widget's Group button: the speaker picker at its group step. */
     @Test fun aGroupLinkOpensThePickerToGroup() {
         shell()
         opening.value = DeepLink.Group

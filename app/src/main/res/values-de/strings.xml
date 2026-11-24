@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tabs -->
     <string name="tab_home">Startseite</string>
     <string name="tab_search">Suche</string>
 
-    <!-- Shared -->
     <string name="see_all">Alle anzeigen</string>
     <string name="more_options_for">Weitere Optionen für %1$s</string>
     <string name="play">Abspielen</string>
@@ -22,11 +20,9 @@
     <string name="open_now_playing">Aktuelle Wiedergabe öffnen</string>
     <string name="speaker_button_description">Lautsprecher: %1$s. Lautsprecher auswählen</string>
     <string name="speaker_button_playing">Lautsprecher: %1$s, spielt. Lautsprecher auswählen</string>
-    <!-- Launcher shortcuts, held on the app icon -->
     <string name="shortcut_speakers">Lautsprecher</string>
     <string name="shortcut_choose_speaker">Lautsprecher auswählen</string>
     <string name="radio">Radio</string>
-    <!-- What an item is: the line under its name where the server gives none, and before a top result's -->
     <string name="kind_song">Titel</string>
     <string name="kind_album">Album</string>
     <string name="kind_artist">Künstler</string>

@@ -36,7 +36,6 @@ class ServerSectionLoaderTest {
         fixture("2.11", "server_info")["response"]!!,
     )
 
-    /** The 2.11 test library, synced into the index, with [overrides] for single commands. */
     private fun withLibrary(
         overrides: (String, JsonObject?) -> List<JsonObject>? = { _, _ -> null },
         speaker: String? = null,

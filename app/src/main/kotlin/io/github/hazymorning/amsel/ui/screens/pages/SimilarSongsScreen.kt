@@ -33,7 +33,6 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.rememberRetry
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** The songs the server finds similar to the song named [title], as rows that play from the tapped one on. */
 @Composable
 fun SimilarSongsScreen(
     state: SimilarSongsUiState,
@@ -45,7 +44,7 @@ fun SimilarSongsScreen(
     modifier: Modifier = Modifier,
 ) {
     val list = rememberLazyListState()
-    // Where the sentence does not fit the bar, the song's name alone does: a name is cut last.
+    // When "Similar to …" does not fit the bar, the song's name alone shows: a name is cut last.
     val whole = stringResource(R.string.pages_similar_to, title)
     MaterialScreen(modifier, bar = { PageTopBar(whole, onBack, shorterTitle = title) }) { insets ->
         ScrollEdges(list)
@@ -89,10 +88,9 @@ fun SimilarSongsScreen(
     }
 }
 
-/** Under a slim bar alone, a screenful. */
+// A screenful under the slim bar.
 private const val SKELETON_ROWS = 12
 
-/** The songs the server finds similar to the song [key], named [title]. */
 @Composable
 fun SimilarSongsRoute(navigator: Navigator, key: String, title: String, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph

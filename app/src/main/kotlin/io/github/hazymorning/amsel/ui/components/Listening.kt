@@ -18,7 +18,6 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-/** "45 min", "1 h 5 min": the nearest minute, never under one. */
 @Composable
 fun lengthText(seconds: Int): String {
     val (h, m) = lengthParts(seconds)
@@ -29,7 +28,6 @@ fun lengthText(seconds: Int): String {
     }
 }
 
-/** "2 h 10 min left": the nearest minute, never under one. */
 @Composable
 fun leftText(remainingSec: Int): String {
     val (h, m) = lengthParts(remainingSec)
@@ -40,10 +38,6 @@ fun leftText(remainingSec: Int): String {
     }
 }
 
-/**
- * "3 Oct", with the year when it is not this one ("3 Oct 2025"), as the app's language writes a
- * date: an episode's, a bookmark's.
- */
 @Composable
 fun dateText(date: LocalDate): String {
     val locale = LocalConfiguration.current.locales[0]
@@ -53,7 +47,6 @@ fun dateText(date: LocalDate): String {
     }
 }
 
-/** Whole hours and minutes, rounded to the nearest minute and never under one. */
 internal fun lengthParts(totalSec: Int): Pair<Int, Int> {
     val minutes = ((totalSec + SECONDS_PER_MINUTE / 2) / SECONDS_PER_MINUTE).coerceAtLeast(1)
     return minutes / MINUTES_PER_HOUR to minutes % MINUTES_PER_HOUR
@@ -65,17 +58,14 @@ private const val MINUTES_PER_HOUR = 60
 private const val HEARD_ALPHA = 0.6f
 private const val AHEAD_ALPHA = 0.12f
 
-/**
- * How far through a book, an episode or what plays, as the line every progress is drawn with;
- * [fraction] is read while drawing, so a moving line redraws without recomposing.
- */
+/** [fraction] is read while drawing, so progress redraws without recomposition. */
 @Composable
 fun ProgressLine(fraction: () -> Float, modifier: Modifier = Modifier) {
     val ink = MaterialTheme.colorScheme.onSurface
     Canvas(modifier.fillMaxWidth().height(Sizes.ProgressLine)) {
         val line = Sizes.ProgressLine.toPx()
         val y = size.height / 2f
-        // Round ends, as Now Playing's line has, kept inside the width.
+        // Inset by half the stroke, so the round caps stay inside the width.
         val start = line / 2f
         val end = size.width - line / 2f
         drawLine(ink.copy(alpha = AHEAD_ALPHA), Offset(start, y), Offset(end, y), line, StrokeCap.Round)

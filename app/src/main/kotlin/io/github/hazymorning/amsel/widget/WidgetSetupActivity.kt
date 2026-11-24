@@ -16,10 +16,7 @@ import io.github.hazymorning.amsel.graph
 import io.github.hazymorning.amsel.ui.theme.AmselTheme
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
 
-/**
- * A widget's page: the launcher opens it to change the widget, and before Android 12 also as it is
- * placed. Leaving without Done leaves the widget as it was, or places none.
- */
+/** Before Android 12 it also runs on placement, where RESULT_CANCELED places no widget. */
 class WidgetSetupActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(TRANSPARENT, TRANSPARENT))
@@ -28,13 +25,13 @@ class WidgetSetupActivity : ComponentActivity() {
         val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         setResult(RESULT_CANCELED, answer(widgetId))
         val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(widgetId)?.provider
-        // Exported for launchers that open it themselves: only Amsel's own widgets are set here.
+        // Exported for launchers, so any app can start it: only Amsel's own widget ids are accepted.
         if (provider?.packageName != packageName) {
             finish()
             return
         }
         val graph = graph
-        // The new widget shows what plays at once, the picture on this page too.
+        // So the new widget and this page's preview show current content at once.
         graph.widgets.follow()
         val wallpaper = wallpaperColor(this)?.let(::Color)
         setContent {

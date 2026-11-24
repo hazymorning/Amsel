@@ -25,7 +25,6 @@ class ExtrasRepositoryTest {
     private val versions = listOf("2.10", "2.11")
     private var loaded = true
 
-    /** A server that lists the plugin, [loaded] or not, beside what was recorded; [answers] go first. */
     private fun withPlugin(
         version: String,
         answers: Map<String, JsonObject> = emptyMap(),
@@ -145,7 +144,6 @@ class ExtrasRepositoryTest {
         }
     }
 
-    /** What [load] makes of a server that has everything recorded but [domain]. */
     private fun offeredWithout(domain: String): ServerExtras {
         val all = FakeMaServer.recorded("2.11", "providers").getValue("result").jsonArray
         val rest = all.filter { it.jsonObject.getValue("domain").jsonPrimitive.content != domain }

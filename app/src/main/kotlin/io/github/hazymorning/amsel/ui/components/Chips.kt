@@ -51,13 +51,11 @@ import kotlin.math.roundToInt
 
 private val ChipReach = (Sizes.TouchTarget - Sizes.ChipHeight) / 2
 
-/** A chip's label stands this far in from its ends. */
 private val ChipPadding = 16.dp
 
 /**
- * A choice among a few: selected, a tonal surface with the label in ink; otherwise the
- * label alone in the secondary tone. No outline and no tick, which would only repeat the fill. The
- * layout is the chip; the 48 dp target reaches beyond it, and a press shows on the chip.
+ * The fill alone marks the selection: an outline or a tick would only repeat it. The layout is the
+ * visible chip; the 48 dp target overhangs it vertically.
  */
 @Composable
 fun ChoiceChip(selected: Boolean, onClick: () -> Unit, label: String, role: Role, modifier: Modifier = Modifier) {
@@ -102,10 +100,7 @@ fun ChoiceChip(selected: Boolean, onClick: () -> Unit, label: String, role: Role
     }
 }
 
-/**
- * Where a chip row has scrolled to and which chip it last brought into view. Rows that stand for
- * one another (the header on each of a screen's pages) share one, and so move as one row.
- */
+/** Shared by rows that show the same choice (a header repeated on each page), so they scroll as one. */
 @Stable
 class ChipRowState internal constructor(internal val scroll: ScrollState) {
     internal var shown = -1
@@ -118,11 +113,8 @@ fun rememberChipRowState(): ChipRowState {
 }
 
 /**
- * A row of choices whose first chip's edge stands on the margin, so a selected fill never reaches
- * past it. When the row does not fit it scrolls on past the screen's edge, fading out over 24 dp,
- * so the last chip reads as more to come rather than cut. The chosen chip is always in view:
- * when the choice changes, however it was made (a tap, a swipe between the pages the chips
- * stand for), the row brings it to its middle, as far as it scrolls.
+ * The first chip's edge, not its label, sits on the margin, so a selected fill never reaches past it.
+ * Whenever [selected] changes, by a tap or by a swipe between pages, the row centres that chip.
  */
 @Composable
 fun <T> ChoiceChipRow(
@@ -130,22 +122,22 @@ fun <T> ChoiceChipRow(
     selected: T,
     onSelect: (T) -> Unit,
     label: @Composable (T) -> String,
-    /** Tab for choices that switch what shows below, RadioButton for a setting's values. */
+    /** [Role.Tab] when the choice switches the content below, [Role.RadioButton] for a setting's values. */
     role: Role,
     modifier: Modifier = Modifier,
     state: ChipRowState = rememberChipRowState(),
 ) {
     val scroll = state.scroll
-    // Each chip's middle in the row, as placed: read when the choice changes, never in composition.
+    // Plain map, not state: read only in the effect below, never in composition.
     val middles = remember { mutableMapOf<Int, Int>() }
     val chosen = options.indexOf(selected)
     val still = LocalReducedMotion.current
     LaunchedEffect(chosen) {
-        // By the next frame the row is placed.
+        // Wait a frame, so onPlaced has recorded the chips' positions.
         withFrameNanos {}
         val middle = middles[chosen] ?: return@LaunchedEffect
         val target = (middle - scroll.viewportSize / 2).coerceIn(0, scroll.maxValue)
-        // As it first shows, the row simply stands there; after that it moves.
+        // Jump on first display; animate later changes unless motion is reduced.
         if (state.shown >= 0 && !still) scroll.animateScrollTo(target, Motion.spatial()) else scroll.scrollTo(target)
         state.shown = chosen
     }
@@ -173,12 +165,7 @@ fun <T> ChoiceChipRow(
     }
 }
 
-/**
- * Shows the current one of a set and opens the sheet that changes it: its value in ink on a quiet
- * ground, a caret after it. A value too long for its line takes up to three, 8 over and under them,
- * before it ends after its last whole word; the sheet names it in full. A press shows on the chip,
- * not on the 48 dp target around it. [contentDescription] names what the value is for.
- */
+/** [contentDescription], if given, names the setting and its value ("Show as: Grid"). */
 @Composable
 fun DropdownChip(
     label: String,
@@ -222,7 +209,6 @@ fun DropdownChip(
 private val DropdownHeight = Sizes.PillHeight
 private val DropdownReach = (Sizes.ButtonHeight - DropdownHeight) / 2
 
-/** The caret's ink stands this far in from the chip's end. */
 private val DropdownEnd = 12.dp
 
 private const val DROPDOWN_LINES = 3

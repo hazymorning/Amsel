@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- widget_words an eighth smaller (WordSize.Small), so a strip one row high keeps the speaker over
-     the title. -->
+<!-- widget_words.xml × 0.875 (WordSize.Small.scale); keep in step. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_words"
@@ -108,9 +107,8 @@
         android:textSize="11.375sp"
         android:visibility="gone" />
 
-    <!-- Ticks by itself from the time Amsel sets while it plays: a widget draws again only when
-         something changes. At rest the time stands in widget_time_still: a stopped Chronometer works
-         its time out again whenever the launcher lays the widget out anew, and runs on. -->
+    <!-- Ticks on the launcher's side while playing. While paused the time is widget_time_still: a
+         stopped Chronometer recomputes its text whenever the launcher lays it out, and so runs on. -->
     <Chronometer
         android:id="@+id/widget_time"
         android:layout_width="match_parent"

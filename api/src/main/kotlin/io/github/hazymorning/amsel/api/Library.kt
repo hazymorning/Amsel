@@ -20,11 +20,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 
-/**
- * One page of library items in the given order; artists are album artists only. Radio
- * stations (`MediaType.Radio`) list and sort the same way, and play through [playMedia] by
- * their uri.
- */
+/** Artists are album artists only, as Music Assistant's own Artists view lists them. */
 public suspend fun MaApi.libraryItems(
     type: MediaType,
     sort: LibrarySort = LibrarySort.AToZ,
@@ -41,7 +37,6 @@ public suspend fun MaApi.libraryItems(
     }
 }
 
-/** The library's [type] items that have been played, the most played first (`play_count`). */
 public suspend fun MaApi.mostPlayed(type: MediaType, limit: Int): List<MediaItem> {
     val typedSort = typedSort()
     return list("music/${type.plural}/library_items", MediaItem.serializer()) {
@@ -52,7 +47,6 @@ public suspend fun MaApi.mostPlayed(type: MediaType, limit: Int): List<MediaItem
     }
 }
 
-/** How many library items of [type] there are, as [libraryItems] lists them; or only the favorites. */
 public suspend fun MaApi.libraryCount(type: MediaType, favoritesOnly: Boolean = false): Int {
     val count = client.call(
         "music/${type.plural}/count",
@@ -77,19 +71,20 @@ public suspend fun MaApi.itemByUri(uri: String): MediaItem? =
 public suspend fun MaApi.albumTracks(itemId: String, provider: String): List<MediaItem> =
     listEvery("music/albums/album_tracks", Schema.ALBUM_TRACK_PAGING) { ids(itemId, provider) }
 
-/** Up to [limit] of an album's tracks from [offset]. */
 public suspend fun MaApi.albumTracks(itemId: String, provider: String, offset: Int, limit: Int): ItemPage<MediaItem> =
     listingPage("music/albums/album_tracks", Schema.ALBUM_TRACK_PAGING, offset, limit) { ids(itemId, provider) }
 
-/** Every album of the artist; for a library artist the server reads only its own library. */
+/** For a library artist, the server lists library albums only. */
 public suspend fun MaApi.artistAlbums(itemId: String, provider: String): List<MediaItem> =
     listEvery("music/artists/artist_albums", Schema.LISTING_PAGING) { ids(itemId, provider) }
 
-/** Up to [limit] of the artist's albums from [offset]. */
 public suspend fun MaApi.artistAlbums(itemId: String, provider: String, offset: Int, limit: Int): ItemPage<MediaItem> =
     listingPage("music/artists/artist_albums", Schema.LISTING_PAGING, offset, limit) { ids(itemId, provider) }
 
-/** All of a listing that pages from schema [paged] and answers everything before. */
+/**
+ * From schema [paged] a call without `limit` answers at most 500 items; before it the server
+ * ignores `offset` and answers all at once.
+ */
 private suspend fun MaApi.listEvery(command: String, paged: Int, build: JsonObjectBuilder.() -> Unit): List<MediaItem> =
     if (schema() >= paged) {
         listAll(command, MediaItem.serializer(), build = build)
@@ -97,7 +92,7 @@ private suspend fun MaApi.listEvery(command: String, paged: Int, build: JsonObje
         list(command, MediaItem.serializer(), build = build)
     }
 
-/** A page of a listing that pages from schema [paged]; before it, everything from [offset] on. */
+/** Before schema [paged] the server cannot page: everything from [offset] on comes as the last page. */
 private suspend fun MaApi.listingPage(
     command: String,
     paged: Int,
@@ -111,11 +106,7 @@ private suspend fun MaApi.listingPage(
     list(command, MediaItem.serializer(), timeout, build).pageFrom(offset)
 }
 
-/**
- * Up to [limit] of a playlist's tracks from [offset], each with its position. Before schema 93
- * the server cannot page: the whole playlist streams in partials, so everything from [offset]
- * comes at once.
- */
+/** Before schema 93 the whole playlist streams in partials, and everything from [offset] comes as one page. */
 public suspend fun MaApi.playlistTracks(
     itemId: String,
     provider: String,
@@ -126,7 +117,7 @@ public suspend fun MaApi.playlistTracks(
         ids(itemId, provider)
     }
 
-/** One call; each list is re-sorted so the library's matches come first. */
+/** The server interleaves library and provider results, so each list is re-sorted, library first. */
 public suspend fun MaApi.search(query: String, limitPerType: Int = 10): SearchResults {
     if (query.isBlank()) return SearchResults()
     val raw = client.call(
@@ -150,8 +141,8 @@ public suspend fun MaApi.search(query: String, limitPerType: Int = 10): SearchRe
 }
 
 /**
- * What the person played lately, newest first: albums, playlists, artists and stations; with
- * [queueId], only what last played on that speaker.
+ * The calling user's history, newest first. With [queueId], only items whose last play was on that
+ * speaker: the server keeps one play-log row per item and user.
  */
 public suspend fun MaApi.recentlyPlayed(
     limit: Int,
@@ -219,10 +210,8 @@ public suspend fun MaApi.removeFromPlaylist(dbPlaylistId: String, positions: Lis
 )
 
 /**
- * Sends [command], which the server answers with a background task, and returns once
- * `tasks_updated` lists that task as finished; throws [MaCommandException] when it failed, and
- * [MaConnectionException] when the connection closed first, so whether it ran is not known. The
- * task's id comes with the answer, so listening starts before the command is sent.
+ * Returns once `tasks_updated` lists the task as finished. Listening starts before the command is
+ * sent, as that event can arrive before the answer that names the task.
  */
 private suspend fun MaApi.runTask(command: String, args: JsonObject): Unit = coroutineScope {
     val updates = Channel<JsonElement>(Channel.UNLIMITED)
@@ -232,8 +221,7 @@ private suspend fun MaApi.runTask(command: String, args: JsonObject): Unit = cor
     try {
         val (answer, closed) = client.callOnConnection(command, args)
         val id = answer.decodeOrNull(BackgroundTask.serializer())?.id ?: return@coroutineScope
-        // Every connection of this user hears how the task ends, but a server restart drops it without
-        // a word: waiting past this connection could wait for ever.
+        // A server restart drops the task without an event, so the wait ends with this connection.
         val task = merge<BackgroundTask?>(
             updates.receiveAsFlow()
                 .mapNotNull { tasks ->
@@ -261,7 +249,6 @@ private fun JsonObjectBuilder.libraryArgs(type: MediaType, sort: LibrarySort, ty
     putSort(sort, typedSort)
 }
 
-/** The library's artists are those with albums, as Music Assistant's own Artists view lists them. */
 private fun JsonObjectBuilder.albumArtistsOnly(type: MediaType) {
     if (type == MediaType.Artist) put("album_artists_only", true)
 }
@@ -274,7 +261,6 @@ private fun JsonObjectBuilder.putSort(sort: LibrarySort, typed: Boolean) = when 
     LibrarySort.RecentlyPlayed -> putSort("last_played", "desc", typed)
 }
 
-/** Typed sort from schema 86; before it, `order_by`, with `_desc` for a descending order. */
 private fun JsonObjectBuilder.putSort(field: String, direction: String, typed: Boolean) {
     if (typed) {
         put("sort_field", field)

@@ -34,7 +34,6 @@ class WidgetContentTest {
         assertTrue(look.signedIn)
     }
 
-    /** Closed on purpose, or read on a glance since: the speaker plays on, and the widget says so. */
     @Test fun playsOnWhileWhatTheServerSaidHolds() {
         val look =
             widgetContent(kitchen, "Kitchen", SampleData.nowPlaying, SessionState.Waiting("Home"), current = true)

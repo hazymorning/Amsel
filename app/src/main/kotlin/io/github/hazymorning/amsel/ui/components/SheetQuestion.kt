@@ -16,10 +16,7 @@ import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * A sheet's question, asked in place of its list rather than in a dialog over it: the sheet's title
- * (Back returns to the list), the question, then the two answers stacked, [primary] above [secondary].
- */
+/** Shown in place of the sheet's content rather than in a dialog over it; the caller handles Back. */
 @Composable
 fun SheetQuestion(
     title: String,

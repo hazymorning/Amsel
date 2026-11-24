@@ -8,10 +8,7 @@ import io.github.hazymorning.amsel.playback.R as PlaybackR
 import io.github.hazymorning.amsel.ui.navigation.OrderedToggles
 import kotlinx.serialization.Serializable
 
-/**
- * What the Library can show, each as a chip, in the person's order (Settings, Library). Downloads
- * first as it comes, in sight without a connection, where the row would hide it.
- */
+/** Declaration order is the default: [Downloads] first, so offline it is in view, not scrolled off the chips. */
 @Serializable
 enum class LibraryKind(val id: String) {
     Downloads("downloads"),
@@ -24,10 +21,8 @@ enum class LibraryKind(val id: String) {
     ;
 
     companion object {
-        /** The Library as it comes: every kind, in this order. */
         val Default: OrderedToggles<LibraryKind> = OrderedToggles(entries, entries.toSet())
 
-        /** The kinds in the person's order, one at least among those shown. */
         fun arrangement(tokens: List<String>?): OrderedToggles<LibraryKind> {
             val stored = OrderedToggles.of(tokens, entries, LibraryKind::id, Default)
             return if (stored.shown.isEmpty()) stored.copy(shown = setOf(stored.order.first())) else stored
@@ -35,7 +30,6 @@ enum class LibraryKind(val id: String) {
     }
 }
 
-/** The kind in the library index; none for Downloads, which are on the phone. */
 internal val LibraryKind.type: MediaType?
     get() = when (this) {
         LibraryKind.Playlists -> MediaType.Playlist
@@ -59,21 +53,13 @@ val LibraryKind.icon: Int
         LibraryKind.Downloads -> R.drawable.ic_download
     }
 
-/**
- * Whether the Library has anything of [this] kind to show: books, podcasts and stations while the
- * index holds some ([held]), Downloads while the phone does; playlists, albums and artists always,
- * their empty page saying where music is added.
- */
+/** Playlists, albums and artists always count: their empty page says where music is added. */
 fun LibraryKind.isHeld(held: Set<MediaType>, downloads: Boolean): Boolean = when (this) {
     LibraryKind.Downloads -> downloads
     LibraryKind.Audiobooks, LibraryKind.Podcasts, LibraryKind.Radio -> type in held
     else -> true
 }
 
-/**
- * The chips: the kinds the person shows ([arranged], in their order) that the Library has anything
- * of; while it has none of them, every one arranged, each saying it is empty.
- */
 fun libraryKinds(arranged: List<LibraryKind>, held: Set<MediaType>, downloads: Boolean = false): List<LibraryKind> =
     arranged.filter { it.isHeld(held, downloads) }.ifEmpty { arranged }
 

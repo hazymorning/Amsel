@@ -34,10 +34,8 @@ import io.github.hazymorning.amsel.ui.theme.Shapes
 import io.github.hazymorning.amsel.ui.theme.Sizes
 
 /**
- * [content] must scroll vertically (a lazy list or verticalScroll), or the pull never starts. It
- * gets the modifier each of its items carries: TalkBack cannot pull, so every item offers the
- * refresh among its actions, as Up next's rows offer their moves.
- * The disc rests over the list, which never moves under it.
+ * [content] must scroll vertically (a lazy list or verticalScroll), or the pull never starts. Each of
+ * its items takes the modifier it is given: TalkBack cannot pull, so every item offers Refresh as an action.
  */
 @Composable
 fun AmselPullToRefresh(
@@ -66,7 +64,7 @@ fun AmselPullToRefresh(
         modifier = modifier,
         state = state,
         indicator = {
-            // Pages run under the status bar, so the disc keeps below it; it parts from the list by tone.
+            // Pages run under the status bar, so the indicator keeps below it; its tone, not a shadow, sets it apart.
             PullToRefreshDefaults.IndicatorBox(
                 state = state,
                 isRefreshing = refreshing,

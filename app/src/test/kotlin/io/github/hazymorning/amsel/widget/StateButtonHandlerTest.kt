@@ -6,13 +6,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * A widget's volume, shuffle, repeat and heart act on the speaker it shows, from what it shows: on a
- * cold start the tap that started Amsel came before Amsel knew its speaker, and went to the phone.
- */
+/** Guards a cold-start bug: the tap that started Amsel acted on the phone before Amsel knew its speaker. */
 class StateButtonHandlerTest {
     private class Asked(var limit: Int = 0, var step: Int? = null) : WidgetActions {
-        /** Each volume asked, as the widget shows it: a set level, or the server's step and where it lands. */
         val volumes = mutableListOf<Pair<String, Int>>()
         val nudges = mutableListOf<String>()
         val phone = mutableListOf<Boolean>()
@@ -63,7 +59,6 @@ class StateButtonHandlerTest {
         repeat = RepeatMode.Off,
     )
 
-    /** The server takes the step its settings name; the widget shows where it lands. */
     @Test fun louderTakesTheServersStepOnTheShownSpeaker() = runTest {
         asked.step = 1
         taps.tap(WidgetButton.Louder, kitchen)
@@ -100,7 +95,6 @@ class StateButtonHandlerTest {
         assertEquals(listOf(41, 61), asked.volumes.map { it.second })
     }
 
-    /** A step that would pass the limit sets the limit; from the limit Louder does nothing and says so. */
     @Test fun louderStopsAtTheLimitAndSaysSo() = runTest {
         asked.limit = 70
         asked.step = 5

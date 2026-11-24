@@ -58,10 +58,8 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 /**
- * The sleep timer of [speaker]: under the title one line that is always there, its length and what
- * is left while it runs; one slider from off through five to 120 minutes in fives; Off and the
- * presets; and for a book or an episode the end of the chapter or the episode ([endLabel]). Nothing
- * moves when a timer starts, stops or changes: Off keeps its place, dimmed while none runs.
+ * [endLabel] adds the end of the chapter or episode as a choice. Nothing moves when a timer starts,
+ * stops or changes: Off keeps its place, dimmed while none runs.
  */
 @Composable
 fun SleepSheetContent(
@@ -83,7 +81,7 @@ fun SleepSheetContent(
         timer != null -> null
         else -> stringResource(R.string.sleep_off)
     }
-    // What is left gives way to the length under the finger: it is about to change.
+    // While dragging, the time left gives way to the length under the finger, as it is about to change.
     val left = timer?.endsAtMs?.takeIf { dragging == null }?.let { ends ->
         stringResource(R.string.sleep_left, formatDuration(rememberLeft(ends).value))
     }
@@ -129,11 +127,8 @@ fun SleepSheetContent(
     }
 }
 
-/**
- * The line under the title, always there, so nothing under it moves: how long the timer is set for
- * ("Off" while none runs) and, while one runs, what is [left] of it, in moss. Where one line cannot
- * hold both, what is left stands alone: the slider and the ticked row still say the length.
- */
+// Where the line cannot hold both, the time left shows alone: the slider and the selected preset
+// still show the length.
 @Composable
 private fun SleepLine(length: String?, left: String?) {
     val colors = MaterialTheme.colorScheme
@@ -153,7 +148,7 @@ private fun SleepLine(length: String?, left: String?) {
     )
 }
 
-/** One preset; [minutes] null is Off, shown as a cross, dimmed while there is nothing to turn off. */
+/** [minutes] null is Off. */
 @Composable
 private fun Preset(
     minutes: Int?,
@@ -199,7 +194,6 @@ private fun Preset(
 private fun minutesLabel(minutes: Int): String =
     if (minutes == 0) stringResource(R.string.sleep_off) else stringResource(R.string.sleep_minutes, minutes)
 
-/** Seconds until [endsAtMs], ticking once a second. */
 @Composable
 internal fun rememberLeft(endsAtMs: Long): State<Int> {
     val left = remember(endsAtMs) { mutableIntStateOf(secondsUntil(endsAtMs)) }
@@ -223,7 +217,6 @@ private const val MAX_MINUTES = 120
 private const val STEPS = MAX_MINUTES / STEP_MINUTES
 private val PRESETS = listOf(15, 30, 45, 60)
 
-/** The countdown beside the moon on Now Playing, or null when no timer runs. */
 @Composable
 internal fun sleepLeftText(timer: SleepTimerState?): String? {
     val ends = timer?.endsAtMs ?: return null

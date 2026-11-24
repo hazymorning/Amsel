@@ -36,13 +36,8 @@ enum class ShotVariant(val mode: ThemeMode, val fontScale: Float) {
 }
 
 /**
- * Base class for screenshot tests; each test records one shot in the variants it names. Images
- * land in app/src/test/screenshots/<class name without "Shots">/<name>_<variant>.png, phone size
- * 411x891 dp, at half the phone's resolution.
- *
- * `-Plook=de` (or `de-w360dp`, `w360dp`) records every shot in light, dark and 200 % under those
- * qualifiers into app/build/look/<look>/ instead, at full resolution for scripts/design/measure.py: a
- * way to look at a screen in German or on a narrow phone without keeping the images.
+ * `-Plook=<qualifiers>` (such as `de-w360dp`) records every shot in all variants under those qualifiers
+ * into app/build/look/<look>/ rather than the goldens, at full resolution for scripts/design/measure.py.
  */
 @OptIn(ExperimentalTestApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -67,10 +62,7 @@ abstract class ScreenshotTest {
         SingletonImageLoader.reset()
     }
 
-    /**
-     * Renders [content] full-screen in each of [variants], does [before] (a scroll), and records it.
-     * [qualifiers] are Android's, for a shot kept in another language or width ("de", "w360dp").
-     */
+    /** [qualifiers] are Android resource qualifiers joined by '-', such as "de" or "de-w360dp". */
     fun snap(
         name: String,
         variants: List<ShotVariant> = listOf(ShotVariant.Light),
@@ -83,7 +75,7 @@ abstract class ScreenshotTest {
         onRoot().captureRoboImage(it, roborazziOptions = options)
     }
 
-    /** As [snap], but records every window, so a modal sheet is captured with its scrim over [content]. */
+    /** Captures every window, so a modal sheet shows with its scrim. */
     @OptIn(ExperimentalRoborazziApi::class)
     fun snapScreen(
         name: String,
@@ -102,9 +94,9 @@ abstract class ScreenshotTest {
         val group = javaClass.simpleName.removeSuffix("Shots")
         val folder = if (look.isEmpty()) "src/test/screenshots" else "build/look/$look"
         for (variant in if (look.isEmpty()) variants else ShotVariant.entries) {
-            // Each variant gets its own activity, started after its configuration is set.
+            // Set before runComposeUiTest starts the variant's own activity with this configuration.
             RuntimeEnvironment.setQualifiers(if (variant.mode == ThemeMode.Dark) "+night" else "+notnight")
-            // One at a time: Android wants a language before a width, and a look may hold both.
+            // One at a time: in a single string Android needs the language before the width.
             for (qualifier in "$qualifiers-$look".split('-')) {
                 if (qualifier.isNotEmpty()) RuntimeEnvironment.setQualifiers("+$qualifier")
             }

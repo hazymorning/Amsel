@@ -20,7 +20,6 @@ object PagesSample {
     private fun blueHour(n: Int, title: String, sec: Int) =
         TrackUi("library://track/$n", title, MARLENE, "Blue Hour", art("album/1"), sec, n, artistKey = MARLENE_KEY)
 
-    /** "Blue Hour": the shared sample tracks plus four more, ten in all; one has a guest. */
     val blueHourTracks: List<TrackUi> = SampleData.tracks + listOf(
         blueHour(7, "Glasshouse", 236),
         blueHour(8, "What the River Said", 274).copy(artist = "$MARLENE, Ines Okafor"),
@@ -93,7 +92,6 @@ object PagesSample {
         albums = listOf(
             MediaUi("library://album/1", MediaKind.Album, "Blue Hour", "2019", art("album/1")),
         ) + marleneAlbums,
-        // The second is a music service's artist that has no picture.
         similar = listOf(
             SampleData.artists[0],
             MediaUi("streaming://artist/7", MediaKind.Artist, "Odile Brandt"),
@@ -106,7 +104,6 @@ object PagesSample {
     private fun similar(n: Int, title: String, artist: String, album: String?, cover: Int) =
         TrackUi("streaming://track/$n", title, artist, album, art("album/$cover"), 200 + n)
 
-    /** Similar to "Lanterns": a music service's own songs, the second one playing. */
     val similarSongs = SimilarSongsUiState(
         songs = listOf(
             similar(1, "Paper Moons", "Ines Okafor", "Paper Moons", 6),

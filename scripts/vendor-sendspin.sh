@@ -1,20 +1,8 @@
 #!/usr/bin/env bash
-# Vendors the official Music Assistant app's Sendspin module (sendspin-kmp, Apache-2.0) into
-# sendspin/ at a pinned upstream commit. The sources are copied verbatim and never edited here:
-# to change them, change PINNED_REF (or pass a ref) and run this script again.
-#
-#   scripts/vendor-sendspin.sh                 # vendor PINNED_REF into ./sendspin
-#   scripts/vendor-sendspin.sh <ref>           # a full 40-char commit SHA, or a tag such as sendspin-v0.1.0
-#   scripts/vendor-sendspin.sh <ref> <dest>    # into another directory
-#
-# SENDSPIN_UPSTREAM overrides the repository URL, for example a local clone.
-#
-# What it copies from <upstream>/sendspin-kmp: src/commonMain, src/androidMain, src/commonTest,
-# src/androidHostTest, consumer-rules.pro, README.md, CHANGELOG.md, plus the repository's
-# LICENSE (and NOTICE, if upstream ever adds one). What it leaves out: src/iosMain and any other
-# non-Android source set, api/ (the iOS klib ABI dump), consumer-check/, and the upstream
-# build.gradle.kts. sendspin/build.gradle.kts belongs to Amsel: it is written once, when
-# missing, and never overwritten. See docs/notes/sendspin-vendoring.md.
+# Copies upstream sendspin-kmp (Apache-2.0) verbatim into sendspin/: never edit it there, run this again.
+# Usage: vendor-sendspin.sh [<ref> [<dest>]], ref a full 40-char commit SHA or a tag, PINNED_REF by default;
+# SENDSPIN_UPSTREAM overrides the repository. sendspin/build.gradle.kts is Amsel's and never overwritten.
+# See docs/notes/sendspin-vendoring.md.
 set -euo pipefail
 
 PINNED_REF="d4a7256c3b6a8c8ef3d30f986d4ac90e4e9c86bc"
@@ -35,7 +23,6 @@ echo "Fetching $ref from $UPSTREAM"
 git -C "$work" init -q
 git -C "$work" remote add origin "$UPSTREAM"
 git -C "$work" config advice.detachedHead false
-# Shallow, blobless and sparse: only the module and the licence files are downloaded.
 git -C "$work" fetch -q --depth 1 --filter=blob:none origin "$ref" 2>/dev/null ||
     git -C "$work" fetch -q --depth 1 origin "$ref"
 git -C "$work" sparse-checkout set --no-cone "/$MODULE_DIR/" "/gradle/libs.versions.toml" \
@@ -53,7 +40,6 @@ module="$work/$MODULE_DIR"
 [[ -d "$module/src/commonMain" ]] || { echo "No $MODULE_DIR/src/commonMain at $commit" >&2; exit 1; }
 [[ -f "$work/LICENSE" ]] || { echo "No LICENSE at $commit; refusing to vendor" >&2; exit 1; }
 
-# Upstream source sets this script does not know about are reported, never copied silently.
 for dir in "$module"/src/*/; do
     name="$(basename "$dir")"
     case " ${SOURCE_SETS[*]} iosMain iosTest " in
@@ -79,7 +65,7 @@ for file in "${MODULE_FILES[@]}"; do
     rm -f "$dest/$file"
     if [[ -f "$module/$file" ]]; then cp "$module/$file" "$dest/$file"; fi
 done
-# The repository-level licence files; a module-level one, if upstream adds it, wins.
+# A module-level licence file, if upstream adds one, replaces the repository's.
 for file in "${LEGAL_FILES[@]}"; do
     rm -f "$dest/$file"
     if [[ -f "$work/$file" ]]; then cp "$work/$file" "$dest/$file"; fi
@@ -128,7 +114,7 @@ if [[ -n "$previous_build_sha" && "$previous_build_sha" != "$build_sha" ]]; then
 fi
 amsel_catalog="$repo_root/gradle/libs.versions.toml"
 if [[ -f "$amsel_catalog" ]]; then
-    # upstream key:Amsel key pairs whose versions should match.
+    # upstream catalog key:Amsel catalog key
     for pair in ktor:ktor kermit:kermit kotlinx-atomicfu:atomicfu cryptographyKotlin:cryptographyKotlin \
         bouncycastle:bouncycastle concentus:concentus; do
         up="$(version_of "${pair%%:*}" "$upstream_catalog")"

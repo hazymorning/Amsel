@@ -18,12 +18,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.lineHeight
 import io.github.hazymorning.amsel.ui.theme.tabular
 
-/**
- * A tap plays the track; a long press opens its actions. [lead] is [RowLead.Cover] for the track's
- * art or [RowLead.Glyph] for its number (album pages). [twoLines] is decided per list, so one
- * guest artist does not change the album's rhythm. The playing track shows the ring: in place of
- * its number, or before its second line beside a cover.
- */
+/** Decide [twoLines] per list, not per row, so one guest artist does not change an album's rhythm. */
 @Composable
 fun TrackRow(
     track: TrackUi,
@@ -41,7 +36,7 @@ fun TrackRow(
         track.artist
     },
     twoLines: Boolean = subtitle != null,
-    /** The number column ([numberLeadWidth]) beside [RowLead.Glyph]; a cover's otherwise. */
+    /** The list's [numberLeadWidth], for [RowLead.Glyph]; unused beside a cover. */
     leadWidth: Dp = Sizes.Lead,
 ) {
     val hasSecond = twoLines && !subtitle.isNullOrBlank()
@@ -65,7 +60,7 @@ fun TrackRow(
     )
 }
 
-/** On the margin, its first figure's ink on the line, level with the title; the play bars take its place while it plays. */
+/** [onTitleLine] lifts the number to the title's line in a two-line row; the play bars replace it while playing. */
 @Composable
 internal fun TrackNumber(number: Int?, playing: Boolean, onTitleLine: Boolean) {
     val type = MaterialTheme.typography
@@ -78,7 +73,6 @@ internal fun TrackNumber(number: Int?, playing: Boolean, onTitleLine: Boolean) {
     LeadNumber(number?.toString().orEmpty(), place)
 }
 
-/** A list's number in the lead column, its first figure's ink on the margin. */
 @Composable
 fun LeadNumber(text: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyMedium.tabular()
@@ -94,7 +88,6 @@ fun LeadNumber(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** "3:34" or "1:02:10". */
 fun formatDuration(totalSec: Int): String {
     val h = totalSec / 3600
     val m = (totalSec % 3600) / 60

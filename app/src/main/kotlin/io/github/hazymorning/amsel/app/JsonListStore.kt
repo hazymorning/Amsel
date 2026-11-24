@@ -15,11 +15,8 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
-/**
- * A list kept in one small JSON file on this phone. Changes apply in order, each after the file
- * has been read, so one made while it loads never writes over what was stored. Each write replaces
- * the file whole through a temporary one, so a crash midway leaves the last good list.
- */
+// Each change runs after the file was read, so one made while it loads cannot overwrite what was
+// stored. Writes go through a temporary file, so a crash midway leaves the last good list.
 internal class JsonListStore<T>(private val file: File, serializer: KSerializer<T>, private val scope: CoroutineScope) {
     private val list = ListSerializer(serializer)
     private val json = Json { ignoreUnknownKeys = true }
@@ -38,7 +35,7 @@ internal class JsonListStore<T>(private val file: File, serializer: KSerializer<
             lock.withLock {
                 load()
                 val next = edit(_items.value)
-                // Written first: whoever sees the change can find it on the phone.
+                // Saved before it is published, so whoever sees the change finds it on disk.
                 save(next)
                 _items.value = next
             }
@@ -65,7 +62,7 @@ internal class JsonListStore<T>(private val file: File, serializer: KSerializer<
         } catch (e: IOException) {
             false
         }
-        // Unwritten, the list stays in memory and the next change writes it whole.
+        // On failure the list stays in memory, and the next change writes it whole.
         if (!written) temp.delete()
     }
 }

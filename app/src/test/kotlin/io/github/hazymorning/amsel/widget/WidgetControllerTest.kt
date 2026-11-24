@@ -33,7 +33,6 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** The widgets on a home screen, drawn by the kind they were placed as and the size they stand at. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
@@ -52,7 +51,6 @@ class WidgetControllerTest {
         override val failures = emptyFlow<Pair<String, String>>()
     }
 
-    /** Widgets working in a scope of the test's own, which ends with it. */
     private fun TestScope.widgets(
         connected: () -> Boolean = { false },
         refreshSpeakers: suspend () -> Boolean = { true },
@@ -88,7 +86,6 @@ class WidgetControllerTest {
         elapsedRealtime = { NOW },
     )
 
-    /** The looks asked of Android. */
     private class Plans : WidgetRefreshScheduler {
         var periodic = 0
         var cancelled = 0
@@ -107,7 +104,6 @@ class WidgetControllerTest {
         }
     }
 
-    /** A song 150 s into its 200, as the speaker reports it. */
     private val playingSong =
         WidgetSample.music.copy(
             art = null,
@@ -117,7 +113,6 @@ class WidgetControllerTest {
             durationMs = 200_000,
         )
 
-    /** A widget of [provider] placed at [width] by [height] dp. */
     private fun place(provider: Class<*>, width: Float, height: Float): Int {
         val id = next++
         val name = ComponentName(context, provider)
@@ -133,7 +128,7 @@ class WidgetControllerTest {
         manager.updateAppWidgetOptions(id, options)
     }
 
-    /** Runs what is due until [done]: the store reads and writes on a thread of its own. */
+    /** Polls until [done]: the store runs on Dispatchers.IO, outside the test scheduler. */
     private fun TestScope.settle(done: () -> Boolean) {
         repeat(SETTLE_TRIES) {
             testScheduler.advanceUntilIdle()
@@ -142,7 +137,7 @@ class WidgetControllerTest {
         }
     }
 
-    /** As [settle], with the test's time passing slowly, so the store's thread keeps up with a timeout. */
+    /** As [settle], in small virtual-time steps, so the IO thread finishes before refresh()'s timeout. */
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun TestScope.settleSlowly(done: () -> Boolean) {
         repeat(SETTLE_TRIES) {
@@ -187,7 +182,6 @@ class WidgetControllerTest {
         assertEquals("Lanterns", text(id, R.id.widget_title))
     }
 
-    /** Placed while Amsel follows the music, a widget shows what plays without its page. */
     @Test fun aWidgetPlacedWhileAmselRunsFollowsAtOnce() = runTest {
         val scope = CoroutineScope(StandardTestDispatcher(testScheduler) + Job())
         ended += scope
@@ -209,7 +203,6 @@ class WidgetControllerTest {
         assertEquals(WidgetSetup(speaker = "bedroom"), store.setup(id))
     }
 
-    /** Amsel's socket closed, a look reads the speakers and draws them; the next is the half-hourly one. */
     @Test fun aLookWhileTheSocketIsClosedDrawsWhatPlays() = runTest {
         source.content.value = playingSong
         var glances = 0

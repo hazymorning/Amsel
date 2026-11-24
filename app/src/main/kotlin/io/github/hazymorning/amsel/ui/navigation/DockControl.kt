@@ -4,11 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import io.github.hazymorning.amsel.R
 
-/**
- * What the mini player can hold at its end, beside what plays: play and pause always, and as many
- * more as leave the words their room ([MAX] in all), in the person's order (Settings, Mini player).
- * For a book or an episode, next and previous become 30 s forward and 15 s back.
- */
+/** For a book or an episode, [Next] and [Previous] skip forward and back in time instead. */
 enum class DockControl(val id: String, @StringRes val label: Int, @DrawableRes val icon: Int) {
     PlayPause("play", R.string.dock_play, R.drawable.ic_play),
     Next("next", R.string.dock_next, R.drawable.ic_skip_next),
@@ -21,13 +17,11 @@ enum class DockControl(val id: String, @StringRes val label: Int, @DrawableRes v
     ;
 
     companion object {
-        /** Play, and two more at most: past three the song's words would hardly show. */
+        /** More than three leaves too little width for the title and artist. */
         const val MAX = 3
 
-        /** The mini player as it comes: play, then next. */
         val Default = OrderedToggles(entries, setOf(PlayPause, Next))
 
-        /** The controls in the person's order, play always among those shown. */
         fun arrangement(tokens: List<String>?): OrderedToggles<DockControl> {
             val stored = OrderedToggles.of(tokens, entries, DockControl::id, Default)
             return stored.copy(shown = stored.shown + PlayPause)

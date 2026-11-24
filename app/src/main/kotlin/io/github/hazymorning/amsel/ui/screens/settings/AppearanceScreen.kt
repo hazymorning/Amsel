@@ -41,29 +41,21 @@ import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
 import io.github.hazymorning.amsel.ui.theme.ThemeMode
 
-/**
- * How Amsel looks: the theme and the language; then what each place shows, as they stand on the
- * screen from top to bottom, the pages, the mini player and the bar, each naming what it shows and
- * opening the page that arranges it.
- */
+/** The arrange rows follow the screen from top to bottom: the pages, the mini player, the bar. */
 @Composable
 fun AppearanceScreen(
     theme: ThemeMode,
     onThemeChange: (ThemeMode) -> Unit,
-    /** Opens Android's language page for the app; null where Android has none (before 13). */
+    /** Null before Android 13, which has no per-app language page. */
     onLanguage: (() -> Unit)?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    /** How many sections Home has, and its edit mode as a page of its own. */
     homeSections: Int = HomeLayout.DEFAULT_SECTIONS.size,
     onHome: () -> Unit = {},
-    /** What the Library shows now, in its order, and the page that arranges it. */
     library: List<LibraryKind> = libraryKinds(LibraryKind.Default.visible, held = emptySet()),
     onLibrary: () -> Unit = {},
-    /** The mini player's controls, in their order, and the page that arranges them. */
     dock: List<DockControl> = DockControl.Default.visible,
     onDock: () -> Unit = {},
-    /** The places the bottom bar shows, in its order, and the page that arranges them. */
     bar: List<BarItem> = BarItem.Default,
     onBar: () -> Unit = {},
 ) {
@@ -116,7 +108,6 @@ fun AppearanceScreen(
         }
     }
     if (choosing) {
-        // A choice applies at once, under the sheet as it slides away.
         AmselSheet(onDismiss = { choosing = false }) {
             ChoiceSheet(
                 stringResource(R.string.settings_theme),
@@ -170,8 +161,8 @@ fun AppearanceRoute(navigator: Navigator) {
 }
 
 /**
- * Android's own page for the app's language, which offers the languages in `locales_config.xml`;
- * the app's details page where a device leaves it out, so the tap always answers.
+ * The system page offers the languages in `locales_config.xml`. Some devices lack it; the app's
+ * details page answers the tap there.
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private fun Context.openLanguageSettings() {

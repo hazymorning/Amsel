@@ -25,15 +25,10 @@ internal sealed interface ServerCheck {
 
     data class Failed(val error: ServerError) : ServerCheck
 
-    /** Music Assistant has no users yet: it must be set up in its web UI first. */
+    /** The server has no users yet: it must be set up in its web UI first. */
     data object NeedsSetup : ServerCheck
 }
 
-/**
- * Reads the server's info and sign-in methods. Unreachable covers anything that is not Music
- * Assistant answering, but for a certificate this phone does not trust; a server older than
- * [Schema.MIN_SUPPORTED] is too old.
- */
 internal suspend fun checkServer(address: ServerAddress, probe: suspend (ServerAddress) -> ServerProbe): ServerCheck =
     try {
         val result = probe(address)
@@ -51,7 +46,7 @@ internal suspend fun checkServer(address: ServerAddress, probe: suspend (ServerA
         ServerCheck.Failed(ServerError.Unreachable)
     }
 
-/** Runs a sign-in; a failure to keep the token (Keystore, storage) counts as not getting there. */
+/** Keystore and storage errors while keeping the token count as a failed sign-in. */
 internal suspend fun attempt(block: suspend () -> SignInResult): SignInResult = try {
     block()
 } catch (e: GeneralSecurityException) {
@@ -63,8 +58,8 @@ internal suspend fun attempt(block: suspend () -> SignInResult): SignInResult = 
 }
 
 /**
- * Why [target] was not reached. A name typed without a scheme went to https, as one off the home
- * network may answer any DNS; plain http to it only when typed so.
+ * A name typed without a scheme went over https, as off the home network any DNS may answer for it;
+ * plain http only when typed so, which [ServerError.HttpsFailed] asks for.
  */
 internal fun ServerError.of(target: ServerCheckRequest): ServerError =
     if (this == ServerError.Unreachable && "://" !in target.field && target.address.baseUrl.isHttps) {
@@ -73,12 +68,11 @@ internal fun ServerError.of(target: ServerCheckRequest): ServerError =
         this
     }
 
-/** For display: the host alone, never a scheme or port (`192.168.1.20`, `music.example.com`). */
 internal fun hostOf(address: ServerAddress): String = address.baseUrl.host
 
 /**
- * What a person would type for [address]: the host alone when the app's defaults (`http://`,
- * port 8095) lead back to it, otherwise the whole address, so editing it loses nothing.
+ * The host alone when [ServerAddress.parse] gives [address] back from it, else the whole address, so
+ * editing it loses nothing.
  */
 internal fun typedForm(address: ServerAddress): String {
     val host = hostOf(address)
@@ -87,7 +81,6 @@ internal fun typedForm(address: ServerAddress): String {
 
 internal fun FoundServer.toUi(): FoundServerUi = FoundServerUi(info.serverId, info.name, hostOf(address))
 
-/** A server address kept as the text it parses back from. */
 private object ServerAddressSerializer : KSerializer<ServerAddress> {
     override val descriptor = PrimitiveSerialDescriptor("ServerAddress", PrimitiveKind.STRING)
 
@@ -107,7 +100,7 @@ internal data class SelectedServer(
     fun signInState() = SignInUiState(info.name.orEmpty(), hostOf(address), offersHomeAssistant)
 }
 
-/** What outlives the process: the page, what was typed (never the password) and the chosen server. */
+/** Survives process death; never holds the password. */
 @Serializable
 internal data class SavedSetupState(
     val step: SetupStep,
@@ -118,7 +111,7 @@ internal data class SavedSetupState(
     val username: String,
 )
 
-/** What to check: the address, what shows progress meanwhile, and the field's text if it fails. */
+/** [connectingTo] shows progress meanwhile; [field] is the address field's text if the check fails. */
 internal data class ServerCheckRequest(
     val address: ServerAddress,
     val connectingTo: String,
@@ -132,7 +125,7 @@ internal fun FoundServer.target(fromList: Boolean) =
 internal fun SetupUiState.kept(chosen: SelectedServer?) =
     SavedSetupState(step, server.step, server.address, server.notFound, chosen, signIn?.username.orEmpty())
 
-/** The state [SavedSetupState] brings back; null for the server search, which ended with the process. */
+/** Null for the server search: it died with the process and starts again. */
 internal fun SavedSetupState.restored(): SetupUiState? {
     val server = ServerUiState(serverStep, address = address, notFound = notFound)
     val signIn = chosen?.signInState()?.copy(username = username)

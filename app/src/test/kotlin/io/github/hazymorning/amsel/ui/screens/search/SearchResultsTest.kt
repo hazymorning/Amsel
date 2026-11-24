@@ -18,7 +18,7 @@ import org.junit.Test
 class SearchResultsTest {
     private val mapper = UiMapper { null }
 
-    /** Draws covers, as the app does once connected. */
+    /** Builds art URLs, as once connected; [mapper] builds none. */
     private val drawn = UiMapper { ImageUrls(ServerAddress.parse("http://ma.local:8095") ?: error("address")) }
     private val covers = listOf("c1", "c2", "c3", "c4")
 

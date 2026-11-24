@@ -27,11 +27,7 @@ import io.github.hazymorning.amsel.ui.components.trimToGlyphHeight
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/**
- * One setup page. Setup sits outside the app shell, so the page keeps itself clear of the system
- * bars and the keyboard: an optional top bar, the content, and the [action] at the bottom, where it
- * rides just above the keyboard.
- */
+/** Setup is outside the app shell, so the page pads itself for the system bars and the keyboard. */
 @Composable
 internal fun SetupPage(
     modifier: Modifier = Modifier,
@@ -47,11 +43,7 @@ internal fun SetupPage(
     }
 }
 
-/**
- * A full-width, 48 dp setup button. [filled] marks the screen's one primary action; any other is
- * the tonal secondary. While [busy] it shows a spinner in place of its label and ignores taps, keeping its
- * size and colour so nothing jumps; [busyLabel] tells TalkBack what is happening.
- */
+/** While [busy] it ignores taps but stays enabled, so its colours do not change. */
 @Composable
 internal fun SetupButton(
     text: String,
@@ -78,10 +70,7 @@ internal fun SetupButton(
     }
 }
 
-/**
- * "or" between two ways of doing the same thing: one quiet centred word, a group's space from its
- * neighbours measured from its own ink ("or" has no capitals, "oder" an ascender).
- */
+/** Spaced from the word's glyph bounds ([trimToGlyphHeight]): "or" has no capitals, "oder" has an ascender. */
 @Composable
 internal fun OrLabel(modifier: Modifier = Modifier, above: Dp = Space.Group) {
     val word = stringResource(R.string.setup_or)

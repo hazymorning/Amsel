@@ -25,11 +25,7 @@ import io.github.hazymorning.amsel.ui.theme.Sizes
 import io.github.hazymorning.amsel.ui.theme.glyphFigures
 import io.github.hazymorning.amsel.ui.theme.rememberPress
 
-/**
- * Back or forward by [seconds] for a book or an episode, where shuffle and repeat stand for music:
- * the circular arrow with its seconds set in its middle, a bare glyph at the toggles' size. They are
- * actions rather than modes, so they are in ink.
- */
+// Actions, not modes like the shuffle and repeat they replace, so always drawn in onSurface.
 @Composable
 internal fun SkipSeconds(
     @DrawableRes icon: Int,

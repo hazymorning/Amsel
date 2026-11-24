@@ -20,7 +20,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Where a message's action stands: beside its sentence, or under it once the sentence would be squeezed. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class MessageBarTest {
@@ -33,7 +32,7 @@ class MessageBarTest {
         }
     }
 
-    /** A text's own node: its letters, not the touch target an action spreads around them. */
+    /** The text's own node, not the touch target an action spreads around it. */
     private fun bounds(text: String): DpRect = compose.onNodeWithText(text, useUnmergedTree = true).getBoundsInRoot()
 
     @Test fun aShortActionStandsBesideTheSentenceOnItsLine() {
@@ -83,7 +82,7 @@ class MessageBarTest {
     private companion object {
         val WIDTH = 411.dp
 
-        /** A text's box ends a letter's side bearing past its ink. */
+        /** A text's box ends a side bearing past its last glyph. */
         const val BEARING = 2f
     }
 }

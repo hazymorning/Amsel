@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 
-/** A place in a book or an episode, kept on this phone. [chapter] is its 1-based number, if it has chapters. */
+/** [chapter] counts from 1, as the chapter list shows it. */
 @Immutable
 @Serializable
 data class Bookmark(
@@ -27,10 +27,7 @@ data class Bookmark(
     val note: String = "",
 )
 
-/**
- * Bookmarks in books and episodes. Music Assistant has none in a released server yet, so they are
- * kept in one small file on this phone, newest first.
- */
+// On the phone: no released server keeps bookmarks yet (docs/API-NOTES.md, "Audiobooks and podcasts").
 class BookmarkStore(
     private val context: Context,
     private val playing: PlaybackState,
@@ -45,7 +42,6 @@ class BookmarkStore(
 
     fun add(bookmark: Bookmark) = store.change { all -> (all + bookmark).sortedByDescending(Bookmark::createdAtMs) }
 
-    /** Keeps the place in the book or episode that plays, at once, and offers to take it back. */
     fun addHere() {
         val now = playing.nowPlaying.value?.takeIf { it.spoken } ?: return
         val key = now.key ?: return
@@ -61,7 +57,6 @@ class BookmarkStore(
         messages.showUndo(R.string.bookmark_saved, where) { remove(bookmark.id) }
     }
 
-    /** Plays from [bookmark]: a seek when its item is the speaker's, else the item from there. */
     fun play(bookmark: Bookmark) {
         val now = playing.nowPlaying.value
         if (now?.key == bookmark.itemKey) {
@@ -72,7 +67,6 @@ class BookmarkStore(
         playback.play(listOf(bookmark.itemKey), title = bookmark.itemTitle, startPositionMs = bookmark.positionMs)
     }
 
-    /** Deletes [bookmark] and offers to bring it back. */
     fun delete(bookmark: Bookmark) {
         remove(bookmark.id)
         messages.showUndo(R.string.bookmark_deleted) { add(bookmark) }

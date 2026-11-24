@@ -49,7 +49,6 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ServiceController
 
-/** Artwork never loads in these tests. */
 @OptIn(UnstableApi::class)
 private object NoArtwork : BitmapLoader {
     override fun supportsMimeType(mimeType: String) = false
@@ -61,7 +60,6 @@ private object NoArtwork : BitmapLoader {
         Futures.immediateFailedFuture(UnsupportedOperationException())
 }
 
-/** A library with nothing in it. */
 internal object Catalogless : Catalog {
     override suspend fun recent(limit: Int) = emptyList<BrowseNode>()
 
@@ -76,10 +74,7 @@ internal object Catalogless : Catalog {
     override suspend fun search(query: String, focus: String?): String? = null
 }
 
-/**
- * The service with a fake graph: Kitchen plays, the Office is paused, This phone is idle. Each
- * speaker's snapshot is fixed, as the real graph's cached flows are.
- */
+/** Each speaker's snapshot flow is fixed, as the real graph's cached flows are. */
 private object TestGraph : PlaybackGraph {
     override val elapsedRealtime: () -> Long = { 1_000L }
     override val scope = CoroutineScope(Dispatchers.Main.immediate)
@@ -112,7 +107,7 @@ private object TestGraph : PlaybackGraph {
     val heartFlow = MutableStateFlow<Boolean?>(null)
     var hearts = 0
 
-    /** Runs once inside the next playerFor: a change that lands while the session is built. */
+    /** Runs once inside the next playerFor: a change while the session is being built. */
     var whileBuilding: (() -> Unit)? = null
 
     fun reset() {
@@ -261,7 +256,7 @@ class PlaybackServiceTest {
         idle()
         assertEquals(CommandButton.ICON_HEART_FILLED, session.mediaButtonPreferences.single().icon)
         assertEquals("Unlike", session.mediaButtonPreferences.single().displayName)
-        // A book has no heart, even while one is reported: its controls take the places.
+        // A book has no heart, even while one is reported: its skips take the slots.
         TestGraph.targetFlow.value = PlaybackTarget("study", isPhone = false)
         idle()
         assertTrue(session.mediaButtonPreferences.none { it.sessionCommand == BrowseTree.HEART })
@@ -297,7 +292,6 @@ class PlaybackServiceTest {
     }
 }
 
-/** The car's tree: its plays go to This phone, other controllers' to the selected speaker. */
 @RunWith(RobolectricTestRunner::class)
 class BrowseTreeTest {
     private val app = RuntimeEnvironment.getApplication()
@@ -489,7 +483,7 @@ class BrowseTreeTest {
         val result = tree.onCustomCommand(session, car, BrowseTree.HEART, Bundle.EMPTY).get()
         assertEquals(SessionResult.RESULT_SUCCESS, result.resultCode)
         assertEquals(1, hearts)
-        // An app that is not trusted with control may not like things on the person's behalf.
+        // An untrusted app may not like things on the user's behalf.
         val stranger = controller("com.example.widget")
         assertFalse(tree.onConnectAsync(session, stranger).get().availableSessionCommands.contains(BrowseTree.HEART))
     }
@@ -552,7 +546,6 @@ class BrowseTreeTest {
         )
     }
 
-    /** Books but no podcasts; a book half heard, an album played, an episode finished. */
     private object Shelf : Catalog {
         override suspend fun recent(limit: Int) = listOf(
             BrowseNode(

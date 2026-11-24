@@ -21,10 +21,9 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * The widget measured as drawn, in the Plain look on its flat ground: the room between its edge and
- * everything on it, and the gaps between its button cells, every cell shaded so each shows. Each form
- * is laid out for one size and drawn at others too, as a launcher may give a widget a little more or
- * less than it said: the frame and the gaps hold at all of them, and bare buttons stand as evenly.
+ * Measures drawn pixels on the Plain style's flat background, every cell shaded so each shows. Each form
+ * is also drawn at sizes around the one it was laid out for, as a launcher may draw a widget a little
+ * larger or smaller than it reported.
  */
 @RunWith(org.robolectric.RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -44,7 +43,7 @@ class WidgetInsetsTest {
             return Color.alpha(pixel) == 255 && distance(pixel, ground) >= INKED
         }
 
-        /** The room between the widget's edge and its ink, in dp: start, top, end, bottom. */
+        /** In dp, from each edge to the outermost drawn pixels: start, top, end, bottom. */
         fun frame(): List<Float> {
             var left = width
             var top = height
@@ -62,7 +61,7 @@ class WidgetInsetsTest {
             return listOf(left, top, width - 1 - right, height - 1 - bottom).map { it / density }
         }
 
-        /** The cells crossed by the line [y] dp down: each one's start and end, in dp. */
+        /** Runs of drawn pixels along the row [y] dp down, as (start, end) in dp. */
         fun cells(y: Float): List<Pair<Float, Float>> {
             val row = (y * density).roundToInt()
             val runs = mutableListOf<Pair<Float, Float>>()
@@ -79,7 +78,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /** [slots] showing [look], laid out for [planned] and drawn at [actual]. */
     private fun draw(
         slots: List<WidgetSlot>,
         look: WidgetContent,
@@ -117,7 +115,6 @@ class WidgetInsetsTest {
         assertEquals("$name bottom", expected, bottom, TOLERANCE)
     }
 
-    /** The cells along the line [y] dp down: [count] of them, of one width, [WidgetSizes.GAP] apart. */
     private fun assertCells(drawn: Drawn, y: Float, count: Int, name: String) {
         val cells = drawn.cells(y)
         println("$name cells: $cells")
@@ -127,7 +124,7 @@ class WidgetInsetsTest {
         cells.zipWithNext { a, b -> assertEquals("$name gap", WidgetSizes.GAP, b.first - a.second, TOLERANCE) }
     }
 
-    /** Ink runs a glyph's parts leave on a line (a skip's bar and triangle), joined into one per glyph. */
+    /** Joins runs closer than GLYPH_PARTS_APART into one glyph (a skip glyph's bar and triangle). */
     private fun glyphs(runs: List<Pair<Float, Float>>): List<Pair<Float, Float>> =
         runs.fold(mutableListOf()) { joined, run ->
             val last = joined.lastOrNull()
@@ -139,7 +136,6 @@ class WidgetInsetsTest {
             joined
         }
 
-    /** Laid out for each size the launcher may say, drawn at it and at a little more and less. */
     private fun around(size: SizeF): List<SizeF> = listOf(
         size,
         SizeF(size.width - 8f, size.height - 8f),
@@ -156,7 +152,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /** One row's cells are as high as under words, in its middle; the frame holds at the sides. */
     @Test fun aRowKeepsItsFrameAndGaps() {
         for (actual in around(WidgetSample.row)) {
             val name = "row at $actual"
@@ -170,7 +165,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /** Bare, the buttons reach into the frame, their glyphs each in the middle of its own target. */
     @Test fun bareButtonsStandEvenly() {
         for (actual in around(WidgetSample.row)) {
             val drawn = draw(DefaultSlots.take(3), music, WidgetSample.row, actual, cells = WidgetCells.None)
@@ -184,9 +178,8 @@ class WidgetInsetsTest {
         }
     }
 
-    /** After the buttons, the cells stand on the frame at the top and the last line's baseline at the foot. */
     @Test fun wordsAfterTheButtonsKeepTheFrame() {
-        // A line under the title without a descender, which would reach past its baseline.
+        // No descenders: they would hang below the baseline that meets the frame.
         val look = music.copy(subtitle = "Ana Holm", durationMs = 0)
         for (actual in around(WidgetSample.card)) {
             val name = "card, words after, at $actual"
@@ -196,11 +189,10 @@ class WidgetInsetsTest {
         }
     }
 
-    /** Without what plays, the buttons' grid keeps the frame at the sides, the gaps between, in the middle. */
     @Test fun aPadKeepsItsFrameAndGaps() {
         val four = DefaultSlots.take(4)
         val pad = widgetFit(WidgetSample.card.width, WidgetSample.card.height, 4, words = false)
-        // Each row's middle, half a row from the widget's.
+        // Two rows: each row's centre is half a row pitch from the widget's.
         val half = (pad.cell + WidgetSizes.GAP) / 2
         for (actual in around(WidgetSample.card)) {
             val name = "pad at $actual"
@@ -215,7 +207,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /** Lower than a cell and its frame, a row's targets keep a touch target's height; its cells keep the frame. */
     @Test fun aLowRowsTargetsKeepTheirHeight() {
         for (size in listOf(WidgetSample.strip, SizeF(156f, 72f))) {
             val setup = WidgetSetup(WidgetStyle.Plain, slots = DefaultSlots.take(3), cells = WidgetCells.All)
@@ -227,10 +218,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /**
-     * A strip of any height keeps its frame: the cover and the cells on it, the words' ink, from the
-     * first capital to the baseline, inside it, two lines from 62 dp.
-     */
     @Test fun aStripKeepsItsFrame() {
         for (height in 58..90 step 4) {
             val size = SizeF(WidgetSample.strip.width, height.toFloat())
@@ -255,7 +242,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /** Three rows high, the cover, capped at half the width, still stands on the frame at the top. */
     @Test fun aTallPlayerKeepsItsFrame() {
         for (actual in around(WidgetSample.tallPlayer)) {
             val name = "tall player at $actual"
@@ -265,7 +251,6 @@ class WidgetInsetsTest {
         }
     }
 
-    /** Tall enough, the buttons take two rows: the frame holds, the rows stand a gap apart, the cells alike. */
     @Test fun rowsOfCellsKeepTheFrameAndGaps() {
         val cell = WidgetSizes.CELL_HEIGHT
         for (actual in around(WidgetSample.tallCard)) {
@@ -304,9 +289,8 @@ class WidgetInsetsTest {
         }
     }
 
-    /** A row without buttons sets what plays in its middle, its first letter on the frame. */
     @Test fun aRowsWordsStandInItsMiddle() {
-        // Lines without a descender, which hangs past the baseline the ink stands on.
+        // No descenders: the text is centred by its cap top and last baseline.
         val look = music.copy(subtitle = "Ana Holm")
         for (actual in around(WidgetSample.row)) {
             val (start, top, _, bottom) = draw(emptyList(), look, WidgetSample.row, actual).frame()
@@ -322,13 +306,13 @@ class WidgetInsetsTest {
     }
 
     private companion object {
-        /** A pixel this far from the ground, red, green and blue together, is ink. */
+        /** The summed RGB distance from the background above which a pixel counts as drawn. */
         const val INKED = 24
 
-        /** Two pixels at xxhdpi: an edge's antialiasing. */
+        /** Two pixels at xxhdpi, for antialiased edges. */
         const val TOLERANCE = 0.67f
 
-        /** Closer than this, two runs of ink are one glyph's parts; glyphs stand twice as far apart. */
+        /** In dp; separate glyphs stand at least twice this apart. */
         const val GLYPH_PARTS_APART = 10f
 
         fun distance(a: Int, b: Int) =

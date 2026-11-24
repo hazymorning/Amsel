@@ -3,7 +3,6 @@ package io.github.hazymorning.amsel.app
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** What a tap on a speaker in Play on does, by what the current speaker and the tapped one do. */
 class PlayOnActionTest {
     private fun tap(fromPhone: Boolean, holds: Boolean, plays: Boolean, targetPlays: Boolean, same: Boolean = false) =
         choiceOf(same, fromPhone, holds, plays, targetPlays)
@@ -15,7 +14,7 @@ class PlayOnActionTest {
 
     @Test fun aSpeakerThatPlaysIsNeverTakenOverUnasked() {
         assertEquals(PlayOnAction.Ask, tap(fromPhone = true, holds = true, plays = true, targetPlays = true))
-        // Paused music does not stop what plays there: the person sees that instead.
+        // Paused music does not stop what plays there: the user sees that instead.
         assertEquals(PlayOnAction.Select, tap(fromPhone = true, holds = true, plays = false, targetPlays = true))
     }
 

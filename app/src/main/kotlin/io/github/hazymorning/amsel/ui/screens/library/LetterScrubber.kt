@@ -55,7 +55,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** How long the thumb stays after the list stops, so it can still be caught. */
+/** The thumb stays this long after scrolling stops, so it can still be grabbed. */
 private const val LINGER_MS = 1500L
 
 private val ThumbWidth = Space.S1
@@ -65,16 +65,11 @@ private val ThumbInset = (Keyline.Margin - ThumbWidth) / 2
 
 private val Bubble = Space.S16
 
-/** The bubble centres one touch target in from the margin, clear of the finger on the thumb. */
+/** Centres the bubble one touch target in from the margin, clear of the finger on the thumb. */
 private val BubbleEndInset = Keyline.Margin + Sizes.TouchTarget - Bubble / 2
 
 private val Lane = Keyline.Margin + Space.S3
 
-/**
- * A–Z: a thin thumb in the right margin appears while the list moves; dragging it jumps by letter
- * and shows the letter in a bubble beside it. At rest nothing is drawn. For TalkBack it is one
- * adjustable control ("Jump to letter, M").
- */
 @Composable
 private fun LetterScrubber(
     letters: List<LetterJump>,
@@ -87,7 +82,7 @@ private fun LetterScrubber(
 ) {
     val jump by rememberUpdatedState(onJump)
     val stop by rememberUpdatedState(onHold)
-    // Another kind brings its own list: what is remembered below reads the one shown now.
+    // A kind switch swaps the list; the remembered state and gesture below must read the current one.
     val position by rememberUpdatedState(progress)
     val first by rememberUpdatedState(firstVisible)
     val current by remember(letters) {
@@ -140,7 +135,7 @@ private fun LetterScrubber(
                     }
                 },
         )
-        // Read while placing, so a moving list repositions the thumb without recomposing.
+        // Read in the placement phase, so scrolling moves the thumb without recomposition.
         fun thumbY(): Int = ((if (held != null) heldFraction else position().coerceIn(0f, 1f)) * travel).roundToInt()
         Box(
             Modifier
@@ -150,14 +145,13 @@ private fun LetterScrubber(
                 .size(ThumbWidth, ThumbLength)
                 .background(colors.onSurfaceVariant, Shapes.Pill),
         )
-        // Only the thumb takes a touch, as Android's fast scroller: the rest of the lane stays the
-        // list's. Grabbing it stops the list and shows its letter; moving it jumps.
+        // Only the thumb takes touches, like Android's fast scroller; the rest of the strip stays the list's.
         if (shown) {
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
                     .offset { IntOffset(0, thumbY() - ((Sizes.TouchTarget - ThumbLength) / 2).roundToPx()) }
-                    // A full touch target, wider than the lane it hangs from.
+                    // Unbounded: a full touch target is wider than Lane.
                     .wrapContentWidth(Alignment.End, unbounded = true)
                     .size(Sizes.TouchTarget)
                     .pointerInput(letters, travel) {
@@ -167,7 +161,7 @@ private fun LetterScrubber(
                             stop()
                             heldFraction = position().coerceIn(0f, 1f)
                             held = current
-                            // The gesture restarts when the letters change, so the hold ends with it either way.
+                            // pointerInput restarts when the letters change; finally clears the hold then too.
                             try {
                                 var y = heldFraction * travel + thumbHalf
                                 drag(down.id) { change ->
@@ -182,7 +176,7 @@ private fun LetterScrubber(
                     },
             )
         }
-        // The letters can change under a hold for one frame before its gesture restarts.
+        // held can index the previous letters for one frame, until the gesture restarts.
         held?.let(letters::getOrNull)?.let { jump ->
             val style = MaterialTheme.typography.headlineSmall
             val letter = jump.letter
@@ -193,7 +187,7 @@ private fun LetterScrubber(
                         val y = thumbY() + thumbHalf - Bubble.toPx() / 2
                         IntOffset(-BubbleEndInset.roundToPx(), y.roundToInt())
                     }
-                    // Wider than the lane it hangs from.
+                    // Unbounded: the bubble is wider than Lane.
                     .wrapContentWidth(Alignment.End, unbounded = true)
                     .size(Bubble)
                     .background(colors.surfaceContainerHigh, Shapes.Circle),
@@ -205,7 +199,6 @@ private fun LetterScrubber(
     }
 }
 
-/** The scrubber for the library's list, whose header is its first item. */
 @Composable
 internal fun BoxScope.LetterScrubber(letters: List<LetterJump>, state: LazyListState, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
@@ -224,7 +217,6 @@ internal fun BoxScope.LetterScrubber(letters: List<LetterJump>, state: LazyListS
     )
 }
 
-/** The scrubber for the library's grid, whose header is its first item. */
 @Composable
 internal fun BoxScope.LetterScrubber(letters: List<LetterJump>, state: LazyGridState, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
@@ -243,17 +235,16 @@ internal fun BoxScope.LetterScrubber(letters: List<LetterJump>, state: LazyGridS
     )
 }
 
-/** Where a letter starts in an A–Z list: [index] is the first item in [LibraryUiState.items] filed under [letter]. */
+/** [index]: the first item filed under [letter], in [LibraryUiState.items] (the header not counted). */
 @Immutable
 data class LetterJump(val letter: String, val index: Int)
 
-/** Shorter lists scroll fine without a scrubber (about three phone screens of rows). */
+/** Shorter lists (about three screens of rows) need no scrubber. */
 const val SCRUBBER_MIN_ITEMS = 30
 
 /**
- * The scrubber's letters for a list in A–Z order, from each item's sort name (Music Assistant's
- * `sort_name`, which already drops a leading "The"). Accents fold to their base letter; digits and
- * symbols file under "#". Lists shorter than [SCRUBBER_MIN_ITEMS] get no scrubber.
+ * [sortNames] in A–Z order. Music Assistant's `sort_name` already moves a leading "The" to the end
+ * (docs/API-NOTES.md, "Item shapes").
  */
 fun letterJumps(sortNames: List<String>): List<LetterJump> {
     if (sortNames.size < SCRUBBER_MIN_ITEMS) return emptyList()
@@ -266,12 +257,12 @@ fun letterJumps(sortNames: List<String>): List<LetterJump> {
     return if (jumps.size < 2) emptyList() else jumps
 }
 
-/** "Élodie" files under E, "4AM Radio" under #. */
 internal fun indexLetter(name: String): String {
     val first = name.trimStart().firstOrNull() ?: return "#"
+    // NFD puts the base letter first: "Élodie" files under E.
     val base = Normalizer.normalize(first.toString(), Normalizer.Form.NFD).first()
     return if (base.isLetter()) base.uppercaseChar().toString() else "#"
 }
 
-/** The library's header stands before the letters' items, as its list's first item. */
+/** The header is the lazy list's first item, before [LibraryUiState.items]. */
 private const val HEADER_ITEMS = 1

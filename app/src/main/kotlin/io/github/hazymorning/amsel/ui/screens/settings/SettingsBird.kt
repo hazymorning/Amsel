@@ -45,12 +45,8 @@ import io.github.hazymorning.amsel.ui.theme.isNight
 import kotlin.math.roundToInt
 
 /**
- * The README's picture at the foot of Settings: the icon's blackbird behind three crowns, before the
- * sun by day and the moon at night, cut by the edge it stands on. It is the header's drawing in one
- * scale ([ReadmeHeader], `scripts/design/readme-header.py`), so the two stay one picture. Each time it
- * comes into view over the dock, the sun grows into place, then the bird rises from behind the crowns;
- * with reduced motion it simply stands there. A picture and nothing more: it is not spoken, takes no
- * touch and keeps its size at any font scale.
+ * The README header's drawing at one scale ([ReadmeHeader], `scripts/design/readme-header.py`); the two
+ * stay in step. Decorative only: not spoken, no touch, the same size at any font scale.
  */
 @Composable
 internal fun SettingsBird(modifier: Modifier = Modifier) {
@@ -76,7 +72,7 @@ internal fun SettingsBird(modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(BirdHeight)
             .onGloballyPositioned { at ->
-                // Over the dock's edge, not merely in the window: the dock covers the page's foot.
+                // Above the dock's edge, not merely in the window: the dock covers the page's foot.
                 val top = at.positionInWindow().y
                 val edge = window.containerSize.height - dockPx
                 if (top + at.size.height * IN_VIEW <= edge) {
@@ -89,10 +85,10 @@ internal fun SettingsBird(modifier: Modifier = Modifier) {
         val scale = Disc.toPx() / 2 / ReadmeHeader.DISC
         val centre = Offset(size.width / 2, ReadmeHeader.DISC * scale)
         val unit = ReadmeHeader.ICON_UNIT * scale
-        // The painter draws from a bitmap of its own: on whole pixels it stays as sharp as the icon.
+        // The painter renders through a bitmap of its own, so whole-pixel offsets keep it as sharp as the icon.
         val right = (centre.x + ReadmeHeader.Head.x * scale + ReadmeHeader.IconHead.x * unit).roundToInt().toFloat()
         val top = (centre.y + ReadmeHeader.Head.y * scale - ReadmeHeader.IconHead.y * unit).roundToInt().toFloat()
-        // Below the edge the picture is cut by, the whole bird is out of sight.
+        // The drop that puts the whole bird below the clipped bottom edge.
         val below = size.height - (top + ReadmeHeader.ICON_CROWN * unit)
         clipRect {
             drawCircle(disc, ReadmeHeader.DISC * scale * rise.disc.value, centre)
@@ -109,7 +105,7 @@ internal fun SettingsBird(modifier: Modifier = Modifier) {
     }
 }
 
-/** How far the sun has grown and the bird has risen, from 0 to 1, read only where they are drawn. */
+/** 0 to 1, read only in the draw phase. */
 private class HeaderAnimation {
     val disc = Animatable(0f)
     val bird = Animatable(0f)
@@ -130,7 +126,6 @@ private class HeaderAnimation {
     }
 }
 
-/** The share of the picture above the dock's edge that starts it. */
 private const val IN_VIEW = 0.6f
 
 private const val DISC_MS = 650
@@ -139,11 +134,6 @@ private const val BIRD_MS = 900
 private fun DrawScope.drawTree(crown: TreeCircle, tint: Color, disc: Offset, scale: Float) =
     drawCircle(tint, crown.radius * scale, disc + Offset(crown.x, crown.y) * scale)
 
-/**
- * The settings and the picture under them. It stands on the page's end, which is the dock's edge once
- * the page is scrolled there; at the screen's foot where everything fits; and not at all where the
- * settings fit as they are and would scroll only for it ([picturePlacement]).
- */
 @Composable
 internal fun PageWithBird(modifier: Modifier = Modifier, settings: @Composable ColumnScope.() -> Unit) {
     Layout(
@@ -170,14 +160,10 @@ internal fun PageWithBird(modifier: Modifier = Modifier, settings: @Composable C
     }
 }
 
-/** How tall the page is and where the picture's top stands on it; [bird] is null where it is left out. */
+/** [bird] is the picture's top, null where the picture is left out. */
 internal data class PicturePlacement(val height: Int, val bird: Int?)
 
-/**
- * Where the picture goes on a page whose settings are [settings] high and end [end] over the dock, in a
- * window of [room]: [gap] under them where the page scrolls anyway, at the window's foot where all of
- * it fits, and nowhere where the settings fit and only the picture would make them scroll.
- */
+/** The picture is left out where only it would make the page scroll. */
 internal fun picturePlacement(settings: Int, bird: Int, gap: Int, end: Int, room: Int): PicturePlacement {
     val withBird = settings + gap + bird
     return when {
@@ -187,7 +173,7 @@ internal fun picturePlacement(settings: Int, bird: Int, gap: Int, end: Int, room
     }
 }
 
-/** The header's picture in its own measure, a card of 1200 by 450: what stands where from the disc's centre. */
+/** In the header's units (a 1200 by 450 card), measured from the disc's centre. */
 internal object ReadmeHeader {
     const val DISC = 150f
 
@@ -197,12 +183,12 @@ internal object ReadmeHeader {
     val Behind = TreeCircle(161f, 255f, 175f)
     val Front = TreeCircle(1f, 270f, 200f)
 
-    /** The middle of the bird's head, and where the icon's 108 units have it; one unit's size. */
+    /** The middle of the bird's head, the same point in the icon's 108 units, and one icon unit's size. */
     val Head = Offset(6f, -12f)
     val IconHead = Offset(46.5f, 62f)
     const val ICON_UNIT = 4.4f
 
-    /** Over the highest thing the icon draws (the sprig over the bird's head, at 42), in its units. */
+    /** Just above the icon's highest drawing (the sprig over the bird's head, at 42), in icon units. */
     const val ICON_CROWN = 40f
 }
 
@@ -213,27 +199,26 @@ internal data class TreeColors(val back: Color, val behind: Color, val front: Co
 internal val DayTrees = TreeColors(Color(0xFFD3DAC4), Color(0xFFB8C5A2), Color(0xFFC7D1B5))
 internal val NightTrees = TreeColors(Color(0xFF2B3425), Color(0xFF34402C), Color(0xFF3B4832))
 
-/** The paper raised by the step Surface 1 lies under it: the header's own sun is lost on the app's lighter page. */
+/**
+ * The page tone lightened by the step that Surface 1 lies below it: the header's own sun is lost on the
+ * app's lighter page.
+ */
 private val DaySun = Color(0xFFFBFAF7)
 
-/** A moon barely off the page, between its first and second surfaces: there, not shining, darker than the crowns. */
+/** Between the night page's first and second surface tones and darker than the crowns, so the moon stays faint. */
 private val NightMoon = Color(0xFF21221E)
 
-/** The sun: large enough that the bird's eye and beak read, small enough to stay a signature. */
+/** Large enough for the bird's eye and beak to be legible, and no larger. */
 private val Disc = 72.dp
 
 internal val BirdHeight = Disc / 2 * ((ReadmeHeader.DISC + ReadmeHeader.FOOT) / ReadmeHeader.DISC)
 
-/** From the licence line's baseline to the sun: one group with it, with room to breathe. */
+/** From the licence line's baseline to the sun. */
 private val BirdGap = Space.S12
 
 private const val ICON_SIDE = 108f
 
-/**
- * Amsel's name and whose Amsel is, centred under the last block, quiet: what Amsel is, not a
- * setting. The name is set as the README's picture sets it (Display's face, weight and tracking),
- * the same in every language; the licence line under it is smaller than any reading text.
- */
+/** The name is set as the README header sets it (Display's face, weight and tracking). */
 @Composable
 internal fun LicenceNote() {
     val type = MaterialTheme.typography
@@ -261,9 +246,8 @@ internal fun LicenceNote() {
     }
 }
 
-/** The licence line: a signature's small print, about as wide as Amsel's name over it. */
+/** Sized so the licence line is about as wide as the name above it. */
 private val LicenceSize = 8.5.sp
 private val LicenceLine = 11.sp
 
-/** From the last block to the licence: the page's end stands apart from its settings. */
 private val OverLicence = Space.S16

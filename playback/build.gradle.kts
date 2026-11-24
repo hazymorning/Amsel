@@ -23,10 +23,10 @@ dependencies {
     api(libs.media3.session)
     implementation(libs.media3.exoplayer)
     implementation(libs.androidx.core)
-    // "This phone": the vendored Sendspin player, on a Ktor client over our own OkHttpClient.
+    // Sendspin ("This phone") runs on Ktor; its OkHttp engine is built from the app's OkHttpClient.
     implementation(project(":sendspin"))
     implementation(libs.ktor.client.okhttp)
-    // Only to quiet the module's logging in release builds (already on the allowlist through it).
+    // Only to quiet Sendspin's logging in release builds; already on the allowlist through it.
     implementation(libs.kermit)
 
     testImplementation(testFixtures(project(":api")))

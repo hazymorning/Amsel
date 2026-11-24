@@ -27,19 +27,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** One item's download: how far it has come and, once complete, what it holds and its cover. */
 data class ItemDownloadState(
     val state: DownloadState? = null,
     val manifest: DownloadManifest? = null,
     val cover: File? = null,
 )
 
-/**
- * Downloads as the app offers them: a book or an episode from Audiobookshelf comes down to the
- * phone ([DownloadRepository], in the download service) and plays from there without a connection. One that
- * stops says why, with Retry where trying again can help; a lapsed sign-in is let go, so the next
- * download asks for it, and signing in again carries on with what it had stopped.
- */
 class DownloadController(
     private val context: Context,
     private val downloads: DownloadRepository,
@@ -51,7 +44,7 @@ class DownloadController(
     val entries: StateFlow<Map<String, DownloadManifest>> get() = downloads.entries
     val account: StateFlow<AbsAccount?> get() = abs.account
 
-    /** Each download as the lists mark it; what stopped is not marked, its page says so. */
+    /** Lists leave a stopped download unmarked; its page says why. */
     val marks: StateFlow<Map<String, DownloadMark>> = downloads.states.map { states ->
         states.mapNotNull { (uri, state) ->
             when (state) {
@@ -78,7 +71,7 @@ class DownloadController(
         }
     }
 
-    /** Downloads [uri]; the person is signed in to Audiobookshelf (the screens ask first). */
+    /** Callers ask for the Audiobookshelf sign-in first. */
     fun download(uri: String) {
         scope.launch {
             when (downloads.add(uri)) {
@@ -97,35 +90,33 @@ class DownloadController(
         }
     }
 
-    /** Every download as a row of the Library's Downloads, the newest first, saying how far it has come. */
     val rows: Flow<List<MediaUi>> = combine(downloads.entries, downloads.states) { entries, states ->
         entries.values.sortedByDescending { it.addedAt }.map { row(it, states[it.uri]) }
     }.flowOn(Dispatchers.IO)
 
-    /** [uri]'s download as its page shows it. */
     fun of(uri: String): Flow<ItemDownloadState> = combine(downloads.states, downloads.done) { states, done ->
         val manifest = done[uri]
         ItemDownloadState(states[uri], manifest, manifest?.let { downloads.cover(uri) })
     }.distinctUntilChanged().flowOn(Dispatchers.IO)
 
-    /** Stops [uri]'s download, or deletes it from the phone; playing, it stops first ([LocalPlayback]). */
+    /** Cancels or deletes [uri]'s download; if it plays, LocalPlayback stops it once it is gone. */
     fun remove(uri: String) {
         scope.launch { downloads.remove(uri) }
     }
 
-    /** Starts what waits again: the app is in front, the only time Android lets the service start. */
+    /** Call while the app is in front: only then does Android let the download service start. */
     fun resume() {
         scope.launch { downloads.resume() }
     }
 
-    /** Signs in to Audiobookshelf; null when it worked, else why not. */
+    /** Null when it worked, else why not. */
     suspend fun signIn(address: String, username: String, password: String): AbsException.Reason? {
         try {
             abs.signIn(address, username, password)
         } catch (e: AbsException) {
             return e.reason
         } catch (e: IOException) {
-            // The phone could not keep the sign-in.
+            // Network failures arrive as AbsException: this is the account failing to save.
             return AbsException.Reason.Server
         }
         downloads.states.value.filterValues { it == DownloadState.Failed(AbsException.Reason.SignedOut) }
@@ -133,7 +124,7 @@ class DownloadController(
         return null
     }
 
-    /** Downloads stay on the phone and play on; only new ones need the account. */
+    /** Keeps the downloads: they play without the account, which only new ones need. */
     fun signOut() {
         scope.launch {
             try {
@@ -178,6 +169,7 @@ class DownloadController(
         val retry = { download(uri) }
         when (state.reason) {
             AbsException.Reason.SignedOut -> {
+                // Forgets the lapsed sign-in, so the next download asks for it.
                 try {
                     abs.signOut()
                 } catch (e: IOException) {
@@ -196,7 +188,7 @@ class DownloadController(
             AbsException.Reason.HttpsFailed,
             -> messages.show(R.string.download_failed_unreachable, title, retry)
 
-            // A retry from here cannot work: it says why.
+            // No Retry: it cannot work from this network, and the message says why.
             AbsException.Reason.AwayFromHome -> messages.show(R.string.download_failed_away, title)
 
             AbsException.Reason.WrongLogin, AbsException.Reason.Server ->

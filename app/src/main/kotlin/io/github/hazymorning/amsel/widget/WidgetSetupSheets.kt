@@ -22,7 +22,6 @@ import io.github.hazymorning.amsel.ui.components.SheetHeader
 import io.github.hazymorning.amsel.ui.components.sheetEnd
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** Which of the widget page's choices is open on a sheet. */
 sealed interface WidgetSheet : java.io.Serializable {
     data object Speaker : WidgetSheet
 
@@ -30,11 +29,10 @@ sealed interface WidgetSheet : java.io.Serializable {
 
     data object Cells : WidgetSheet
 
-    /** What button [slot] does; one past the last adds one. */
+    /** [slot] one past the last adds a button. */
     data class Button(val slot: Int) : WidgetSheet
 }
 
-/** The names of the buttons, from the start. */
 private val SlotNames = listOf(
     R.string.widget_slot_1,
     R.string.widget_slot_2,
@@ -46,7 +44,6 @@ private val SlotNames = listOf(
     R.string.widget_slot_8,
 )
 
-/** What button [slot] does, the [current] one ticked (none for a button to add); Play … goes on to pick its item. */
 @Composable
 internal fun ButtonChoices(slot: Int, current: WidgetSlot?, volumeLimit: Int, onChoose: (WidgetButton) -> Unit) {
     Column(
@@ -75,7 +72,6 @@ internal fun ButtonChoices(slot: Int, current: WidgetSlot?, volumeLimit: Int, on
     }
 }
 
-/** Where the widget plays and what it shows: where Amsel plays, or one speaker, whichever Amsel is on. */
 @Composable
 internal fun SpeakerChoices(current: String?, speakers: List<WidgetSpeaker>, onChoose: (String?) -> Unit) {
     Column(
@@ -97,7 +93,6 @@ internal fun SpeakerChoices(current: String?, speakers: List<WidgetSpeaker>, onC
     }
 }
 
-/** The widget's ground: the cover of what plays, blurred or darkened; the phone's colours; or the wallpaper. */
 @Composable
 internal fun StyleChoices(current: WidgetStyle, onChoose: (WidgetStyle) -> Unit) = DescribedChoices(
     stringResource(R.string.widget_style),
@@ -117,7 +112,6 @@ internal fun StyleChoices(current: WidgetStyle, onChoose: (WidgetStyle) -> Unit)
     onChoose = onChoose,
 )
 
-/** Which buttons stand on a shaded cell: play and pause alone, every one, or none, which fits more. */
 @Composable
 internal fun CellsChoices(current: WidgetCells, onChoose: (WidgetCells) -> Unit) = DescribedChoices(
     stringResource(R.string.widget_cells),
@@ -136,7 +130,6 @@ internal fun CellsChoices(current: WidgetCells, onChoose: (WidgetCells) -> Unit)
     onChoose = onChoose,
 )
 
-/** A choice of [values] under [title], each with a line on what it does, the [current] one ticked. */
 @Composable
 private fun <T> DescribedChoices(
     title: String,
@@ -170,7 +163,6 @@ private fun <T> DescribedChoices(
     }
 }
 
-/** What a choice adds to its name, where it does something a first look would not tell. */
 @Composable
 private fun note(button: WidgetButton, current: WidgetSlot?, volumeLimit: Int): String? = when (button) {
     WidgetButton.Next -> stringResource(R.string.widget_next_note)
@@ -194,14 +186,12 @@ private fun note(button: WidgetButton, current: WidgetSlot?, volumeLimit: Int): 
     else -> null
 }
 
-/** A button's row: what it does, a Play … button with its item. */
 @Composable
 internal fun slotTitle(slot: WidgetSlot): String = slot.item?.takeIf {
     slot.button == WidgetButton.PlayItem
 }?.let { stringResource(R.string.widget_play_item, it.title) }
     ?: stringResource(slot.button.label)
 
-/** A look's name. */
 internal val WidgetStyle.label: Int
     get() = when (this) {
         WidgetStyle.Cover -> R.string.widget_look_cover

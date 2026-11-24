@@ -18,7 +18,6 @@ import io.github.hazymorning.amsel.ui.theme.Radius
 import io.github.hazymorning.amsel.ui.theme.SmoothShape
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** The rows of one [SettingsGroup], each given its place's shape. */
 internal class SettingsRows {
     val rows = mutableListOf<@Composable (Shape) -> Unit>()
 
@@ -27,11 +26,7 @@ internal class SettingsRows {
     }
 }
 
-/**
- * A block of settings, as Android's and iOS's own settings set theirs: its name over it, with the
- * rows' words, then its rows as one rounded block in the second surface, each row a part of it with
- * a hair of the page between them rather than a rule. [above] runs to the name's capitals.
- */
+/** [above] is measured to the name's capitals. */
 @Composable
 internal fun SettingsGroup(label: String, above: Dp, content: SettingsRows.() -> Unit) {
     val rows = SettingsRows().apply(content).rows
@@ -42,7 +37,6 @@ internal fun SettingsGroup(label: String, above: Dp, content: SettingsRows.() ->
     }
 }
 
-/** A block of settings with no name over it: [SettingsGroup]'s rows alone, as a page's first block. */
 @Composable
 internal fun SettingsBlock(content: SettingsRows.() -> Unit) {
     val rows = SettingsRows().apply(content).rows
@@ -52,7 +46,6 @@ internal fun SettingsBlock(content: SettingsRows.() -> Unit) {
     }
 }
 
-/** A settings page's few words over its rows: what the page is for. They wrap at any type size. */
 @Composable
 internal fun PageHint(text: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.bodyMedium
@@ -68,20 +61,16 @@ internal fun PageHint(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** A row's corners in its block: the block's own corners round fully, those between rows a little. */
 internal fun blockShape(first: Boolean, last: Boolean): Shape {
     val top = if (first) Radius.Large else BetweenCorner
     val bottom = if (last) Radius.Large else BetweenCorner
     return SmoothShape(top, top, bottom, bottom)
 }
 
-/** Where a block's sides stand from the screen's. */
 internal val BlockEdge = Keyline.Margin - Space.BandInset
 
-/** How far a row's words keep from its block's sides. */
 internal val RowInset = Space.S4
 
-/** Where a row's words start inside its block, and so its group's name over it. */
 internal val RowWords = BlockEdge + RowInset
 
 internal val LabelToBlock = Space.LabelToContent

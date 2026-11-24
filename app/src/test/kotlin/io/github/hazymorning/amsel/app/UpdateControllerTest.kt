@@ -27,7 +27,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** An update downloads in the app and opens Android's installer on it, as Schmeckts does. */
 class UpdateControllerTest {
     @get:Rule val temp = TemporaryFolder()
 
@@ -144,7 +143,6 @@ class UpdateControllerTest {
         }
     }
 
-    /** GitHub, played by an interceptor: [release] at its API, [file] at the release's download. */
     private fun github(release: String = release(), file: ByteArray = apk): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val url = chain.request().url.toString()
@@ -171,7 +169,6 @@ class UpdateControllerTest {
         val JSON = "application/json".toMediaType()
     }
 
-    /** Counted from 1.0 now: the versions counted by the calendar before come before every one since. */
     @Test fun numbersSince1Point0ComeAfterTheCalendarsVersions() {
         assertTrue(isNewer("1.0", "2026.11.57"))
         assertFalse(isNewer("2026.11.57", "1.0"))

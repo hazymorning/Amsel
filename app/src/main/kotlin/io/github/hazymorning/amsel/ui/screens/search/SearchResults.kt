@@ -46,7 +46,6 @@ import io.github.hazymorning.amsel.ui.theme.Fade
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** What a row of Search does: a song plays, anything else opens; each has its ⋮. */
 @Immutable
 internal class ResultActions(
     val onPlayTrack: (TrackUi) -> Unit,
@@ -60,11 +59,10 @@ internal fun ResultList(
     results: SearchResultsUi,
     playingKey: String?,
     actions: ResultActions,
-    /** The screen's room; the field above has taken its top. */
+    /** Its top inset is already consumed above the search field. */
     insets: PaddingValues,
 ) {
     val keyboard = LocalSoftwareKeyboardController.current
-    // Scrolling the results puts the keyboard away, as in every other app.
     val hideKeyboard = remember(keyboard) {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
@@ -73,7 +71,7 @@ internal fun ResultList(
             }
         }
     }
-    // A new query's results start at their top; the same query keeps its place across recreation.
+    // Keyed by query: a new query starts at the top, the same one keeps its scroll across recreation.
     val list = rememberSaveable(results.query, saver = LazyListState.Saver) { LazyListState() }
     ScrollEdges(list)
     LazyColumn(
@@ -99,7 +97,7 @@ internal fun ResultList(
             header("top", R.string.search_top_result)
             item(key = "top", contentType = "top") {
                 when (top) {
-                    // Its kind is named, because a top result can be anything.
+                    // A top result can be of any kind, so its row names it.
                     is TopResult.Song -> TrackRow(
                         top.track,
                         RowLead.Cover,
@@ -156,7 +154,6 @@ internal fun ResultList(
     }
 }
 
-/** What was opened or played from Search lately, shown while the field is empty; each acts as it did there. */
 @Composable
 internal fun RecentList(
     recent: List<RecentItem>,
@@ -202,10 +199,9 @@ internal fun RecentList(
     }
 }
 
-/** Of the items here only a radio station plays when tapped; an album or playlist is opened. */
+/** Only a station plays on tap; other items open a page, so only a station shows as playing. */
 private fun MediaUi.isPlaying(playingKey: String?): Boolean = kind == MediaKind.Radio && key == playingKey
 
-/** "Album · Marlene Vogt", or just "Artist". */
 @Composable
 private fun kindLine(@StringRes kind: Int, detail: String?): String {
     val name = stringResource(kind)

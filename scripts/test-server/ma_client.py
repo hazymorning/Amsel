@@ -1,8 +1,6 @@
-"""Tiny stdlib-only Music Assistant client: HTTP JSON-RPC at /api and a WebSocket at /ws.
+"""A Music Assistant client on the standard library only, so CI needs nothing but python3 (3.10+).
 
-No third-party packages: CI runners and dev machines only need python3 (3.10+).
-The WebSocket client is a minimal RFC 6455 implementation (text frames, fragmentation,
-ping/pong, close). It does not negotiate permessage-deflate, so the server sends plain frames.
+The WebSocket offers no permessage-deflate, so the server sends uncompressed frames.
 """
 
 from __future__ import annotations
@@ -27,8 +25,6 @@ def log(*args: Any) -> None:
 
 
 class HttpError(Exception):
-    """A non-2xx HTTP answer."""
-
     def __init__(self, status: int, body: str) -> None:
         super().__init__(f"HTTP {status}: {body[:300]}")
         self.status = status
@@ -42,7 +38,6 @@ def http_json(
     method: str | None = None,
     timeout: float = 120,
 ) -> Any:
-    """GET (payload None) or POST JSON and return the decoded JSON answer."""
     data = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request(url, data=data, method=method or ("GET" if data is None else "POST"))
     req.add_header("Accept", "application/json")
@@ -60,7 +55,6 @@ def http_json(
 
 
 def rpc(base_url: str, token: str, command: str, **args: Any) -> Any:
-    """Run one API command over the HTTP JSON-RPC endpoint (POST /api)."""
     return http_json(
         f"{base_url}/api",
         {"message_id": f"rpc-{time.monotonic_ns()}", "command": command, "args": args},
@@ -69,8 +63,6 @@ def rpc(base_url: str, token: str, command: str, **args: Any) -> Any:
 
 
 class WebSocket:
-    """Blocking WebSocket client, just enough for the Music Assistant API."""
-
     def __init__(self, url: str, timeout: float = 30) -> None:
         parts = urlsplit(url)
         if parts.scheme != "ws":
@@ -125,18 +117,17 @@ class WebSocket:
         self.sock.sendall(header + mask + masked)
 
     def send_json(self, obj: Any) -> None:
-        """Send one JSON text message."""
         self._send_frame(0x1, json.dumps(obj).encode())
 
     def recv_json(self, timeout: float | None = None) -> Any:
-        """Receive one complete JSON text message (answers pings, skips binary messages)."""
+        """The next text message as JSON; binary messages are skipped."""
         while True:
             opcode, data = self.recv(timeout)
             if opcode == 0x1:
                 return json.loads(data)
 
     def recv(self, timeout: float | None = None) -> tuple[int, bytes]:
-        """Receive one complete message as (opcode, payload): 0x1 text or 0x2 binary."""
+        """The next whole message as (opcode, payload): 0x1 text or 0x2 binary."""
         self.sock.settimeout(timeout)
         message = b""
         first_opcode = 0
@@ -167,7 +158,6 @@ class WebSocket:
                 return first_opcode, message
 
     def close(self) -> None:
-        """Close politely."""
         try:
             self._send_frame(0x8, struct.pack("!H", 1000))
         except OSError:
@@ -176,8 +166,6 @@ class WebSocket:
 
 
 class MassSocket:
-    """Command/answer matching on top of WebSocket, keeping every frame for recording."""
-
     def __init__(self, base_url: str, timeout: float = 30) -> None:
         self.ws = WebSocket(base_url.replace("http://", "ws://", 1) + "/ws", timeout=timeout)
         self.server_info = self.ws.recv_json(timeout)
@@ -191,11 +179,8 @@ class MassSocket:
         timeout: float = 120,
         message_id: str | None = None,
     ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-        """
-        Send a command and collect its answer.
+        """Returns (request, frames), the answer's frames in order: partial ones first, then the final one.
 
-        Returns (request, frames): every result frame for this message_id in order; a large
-        listing arrives as several frames with "partial": true before the final one.
         Events that arrive meanwhile go to self.events.
         """
         if message_id is None:
@@ -224,7 +209,7 @@ class MassSocket:
     def wait_for_event(
         self, predicate: Callable[[dict[str, Any]], bool], timeout: float = 30
     ) -> dict[str, Any] | None:
-        """Return the first event (already buffered or new) the predicate accepts."""
+        """The first event the predicate accepts, buffered ones included; None after the timeout."""
         for evt in self.events:
             if predicate(evt):
                 return evt
@@ -241,5 +226,4 @@ class MassSocket:
         return None
 
     def close(self) -> None:
-        """Close the socket."""
         self.ws.close()

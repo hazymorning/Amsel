@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A bar's or a player's cover, as high as its place and as wide as high, in Amsel's cover corners
-     (drawn into the picture); while nothing plays, the cover's shape in the shade's colour with the
-     song's glyph, as on the dock. One box, not a merge: it holds the cover and its stand-ins. On a
-     launcher that gives more room than it said, the cover stays on the frame at the top. -->
+<!-- A FrameLayout, not <merge>: widget_art_box holds the cover and its placeholders. fitStart keeps
+     the cover at the top when a launcher draws the widget taller than it reported. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_art_box"
@@ -19,7 +17,7 @@
         android:scaleType="fitStart"
         android:visibility="gone" />
 
-    <!-- The cover's shape over it, tinted at night only. -->
+    <!-- The night tint over the cover: the blank shape in widget_night_tone, transparent by day. -->
     <ImageView
         android:id="@+id/widget_art_night"
         android:layout_width="wrap_content"
@@ -41,7 +39,7 @@
         android:tint="@color/widget_cell_light"
         android:tintMode="src_in" />
 
-    <!-- 4 dp of room around the glyph, so its ink can move to the middle. -->
+    <!-- The 4dp padding lets WidgetDrawing shift the glyph to centre its visible bounds (ART_GLYPH_ROOM). -->
     <ImageView
         android:id="@+id/widget_art_glyph"
         android:layout_width="32dp"

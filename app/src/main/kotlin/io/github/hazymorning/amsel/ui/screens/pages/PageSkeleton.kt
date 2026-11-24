@@ -13,22 +13,18 @@ import io.github.hazymorning.amsel.ui.components.TilePlaceholder
 import io.github.hazymorning.amsel.ui.theme.Keyline
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/*
- * Skeleton blocks for a page's very first load: the shared placeholders (ui/components), so each
- * is exactly as tall as what replaces it at every font scale and nothing moves when data arrives.
- */
+// Built from the shared placeholders, so each block matches its content's height at every font scale.
 
-/** Rows drawn while a page's tracks load: about a screenful, no more. */
+// About a screenful.
 private const val SKELETON_ROWS = 6
 
-/** A screenful of track row blocks, each with the rows' [lead] (none: words only) and line count. */
 internal fun LazyListScope.trackRowBlocks(lead: RowLead, withSubtitle: Boolean, count: Int = SKELETON_ROWS) {
     items(count, key = { "track_block_$it" }, contentType = { PageSlot.Track }) {
         RowPlaceholder(it, lead = lead, lines = if (withSubtitle) 2 else 1)
     }
 }
 
-/** One row of [columns] tile blocks, laid out like the album grid. */
+// Laid out like a row of the artist page's album grid.
 @Composable
 internal fun TileRowBlock(columns: Int, modifier: Modifier = Modifier) {
     Row(

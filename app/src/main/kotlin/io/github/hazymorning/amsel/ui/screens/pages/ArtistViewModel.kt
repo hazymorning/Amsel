@@ -30,14 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * An artist page: name, photo and albums from the library index, or all it showed last time, at
- * once, then the server's artist, popular songs and albums, each shown the moment it arrives.
- * Popular songs are the slow part (the server may ask music services for them), so nothing waits
- * for them, nor for the similar artists, which are asked once [similarOffered] says the server can
- * find any: right after a connect it has not said so yet.
- * [playing] is the uri playing on the current speaker (or starting there).
- */
+/** [playing] is the URI playing on the current speaker, or starting there. */
 class ArtistViewModel(
     private val key: String,
     private val source: PageSource,
@@ -49,7 +42,8 @@ class ArtistViewModel(
     private val page = MutableStateFlow(ArtistUiState(loading = true, popularLoading = true))
     private var loading: Job? = null
 
-    /** The covers of the albums and popular songs the page lists ([pageCovers]), last time's until the server's. */
+    // [pageCovers] of what the page lists, for an artist without a picture: the cached page's until the
+    // server's.
     private val covers = MutableStateFlow<ArtRef?>(null)
 
     val state: StateFlow<ArtistUiState> = combine(page, source.row(key), playing, covers) { page, row, uri, covers ->
@@ -60,10 +54,8 @@ class ArtistViewModel(
         ArtistUiState(loading = true, popularLoading = true),
     )
 
-    /**
-     * The index's row paints the header until the server answers, and follows favorites changed anywhere.
-     * An artist with no picture of its own and none in the index wears the [covers] of what its page lists.
-     */
+    // The index row gives the header until the server answers, and the favourite as changed anywhere.
+    // An artist without a picture of its own or in the index gets the [covers].
     private fun shown(page: ArtistUiState, row: LibraryItemEntity?, uri: String?, covers: ArtRef?): ArtistUiState {
         val artist = (page.artist ?: row?.let(mapper::media))?.let { it.copy(art = it.art ?: covers) }
         return page.copy(artist = row?.let { artist?.copy(favorite = it.favorite) } ?: artist, currentTrackKey = uri)
@@ -77,7 +69,7 @@ class ArtistViewModel(
 
     fun retry() = load()
 
-    /** The [first] load paints what the page showed last time while the server is asked. */
+    /** Only the [first] load shows the cached page while the server is asked. */
     private fun load(first: Boolean = false) {
         loading?.cancel()
         page.update { it.copy(loading = true, popularLoading = true, unavailable = false) }
@@ -89,7 +81,8 @@ class ArtistViewModel(
             launch { similarArtists(item) }
             if (first) source.shown(key)?.let { last -> paintShown(last) }
             val albumsFromIndex = paintCached()
-            // Each part lands on its own; the page is unavailable only once all have answered.
+            // Each part shows as it answers, as popular songs are the slow call (docs/API-NOTES.md, "The
+            // artist page"); the page is unavailable only once all have answered.
             val songs = launch {
                 val list = popular.await()
                 page.update {
@@ -109,22 +102,21 @@ class ArtistViewModel(
             served?.let { artistOf(it) }?.let { artist -> page.update { it.copy(artist = artist) } }
             songs.join()
             discography.join()
-            // The server's own artist, else the one its albums and songs name: an artist a music
-            // service is slow to describe still gets its page from what did answer.
+            // The server's artist, else the one its albums and songs name, so an artist a music service
+            // is slow to describe still gets a page.
             val artist = page.value.artist
             val servedAlbums = albums.await()
             val servedPopular = popular.await()
             if (servedAlbums != null || servedPopular != null) {
                 covers.value = mapper.pageCovers(servedAlbums.orEmpty(), servedPopular.orEmpty())
             }
-            // Popular songs or albums alone still make a page; neither, or no artist, does not.
             val unavailable = artist == null || (servedPopular == null && servedAlbums == null)
             page.update {
                 it.copy(
                     loading = false,
                     unavailable = unavailable,
-                    // The index's albums of an artist the server cannot give are not shown as if it
-                    // could; what an earlier visit got from the server stays.
+                    // Index albums are dropped for an artist the server cannot give; albums an earlier
+                    // visit got from the server stay.
                     albums = if (unavailable && servedAlbums == null && albumsFromIndex) emptyList() else it.albums,
                 )
             }
@@ -136,18 +128,17 @@ class ArtistViewModel(
         }
     }
 
-    /** The artist as its own albums and songs name it, where the server has not described it (yet). */
     private fun namedIn(lists: List<MediaItem>): MediaUi? {
         val named = lists.firstNotNullOfOrNull { item -> item.artists.firstOrNull { it.uri == key } } ?: return null
         return MediaUi(key, MediaKind.Artist, named.name, art = mapper.art(named.cover))
     }
 
-    /** Without a picture of its own an artist wears its albums, as in the Library's list. */
+    // Without a picture of its own an artist gets its index row's art (its albums' covers), as in the
+    // Library list.
     private suspend fun artistOf(item: MediaItem): MediaUi = mapper.media(item).let { shown ->
         shown.copy(art = shown.art ?: source.row(key).first()?.let(mapper::media)?.art)
     }
 
-    /** What the page showed last time, where the server has not answered yet. */
     private suspend fun paintShown(last: CachedPage) {
         val artist = artistOf(last.item)
         covers.value = mapper.pageCovers(last.shelf, last.rows)
@@ -160,10 +151,9 @@ class ArtistViewModel(
         }
     }
 
-    /**
-     * Similar artists: a bonus, so a failure or none leaves the shelf out and says nothing. Those
-     * without a picture wear their albums' covers, where the index holds them.
-     */
+    // Optional: a failure leaves the shelf out without a message. Waits until the server offers similar
+    // artists, which right after a connect is not known yet. Those without a picture get their albums'
+    // covers from the index.
     private suspend fun similarArtists(artist: Deferred<MediaItem?>) {
         if (similarOffered.firstOrNull { it } != true) return
         val found = orNullOnFailure { source.similarArtists(key) } ?: return
@@ -175,7 +165,7 @@ class ArtistViewModel(
         page.update { it.copy(similar = shown) }
     }
 
-    /** Albums from the library index, unless the page already shows them. True when they now come from it. */
+    /** Returns true when the shown albums now come from the library index. */
     private suspend fun paintCached(): Boolean {
         if (page.value.albums.isNotEmpty()) return false
         val rows = source.cachedAlbums(key)
@@ -185,46 +175,28 @@ class ArtistViewModel(
     }
 }
 
-/**
- * Everything an artist page draws: photo and name, Play and Shuffle, five popular songs as the
- * server ranks them, the artist's albums, then a shelf of similar artists. The header and the
- * albums paint from the library cache; until [artist] is known the whole page is a skeleton.
- * Popular songs often arrive last: while [popularLoading], their place holds skeleton rows so the
- * albums do not move.
- */
 @Immutable
 data class ArtistUiState(
-    /** Name and photo (kind Artist). Null until known. */
     val artist: MediaUi? = null,
-    /** The server's top tracks for this artist; the page shows the first five. */
     val popular: List<TrackUi> = emptyList(),
-    /** Every album by the artist, newest first, with the year as subtitle. */
     val albums: List<MediaUi> = emptyList(),
-    /** Artists the server finds similar, in its order; hidden when empty, and never what makes a page. */
+    /** In the server's order; never what makes a page available. */
     val similar: List<MediaUi> = emptyList(),
-    /** The track playing on the current speaker; drawn highlighted when it is among [popular]. */
     val currentTrackKey: String? = null,
-    /** Songs and albums are being fetched: the first load, or a Retry. */
     val loading: Boolean = false,
-    /** The popular songs have not answered yet (the albums may already show). */
     val popularLoading: Boolean = false,
-    /** The artist could not be loaded or no longer exists; [showUnavailable] says whether nothing is cached. */
+    /** The last load failed or the artist is gone; the page says so only when [showUnavailable]. */
     val unavailable: Boolean = false,
 ) {
 
-    /** No header or nothing to show: the page says so plainly and offers Retry. */
     val showUnavailable: Boolean = unavailable && (artist == null || (popular.isEmpty() && albums.isEmpty()))
 
-    /** Skeleton rows and tiles stand in for songs and albums while they load. */
     val contentLoading: Boolean = popular.isEmpty() && albums.isEmpty() && (loading || artist == null)
 
-    /** Skeleton rows stand in for the popular songs above albums that are already shown. */
     val popularPending: Boolean = popularLoading && popular.isEmpty() && !contentLoading
 
-    /**
-     * A popular song's album; for a single, which names no album, its artists when
-     * they are not just this artist (on their own page that line would say nothing), else the title alone.
-     */
+    // The song's album; for a single, its artists unless they are just this artist, which would say
+    // nothing on its own page.
     fun subtitleOf(track: TrackUi): String? = albumBesides(track.title, track.album)
         ?: track.artist.takeUnless { it.equals(artist?.title, ignoreCase = true) }
 }

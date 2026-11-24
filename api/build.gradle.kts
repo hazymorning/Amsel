@@ -21,7 +21,7 @@ dependencies {
     api(libs.kotlinx.serialization.json)
     api(libs.okhttp)
 
-    // FakeMaServer and the recorded fixtures, shared with the tests of :data, :playback and :app.
+    // FakeMaServer exposes its MockWebServer to the tests of :data, :playback and :app.
     testFixturesApi(libs.okhttp.mockwebserver)
 
     testImplementation(libs.junit)

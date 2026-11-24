@@ -20,38 +20,31 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** An album, playlist, artist, radio station, book, podcast or episode as a Home section keeps it on disk. */
 @Serializable
 data class HomeItem(
     val uri: String,
-    /** The media type: "album", "artist", "playlist", "radio", "audiobook", "podcast" or "podcast_episode". */
     @SerialName("kind") val mediaType: String,
     val name: String,
-    /** Artists for an album, owner for a playlist, authors for a book, the podcast for an episode. */
     val subtitle: String? = null,
     val image: MediaItemImage? = null,
     val favorite: Boolean = false,
-    /** An album's first artist or a book's first author, for "Go to artist". */
     val artistUri: String? = null,
-    /** A book's or episode's length in seconds. */
     val durationSec: Int? = null,
-    /** Where the person stopped in a book or episode. */
     val resumeMs: Long? = null,
     val fullyPlayed: Boolean = false,
-    /** An episode's podcast, for "Go to podcast". */
+    /** An episode's podcast. */
     val parentUri: String? = null,
     /** A smart playlist, whose cover Music Assistant draws as a grid of album covers. */
     val smart: Boolean = false,
     /** A playlist the server fills anew each time it plays. */
     val dynamic: Boolean = false,
-    /** An artist without a picture: its albums' covers from the index, which it wears. */
+    /** For an artist without a picture: its albums' covers from the index. */
     val covers: List<String> = emptyList(),
 )
 
 /**
- * One section's items. [fallback]: nothing has been played yet, so "Recently played" shows the
- * library's albums instead ("Your albums"). [speaker]: the speaker whose plays Played here shows;
- * null while the whole history stands in for one nothing has played on.
+ * [fallback]: nothing has been played yet, so Recently played shows the library's albums ("Your albums").
+ * [speaker]: whose plays Played here shows; null when it shows the whole history, as nothing played there.
  */
 @Serializable
 data class SectionItems(
@@ -60,21 +53,16 @@ data class SectionItems(
     val speaker: String? = null,
 )
 
-/** Loads up to [limit] items of one option; [pinned] are the pins, [previous] what it had before. */
 fun interface SectionLoader {
     suspend fun load(option: SectionOption, limit: Int, pinned: List<String>, previous: SectionItems?): SectionItems
 }
 
-/**
- * Where each option's items come from: the library index where it can answer (instant, and kept
- * current by events), the server for what changes with every play.
- * Pins resolve from the index, then the server; a pin neither can answer keeps its previous
- * entry, so a pin never disappears while offline.
- */
+// The library index where it can answer, the server for what changes with every play.
+// See docs/API-NOTES.md, "Home sections".
 class ServerSectionLoader(
     private val api: MaApi,
     private val library: () -> LibraryRepository,
-    /** The speaker music plays on, by player id, which is its queue's id too. */
+    // A player id, which is also its queue's id.
     private val speaker: () -> String?,
 ) : SectionLoader {
     override suspend fun load(
@@ -109,7 +97,7 @@ class ServerSectionLoader(
 
     private fun index(rows: List<LibraryItemEntity>) = SectionItems(rows.map { it.toHomeItem() })
 
-    /** Albums in random order, going on from [shown]: See all starts with those Home showed. */
+    // Starts with [shown], so See all begins with the albums Home showed.
     private suspend fun randomAlbums(limit: Int, shown: SectionItems?): SectionItems {
         val first = shown?.items.orEmpty()
         val uris = first.mapTo(HashSet()) { it.uri }
@@ -122,7 +110,6 @@ class ServerSectionLoader(
     private suspend fun recent(type: MediaType, limit: Int) =
         server(api.libraryItems(type, LibrarySort.RecentlyPlayed, limit = limit, playedOnly = true))
 
-    /** What last played on the speaker in use; for one nothing has played on yet, the whole history. */
     private suspend fun playedHere(limit: Int): SectionItems {
         val here = speaker() ?: return recentOrAlbums(limit)
         val played = server(api.recentlyPlayed(limit, queueId = here))
@@ -135,11 +122,9 @@ class ServerSectionLoader(
         return index(library().firstRows(MediaType.Album, LibrarySort.AToZ, limit)).copy(fallback = true)
     }
 
-    /**
-     * Books and episodes in progress, last played first. The server's list says nothing of where the
-     * person stands, so each is looked up, and a book's row in the index takes what it says. One
-     * that cannot be looked up keeps its row, else its previous entry.
-     */
+    // `in_progress_items` carries no position, so each item is looked up, and a book's row takes its progress; one
+    // that cannot be looked up keeps its row, else its previous entry.
+    // See docs/API-NOTES.md, "Audiobooks and podcasts".
     private suspend fun continueListening(limit: Int, previous: SectionItems?): List<HomeItem> {
         val before = previous?.items.orEmpty().associateBy { it.uri }
         val started = api.started(limit)
@@ -150,13 +135,13 @@ class ServerSectionLoader(
         }.filterNot { it.fullyPlayed }
     }
 
-    /** Server items, each taking the index's row when it has one: recently played items carry no artists. */
+    // The index's row where it has one: recently played items carry no artists or owner.
     private suspend fun server(items: List<MediaItem>): SectionItems {
         val rows = library().rows(items.map { it.uri })
         return SectionItems(items.map { rows[it.uri]?.toHomeItem() ?: it.toHomeItem() })
     }
 
-    /** Each pin as the index has it; those it has not are asked of the server together. */
+    // A pin neither the index nor the server answers keeps its previous entry, so it never disappears offline.
     private suspend fun pins(uris: List<String>, previous: SectionItems?): List<HomeItem> = coroutineScope {
         val before = previous?.items.orEmpty().associateBy { it.uri }
         val rows = library().rows(uris)
@@ -171,14 +156,12 @@ class ServerSectionLoader(
 }
 
 /**
- * Options listed from the library index. While it syncs for the first time they are empty, so
- * Home draws them as loading rather than hiding them. "Recently played" counts, as its fallback is
- * the index's albums; Pinned does not, as the pins themselves say whether it is empty.
+ * Options listed from the library index, shown as loading during its first sync rather than hidden. Recently
+ * played counts, as its fallback is the index's albums; Pinned does not, as the pins say whether it is empty.
  */
 val SectionOption.readsIndex: Boolean
     get() = this != SectionOption.Pinned && this !in FROM_SERVER
 
-/** The kind an option lists from the library index (Recently played falls back to albums); null for the server's. */
 val SectionOption.indexKind: MediaType?
     get() = if (!readsIndex) {
         null

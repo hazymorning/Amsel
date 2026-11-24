@@ -35,20 +35,18 @@ import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.secondLine
 import io.github.hazymorning.amsel.ui.theme.spaced
 
-/** Widths for placeholder lines, cycled by place so a list of blocks does not look stamped. */
+/** Cycled by index, so the placeholders of a list vary in width. */
 private val TitleWidths = floatArrayOf(0.55f, 0.4f, 0.65f, 0.5f, 0.35f)
 private val SubtitleWidths = floatArrayOf(0.3f, 0.25f, 0.35f)
 
-/** A tile is narrow, so its lines take more of it. */
+/** A tile is narrow, so its lines take a larger share of it. */
 private const val TILE_WIDER = 0.2f
 
 private fun FloatArray.cycled(index: Int) = this[index % size]
 
-/** Calm blocks in the first surface tone, still: they hold the place of what is coming, nothing more. */
 @Composable
 private fun blockTone(): Color = MaterialTheme.colorScheme.surfaceContainerLow
 
-/** A cover's twin: the same corners as every cover at its size. */
 @Composable
 fun SkeletonArt(modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier) {
@@ -105,7 +103,7 @@ private fun boxAlignment(horizontal: Alignment.Horizontal, vertical: Alignment.V
         else -> if (vertical == Alignment.Bottom) Alignment.BottomStart else Alignment.CenterStart
     }
 
-/** [index] is the block's place in its list. */
+/** [index] picks the line widths, so neighbouring rows differ. */
 @Composable
 fun RowPlaceholder(index: Int, modifier: Modifier = Modifier, lead: RowLead = RowLead.Cover, lines: Int = 2) {
     val twoLines = lead == RowLead.Cover || lines > 1
@@ -120,7 +118,7 @@ fun RowPlaceholder(index: Int, modifier: Modifier = Modifier, lead: RowLead = Ro
             SkeletonArt(Modifier.size(Sizes.RowArt))
             Spacer(Modifier.width(Space.Sibling))
         } else if (lead == RowLead.Glyph) {
-            // The rows to come are numbered, small and quiet: their column, as wide as two figures, stays empty.
+            // The loaded rows will be numbered: leave their two-figure column empty.
             Spacer(Modifier.width(numberLeadWidth(0) + Space.Sibling))
         }
         RowLines(MaterialTheme.typography.bodyLarge, besideCover = lead == RowLead.Cover, Modifier.weight(1f)) {
@@ -130,7 +128,7 @@ fun RowPlaceholder(index: Int, modifier: Modifier = Modifier, lead: RowLead = Ro
     }
 }
 
-/** Stands in for [MediaTile]; the width comes from the caller, [index] is its place in the list. */
+/** The caller sets the width; [index] picks the line widths. */
 @Composable
 fun TilePlaceholder(index: Int, modifier: Modifier = Modifier, twoLines: Boolean = true) {
     val type = MaterialTheme.typography
@@ -168,7 +166,6 @@ fun TilePlaceholder(index: Int, modifier: Modifier = Modifier, twoLines: Boolean
     }
 }
 
-/** Stands in for Home's card: its tone and its shape, as tall as its cover. */
 @Composable
 fun CardPlaceholder(modifier: Modifier = Modifier) {
     Box(

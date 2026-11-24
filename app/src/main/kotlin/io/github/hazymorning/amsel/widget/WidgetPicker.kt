@@ -38,10 +38,6 @@ import io.github.hazymorning.amsel.ui.screens.search.SearchViewModel
 import io.github.hazymorning.amsel.ui.theme.Space
 import kotlinx.coroutines.flow.map
 
-/**
- * What a Play … button plays: with the field empty, the library by kind, played lately first, as
- * the Library tab has it; or what Search finds. Whatever is tapped, or held, is the pick.
- */
 @Composable
 fun WidgetPicker(onPick: (WidgetItem) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
     val graph = LocalContext.current.graph
@@ -89,7 +85,6 @@ fun WidgetPicker(onPick: (WidgetItem) -> Unit, onBack: () -> Unit, modifier: Mod
     )
 }
 
-/** The library's kinds as chips, the chosen one's items under them, each a pick. */
 @Composable
 internal fun WidgetShelf(
     state: LibraryUiState,
@@ -107,7 +102,7 @@ internal fun WidgetShelf(
     ) {
         state.kinds?.filter { it != LibraryKind.Downloads }?.takeIf { it.size > 1 }?.let { kinds ->
             item(key = KINDS, contentType = KINDS) {
-                // Under the chips as far as the field stands over them.
+                // The same space below the chips as the search field leaves above them.
                 Column(Modifier.padding(bottom = Space.Part)) {
                     ChoiceChipRow(kinds, state.kind, onKind, label = { stringResource(it.label) }, role = Role.Tab)
                 }
@@ -130,10 +125,10 @@ internal fun WidgetShelf(
     }
 }
 
-/** The cover a button wears: an artist without a picture wears the first of its albums'. */
+/** An artist without a picture (a mosaic) takes its first album's cover. */
 private fun ArtRef.face(): String = (if (mosaic) quarters.firstOrNull() ?: this else this).sized(FACE_PX)
 
-/** As large as a tile's cover, about 80 dp; a button's face of 32 is made from it too. */
+/** A tile's cover is about 80 dp, 240 px at xxhdpi; the covers in cells are made from the same picture. */
 private const val FACE_PX = 256
 private const val PICK = "widget-pick"
 private const val SHELF = "widget-shelf"

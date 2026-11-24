@@ -72,14 +72,10 @@ import io.github.hazymorning.amsel.ui.theme.secondLine
 
 internal enum class PageSlot { Art, Title, Actions, Header, Track, Shelf, AlbumRow, Message }
 
-/** Index of the title item in every page's list; the bar shows the title once it has scrolled away. */
+// Every page lists its title right after its art; the bar shows the title once it has scrolled away.
 private const val TITLE_INDEX = 1
 
-/**
- * A page: the slim bar with Back on the status strip, and the page's list running up under it. The
- * bar's title fades in only after the page's own title has scrolled away. [bottom] is the room
- * under the list's last ink before the dock.
- */
+/** [bottom] is the space between the list's last glyph and the dock. */
 @Composable
 internal fun PageScaffold(
     title: String?,
@@ -87,7 +83,7 @@ internal fun PageScaffold(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     bottom: Dp = Space.ListEnd,
-    /** The cover whose hue washes the page's head. */
+    /** Its hue tints the page's head. */
     art: ArtRef? = null,
     actions: @Composable RowScope.() -> Unit = {},
     content: LazyListScope.() -> Unit,
@@ -101,7 +97,7 @@ internal fun PageScaffold(
             Modifier
                 .fillMaxSize()
                 .drawBehind {
-                    // The head scrolls away with its wash; past it the page is plain.
+                    // The tint scrolls away with the head; past it the page is plain.
                     if (list.firstVisibleItemIndex != 0) return@drawBehind
                     val top = -list.firstVisibleItemScrollOffset.toFloat()
                     val brush = Brush.verticalGradient(
@@ -119,12 +115,7 @@ internal fun PageScaffold(
     }
 }
 
-/**
- * The page's head leans to its cover as Now Playing's whole page does: the same muted hue, behind
- * the cover and its title under the bar's clear strip, easing into the plain page by the list. A
- * cover with no hue worth borrowing, or none yet, leaves the page plain. The hue is there as soon
- * as it is known, with no fade.
- */
+// Now Playing's muted hue, shown without a fade; transparent while the cover has none.
 @Composable
 private fun coverWash(art: ArtRef?): State<Color> {
     val colors = rememberCoverColors(art)
@@ -132,16 +123,14 @@ private fun coverWash(art: ArtRef?): State<Color> {
     return rememberUpdatedState(colors?.wash(scheme.surface, scheme.isNight) ?: scheme.surface.copy(alpha = 0f))
 }
 
-/** The wash reaches down this many cover heights from the screen's top. */
 private const val WASH_COVERS = 2f
 
-/** Whole through the bar and the cover's top, then easing out to nothing. */
 private val WashStops = listOf(0f to 1f, 0.35f to 1f, 0.6f to 0.62f, 0.8f to 0.25f, 1f to 0f)
 
 @Composable
 internal fun pageCover(): Dp = Sizes.pageCover(LocalWindowInfo.current.containerDpSize.width)
 
-/** The cover keeps clear of the strip's fade under the bar, so nothing veils it at rest. */
+// The top padding keeps the cover clear of the fade under the bar.
 @Composable
 internal fun PageArt(art: ArtRef?, kind: MediaKind, name: String?, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth().padding(top = Space.Sibling), contentAlignment = Alignment.Center) {
@@ -153,11 +142,7 @@ internal fun PageArt(art: ArtRef?, kind: MediaKind, name: String?, modifier: Mod
     }
 }
 
-/**
- * The page's name in the Display style, centred under the cover, two lines at most and cut at a
- * word; a [line] (the artist) and [meta] under it. A null [title] draws a skeleton line, as does a
- * null [meta] that [hasMeta] says is coming.
- */
+/** A null [title] draws a skeleton line, as does a null [meta] while [hasMeta]. */
 @Composable
 internal fun PageTitle(
     title: String?,
@@ -169,7 +154,7 @@ internal fun PageTitle(
     val type = MaterialTheme.typography
     val density = LocalDensity.current
     val toLine = with(density) { secondLine(type.bodyLarge) }
-    // The details stand as far under the line as the line under the title, letters to letters.
+    // The gap from the line to the meta, baseline to cap height, matches the one from the title to the line.
     val toMeta = with(density) { toLine - capHeight(type.bodyLarge) + capHeight(type.bodyMedium) }
     val column = Sizes.pageColumn(LocalWindowInfo.current.containerDpSize.width)
     Column(
@@ -231,10 +216,7 @@ internal fun PageTitle(
     }
 }
 
-/**
- * A link when [onClick] is set (an album's artist, a book's author; [linkLabel] says where it
- * leads), plain secondary text otherwise; its layout is its ink.
- */
+/** [linkLabel] tells TalkBack where the link leads. */
 @Composable
 internal fun TitleLine(
     text: String?,
@@ -272,11 +254,8 @@ internal fun TitleLine(
 }
 
 /**
- * The page's one focal action, a 56 dp ink circle that plays, on the page's middle; quiet glyphs
- * stand a group's distance from its edge on either side, as previous and next do on Now Playing:
- * [start] (shuffle) and [end] (the page's actions). The two sides take the same width whatever
- * their glyphs' ink, so the circle never leans toward the narrower one. The list's first ink comes
- * [Space.HeaderToList] under the circle; [listInk] is how far that ink sits inside the list's first item.
+ * Both sides take the same width, so the play button stays centred. [listInk] is how far the list's
+ * first glyph sits inside its first item, so that glyph comes [Space.HeaderToList] under the button.
  */
 @Composable
 internal fun PageActions(
@@ -313,18 +292,17 @@ internal fun PageActions(
     }
 }
 
-/** A quiet action beside a page's play button; with [ring], inside a ring that shows how far a download is. */
 internal class PageGlyph(
     @DrawableRes val icon: Int,
     val label: String,
     val ring: Ring? = null,
     val onClick: () -> Unit,
 ) {
-    /** The ring fills with [progress], or turns while it is null. */
+    /** Download progress: the ring fills with [progress], or spins while it is null. */
     class Ring(val progress: (() -> Float)?)
 }
 
-/** Shuffle starts the music, so it ticks as the play button does. */
+// Shuffle starts playback, so it gives the play button's haptic.
 @Composable
 internal fun shuffleGlyph(onShuffle: () -> Unit): PageGlyph {
     val haptics = LocalHapticFeedback.current
@@ -334,7 +312,6 @@ internal fun shuffleGlyph(onShuffle: () -> Unit): PageGlyph {
     }
 }
 
-/** The page's ⋮, for the item called [title]. */
 @Composable
 internal fun moreGlyph(title: String, onMore: () -> Unit) =
     PageGlyph(R.drawable.ic_more, stringResource(R.string.more_options_for, title), onClick = onMore)
@@ -353,7 +330,7 @@ private fun PageGlyphSlot(glyph: PageGlyph?) {
     }
 }
 
-/** So the glyph's ink, not its target, stands a group's distance from the circle. */
+// The glyph itself, not its touch target, is Space.Group away from the play button.
 private fun glyphGap(glyph: PageGlyph?): Dp {
     val ink = glyph?.let { if (it.ring != null) Sizes.Icon else glyphWidth(it.icon) } ?: Sizes.Icon
     return (Space.Group - (Sizes.TouchTarget - ink) / 2).coerceAtLeast(0.dp)

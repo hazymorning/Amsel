@@ -4,7 +4,6 @@ import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** How many cards Home's grid sets to a row, between the margins of a phone. */
 class HomeCardsTest {
     @Test fun aNarrowPhoneKeepsTwoColumns() {
         assertEquals(2, cardColumns(PHONE_411, CAPTION))
@@ -25,7 +24,7 @@ class HomeCardsTest {
         val PHONE_411 = 411.dp - MARGINS
         val PHONE_360 = 360.dp - MARGINS
 
-        /** The size a card's title is set in. */
+        // titleSmall's font size.
         val CAPTION = 14.dp
     }
 }

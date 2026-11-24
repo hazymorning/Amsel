@@ -41,11 +41,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
 /**
- * One line of text that, when it is longer than its room, shows the rest of itself the way
- * MarqueeLabel's `leftRight` mode does: it rests at its start, glides until its last letter stands
- * at the end of its room, rests there, glides back, and so on for as long as it [runs]. An edge
- * fades only while text is hidden past it, by how much is hidden. Text that fits is plain text;
- * with animations off, or while it does not run, it stays at its start.
+ * A line too long for its width moves back and forth as in MarqueeLabel's `leftRight` mode, pausing
+ * at each end, while it [runs]; with reduced motion it stays at its start.
  */
 @Composable
 fun MarqueeText(text: String, style: TextStyle, color: Color, modifier: Modifier = Modifier, runs: Boolean = true) {
@@ -54,7 +51,7 @@ fun MarqueeText(text: String, style: TextStyle, color: Color, modifier: Modifier
     val rtl = line.getParagraphDirection(0) == ResolvedTextDirection.Rtl
     val still = LocalReducedMotion.current || !runs
     val speed = with(LocalDensity.current) { Speed.toPx() } / MS_PER_SECOND
-    // How far the line has moved from its start; drawing reads it, so moving never recomposes.
+    // Read only while drawing, so the movement never recomposes.
     val moved = remember(line) { Animatable(0f) }
     var room by remember { mutableIntStateOf(0) }
     LaunchedEffect(line, still, speed) {
@@ -75,7 +72,7 @@ fun MarqueeText(text: String, style: TextStyle, color: Color, modifier: Modifier
         modifier = modifier
             .onSizeChanged { room = it.width }
             .semantics { this.text = AnnotatedString(text) }
-            // Offscreen, so the fades take alpha from the text alone, not from what lies under it.
+            // Offscreen, so DstIn fades only the text, not what lies under it.
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
                 val hidden = line.size.width - size.width
@@ -97,7 +94,6 @@ fun MarqueeText(text: String, style: TextStyle, color: Color, modifier: Modifier
     }
 }
 
-/** Hides the text at one edge by [strength]: 0 not at all, 1 wholly at the very edge, fading over [fade]. */
 private fun DrawScope.fadeEdge(fade: Float, left: Boolean, strength: Float) {
     if (strength <= 0f) return
     val clear = Color.Black.copy(alpha = 1f - strength)
@@ -115,9 +111,9 @@ private fun DrawScope.fadeEdge(fade: Float, left: Boolean, strength: Float) {
 
 private val FadeWidth = 20.dp
 
-/** The average speed of a glide; Android's and Compose's own marquees run at 30 dp a second. */
+/** The average speed per second, the same as Android's and Compose's own marquees. */
 private val Speed = 30.dp
 private const val MS_PER_SECOND = 1000f
 
-/** At each end, long enough to read what has come into view. */
+/** The pause at each end, long enough to read what has come into view. */
 private const val REST_MS = 2_500L

@@ -25,14 +25,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 
-/** A Music Assistant server found on the network, confirmed by its own `/info`. */
 data class FoundServer(val address: ServerAddress, val info: ServerInfo)
 
-/**
- * Finds servers announcing `_mass._tcp` with Android's own service discovery. Every server
- * announces the host name `mass.local`, so each candidate is confirmed with `GET /info` and its
- * `server_id`.
- */
 class ServerDiscovery(private val context: Context, private val http: OkHttpClient) {
     fun servers(): Flow<List<FoundServer>> = callbackFlow {
         val nsd = context.getSystemService(NsdManager::class.java)
@@ -72,7 +66,6 @@ class ServerDiscovery(private val context: Context, private val http: OkHttpClie
         awaitClose { if (started) nsd.stopServiceDiscovery(listener) }
     }
 
-    /** The service with its addresses and TXT record; null when it cannot be resolved. */
     // resolveService is deprecated from API 34, where registerServiceInfoCallback replaces it.
     @Suppress("DEPRECATION")
     private suspend fun resolve(nsd: NsdManager, service: NsdServiceInfo): NsdServiceInfo? =
@@ -113,11 +106,9 @@ class ServerDiscovery(private val context: Context, private val http: OkHttpClie
             }
         }
 
-    /**
-     * Asks each resolved address, IPv4 first, then the TXT `base_url`, which can be an address only
-     * the server's own container knows; keeps the first that answers as the server announced. One
-     * host name can carry several servers' addresses (they all announce `mass.local`).
-     */
+    // Resolved addresses, IPv4 first, then TXT `base_url`, which can be container-internal. Every server announces
+    // `mass.local`, so one host can carry several servers' addresses: keep the first with the announced `server_id`.
+    // See docs/API-NOTES.md, "Discovery".
     private suspend fun confirm(service: NsdServiceInfo): FoundServer? {
         // NsdServiceInfo.host is deprecated from API 34, where hostAddresses replaces it.
         @Suppress("DEPRECATION")
@@ -138,7 +129,6 @@ class ServerDiscovery(private val context: Context, private val http: OkHttpClie
         return null
     }
 
-    /** `GET /info`, unauthenticated; null when nothing answers as Music Assistant there. */
     private suspend fun info(address: ServerAddress): ServerInfo? {
         val url = address.baseUrl.newBuilder().addPathSegment("info").build()
         val call = http.forUrl(url).newCall(Request.Builder().url(url).build())
@@ -151,7 +141,7 @@ class ServerDiscovery(private val context: Context, private val http: OkHttpClie
                     override fun onResponse(call: Call, response: Response) = response.use {
                         cont.resume(
                             try {
-                                // Read in part: anything on the network can announce itself and answer.
+                                // Capped: anything on the network can announce itself and answer.
                                 if (it.isSuccessful) it.peekBody(MAX_INFO_BYTES).string() else null
                             } catch (e: IOException) {
                                 null
@@ -171,7 +161,7 @@ class ServerDiscovery(private val context: Context, private val http: OkHttpClie
     private companion object {
         const val SERVICE_TYPE = "_mass._tcp"
 
-        /** Far more than a server's info takes; past it, nothing is Music Assistant. */
+        // Far more than any server_info; a longer body is not Music Assistant.
         const val MAX_INFO_BYTES = 64L * 1024
     }
 }

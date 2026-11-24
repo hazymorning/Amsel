@@ -17,7 +17,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** The chosen chip is in view however the choice was made, and rows that stand for one another move as one. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class ChoiceChipRowTest {
@@ -38,7 +37,7 @@ class ChoiceChipRowTest {
             AmselTheme { ChoiceChipRow(kinds, chosen, { chosen = it }, { it }, Role.Tab) }
         }
         assertTrue(inView("Playlists"))
-        // As a swipe between the library's kinds makes it: not by a tap on the chip.
+        // Set directly, as a swipe between the library's kinds does, not by a tap on the chip.
         chosen = "Downloads"
         compose.waitForIdle()
         assertTrue("Downloads is chosen and out of sight", inView("Downloads"))

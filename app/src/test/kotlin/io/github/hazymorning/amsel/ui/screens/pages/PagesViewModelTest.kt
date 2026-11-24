@@ -27,7 +27,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/** The pages' ViewModels against the recorded 2.11 server shapes. */
+// Fixtures are recorded 2.11 server replies.
 @OptIn(ExperimentalCoroutinesApi::class)
 class PagesViewModelTest {
     private val messages = MessageController(MutableStateFlow(true))
@@ -155,7 +155,7 @@ class PagesViewModelTest {
         assertEquals(third, state.value.tracks[1])
         assertEquals(listOf(1, 2, 3, 4), state.value.positions)
 
-        // The server's task failed: the page reads the playlist again, the track back in its place.
+        // The server's task failed: the page reloads the playlist, with the track back in place.
         edits.emit(PlaylistEdit.Failed("library://playlist/9"))
         assertEquals(listOf(1, 2, 3, 4, 5), state.value.positions)
     }

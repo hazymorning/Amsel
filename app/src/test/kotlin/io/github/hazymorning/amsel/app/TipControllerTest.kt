@@ -12,10 +12,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Which tip shows: one at a time, each once, the next on another day. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TipControllerTest {
-    /** Settings out of the bar, so the pull down that opens them has its tip. */
+    // Settings out of the bar, so the Settings tip applies.
     private val prefs = MutableStateFlow<Prefs?>(Prefs(barPlaces = listOf("home", "search", "-settings")))
     private val inFront = MutableStateFlow(true)
     private var day = 20_000L

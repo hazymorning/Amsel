@@ -8,9 +8,8 @@ import io.github.hazymorning.amsel.ui.model.MediaKind
 import io.github.hazymorning.amsel.ui.model.MediaUi
 
 /**
- * [item] of the answer [raw] as Search lists it. An artist without a picture wears the covers the
- * library index made it ([held], by uri), else those of the answer's own albums and songs by it,
- * which a guest the index does not hold has.
+ * The server sends no stand-in for an artist without a picture (docs/API-NOTES.md, "Images"): use the
+ * index's covers for it ([held], by uri), else those of its albums and songs in [raw].
  */
 internal fun UiMapper.listed(item: MediaItem, raw: SearchResults, held: Map<String, ArtRef>): MediaUi {
     val shown = media(item)

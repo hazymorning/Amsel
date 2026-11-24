@@ -26,11 +26,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * An album page: the header from the library index and the tracks it showed last time at once,
- * then the server's album, its tracks and the artist's other albums, each shown as it arrives.
- * [playing] is the uri playing on the current speaker (or starting there).
- */
+/** [playing] is the URI playing on the current speaker, or starting there. */
 class AlbumViewModel(
     private val key: String,
     private val source: PageSource,
@@ -46,7 +42,7 @@ class AlbumViewModel(
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AlbumUiState(loading = true))
 
-    /** The index's row paints the header until the server answers, and follows favorites changed anywhere. */
+    // The index row gives the header until the server answers, and the favourite as changed anywhere.
     private fun shown(page: AlbumUiState, row: LibraryItemEntity?, uri: String?): AlbumUiState {
         val album = page.album ?: row?.let(mapper::albumHeader)
         return page.copy(album = row?.let { album?.copy(favorite = it.favorite) } ?: album, currentTrackKey = uri)
@@ -60,7 +56,7 @@ class AlbumViewModel(
 
     fun retry() = load()
 
-    /** The [first] load paints what the page showed last time while the server is asked. */
+    /** Only the [first] load shows the cached page while the server is asked. */
     private fun load(first: Boolean = false) {
         loading?.cancel()
         page.update { it.copy(loading = true, unavailable = false) }
@@ -83,7 +79,6 @@ class AlbumViewModel(
         }
     }
 
-    /** What the page showed last time, where the server has not answered yet. */
     private fun AlbumUiState.from(last: CachedPage) = copy(
         album = album ?: mapper.albumHeader(last.item),
         tracks = tracks.ifEmpty { last.rows.map(mapper::track) },
@@ -95,7 +90,7 @@ class AlbumViewModel(
         unavailable = album == null || tracks == null,
     )
 
-    /** "More by" the artist: a bonus, so a failure leaves the shelf out and says nothing. */
+    // Optional: a failure leaves the shelf out without a message.
     private suspend fun moreByArtist(artistKey: String?) {
         if (artistKey == null) return
         val albums = orNullOnFailure { source.artistAlbums(artistKey) } ?: return
@@ -103,13 +98,11 @@ class AlbumViewModel(
     }
 }
 
-/** What an album page shows above its tracks. */
 @Immutable
 data class AlbumUi(
     val key: String,
     val title: String,
     val art: ArtRef? = null,
-    /** The album artist, or null when the album names none. A link when [artistKey] is set. */
     val artist: String? = null,
     val artistKey: String? = null,
     val year: Int? = null,
@@ -117,43 +110,28 @@ data class AlbumUi(
     /** Its tracks are by different artists, though the server names one ("Various Artists"). */
     val compilation: Boolean = false,
 ) {
-    /** The album as an item, for its ⋮ sheet. */
     val media: MediaUi = MediaUi(key, MediaKind.Album, title, artist, art, favorite, artistKey = artistKey)
 }
 
-/**
- * Everything an album page draws. The library cache usually knows [album] before the server
- * answers, so the header paints at once and only the tracks wait. Until [album] is known the
- * whole page is a skeleton in the exact shape of the content.
- */
 @Immutable
 data class AlbumUiState(
-    /** Null until known. */
     val album: AlbumUi? = null,
-    /** In album order; [TrackUi.number] is the track number shown in the row. */
     val tracks: List<TrackUi> = emptyList(),
-    /** Other albums by the same artist, newest first, with the year as subtitle; hidden when empty. */
     val moreByArtist: List<MediaUi> = emptyList(),
-    /** The track playing on the current speaker when it is on this album; drawn highlighted. */
     val currentTrackKey: String? = null,
-    /** The tracks are being fetched: the first load, or a Retry. */
     val loading: Boolean = false,
-    /** The album could not be loaded or no longer exists; [showUnavailable] says whether nothing is cached. */
+    /** The last load failed or the album is gone; the page says so only when [showUnavailable]. */
     val unavailable: Boolean = false,
 ) {
-    /** No header or nothing playable to show: the page says so plainly and offers Retry. */
     val showUnavailable: Boolean = unavailable && (album == null || tracks.isEmpty())
 
-    /** Rows stand in for the tracks while they load. */
     val tracksLoading: Boolean = tracks.isEmpty() && (loading || album == null)
 
     val songCount: Int = tracks.size
 
     val durationSec: Int = tracks.sumOf { it.durationSec }
 
-    /**
-     * A track row's secondary line: the track's artist only when it differs from the album's, so
-     * guests and a compilation's artists show and the album artist is not repeated on every row.
-     */
+    // The track's artist only where it differs from the album's: guests and a compilation's artists
+    // show, and the album artist is not repeated on every row.
     fun subtitleOf(track: TrackUi): String? = track.artist.takeIf { it != album?.artist }
 }

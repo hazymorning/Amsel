@@ -10,8 +10,8 @@ import io.github.hazymorning.amsel.ui.model.ArtRef
 import io.github.hazymorning.amsel.ui.theme.Keyline
 
 /**
- * Asks for Now Playing's cover while the music plays, at the size it takes on most phones (the
- * window's width less the margins), so the sheet rises with it in place rather than loading in.
+ * Preloads Now Playing's cover at the size it has on most phones (window width less both margins),
+ * so the sheet opens with the cover already in memory.
  */
 @Composable
 internal fun PreloadCover(art: ArtRef?) {

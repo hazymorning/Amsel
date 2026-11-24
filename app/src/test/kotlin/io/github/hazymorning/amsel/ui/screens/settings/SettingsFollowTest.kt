@@ -16,7 +16,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Follow the music's page: all speakers in at first, any can be left out, the last one in stays. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class SettingsFollowTest {
@@ -46,7 +45,6 @@ class SettingsFollowTest {
         compose.onNodeWithText("Hedwig").performClick().assertIsOff()
         compose.onNodeWithText("Potterbox").performClick()
         assertEquals(setOf("hedwig", "potter"), skipped)
-        // Gandalf alone is followed, so it stays in.
         compose.onNodeWithText("Gandalf").performClick().assertIsOn()
         assertEquals(setOf("hedwig", "potter"), skipped)
         compose.onNodeWithText("Hedwig").performClick().assertIsOn()

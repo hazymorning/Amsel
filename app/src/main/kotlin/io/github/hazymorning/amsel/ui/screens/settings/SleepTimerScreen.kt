@@ -21,7 +21,6 @@ import io.github.hazymorning.amsel.ui.navigation.Navigator
 import io.github.hazymorning.amsel.ui.theme.AmselSheet
 import io.github.hazymorning.amsel.ui.theme.Space
 
-/** The sleep timer's ways, set once: how it ends, a shake to start it over, and starting with playback. */
 @Composable
 fun SleepTimerScreen(
     state: SettingsUiState,
@@ -65,7 +64,6 @@ fun SleepTimerScreen(
         }
     }
     if (choosing) {
-        // A choice applies at once, under the sheet as it slides away.
         AmselSheet(onDismiss = { choosing = false }) {
             ChoiceSheet(
                 stringResource(R.string.settings_sleep_fade),

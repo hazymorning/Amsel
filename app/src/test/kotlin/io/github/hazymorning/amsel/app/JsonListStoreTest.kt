@@ -16,7 +16,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** A list kept in a file: what it shows is already on the phone, so the next run of the app finds it. */
 class JsonListStoreTest {
     @get:Rule val temp = TemporaryFolder()
 

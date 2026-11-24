@@ -38,16 +38,13 @@ import io.github.hazymorning.amsel.ui.theme.capHeight
 import io.github.hazymorning.amsel.ui.theme.groupAfter
 import kotlinx.coroutines.delay
 
-/** How long a message stays: long enough to read a sentence, longer when it offers Retry. */
+/** Long enough to read a sentence; longer when it offers Retry. */
 private const val SHORT_MS = 4_000L
 private const val LONG_MS = 10_000L
 
 /**
- * The app's one message: a plain sentence, with Retry when trying again can help. A bar on the
- * margins in the second surface tone, set apart by tone rather than shadow; the sentence and Retry
- * in ink, 16 inside its edges. A longer sentence wraps and the bar grows. The action stands beside
- * the sentence, centred on it, or under it at the end ([actionBeside]): a long word for Retry or
- * large type never squeezes the sentence into a narrow column of broken words.
+ * The action goes beside the sentence or under it ([actionBeside]), so a long action label or large
+ * type never squeezes the sentence into a narrow column of broken words.
  */
 @Composable
 fun MessageBar(message: String, modifier: Modifier = Modifier, action: String? = null, onAction: () -> Unit = {}) {
@@ -95,7 +92,7 @@ fun MessageBar(message: String, modifier: Modifier = Modifier, action: String? =
                 linesUnder = sentence.minIntrinsicHeight(width) + gap + cap,
             )
             val text = sentence.measure(Constraints(maxWidth = if (beside) room else width))
-            // The action's layout is a line's box; it is placed by its capitals, as the sentence is.
+            // The action's layout is a full line box; align it by its cap top, as the sentence is.
             val capTop = button[FirstBaseline].takeIf { it != AlignmentLine.Unspecified }?.minus(cap)
                 ?: ((button.height - cap) / 2)
             if (beside) {
@@ -115,19 +112,12 @@ fun MessageBar(message: String, modifier: Modifier = Modifier, action: String? =
 }
 
 /**
- * Whether a message's action stands beside its sentence: while the sentence keeps at least half of
- * the [bar] beside it ([room]), none of its words has to break ([longestWord]), and its lines there
- * make the bar no taller than its lines at full width with the action on a row of its own under
- * them ([linesBeside], [linesUnder]): beside may cost the sentence a line, not two.
+ * Beside, if the sentence keeps at least half the [bar], no word has to break, and it is no taller
+ * there ([linesBeside]) than at full width with the action on its own row below ([linesUnder]).
  */
 internal fun actionBeside(bar: Int, room: Int, longestWord: Int, linesBeside: Int, linesUnder: Int): Boolean =
     room * 2 >= bar && longestWord <= room && linesBeside <= linesUnder
 
-/**
- * Shows [state]'s messages one at a time as [MessageBar]s, fading between them. A message can be
- * swiped away to either side. TalkBack reads each as it appears and can dismiss it; with TalkBack
- * on, a message stays as long as the person's accessibility settings ask.
- */
 @Composable
 fun MessageHost(state: SnackbarHostState, modifier: Modifier = Modifier) {
     val current = state.currentSnackbarData

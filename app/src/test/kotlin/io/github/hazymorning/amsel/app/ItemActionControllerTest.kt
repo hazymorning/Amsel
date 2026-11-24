@@ -34,7 +34,7 @@ class ItemActionControllerTest {
     @Test fun `a song, an album, an artist and a playlist offer their endless mix after the queue rows`() {
         val seeds = listOf(album, SampleData.artists[0], SampleData.playlists[0]).map { of(it) } + listOf(of(song))
         seeds.forEach { assertEquals(ItemAction.EndlessMix, it[it.indexOf(ItemAction.AddToUpNext) + 1]) }
-        // A song on Home is listed as the albums beside it are.
+        // A song on Home is a MediaUi, like the albums beside it.
         assertEquals(
             listOf(
                 ItemAction.PlayNext,
@@ -69,7 +69,7 @@ class ItemActionControllerTest {
         val sound = "ambient_sounds://sound_effect/1"
         assertTrue(of(song.copy(key = sound), ActionsContext.NowPlaying).none(EXTRAS::contains))
         assertTrue(of(MediaUi(sound, MediaKind.Track, "Rain")).none(EXTRAS::contains))
-        // A row of Up next the server names no item for goes by its place in the queue.
+        // An Up next row the server names no item for is keyed by its queue item id.
         assertTrue(of(song.copy(key = "q7"), ActionsContext.UpNext).none(EXTRAS::contains))
     }
 
@@ -147,7 +147,7 @@ class ItemActionControllerTest {
         assertEquals(listOf(ItemAction.CancelDownload), downloads(DownloadState.Waiting()))
         assertEquals(listOf(ItemAction.CancelDownload), downloads(DownloadState.Running(1, 2)))
         assertEquals(listOf(ItemAction.RemoveDownload), downloads(DownloadState.Done))
-        // Stopped: tried again, or let go; the item's own flag is not needed then.
+        // A stopped download offers a retry or its removal, whatever the item's own flag says.
         assertEquals(
             listOf(ItemAction.Download, ItemAction.RemoveDownload),
             downloads(DownloadState.Failed(AbsException.Reason.Unreachable), book.copy(downloadable = false)),
@@ -160,7 +160,7 @@ class ItemActionControllerTest {
 
     private val hosts = ServerExtras(djHosts = listOf(DjHost("music_nerd", "Music nerd")))
 
-    /** Now Playing's menu for [playing], from the rules [ItemActionController.state] hands what plays to. */
+    // Now Playing's menu, from the same rules [ItemActionController.state] uses.
     private fun menu(playing: NowPlayingUi, extras: ServerExtras = hosts, serverQueue: Boolean = true) =
         when (val target = playing.moreTarget()) {
             is ActionTarget.Track -> {
@@ -188,11 +188,11 @@ class ItemActionControllerTest {
             book,
             book.copy(kind = MediaKind.Episode, key = "library://podcast_episode/x"),
             SampleData.nowPlaying.copy(kind = MediaKind.Radio, key = "library://radio/1"),
-            // A download plays from the phone's files, as LocalPlaying shows it.
+            // A download playing from the phone's files, as LocalNowPlaying.kt shows it.
             book.copy(speaker = SampleData.speakers[0], canShuffle = false),
         )
         others.forEach { assertFalse(it.title, ItemAction.Dj in menu(it)) }
-        // Whatever plays from the phone's own files is on no queue of the server.
+        // What plays from the phone's own files is on no server queue.
         assertFalse(ItemAction.Dj in menu(SampleData.nowPlaying, serverQueue = false))
         val sound = SampleData.nowPlaying.copy(key = "ambient_sounds://sound_effect/1")
         assertFalse(ItemAction.Dj in menu(sound))

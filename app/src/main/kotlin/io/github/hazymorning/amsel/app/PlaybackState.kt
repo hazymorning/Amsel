@@ -33,15 +33,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * What plays and where, as every screen shows it: the speakers, the one the music plays on, and
- * what plays there. A tap on the transport ([optimistic]) or a play on its way shows at once,
- * before the speaker reports it.
- */
 class PlaybackState(
     private val context: Context,
     private val data: DataGraph,
-    /** The speaker the person picked, or This phone. */
     selected: StateFlow<PlaybackTarget>,
     phone: PhoneSpeaker,
     dispatcher: PlayDispatcher,
@@ -51,9 +45,8 @@ class PlaybackState(
     scope: CoroutineScope,
 ) {
     /**
-     * Every speaker for the "Play on" sheet, "This phone" first, with what each plays. This phone can
-     * always be chosen: its player leaves the server (or stays as unavailable) once another speaker is
-     * chosen, and joins again when it is picked.
+     * This phone is always available: its player leaves the server, or stays as unavailable, while
+     * another speaker is selected, and joins again when it is picked.
      */
     val speakers: StateFlow<List<SpeakerUi>> = combine(data.speakers.players, phone.playerId) { players, phoneId ->
         fun row(player: Player, isPhone: Boolean) =
@@ -66,10 +59,7 @@ class PlaybackState(
             .map { row(it, isPhone = false) }
     }.stateIn(scope, SharingStarted.Eagerly, listOf(SpeakerUi(PHONE, "", isPhone = true)))
 
-    /**
-     * The speaker the music plays on: what the speaker button shows, also while the server does not
-     * list it (before it answers, or once the speaker joined a group).
-     */
+    /** Known also while the server does not list it: before it answers, or once it joined a group. */
     val speaker: StateFlow<SpeakerUi> =
         combine(selected, data.speakers.players, data.prefs.prefs) { target, players, prefs ->
             val player = target.playerId?.let { players[it] }
@@ -93,7 +83,6 @@ class PlaybackState(
         volumeTimeoutMs = RemotePlayer.CONFIRM_VOLUME_MS,
     )
 
-    /** What the current speaker reports, and what a list marks as playing there. */
     private val fromSpeaker: StateFlow<SpeakerReport?> = combine(
         selected,
         data.speakers.players,
@@ -116,8 +105,8 @@ class PlaybackState(
         }
         val starting = pending[id]
         if (starting != null) {
-            // A play is on its way: the tap shows at once what is coming, from its start. What the
-            // speaker reports until the play is done is the queue being replaced.
+            // Until the play is done the speaker reports the queue being replaced: show what is
+            // coming, from its start.
             val np = NowPlayingUi(
                 title = starting.request.title.orEmpty(),
                 artist = "",
@@ -134,7 +123,6 @@ class PlaybackState(
         SpeakerReport(id, shown, uri, setOfNotNull(uri, shown?.albumKey, shown?.parentKey), next)
     }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    /** A download playing on this phone, which the session holds instead of the phone's stream. */
     private val reported: StateFlow<SpeakerReport?> =
         combine(fromSpeaker, local.now, selected, speaker) { fromSpeaker, downloaded, target, speakerUi ->
             if (downloaded == null || !target.isPhone) return@combine fromSpeaker
@@ -142,26 +130,18 @@ class PlaybackState(
             SpeakerReport(target.playerId ?: PHONE, np, np.key, setOfNotNull(np.key), next = null)
         }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    /** The uri playing on the current speaker, or starting there: the row a list marks with the playing ring. */
     val playingUri: Flow<String?> = reported.map { it?.uri }.distinctUntilChanged()
 
-    /** [playingUri] and the album or podcast it comes from, for a list of those. */
+    /** [playingUri] with its album or podcast, so a list of those can mark the one that plays. */
     val playingContext: Flow<Set<String>> = reported.map { it?.context.orEmpty() }.distinctUntilChanged()
 
-    /**
-     * The playing book's or episode's latest finished state, from a mark or the server's progress:
-     * the queue's copy of the item keeps the one it was queued with, and the ⋮ offers by it.
-     */
+    // The queue's copy of an item keeps the finished state it was queued with, and the ⋮ offers by
+    // the latest mark or progress. See docs/API-NOTES.md, "Queue fields used".
     private val finished = MutableStateFlow<Pair<String, Boolean>?>(null)
 
-    /** Music moving to the current speaker ("Play my music here"), until the speaker reports it. */
     private val moving = MutableStateFlow<NowPlayingUi?>(null)
 
-    /**
-     * What plays on the current speaker, or null when nothing does (the mini player hides). A tap on
-     * play, pause, shuffle, repeat or the volume shows here at once, before the speaker reports it,
-     * and so does music on its way there.
-     */
+    /** Taps and music on its way show here at once, before the speaker reports them. */
     val nowPlaying: StateFlow<NowPlayingUi?> =
         combine(reported, optimistic.pending, finished, moving, favorites.known) {
                 current,
@@ -178,16 +158,11 @@ class PlaybackState(
             music?.key?.let(liked::get)?.let { music.copy(favorite = it) } ?: music
         }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    /** Now Playing's heart for the notification and the car ([NowPlayingUi.heart]). */
     val heart: StateFlow<Boolean?> =
         combine(nowPlaying, data.permissions) { np, permissions -> np?.heart(permissions.canWriteLibrary) }
             .distinctUntilChanged()
             .stateIn(scope, SharingStarted.Eagerly, null)
 
-    /**
-     * What plays on speaker [id], whichever speaker Amsel is on: for a widget that keeps to it. A
-     * tap on its play shows at once, as on the current speaker's.
-     */
     fun nowPlayingOf(id: String): Flow<NowPlayingUi?> = combine(
         data.speakers.players,
         data.speakers.queues,
@@ -202,7 +177,6 @@ class PlaybackState(
         mapper.nowPlaying(player, queues[id]?.queue, snapshot, speakerUi)?.let { optimistic.overlay(it, pending[id]) }
     }
 
-    /** A tap on that heart, as on Now Playing's. */
     fun toggleHeart() {
         val np = nowPlaying.value ?: return
         if (heart.value == null) return
@@ -212,13 +186,13 @@ class PlaybackState(
     /** [playingUri] now. */
     internal val uri: String? get() = reported.value?.uri
 
-    /** Whether [speakerId] plays a download from this phone's files, which only the phone can fade and pause. */
+    // What plays from this phone's files only the phone can fade and pause.
     internal fun playsDownload(speakerId: String): Boolean {
         val here = local.now.value ?: return false
         return reported.value?.let { it.playerId == speakerId && it.uri == here.manifest.uri } == true
     }
 
-    /** The queue's next item on the current speaker, as a skip will show it. */
+    /** The queue's next item, as a skip will show it. */
     internal val next: NowPlayingUi? get() = reported.value?.next
 
     init {
@@ -230,9 +204,9 @@ class PlaybackState(
                 if (update.uri == reported.value?.nowPlaying?.key) finished.value = update.uri to update.fullyPlayed
             }
         }
-        // Another item starts from its own queued state; a mark seen while it was current before is stale.
+        // Reset on every change of item: one that comes back starts from its queued state again.
         scope.launch { reported.map { it?.nowPlaying?.key }.distinctUntilChanged().collect { finished.value = null } }
-        // The queue's copy keeps the like it was queued with: ask again whenever an item starts,
+        // The queue's copy keeps the like it was queued with: read again whenever an item starts,
         // and after a reconnect, which may have missed a change.
         scope.launch {
             combine(
@@ -243,11 +217,8 @@ class PlaybackState(
         }
     }
 
-    /**
-     * Shows [music] on the current speaker while [move] takes it there, and until the speaker
-     * reports it or its time to confirm runs out: the speaker changes at once, the music only once
-     * the server has moved it.
-     */
+    // The speaker changes at once but the music only once the server has moved it: [music] shows
+    // meanwhile, until the speaker reports it or CONFIRM_TIMEOUT_MS runs out.
     internal suspend fun whileMoving(music: NowPlayingUi, move: suspend () -> Unit) {
         moving.value = music
         try {
@@ -258,7 +229,6 @@ class PlaybackState(
         }
     }
 
-    /** The name of speaker [playerId] as Play on shows it, for a sentence about it. */
     internal fun nameOf(playerId: String): String = nameOf(
         speakers.value.firstOrNull { it.id == playerId }
             ?: data.speakers.players.value[playerId]?.let { mapper.speaker(it, isPhone = false) }
@@ -279,21 +249,14 @@ private data class SpeakerReport(
     val nowPlaying: NowPlayingUi?,
     val uri: String?,
     val context: Set<String>,
-    /** The queue's next item, as a skip will show it. */
     val next: NowPlayingUi?,
 )
 
-/**
- * The item a play action is starting (so a tapped row answers at once, and gives way again if the
- * action fails), else what the speaker plays.
- */
+// A pending play's item first, so a tapped row is marked at once and unmarked if the play fails.
 internal fun playingUri(snapshot: SpeakerSnapshot?, starting: PlayRequest?): String? =
     starting?.starts() ?: snapshot?.current?.uri?.ifEmpty { null }
 
-/**
- * Its start item, unless that is a chapter's position; else its one item, or its first unless
- * shuffled.
- */
+// startItem can be a chapter's position rather than a uri; a shuffled list has no known first item.
 private fun PlayRequest.starts(): String? = startItem?.takeIf { ItemUri.parse(it) != null }
     ?: uris.singleOrNull()
     ?: uris.firstOrNull()?.takeUnless { shuffle }

@@ -33,7 +33,7 @@ class MosaicCropTest {
 
     private fun crop(px: Int): Bitmap = runBlocking { MosaicCrop(px).transform(collage(), Size.ORIGINAL) }
 
-    /** Six by six tiles, each column its own colour, light and dark in turn, as a server's collage. */
+    /** Six by six tiles like the server's collage, with contrast across every seam. */
     private fun collage(): Bitmap {
         val tile = SIDE / 6
         val bitmap = Bitmap.createBitmap(SIDE, SIDE, Bitmap.Config.ARGB_8888)

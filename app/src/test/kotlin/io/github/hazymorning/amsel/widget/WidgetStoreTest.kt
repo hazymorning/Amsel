@@ -39,7 +39,7 @@ class WidgetStoreTest {
         assertNull(store.setup(7))
     }
 
-    /** As Amsel 2026.11.50 kept them: four buttons, no look, no speaker. */
+    /** The format of Amsel 2026.11.50: buttons only, no style or speaker. */
     @Test fun aButtonALaterAmselDroppedIsLeftOut() = runTest {
         File(dir, "setups.json").writeText(
             """[{"id":3,"slots":[{"button":"gone"},{"button":"next"},{"button":"item"},{"button":"louder"}]}]""",
@@ -50,7 +50,6 @@ class WidgetStoreTest {
         )
     }
 
-    /** Saved as they came before, untouched: the buttons come as they come now; chosen ones stay. */
     @Test fun theEarlierButtonsAsTheyCameComeAsNow() = runTest {
         File(dir, "setups.json").writeText(
             """[{"id":3,"slots":[{"button":"previous"},{"button":"play"},{"button":"next"},""" +
@@ -81,7 +80,7 @@ class WidgetStoreTest {
         assertEquals(emptyMap<String, WidgetContent>(), again.contents())
     }
 
-    /** Amsel 2026.11.50 kept one look and its pictures: the look is read once, the pictures go. */
+    /** Amsel 2026.11.50 kept one speaker's content and its pictures: the content is read, the pictures deleted. */
     @Test fun theEarlierLookIsReadAndItsPicturesGo() = runTest {
         File(dir, "look.json").writeText("""{"speaker":"Kitchen","title":"Lanterns"}""")
         File(dir, "cover.png").writeText("png")

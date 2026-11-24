@@ -8,13 +8,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
-/**
- * One item's download: what Audiobookshelf holds for it, then each audio file in turn. A file
- * grows in `<name>.part` and is renamed once it has every byte; a part left by a lost connection
- * or a restart goes on from where it ended (HTTP Range), so nothing is fetched twice.
- */
+// A file is written to `<name>.part` and renamed once complete; a part left by a lost connection or a restart
+// resumes with an HTTP Range, so nothing is fetched twice.
 internal class DownloadTask(private val abs: AbsClient, private val store: DownloadStore) {
-    /** [stub] with its files, chapters and length, as the server has them now. */
     suspend fun plan(stub: DownloadManifest): DownloadManifest {
         val media = abs.item(stub.absItemId).media
         val episode = stub.absEpisodeId?.let { id ->
@@ -23,7 +19,7 @@ internal class DownloadTask(private val abs: AbsClient, private val store: Downl
         val tracks = if (episode != null) listOfNotNull(episode.audioTrack) else media.tracks
         if (tracks.isEmpty()) throw AbsException(AbsException.Reason.NotFound)
         val files = tracks.mapIndexed { i, track ->
-            // The server's word becomes part of a path on the phone: letters and digits only.
+            // The server's extension becomes part of a path on the phone: letters and digits only.
             val ext = track.metadata?.ext?.trimStart('.')?.takeIf { it.matches(EXT) } ?: "audio"
             DownloadFile(
                 track.ino,
@@ -43,8 +39,7 @@ internal class DownloadTask(private val abs: AbsClient, private val store: Downl
         )
     }
 
-    /** The cover, when the server has one; a book plays without it. */
-    // Both read their answer, so off the main thread (see AbsClient.call).
+    // cover() and fetch() read their responses, so they run on IO (see AbsClient.call).
     suspend fun cover(manifest: DownloadManifest) = withContext(Dispatchers.IO) { coverHere(manifest) }
 
     private suspend fun coverHere(manifest: DownloadManifest) {
@@ -62,10 +57,7 @@ internal class DownloadTask(private val abs: AbsClient, private val store: Downl
         }
     }
 
-    /**
-     * Fetches [file] of [manifest] unless it is already in place. [onProgress] hears how many of its
-     * bytes are on the phone, as they arrive.
-     */
+    /** [onProgress] gets the file's bytes on the phone so far, a resumed part included. */
     suspend fun fetch(manifest: DownloadManifest, file: DownloadFile, onProgress: (Long) -> Unit) =
         withContext(Dispatchers.IO) { fetchHere(manifest, file, onProgress) }
 
@@ -85,7 +77,7 @@ internal class DownloadTask(private val abs: AbsClient, private val store: Downl
                 // Already all there: the last attempt ended just before the rename.
                 HTTP_RANGE_NOT_SATISFIABLE -> if (from == file.size) return finish(part, target) else false
 
-                // The token was renewed on the way here: the server refuses this file, not the account.
+                // AbsClient.authorized has renewed the token on a 401: this file is refused, not the account.
                 401, 403 -> throw AbsException(AbsException.Reason.Refused)
 
                 404 -> throw AbsException(AbsException.Reason.NotFound)

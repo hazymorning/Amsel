@@ -25,13 +25,8 @@ import kotlinx.coroutines.plus
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * One Music Assistant speaker behind Media3's [Player], This phone included: state comes from
- * [snapshots] and every command goes to [commands]. A speaker's volume is its own
- * ([DeviceInfo.PLAYBACK_TYPE_REMOTE]), This phone's the phone's media volume. One instance per
- * selected speaker; the service swaps instances with `MediaSession.setPlayer` and releases the old
- * one.
- *
- * Must be created and used on the main thread (the session's application looper).
+ * One instance per target, swapped by the service with `MediaSession.setPlayer`. A speaker's volume is
+ * its own ([DeviceInfo.PLAYBACK_TYPE_REMOTE]), This phone's the phone's media volume. Main thread only.
  */
 @OptIn(UnstableApi::class)
 class RemotePlayer(
@@ -39,41 +34,30 @@ class RemotePlayer(
     private val snapshots: StateFlow<SpeakerSnapshot?>,
     private val commands: SpeakerCommands,
     private val elapsedRealtime: () -> Long,
-    /** Set for "This phone": the audio comes out of this phone, not a speaker. */
     private val local: LocalOutput?,
-    /** A command did not reach the speaker; the app shows it with Retry. */
     private val onCommandFailed: (CommandFailure) -> Unit,
     /**
-     * The app's: commands outlive the player, since the service swaps players when the speaker
-     * changes, and when This phone joins the server for the first time its id changes mid-command
-     * (the command is still waiting for that join). Each one is bounded by its own timeouts.
+     * Commands outlive the player: the service swaps players when the speaker changes, and on This
+     * phone's first join its id changes while a command still waits for that join.
      */
     appScope: CoroutineScope,
-    /**
-     * The level a speaker's keys and the system's slider never raise it past, 0 for none: only the
-     * volume sheet goes louder, and asks first.
-     */
+    /** Keys and the system slider never raise a speaker past it (0 for none); only the volume sheet does. */
     private val volumeLimit: () -> Int = { 0 },
 ) : SimpleBasePlayer(Looper.getMainLooper()) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val commandScope = appScope + Dispatchers.Main.immediate
 
-    /** Read where it is needed, never kept: a seek shows in it before its command is on its way. */
+    /** Never cached: a seek shows in it before its command goes out. */
     private val snapshot: SpeakerSnapshot? get() = snapshots.value
 
-    /** The last play_media until the snapshot says it is in progress. */
     private var queuing: ListenableFuture<*>? = null
 
-    /** A car or voice play, sent with the play() that follows it: a prepare alone starts nothing. */
+    /** A car or voice play waits for play(): a prepare alone starts nothing. */
     private var prepared: PlayRequest? = null
 
-    /**
-     * What a media button resumed with while the speaker had not reported yet (Amsel was closed):
-     * shown, buffering, until it reports what it holds, or the play fails.
-     */
+    /** After a media-button resume, shown buffering until the speaker reports what it holds or the play fails. */
     private var standIn: MediaItem? = null
 
-    /** Where a step to another chapter goes, until the snapshot shows it (see [getPlaceholderState]). */
     private var steppingTo: Long? = null
 
     init {
@@ -142,7 +126,6 @@ class RemotePlayer(
         send({ !it.playing }) { id -> pause(id) }
     }
 
-    /** The assistant's "stop", and a dismissed notification. */
     override fun handleStop(): ListenableFuture<*> {
         prepared = null
         local?.hold(true)
@@ -153,7 +136,6 @@ class RemotePlayer(
         // Called even when Media3 ignores the seek (mediaItemIndex == C.INDEX_UNSET, e.g. "next"
         // with no next item in the window), so the intent always reaches the server.
         val before = snapshot?.current?.queueItemId
-        // A book's or episode's chapters come first; past the first or last one, the queue's item.
         val chapter = chapterTarget(seekCommand)
         if (chapter != null) {
             steppingTo = chapter
@@ -173,7 +155,7 @@ class RemotePlayer(
             }
 
             Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM -> {
-                // A tapped chapter is entered, as a step to it is.
+                // A tapped chapter start rounds up into the chapter, as a step to it does.
                 val chapterStart = positionMs in snapshot?.current?.chapterStartsMs.orEmpty()
                 seek(positionMs, step = false, intoSecond = chapterStart)
             }
@@ -215,7 +197,7 @@ class RemotePlayer(
         val limit = volumeLimit()
         if (limit > 0) {
             if (before >= limit) return Futures.immediateVoidFuture()
-            // The server's step grows to 5 at most: the step that would pass the limit stops on it.
+            // Within one server step of the limit, the limit is set instead of stepping past it.
             if (before + MAX_SERVER_STEP > limit) {
                 return send({ it.volumeLevel == limit }, CONFIRM_VOLUME_MS) { id -> setVolume(id, limit) }
             }
@@ -228,7 +210,7 @@ class RemotePlayer(
         return send({ (it.volumeLevel ?: 0) < before }, CONFIRM_VOLUME_MS) { id -> volumeDown(id) }
     }
 
-    // Media3 asks every player that adjusts its volume to mute too; Amsel offers no mute.
+    // COMMAND_ADJUST_DEVICE_VOLUME covers mute too; Amsel offers no mute.
     override fun handleSetDeviceMuted(muted: Boolean, flags: Int): ListenableFuture<*> = Futures.immediateVoidFuture()
 
     override fun handleSetShuffleModeEnabled(shuffleModeEnabled: Boolean): ListenableFuture<*> =
@@ -244,10 +226,7 @@ class RemotePlayer(
         return send({ it.repeat == mode }) { id -> setRepeat(id, mode) }
     }
 
-    /**
-     * Android Auto and voice plays arrive here (via MediaLibrarySession.Callback.onSetMediaItems)
-     * and wait for play(): the assistant prepares before its announcement and plays after it.
-     */
+    /** Car and voice plays wait for play(): the assistant prepares before its announcement and plays after it. */
     override fun handleSetMediaItems(
         mediaItems: MutableList<MediaItem>,
         startIndex: Int,
@@ -255,12 +234,10 @@ class RemotePlayer(
     ): ListenableFuture<*> {
         val resumed = mediaItems.singleOrNull()?.takeIf { it.mediaId == BrowseIds.RESUME }
         if (resumed != null) {
-            // The speaker carries on with its own queue: nothing is queued anew.
             prepared = null
             if (snapshot?.current == null) standIn = resumed
             return Futures.immediateVoidFuture()
         }
-        // Its title shows while the speaker starts it, as a play from the app shows its own.
         val title = mediaItems.getOrNull(startIndex)?.mediaMetadata?.title?.toString()
         prepared = BrowseIds.toPlayRequest(playerId, mediaItems.map { it.mediaId }, startIndex)?.copy(title = title)
         return Futures.immediateVoidFuture()
@@ -277,10 +254,7 @@ class RemotePlayer(
         return sent
     }
 
-    /**
-     * What Media3 shows until a command's future is done. For a next or previous that is the
-     * neighbouring item; a step to another chapter stays on this item, at the chapter's start.
-     */
+    /** Media3's placeholder for next or previous is the neighbouring item; a chapter step stays on this one. */
     override fun getPlaceholderState(suggestedPlaceholderState: State): State {
         val chapter = steppingTo ?: return suggestedPlaceholderState
         steppingTo = null
@@ -293,9 +267,8 @@ class RemotePlayer(
     }
 
     /**
-     * A seek within what the speaker holds. Where it goes shows in the snapshot as soon as it is
-     * asked ([SpeakerCommands.seek]); the future only covers the moment until that snapshot is
-     * here, during which Media3 shows the target itself, so a tap right after steps on from it.
+     * The target shows in the snapshot as soon as it is asked ([SpeakerCommands.seek]); the future
+     * covers only the hop until then, while Media3 shows it, so a tap right after steps on from it.
      */
     private fun seek(positionMs: Long, step: Boolean, intoSecond: Boolean = false): ListenableFuture<*> {
         val item = snapshot?.current ?: return Futures.immediateVoidFuture()
@@ -314,9 +287,8 @@ class RemotePlayer(
     }
 
     /**
-     * Where next or previous goes inside a book or episode with two or more chapters, from where
-     * Media3 has it now (a seek just asked for included); null when the step leaves the item (past
-     * its first or last chapter) or the command is not a step.
+     * From Media3's position, which includes a seek just asked for; null when the step leaves the item
+     * (past its first or last chapter) or the command is not a step.
      */
     private fun chapterTarget(command: Int): Long? {
         val starts = snapshot?.current?.chapterStartsMs?.takeIf { it.size >= 2 } ?: return null
@@ -334,10 +306,9 @@ class RemotePlayer(
     }
 
     /**
-     * Sends a command; the returned future keeps Media3's optimistic placeholder state until the
-     * server confirms it ([confirm] matches a new snapshot), [timeoutMs] passes, or it fails. On
-     * this phone the command waits until its Sendspin client has joined the server: before that
-     * the server does not know the phone's player (it unregisters a disconnected one).
+     * The future keeps Media3's placeholder state until [confirm] matches a snapshot, [timeoutMs]
+     * passes or the command fails. For This phone it waits for the join: the server unregisters a
+     * disconnected phone's player.
      */
     private fun send(
         confirm: ((SpeakerSnapshot) -> Boolean)?,
@@ -369,7 +340,6 @@ class RemotePlayer(
         const val CONFIRM_TIMEOUT_MS = 3_000L
         const val CONFIRM_VOLUME_MS = 1_500L
 
-        /** The largest step the server's volume up takes (`players/controller.py`, adaptive). */
         const val MAX_SERVER_STEP = 5
 
         /** How long a seek's target may take to show in the snapshot: one hop between threads. */

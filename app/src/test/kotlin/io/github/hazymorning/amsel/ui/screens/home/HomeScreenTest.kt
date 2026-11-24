@@ -38,13 +38,11 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Touch and TalkBack paths into, through and out of Home's edit mode. */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "w411dp-h891dp-xxhdpi")
 class HomeScreenTest {
     @get:Rule val compose = createComposeRule()
 
-    /** Records what the screen asked edit mode to do. */
     private class Recorder : HomeEditor {
         val calls = mutableListOf<String>()
 
@@ -135,7 +133,7 @@ class HomeScreenTest {
         val editor = Recorder()
         show(HomeSample.editing, editor)
         compose.onAllNodesWithContentDescription("What to show: Recently played").onFirst().performClick()
-        // Further down the sheet than the screen reaches: TalkBack's click, which needs no scrolling.
+        // Below the sheet's visible part: TalkBack's click needs no scrolling.
         compose.onNodeWithText("Random albums").performSemanticsAction(SemanticsActions.OnClick)
         assertEquals(listOf("option s2 RandomAlbums"), editor.calls)
     }
@@ -240,7 +238,7 @@ class HomeScreenTest {
         val editor = Recorder()
         show(HomeSample.editing, editor)
         val title = compose.onNode(movable("Pinned"))
-        // The first move comes after the long press's time, which is when the press counts as held.
+        // The first move comes after the long-press timeout, when the press counts as held.
         title.performTouchInput {
             down(center)
             advanceEventTime(viewConfiguration.longPressTimeoutMillis + 100)
@@ -349,7 +347,7 @@ class HomeScreenTest {
         }
         val list = compose.onAllNodes(hasScrollAction()).onFirst()
         list.performScrollToNode(hasText("Add section"))
-        // To the list's end: scrolling to the button only brings it into the list, dock or not.
+        // To the list's end: scrolling to the button only brings it into the viewport, dock or not.
         repeat(3) { list.performTouchInput { swipeUp() } }
         val screen = compose.onRoot().getUnclippedBoundsInRoot()
         val button = compose.onNodeWithText("Add section").assertIsDisplayed().getUnclippedBoundsInRoot()
@@ -359,12 +357,11 @@ class HomeScreenTest {
         )
     }
 
-    /** TalkBack's action named [label] on this node. */
     private fun SemanticsNodeInteraction.act(label: String) {
         val actions = fetchSemanticsNode().config[SemanticsActions.CustomActions]
         compose.runOnIdle { actions.first { it.label == label }.action() }
     }
 
-    /** What a held press moves: it alone carries TalkBack's moves. */
+    // The node a held press moves: the only one carrying TalkBack's move actions.
     private fun movable(text: String) = hasText(text) and SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions)
 }

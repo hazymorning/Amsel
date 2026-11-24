@@ -65,27 +65,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
-/** Content the shell hosts. Each slot is a screen the app wires to its ViewModel. */
 class ShellSlots(
-    /** A tab destination. */
     val screen: @Composable (route: Route, navigator: Navigator) -> Unit,
-    /** Full-screen Now Playing; [onClose] brings it down. */
     val nowPlaying: @Composable (onClose: () -> Unit, navigator: Navigator) -> Unit,
-    /** Sheets that may lead to a page, on the shown tab. */
     val sheets: @Composable (navigator: Navigator) -> Unit,
 )
 
 /**
- * A message's lower edge above the system bar while Now Playing is open. Now Playing's footer ends
- * 16 above it, so the footer's ink lies under the bar's straight edges, never beside a corner.
+ * A message's bottom edge above the system bar while Now Playing is open. Now Playing's footer ends
+ * 16 dp above the bar, so the message covers it with its straight sides, clear of its rounded corners.
  */
 private val OverFooter = Space.S1
 
-/**
- * A tab opens at its top: the pages opened in a tab close when the person leaves it or taps it
- * again, so nothing of them keeps running. Back from another tab's top goes to Home, then leaves
- * the app. Pages run the full height of the screen, under the dock. [layer] is where Now Playing is.
- */
 @Composable
 fun AppShell(
     nowPlaying: NowPlayingUi?,
@@ -93,7 +84,6 @@ fun AppShell(
     onSpeaker: () -> Unit,
     slots: ShellSlots,
     modifier: Modifier = Modifier,
-    /** The speaker picker at its group step: a widget's Group button. */
     onGroup: () -> Unit = onSpeaker,
     onControl: (PlayerControl) -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -103,11 +93,9 @@ fun AppShell(
     offer: Offer? = null,
     onTakeOffer: (Offer) -> Unit = {},
     onDismissOffer: (Offer) -> Unit = {},
-    /** The places the bottom bar shows, in its order. */
     bar: List<BarItem> = BarItem.Default,
-    /** The mini player's controls beside what plays, in the person's order. */
     dock: List<DockControl> = DockControl.Default.visible,
-    /** The mini player's controls that open something or change it: the heart, volume, sleep, the speaker. */
+    /** Favorite, Volume, Sleep and Speaker; the dock's other controls go to [onControl]. */
     onDockControl: (DockControl) -> Unit = {},
 ) {
     var tab by rememberSaveable { mutableStateOf(Tab.Home) }
@@ -127,8 +115,8 @@ fun AppShell(
                 layer.close()
             }
 
-            // Opened cold, the speaker reports a moment after the app shows; if nothing plays by
-            // then, Home stays, rather than Now Playing rising over it later out of nowhere.
+            // Opened cold, the speaker reports shortly after the app shows; if nothing plays within the
+            // wait, Home stays rather than Now Playing opening later unasked.
             DeepLink.NowPlaying, DeepLink.UpNext -> withTimeoutOrNull(NOW_PLAYING_WAIT_MS) {
                 snapshotFlow { playing }.first { it != null }
                 layer.open()
@@ -143,11 +131,11 @@ fun AppShell(
     }
     val dockHeight = remember { mutableIntStateOf(0) }
     val stack = tabs.stack(tab)
-    // A place taken out of the bar from its own pages keeps them; back at its top, which nothing opens
-    // any more, the person is Home. Search may stand outside the bar, as Home's field opens it.
+    // A tab removed from the bar keeps its open pages; back at its root, which nothing reaches any more,
+    // the user is taken Home. Search is exempt: Home's field opens it.
     val stranded = tab != Tab.Home && tab != Tab.Search && bar.none { it.tab == tab }
     LaunchedEffect(stranded, stack.size) { if (stranded && stack.size == 1) tab = Tab.Home }
-    // Nothing left to show: the layer folds away rather than leaving its scrim behind.
+    // PlayerLayer leaves composition when nothing plays; close its state too, or it stays open.
     val nothingPlays = nowPlaying == null
     LaunchedEffect(nothingPlays) { if (nothingPlays) layer.close() }
     val density = LocalDensity.current
@@ -169,7 +157,6 @@ fun AppShell(
             CompositionLocalProvider(LocalDockInset provides dockInset) {
                 TabPages(tabs, tab, Modifier.fillMaxSize())
             }
-            // The dock stands a little above the page, its short shadow on what scrolls under it.
             DockShadow(Modifier.align(Alignment.BottomCenter).offset { IntOffset(0, -dockHeight.intValue) })
             Dock(
                 nowPlaying = nowPlaying,
@@ -179,13 +166,11 @@ fun AppShell(
                 onSpeaker = onSpeaker,
                 controls = dock,
                 onDockControl = onDockControl,
-                // A long press on what plays arranges its controls, as one on the bar arranges the bar.
                 onArrange = { tabs.navigator(tab).open(Route.Dock) },
                 modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged { dockHeight.intValue = it.height },
                 openDrag = Modifier.layerDrag(layer),
                 covered = layer.isOpen,
             ) {
-                // The places the person chose, in their order; a long press on any arranges them.
                 val arrange = stringResource(R.string.bar_arrange)
                 val onArrange = { tabs.navigator(tab).open(Route.Bar) }
                 bar.forEach { place ->
@@ -196,6 +181,7 @@ fun AppShell(
                         NavBarItem(
                             selected = t == tab,
                             onClick = {
+                                // Leaving a tab, or tapping it again, closes its pages, so none keeps running.
                                 tabs.popToRoot(tab)
                                 tab = t
                             },
@@ -208,7 +194,7 @@ fun AppShell(
                     }
                 }
             }
-            // Back from a non-Home tab's top goes to Home first (NavDisplay only sees a 1-entry stack).
+            // NavDisplay cannot pop a one-entry stack, so back from another tab's root goes Home here.
             BackHandler(enabled = !layer.isOpen && stack.size == 1 && tab != Tab.Home) { tab = Tab.Home }
 
             if (nowPlaying != null) {
@@ -220,9 +206,8 @@ fun AppShell(
                 PreloadCover(nowPlaying.art)
             }
             slots.sheets(tabs.navigator(tab))
-            // Over Now Playing too, where most of what can fail is tapped. They move with the layer
-            // from 16 above the dock, or the keyboard that covers the dock, to Now Playing's footer,
-            // which they cover whole; a message stands over an offer.
+            // Over Now Playing too, where most failing actions are tapped. They follow the layer from
+            // above the dock (or the keyboard covering it) to over Now Playing's footer.
             val systemBars = WindowInsets.safeDrawing
             val keyboard = WindowInsets.ime
             val overDock: Density.() -> Int = {
@@ -253,15 +238,10 @@ fun AppShell(
     }
 }
 
-/**
- * The current tab's pages. A page that comes and one that goes cross-fade, as content that changes
- * does; only the back gesture moves a page, with the finger. Another tab is simply there.
- */
 @Composable
 private fun TabPages(tabs: TabStacks, tab: Tab, modifier: Modifier = Modifier) {
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val travel = with(LocalDensity.current) { Motion.AxisTravel.roundToPx() } * if (rtl) -1 else 1
-    // With less motion asked for, the back gesture is a crossfade too.
     val still = LocalReducedMotion.current
     NavDisplay(
         entries = tabs.entries(tab),
@@ -273,7 +253,7 @@ private fun TabPages(tabs: TabStacks, tab: Tab, modifier: Modifier = Modifier) {
                 else -> Motion.crossfade()
             }
         },
-        // Leaving a page for another tab looks like a pop to NavDisplay; it is a tab change all the same.
+        // NavDisplay can take switching tabs from a page for a pop; it is still a tab change.
         popTransitionSpec = {
             when {
                 initialState.root() != targetState.root() -> Motion.none()
@@ -290,25 +270,19 @@ private fun TabPages(tabs: TabStacks, tab: Tab, modifier: Modifier = Modifier) {
     )
 }
 
-/** Opens Now Playing: what a tap on something already playing does, rather than nothing. */
 val LocalOpenNowPlaying = staticCompositionLocalOf<() -> Unit> { {} }
 
-/** Counts the searches a shortcut or a link asked for: each one empties Search and brings the keyboard up. */
+/** Bumped for each fresh search asked for; every change empties Search and brings up the keyboard. */
 val LocalNewSearch = compositionLocalOf { 0 }
 
-/** Goes to Search, emptied, the keyboard up: Home's Search field. */
 val LocalStartSearch = staticCompositionLocalOf<() -> Unit> { {} }
 
-/**
- * Set once a link to Up next (a widget's button) has opened Now Playing, which then opens Up next, or
- * the chapters ([AnswerUpNext]), and clears it.
- */
+/** Set once an Up next link has opened Now Playing; [AnswerUpNext] answers and clears it. */
 val LocalUpNextAsked = staticCompositionLocalOf<MutableState<Boolean>> { mutableStateOf(false) }
 
 /**
- * Now Playing's answer to a link that asked for Up next: [open], once per ask. It runs in the
- * screen's own scope: clearing the ask restarts the effect that saw it, which would cut the opening
- * short and leave Up next closed.
+ * Runs [open] once per Up next link, in the screen's own scope: clearing the ask restarts the effect,
+ * which would cancel [open] midway and leave Up next closed.
  */
 @Composable
 fun AnswerUpNext(open: suspend () -> Unit) {
@@ -322,5 +296,4 @@ fun AnswerUpNext(open: suspend () -> Unit) {
     }
 }
 
-/** How long a Now Playing link waits for the speaker to say what plays. */
 private const val NOW_PLAYING_WAIT_MS = 5_000L

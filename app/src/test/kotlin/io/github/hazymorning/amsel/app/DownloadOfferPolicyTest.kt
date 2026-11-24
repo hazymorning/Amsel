@@ -15,7 +15,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** When a book's or an episode's download is offered: once, the first time it plays on This phone. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class DownloadOfferPolicyTest {
     private val phone = SampleData.speakers[0]

@@ -6,22 +6,17 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 
-/*
- * Ink on paper: the interface is near-colourless stone, the covers bring the colour, and moss marks
- * only what is alive. Material's slots carry the palette so its few remaining parts agree; the
- * names below say what each one is for. PaletteContrastTest checks the pairs.
- */
+// Every Material slot is set from the palette, so the Material components still in use agree with it.
+// PaletteContrastTest checks the contrast pairs.
 
-/** How much the player's layer dims the page under it, and a played song's cover: it steps back without going dark. */
+/** Dims a played song's cover without making it dark. */
 const val DIM_ALPHA = 0.32f
 
-/** The hairline: ink at this strength, around covers. */
 const val HAIRLINE_ALPHA = 0.08f
 
-/** A quiet pill's fill: ink at this share, so it sits as lightly on the dock as on a page. */
+/** Translucent rather than a solid tone, so a quiet pill matches on the dock and on a page. */
 const val PILL_ALPHA = 0.055f
 
-/** What cannot be used now keeps its place at this strength. */
 const val DISABLED_ALPHA = 0.38f
 
 internal object Night {
@@ -128,7 +123,6 @@ internal val DarkColors = darkColorScheme(
 
 val ColorScheme.isNight: Boolean get() = surface == Night.Background
 
-/** The chrome's glyphs and a pill's words: by day a step softer than words, at night the ink itself. */
 val ColorScheme.controls: Color get() = if (isNight) onSurface else onSurface.copy(alpha = CONTROL_ALPHA)
 
 private const val CONTROL_ALPHA = 0.87f

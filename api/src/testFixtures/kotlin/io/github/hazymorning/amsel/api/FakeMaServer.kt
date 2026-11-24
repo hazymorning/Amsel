@@ -25,28 +25,22 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 
-/** Loads a recorded fixture: `fixture("2.10", "players_all")`. */
 public fun fixture(version: String, name: String): JsonObject {
     val stream = FakeMaServer::class.java.getResourceAsStream("/fixtures/$version/$name.json")
         ?: error("No fixture $version/$name")
     return MaJson.parseToJsonElement(stream.bufferedReader().readText()).jsonObject
 }
 
-/** A recorded list result, decoded with [serializer]. */
 public fun <T> decodeList(version: String, name: String, serializer: KSerializer<T>): List<T> =
     MaJson.decodeFromJsonElement(
         ListSerializer(serializer),
         fixture(version, name).getValue("response").jsonObject.getValue("result"),
     )
 
-/** A recorded single result, decoded with [serializer]. */
 public fun <T> decodeOne(version: String, name: String, serializer: KSerializer<T>): T =
     MaJson.decodeFromJsonElement(serializer, fixture(version, name).getValue("response").jsonObject.getValue("result"))
 
-/**
- * Runs [block] with an [MaApi] signed in to a [FakeMaServer] that sends [version]'s recorded
- * server info; [handler] answers every command but `auth`.
- */
+/** [handler] answers every command but `auth`, which gets [version]'s recorded answer. */
 public fun withFakeApi(
     version: String,
     handler: (command: String, args: JsonObject?) -> List<JsonObject>,
@@ -68,10 +62,7 @@ public fun withFakeApi(
     }
 }
 
-/**
- * A Music Assistant stand-in on MockWebServer. Sends [first] and then [serverInfo] on connect, and
- * answers each command with [handler]'s frames (the message_id is filled in).
- */
+/** Sends [first], then [serverInfo], on connect; [handler]'s frames get the command's message_id. */
 public class FakeMaServer(
     private val serverInfo: JsonElement = fixture("2.10", "server_info")["response"]!!,
     private val first: List<JsonObject> = emptyList(),
@@ -88,17 +79,13 @@ public class FakeMaServer(
 
     public val address: ServerAddress get() = ServerAddress(server.url("/"))
 
-    /** The id its server info names, which a client must expect to send it a token. */
     public val serverId: String get() = serverInfo.jsonObject.getValue("server_id").jsonPrimitive.content
 
-    /** Pushes an event to every connected client. */
     public fun push(event: JsonObject): Unit = sockets.forEach { it.send(event.toString()) }
 
-    /** The arguments of the last [command] received. */
     public fun args(command: String): JsonObject =
         received.last { it["command"]?.jsonPrimitive?.content == command }.getValue("args").jsonObject
 
-    /** Ends every connection abnormally, as a server restart would. */
     public fun dropConnections(): Unit = sockets.forEach { it.close(1011, "restarting") }
 
     private fun listener() = object : WebSocketListener() {
@@ -135,7 +122,6 @@ public class FakeMaServer(
             put("details", details)
         }
 
-        /** The recorded response of [name] as the reply frame. */
         public fun recorded(version: String, name: String): JsonObject {
             val response = fixture(version, name)["response"]!!.jsonObject
             return JsonObject(response - "message_id")

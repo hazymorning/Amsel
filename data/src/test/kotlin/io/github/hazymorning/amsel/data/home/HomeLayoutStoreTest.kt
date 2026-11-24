@@ -21,7 +21,7 @@ class HomeLayoutStoreTest {
 
     private fun file() = File(folder.root, "home.preferences_pb")
 
-    /** A DataStore on [file] for the length of [block], closed afterwards like the app's on exit. */
+    /** Closed after [block], as the app's store is on exit. */
     private fun <T> withStore(block: suspend (DataStore<Preferences>) -> T): T = runBlocking {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         try {
