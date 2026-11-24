@@ -2,7 +2,8 @@
 
 Native Android player for Music Assistant: find something in your library and play it, on the
 phone or on any speaker. Simple, light, beautiful; usable by anyone at home without explanation.
-Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.md`.
+Design: `docs/DESIGN.md`. Architecture: `docs/ARCHITECTURE.md`. Server behaviour:
+`docs/API-NOTES.md`.
 
 ## Writing style (owner's rules, strict)
 
@@ -25,8 +26,8 @@ Design: `docs/DESIGN.md`. Home: `docs/notes/home-sections.md`.
 
 ## How decisions are made
 
-Decide without asking the owner, using these questions in order, and add one line to
-`docs/DECISIONS.md` (what, and which question settled it):
+Decide without asking the owner, using these questions in order. A decision that changes the
+architecture goes into `docs/ARCHITECTURE.md`; no other decision is written down:
 1. What would a first-time user expect? 2. Fewest elements, steps and rules? 3. Calmer and better
 looking? 4. Faster and lighter? Evidence (household tests, owner feedback) beats reasoning, and the
 owner's explicit wishes come first.
@@ -70,10 +71,10 @@ Words in the UI: "speaker" not "player", "Play on" not "transfer", "Up next" not
 
 | Module | Holds |
 | --- | --- |
-| `:api` | The Music Assistant WebSocket client, pure Kotlin |
-| `:data` | Session, token vault, discovery, Room library index, speakers, Home |
-| `:playback` | The Media3 session, speakers as players, This phone (Sendspin), Android Auto |
-| `:app` | Compose screens and ViewModels, navigation, theme, `AppGraph` |
+| `:api` | The Music Assistant WebSocket client and commands, pure Kotlin (`MaClient`, `MaApi`, `MaAuth`) |
+| `:data` | `Session`, `TokenCipher`, server discovery, the Room library index, the speaker, Home and download repositories (`DataGraph`) |
+| `:playback` | The Media3 session (`PlaybackService`), speakers as players, This phone (Sendspin), downloads played on the phone, Android Auto |
+| `:app` | Compose screens and ViewModels, navigation, theme, app-wide state and controllers (`app/`), widgets, `AppGraph` |
 | `:sendspin` | Vendored unchanged (`sendspin/VENDORED.md`); never edit, re-vendor |
 
 - One screen is one file plus one ViewModel; files under ~300 lines; no `!!`.
@@ -81,6 +82,16 @@ Words in the UI: "speaker" not "player", "Play on" not "transfer", "Up next" not
 - Every tap answers within 100 ms (optimistic state); errors are plain sentences with Retry.
 - New dependency or permission only with a reason in the pull request.
 - Check `docs/API-NOTES.md` before using a server command and record new ones there.
+
+## Names and comments
+
+- Names say what a thing is, in the usual Android and Kotlin terms (…Repository, …Controller,
+  …Store, …State, …JobService). No images or metaphors. One concept, one name; no type name twice.
+- Comments only for a non-obvious why, a constraint or a server behaviour: technical, mostly one
+  line, at most three. Nothing the code already says; no narration, no images. Server
+  measurements and version evidence go to `docs/API-NOTES.md`; the code keeps a short reference.
+- Every class has one task that fits in one sentence. Dependencies have no cycles; what runs for
+  the app's life starts explicitly (`AppGraph.start`), never as a side effect of touching a `lazy`.
 
 ## Commands
 
@@ -94,8 +105,6 @@ scripts/test-server/start.sh 2.11.0b7    # local Music Assistant in Docker
 scripts/check.sh                         # all CI runs, live servers too
 ```
 
-Done means: unit tests and the kept screenshots pass, changed screens are looked at in light, dark
-and 200% and pass `scripts/design/measure.py`, TalkBack labels and 48 dp targets are in place, no
-new warnings. A fix runs only the tests for what it touched; every pull request that changes the
-app first passes `scripts/check.sh`, all CI runs. One that changes only the README, docs or their
-pictures is merged without tests.
+Done means: lint, the unit tests and the affected screenshots pass. Every pull request that changes
+the app first passes `scripts/check.sh`, all CI runs; one that changes only the README, docs or
+their pictures is merged without tests.
