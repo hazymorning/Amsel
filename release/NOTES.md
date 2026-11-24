@@ -1,14 +1,17 @@
-# On the lookout
+# Preening
 
 ## New
 
-- **Widgets that keep up:** music started in Music Assistant, in Home Assistant or on another phone now shows on the widgets without opening Amsel. They look at the speakers by themselves: as a song ends, and every quarter of an hour otherwise. While the phone sleeps they wait, and catch up as the screen comes on.
+- **Licences and privacy:** Settings now shows Amsel's licence, the software it builds on, and in plain words where your data goes: only to your own servers, never tracked.
 
 ## Better
 
-- **Back after a nap:** while music plays, a connection lost in the phone's sleep comes back as the screen comes on or the Wi-Fi returns, so the notification no longer freezes.
-- **Light on the battery:** each look is one short connection, only with a network and never on a low battery. No permanent notification, no new permission.
+- **Groomed inside:** Amsel preened every feather. Clearer names, a simpler start, half the comments, short docs. It looks the same and is easier to keep well.
+- **Widgets at rest:** live while Amsel is connected, otherwise a look every half hour, gentle on the battery.
+- **This phone on mobile data:** it streams in Opus there, which needs far less data than FLAC.
 
 ## Fixed
 
-- **Group from a widget:** it opens the group step straight away, for a speaker that can lead one, also while you listen on this phone.
+- **Starts on older phones:** Amsel 1.1 closed at once on Android 9 to 12L. Now it starts.
+- **Volume limit:** the volume keys never step past it, whatever step the server uses.
+- **Play here:** when a speaker is out of reach, one tap plays on this phone.

@@ -232,9 +232,9 @@ string; booleans are Python-style `True`/`False`; a null value is a bare key (`e
 | `unsupported_install` | 2.11 only |
 
 **Gotcha:** every MA server announces the same SRV host `mass.local.`, so with two servers on one
-network their A records merge (two servers seen with both IPs each [live]). Resolve the candidate
-as TXT `base_url` first, then the NSD host and port, and keep the first whose `GET /info` returns
-the same `server_id`.
+network their A records merge (two servers seen with both IPs each [live]). Try the resolved
+addresses first, IPv4 before IPv6, then TXT `base_url`, which can be a container's internal address
+(the example above), and keep the first whose `GET /info` returns the same `server_id`.
 
 ## 5. Players
 
