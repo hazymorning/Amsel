@@ -32,7 +32,8 @@ before Android can create `PlaybackService`. Server behaviour and its evidence: 
 - **Session end** (sign-out, a refused token, a server set up anew) clears speakers, index, Home,
   pages, downloads, the Audiobookshelf sign-in, recent searches, bookmarks, widgets and covers.
 - **Other hosts.** Audiobookshelf's API for downloads (`AbsClient`); GitHub's `releases/latest`
-  for updates (`UpdateController` installs only an APK with Amsel's package name and signing key).
+  for updates (`UpdateController` installs only an APK with Amsel's package name and signing key,
+  through a `PackageInstaller` session whose answer `UpdateResultReceiver` takes).
 
 ## Connection lifecycle
 

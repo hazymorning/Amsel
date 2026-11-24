@@ -767,6 +767,7 @@ Platform behaviour Amsel relies on. `m3/` = Media3 1.11.1 sources (`androidx/med
 - **Widgets and gestures** [src]. A widget gets taps and vertical swipes only: Launcher3 pages on any drag within 30° of sideways (`Workspace.determineScrollingStart`); `StackView` flips vertically and `ViewFlipper` only on a tap or a timer.
 - **Widget updates** [src]. `updatePeriodMillis` is at least 30 min and a periodic job at least 15 min; Doze holds jobs back until the phone wakes; an app with a widget stands in the active standby bucket, where jobs are hardly limited; cached apps see the screen come on only once they run again (Android 14). Music Assistant cannot wake a phone (§9).
 - **`Chronometer` on a widget** [src] ticks on the launcher's side; a stopped one works its time out again whenever the launcher lays the widget out and runs on, so a time at rest is plain text (AOSP `Chronometer`).
+- **Installing an update** [live], [src]. Handed to Android's installer with `ACTION_VIEW` on a `FileProvider` URI, Amsel 1.1's update to 1.2 failed on an Android 16 phone after the person confirmed, with the installer's generic "could not be installed"; the same APK installed from the browser. Since then Amsel writes the APK into its own `PackageInstaller` session: Android answers with `STATUS_PENDING_USER_ACTION` and the confirmation to start, then the outcome (`PackageInstaller.EXTRA_STATUS`). `getPackageArchiveInfo` reads an archive's certificates on Android 9 and 10 only with `GET_SIGNATURES`.
 
 ## Sources
 

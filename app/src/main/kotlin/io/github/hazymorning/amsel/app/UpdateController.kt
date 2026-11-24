@@ -46,7 +46,7 @@ class UpdateController(
     private val inFront: StateFlow<Boolean>,
     private val folder: File,
     private val isOurs: (File) -> Boolean,
-    private val openInstaller: (File) -> Boolean,
+    private val installApk: (File, String) -> Unit,
 ) {
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Unknown)
     val state: StateFlow<UpdateState> = _state.asStateFlow()
@@ -100,9 +100,26 @@ class UpdateController(
                 messages.show(R.string.update_not_ours, update.version)
             } else {
                 inFront.first { it }
-                if (!openInstaller(apk)) messages.show(R.string.error_no_installer)
+                try {
+                    withContext(Dispatchers.IO) { installApk(apk, update.version) }
+                } catch (e: IOException) {
+                    messages.show(R.string.update_not_installed, update.version) { install(update) }
+                }
             }
         }
+    }
+
+    /** Opens Android's confirmation once Amsel is in front, where Android lets it start an activity. */
+    fun confirm(open: () -> Boolean) {
+        scope.launch {
+            inFront.first { it }
+            if (!open()) messages.show(R.string.error_no_installer)
+        }
+    }
+
+    fun notInstalled(version: String) {
+        val update = (_state.value as? UpdateState.Available)?.takeIf { it.version == version }
+        messages.show(R.string.update_not_installed, version, update?.let { { install(it) } })
     }
 
     private suspend fun download(update: UpdateState.Available): File = withContext(Dispatchers.IO) {

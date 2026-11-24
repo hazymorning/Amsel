@@ -1,14 +1,7 @@
 package io.github.hazymorning.amsel
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.content.pm.PackageManager.CERT_INPUT_RAW_X509
-import android.content.pm.PackageManager.PackageInfoFlags
-import android.os.Build
 import android.os.SystemClock
-import androidx.core.content.FileProvider
 import coil3.ImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
@@ -21,6 +14,7 @@ import io.github.hazymorning.amsel.api.Schema
 import io.github.hazymorning.amsel.api.itemByUri
 import io.github.hazymorning.amsel.api.localCleartext
 import io.github.hazymorning.amsel.api.plainHttpOnlyWhen
+import io.github.hazymorning.amsel.app.ApkInstaller
 import io.github.hazymorning.amsel.app.ArtworkKeys
 import io.github.hazymorning.amsel.app.ArtworkLoader
 import io.github.hazymorning.amsel.app.BookmarkStore
@@ -69,7 +63,6 @@ import io.github.hazymorning.amsel.widget.WidgetRefreshJobScheduler
 import io.github.hazymorning.amsel.widget.WidgetSource
 import io.github.hazymorning.amsel.widget.WidgetStore
 import io.github.hazymorning.amsel.widget.widgetContent
-import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineScope
@@ -338,6 +331,7 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
     val recentSearches: RecentSearchStore by lazy { RecentSearchStore(app, scope) }
 
     val updates: UpdateController by lazy {
+        val installer = ApkInstaller(app)
         UpdateController(
             http,
             BuildConfig.VERSION_NAME,
@@ -345,8 +339,8 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
             scope,
             data.session.foreground,
             app.cacheDir.resolve(UPDATE_FOLDER),
-            ::isOurs,
-            ::openInstaller,
+            installer::isOurs,
+            installer::install,
         )
     }
 
@@ -381,38 +375,8 @@ class AppGraph(context: Context, private val vault: TokenCipher = KeystoreTokenC
             }
             .build()
     }
-
-    // Android updates the app only from the same package name and key; another name installs as a new app.
-    private fun isOurs(apk: File): Boolean {
-        val pm = app.packageManager
-        val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            pm.getPackageArchiveInfo(apk.path, PackageInfoFlags.of(PackageManager.GET_SIGNING_CERTIFICATES.toLong()))
-        } else {
-            // The flags as an Int are deprecated from API 33, where PackageInfoFlags replaces them.
-            @Suppress("DEPRECATION")
-            pm.getPackageArchiveInfo(apk.path, PackageManager.GET_SIGNING_CERTIFICATES)
-        } ?: return false
-        val signing = info.signingInfo ?: return false
-        val signers = with(signing) { if (hasMultipleSigners()) apkContentsSigners else signingCertificateHistory }
-        return info.packageName == app.packageName &&
-            signers.orEmpty().any { pm.hasSigningCertificate(app.packageName, it.toByteArray(), CERT_INPUT_RAW_X509) }
-    }
-
-    private fun openInstaller(apk: File): Boolean = try {
-        app.startActivity(
-            Intent(Intent.ACTION_VIEW)
-                .setDataAndType(FileProvider.getUriForFile(app, "${app.packageName}.updates", apk), APK_TYPE)
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK),
-        )
-        true
-    } catch (e: ActivityNotFoundException) {
-        false
-    }
 }
 
-private const val APK_TYPE = "application/vnd.android.package-archive"
-
-// In the cache: res/xml/updates.xml shares this path with the installer.
 private const val UPDATE_FOLDER = "update"
 
 private const val WIDGET_FOLDER = "widget"
